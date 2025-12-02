@@ -1,0 +1,32 @@
+{
+    "extends": "@vue/tsconfig/tsconfig.dom.json",
+    "files": [],
+    "include": [
+        "env.d.ts",
+        "src/typings/*.d.ts",
+        "src/**/*",
+        "src/**/*.vue",
+        "src/**/**/**/**/**/*.vue",
+        "package.json",
+        "../src/config/devops.config.ts",
+        "vite.config.*",
+        "vitest.config.*",
+        "cypress.config.*",
+        "playwright.config.*"
+    ],
+    "exclude": ["src/**/__tests__/*"],
+    "compilerOptions": {
+        "composite": true,
+        "module": "ESNext",
+        "types": ["vue", "node", "jsdom"],
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./src/*"],
+            "#/*": ["../*"]
+        },
+        "noImplicitAny": false,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "moduleResolution": "bundler"
+    }
+}

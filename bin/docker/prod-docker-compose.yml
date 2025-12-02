@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: bin/docker/prod.Dockerfile
+    ports:
+      - '5178:5178'
+    volumes:
+      # 一个卷表示当前目录（.）与容器中的/app目录之间的共享卷
+      # - .:/app
+      #它是一个已存在的目录，并且不需要同步本地文件系统中的任何内容，因此它只是一个路径表示法，而没有冒号。
+      - /app/node_modules
+    environment:
+      - IP=0.0.0.0
+      - PORT=5178
+    command: ['npm', 'run', 'start']

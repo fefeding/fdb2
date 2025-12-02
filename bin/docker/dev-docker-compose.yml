@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: bin/docker/dev.Dockerfile
+    ports:
+      - '5177:5177'
+      - '5176:5176'
+    volumes:
+      # 一个卷表示当前目录（.）与容器中的/app目录之间的共享卷，它使用匿名卷的表示方法，因为它没有指定卷名称。
+      - ../..:/app
+      #它是一个已存在的目录，并且不需要同步本地文件系统中的任何内容，因此它只是一个路径表示法，而没有冒号。
+      - /app/node_modules
+      - /app/web/node_modules
+    environment:
+      - NODE_ENV=development
+      - IP=0.0.0.0
+      - PORT=5177
+      - VITE_PORT=5176
+      - VUE_APP_PREVIEW_TYPE=pc
+    #   - DB_HOST=db
+    #   - DB_USER=${MYSQL_USER}
+    #   - DB_PASSWORD=${MYSQL_PASSWORD}
+    #   - DB_NAME=${MYSQL_DATABASE}
+    command: ['npm', 'run', 'dev:all']
+#     depends_on:
+#       - db
+#   db:
+#     image: mysql:5.7
+#     restart: always
+#     environment:
+#       MYSQL_DATABASE: ${MYSQL_DATABASE}
+#       MYSQL_USER: ${MYSQL_USER}
+#       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+#       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+#     volumes:
+#       - db_data:/var/lib/mysql
+#     ports:
+#       - '3306:3306'
+
+# volumes:
+#   db_data:

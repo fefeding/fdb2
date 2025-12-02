@@ -1,0 +1,6 @@
+{
+    "includes": [
+        "dist", "view", "package.json", ".npmrc", "bootstrap.js", "server.js"
+    ],
+    "nodeExecPath": "../../nodejs/node-v22.17.1-linux-x64/bin/node"
+}

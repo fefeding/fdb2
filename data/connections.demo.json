@@ -1,0 +1,32 @@
+[
+  {
+    "id": "demo-mysql-1",
+    "name": "本地MySQL测试",
+    "type": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "database": "test",
+    "username": "root",
+    "password": "",
+    "options": {
+      "charset": "utf8mb4",
+      "timezone": "+08:00"
+    },
+    "enabled": true,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "demo-sqlite-1",
+    "name": "SQLite演示数据库",
+    "type": "sqlite",
+    "database": "./data/demo.db",
+    "options": {
+      "synchronize": false,
+      "logging": false
+    },
+    "enabled": true,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  }
+]
