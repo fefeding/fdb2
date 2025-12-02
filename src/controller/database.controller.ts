@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, Body, Param } from '@midwayjs/core';
+import { Controller, Query, Body, Param, All } from '@midwayjs/core';
 import { Context } from '@midwayjs/koa';
 import { Inject } from '@midwayjs/core';
 import { ConnectionService } from '../service/connection.service';
@@ -24,7 +24,7 @@ export class DatabaseController {
   /**
    * 获取所有数据库连接配置
    */
-  @Get('/getConnections')
+  @All('/getConnections')
   async getConnections() {
     try {
       const connections = await this.connectionService.getAllConnections();
@@ -43,7 +43,7 @@ export class DatabaseController {
   /**
    * 根据ID获取数据库连接配置
    */
-  @Get('/getConnection/:id')
+  @All('/getConnection/:id')
   async getConnection(@Param('id') id: string) {
     try {
       const connection = await this.connectionService.getConnectionById(id);
@@ -70,7 +70,7 @@ export class DatabaseController {
   /**
    * 添加数据库连接配置
    */
-  @Post('/addConnection')
+  @All('/addConnection')
   async addConnection(@Body() connectionData: ConnectionEntity) {
     try {
       const connection = await this.connectionService.addConnection(connectionData);
@@ -89,7 +89,7 @@ export class DatabaseController {
   /**
    * 更新数据库连接配置
    */
-  @Post('/updateConnection/:id')
+  @All('/updateConnection/:id')
   async updateConnection(@Param('id') id: string, @Body() updates: Partial<ConnectionEntity>) {
     try {
       const connection = await this.connectionService.updateConnection(id, updates);
@@ -108,7 +108,7 @@ export class DatabaseController {
   /**
    * 删除数据库连接配置
    */
-  @Post('/deleteConnection/:id')
+  @All('/deleteConnection/:id')
   async deleteConnection(@Param('id') id: string) {
     try {
       await this.connectionService.deleteConnection(id);
@@ -126,7 +126,7 @@ export class DatabaseController {
   /**
    * 测试数据库连接
    */
-  @Post('/testConnection')
+  @All('/testConnection')
   async testConnection(@Body() connectionData: ConnectionEntity) {
     try {
       const result = await this.connectionService.testConnection(connectionData);
@@ -147,7 +147,7 @@ export class DatabaseController {
   /**
    * 获取数据库列表
    */
-  @Get('/getDatabases/:id')
+  @All('/getDatabases/:id')
   async getDatabases(@Param('id') connectionId: string) {
     try {
       const databases = await this.databaseService.getDatabases(connectionId);
@@ -166,7 +166,7 @@ export class DatabaseController {
   /**
    * 获取数据库详细信息
    */
-  @Get('/getDatabaseInfo/:id/:database')
+  @All('/getDatabaseInfo/:id/:database')
   async getDatabaseInfo(
     @Param('id') connectionId: string,
     @Param('database') databaseName: string
@@ -188,7 +188,7 @@ export class DatabaseController {
   /**
    * 获取数据库表列表
    */
-  @Get('/getTables/:id/:database')
+  @All('/getTables/:id/:database')
   async getTables(
     @Param('id') connectionId: string,
     @Param('database') databaseName: string
@@ -210,7 +210,7 @@ export class DatabaseController {
   /**
    * 获取表详细信息
    */
-  @Get('/getTableInfo/:id/:database/:table')
+  @All('/getTableInfo/:id/:database/:table')
   async getTableInfo(
     @Param('id') connectionId: string,
     @Param('database') databaseName: string,
@@ -233,7 +233,7 @@ export class DatabaseController {
   /**
    * 获取表数据
    */
-  @Get('/getTableData/:id/:database/:table')
+  @All('/getTableData/:id/:database/:table')
   async getTableData(
     @Param('id') connectionId: string,
     @Param('database') databaseName: string,
@@ -268,7 +268,7 @@ export class DatabaseController {
   /**
    * 执行SQL查询
    */
-  @Post('/executeQuery/:id')
+  @All('/executeQuery/:id')
   async executeQuery(
     @Param('id') connectionId: string,
     @Body('sql') sql: string
@@ -295,7 +295,7 @@ export class DatabaseController {
   /**
    * 关闭数据库连接
    */
-  @Post('/closeConnection/:id')
+  @All('/closeConnection/:id')
   async closeConnection(@Param('id') connectionId: string) {
     try {
       await this.connectionService.closeConnection(connectionId);
@@ -313,7 +313,7 @@ export class DatabaseController {
   /**
    * 获取支持的数据库类型
    */
-  @Get('/getSupportedDatabaseTypes')
+  @All('/getSupportedDatabaseTypes')
   async getSupportedDatabaseTypes() {
     try {
       const types = this.databaseService.getSupportedDatabaseTypes();
@@ -333,7 +333,7 @@ export class DatabaseController {
   /**
    * 导出表数据
    */
-  @Get('/exportTableData/:id/:database/:table')
+  @All('/exportTableData/:id/:database/:table')
   async exportTableData(
     @Param('id') connectionId: string,
     @Param('database') databaseName: string,

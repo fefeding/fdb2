@@ -1,92 +1,92 @@
-import { BaseAjax } from '@/adapter/ajax';
+import { request } from '@/service/base';
 import type { ConnectionEntity, DatabaseEntity, TableEntity, ColumnEntity, IndexEntity, ForeignKeyEntity } from '@/typings/database';
 
 /**
  * 数据库连接管理服务
  */
-export class ConnectionService extends BaseAjax {
+export class ConnectionService {
   
   /**
    * 获取所有数据库连接配置
    */
   async getAllConnections() {
-    return this.get('/api/database/getConnections');
+    return request('/api/database/getConnections');
   }
 
   /**
    * 根据ID获取数据库连接配置
    */
   async getConnectionById(id: string) {
-    return this.get(`/api/database/getConnection/${id}`);
+    return request(`/api/database/getConnection/${id}`);
   }
 
   /**
    * 添加数据库连接配置
    */
   async addConnection(connection: ConnectionEntity) {
-    return this.post('/api/database/addConnection', connection);
+    return request('/api/database/addConnection', connection);
   }
 
   /**
    * 更新数据库连接配置
    */
   async updateConnection(id: string, updates: Partial<ConnectionEntity>) {
-    return this.post(`/api/database/updateConnection/${id}`, updates);
+    return request('/api/database/updateConnection/${id}', updates);
   }
 
   /**
    * 删除数据库连接配置
    */
   async deleteConnection(id: string) {
-    return this.post(`/api/database/deleteConnection/${id}`);
+    return request('/api/database/deleteConnection/${id}');
   }
 
   /**
    * 测试数据库连接
    */
   async testConnection(connection: ConnectionEntity) {
-    return this.post('/api/database/testConnection', connection);
+    return request('/api/database/testConnection', connection);
   }
 
   /**
    * 获取支持的数据库类型
    */
   async getDatabaseTypes() {
-    return this.get('/api/database/getSupportedDatabaseTypes');
+    return request('/api/database/getSupportedDatabaseTypes');
   }
 }
 
 /**
  * 数据库管理服务
  */
-export class DatabaseService extends BaseAjax {
+export class DatabaseService {
   
   /**
    * 获取数据库列表
    */
   async getDatabases(connectionId: string) {
-    return this.get(`/api/database/getDatabases/${connectionId}`);
+    return request(`/api/database/getDatabases/${connectionId}`);
   }
 
   /**
    * 获取数据库详细信息
    */
   async getDatabaseInfo(connectionId: string, databaseName: string) {
-    return this.get(`/api/database/getDatabaseInfo/${connectionId}/${databaseName}`);
+    return request(`/api/database/getDatabaseInfo/${connectionId}/${databaseName}`);
   }
 
   /**
    * 获取数据库表列表
    */
   async getTables(connectionId: string, databaseName: string) {
-    return this.get(`/api/database/getTables/${connectionId}/${databaseName}`);
+    return request(`/api/database/getTables/${connectionId}/${databaseName}`);
   }
 
   /**
    * 获取表详细信息
    */
   async getTableInfo(connectionId: string, databaseName: string, tableName: string) {
-    return this.get(`/api/database/getTableInfo/${connectionId}/${databaseName}/${tableName}`);
+    return request(`/api/database/getTableInfo/${connectionId}/${databaseName}/${tableName}`);
   }
 
   /**
@@ -101,29 +101,27 @@ export class DatabaseService extends BaseAjax {
     where?: string,
     orderBy?: string
   ) {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      pageSize: pageSize.toString()
-    });
-    
-    if (where) params.append('where', where);
-    if (orderBy) params.append('orderBy', orderBy);
-
-    return this.get(`/api/database/getTableData/${connectionId}/${databaseName}/${tableName}?${params}`);
+    const params = {
+      page,
+      pageSize,
+      where,
+      orderBy
+    };
+    return request(`/api/database/getTableData/${connectionId}/${databaseName}/${tableName}`, params);
   }
 
   /**
    * 执行SQL查询
    */
   async executeQuery(connectionId: string, sql: string) {
-    return this.post(`/api/database/executeQuery/${connectionId}`, { sql });
+    return request(`/api/database/executeQuery/${connectionId}`, { sql });
   }
 
   /**
    * 关闭数据库连接
    */
   async closeConnection(connectionId: string) {
-    return this.post(`/api/database/closeConnection/${connectionId}`);
+    return request(`/api/database/closeConnection/${connectionId}`);
   }
 
   /**
@@ -136,9 +134,7 @@ export class DatabaseService extends BaseAjax {
     format: string = 'json',
     where?: string
   ) {
-    const params = new URLSearchParams({ format });
-    if (where) params.append('where', where);
-
-    return this.get(`/api/database/exportTableData/${connectionId}/${databaseName}/${tableName}?${params}`);
+    const params = { format, where };
+    return request(`/api/database/exportTableData/${connectionId}/${databaseName}/${tableName}`, params);
   }
 }
