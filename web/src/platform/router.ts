@@ -3,17 +3,11 @@ import { useTitle } from '@vueuse/core';
 import { abortAllPending } from '@/adapter/ajax';
 import { checkLogin, initLoginState } from '@/service/login';
 
-import userRouters from './user/router';
-import adminRouters from './admin/router';
 import databaseRouters from './database/router';
 
 export const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes: [
-        // 用户功能页
-        ...userRouters,
-        // 管理端
-        ...adminRouters,
         // 数据库管理
         ...databaseRouters,
         {

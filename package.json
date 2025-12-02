@@ -7,7 +7,7 @@
     "dev:midway": "cross-env NODE_ENV=local midway-bin dev --ts",
     "dev:vue": "cd web && npm run dev",
     "dev:all": "npm-run-all -p dev:vue dev:midway",
-    "dev": "sh ./bin/start-database.sh",
+    "dev": "sh ./bin/dev.sh",
     "test": "midway-bin test --ts",
     "cov": "midway-bin cov --ts",
     "lint": "mwts check",
@@ -48,7 +48,9 @@
     "jm-jsruntime": "^1.0.7",
     "lodash": "^4.17.21",
     "mysql2": "^3.15.3",
+    "oracledb": "^6.3.0",
     "reflect-metadata": "^0.2.2",
+    "sqlserver": "latest",
     "swagger-ui-dist": "^5.30.3",
     "typeorm": "^0.3.27",
     "uuid": "^13.0.0"

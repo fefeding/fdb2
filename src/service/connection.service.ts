@@ -160,7 +160,7 @@ export class ConnectionService extends BaseService {
    */
   async closeConnection(id: string): Promise<void> {
     if (this.activeConnections.has(id)) {
-      await this.activeConnections.get(id).close();
+      await this.activeConnections.get(id).destroy();
       this.activeConnections.delete(id);
     }
   }
@@ -221,6 +221,35 @@ export class ConnectionService extends BaseService {
           ...baseOptions,
           type: 'postgres' as any,
           ssl: connectionConfig.options?.ssl || false
+        };
+      case 'oracle':
+        return {
+          ...baseOptions,
+          type: 'oracle' as any,
+          connectString: `${connectionConfig.host}:${connectionConfig.port}/${connectionConfig.database}`,
+          host: undefined,
+          port: undefined,
+          database: undefined,
+          extra: {
+            connectionTimeout: 60000,
+            poolMax: 10,
+            poolMin: 1,
+            poolIncrement: 1
+          }
+        };
+      case 'mssql':
+      case 'sqlserver':
+        return {
+          ...baseOptions,
+          type: 'mssql' as any,
+          options: {
+            encrypt: connectionConfig.options?.encrypt || false,
+            trustServerCertificate: true
+          },
+          extra: {
+            connectionTimeout: 60000,
+            requestTimeout: 15000
+          }
         };
       default:
         return baseOptions;

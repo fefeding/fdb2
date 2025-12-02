@@ -1,6 +1,5 @@
-import { RouteRecordRaw } from 'vue-router';
 
-const routes: RouteRecordRaw[] = [
+const routes = [
   {
     path: '/database',
     component: () => import('./layout.vue'),
@@ -8,7 +7,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       title: '数据库管理',
       icon: 'bi-database',
-      needAuth: true
+      needAuth: false
     },
     children: [
       {
@@ -18,7 +17,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: '数据库管理首页',
           icon: 'bi-house',
-          needAuth: true
+          needAuth: false
         }
       },
       {
@@ -28,7 +27,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: '数据库连接',
           icon: 'bi-database-add',
-          needAuth: true
+          needAuth: false
         }
       },
       {
@@ -38,7 +37,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: '数据库结构',
           icon: 'bi-diagram-3',
-          needAuth: true
+          needAuth: false
         }
       },
       {
@@ -48,7 +47,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: 'SQL查询',
           icon: 'bi-code-slash',
-          needAuth: true
+          needAuth: false
         }
       }
     ]
