@@ -1,52 +1,121 @@
 <template>
   <div class="database-layout">
-    <!-- 顶部导航栏 -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <!-- 现代顶部导航栏 -->
+    <nav class="navbar-modern navbar-expand-lg">
       <div class="container-fluid">
-        <a class="navbar-brand" href="#">
-          <i class="bi bi-database"></i> 数据库管理工具
-        </a>
+        <!-- 品牌区域 -->
+        <div class="navbar-brand-wrapper">
+          <router-link to="/database/index" class="navbar-brand-modern">
+            <div class="brand-icon">
+              <i class="bi bi-database-gear"></i>
+            </div>
+            <div class="brand-text">
+              <span class="brand-name">数据库管理平台</span>
+              <span class="brand-subtitle">Database Manager</span>
+            </div>
+          </router-link>
+        </div>
         
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-          <span class="navbar-toggler-icon"></span>
+        <!-- 移动端切换按钮 -->
+        <button class="navbar-toggler-modern" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-line"></span>
+          <span class="navbar-toggler-line"></span>
+          <span class="navbar-toggler-line"></span>
         </button>
         
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav me-auto">
-            <li class="nav-item">
-              <router-link to="/database/index" class="nav-link" :class="{ active: isActive('/database/index') }">
-                <i class="bi bi-house"></i> 首页
+        <!-- 导航菜单 -->
+        <div class="collapse navbar-collapse-modern" id="navbarNav">
+          <!-- 主导航 -->
+          <ul class="navbar-nav-modern me-auto">
+            <li class="nav-item-modern">
+              <router-link to="/database/index" class="nav-link-modern" :class="{ active: isActive('/database/index') }">
+                <div class="nav-icon">
+                  <i class="bi bi-speedometer2"></i>
+                </div>
+                <span class="nav-text">控制台</span>
+                <div class="nav-indicator"></div>
               </router-link>
             </li>
-            <li class="nav-item">
-              <router-link to="/database/connections" class="nav-link" :class="{ active: isActive('/database/connections') }">
-                <i class="bi bi-database-add"></i> 连接管理
+            <li class="nav-item-modern">
+              <router-link to="/database/connections" class="nav-link-modern" :class="{ active: isActive('/database/connections') }">
+                <div class="nav-icon">
+                  <i class="bi bi-plugin"></i>
+                </div>
+                <span class="nav-text">连接管理</span>
+                <div class="nav-indicator"></div>
               </router-link>
             </li>
-            <li class="nav-item">
-              <router-link to="/database/schemas" class="nav-link" :class="{ active: isActive('/database/schemas') }">
-                <i class="bi bi-diagram-3"></i> 数据库结构
+            <li class="nav-item-modern">
+              <router-link to="/database/schemas" class="nav-link-modern" :class="{ active: isActive('/database/schemas') }">
+                <div class="nav-icon">
+                  <i class="bi bi-diagram-3-fill"></i>
+                </div>
+                <span class="nav-text">数据库结构</span>
+                <div class="nav-indicator"></div>
               </router-link>
             </li>
-            <li class="nav-item">
-              <router-link to="/database/query" class="nav-link" :class="{ active: isActive('/database/query') }">
-                <i class="bi bi-code-slash"></i> SQL查询
+            <li class="nav-item-modern">
+              <router-link to="/database/query" class="nav-link-modern" :class="{ active: isActive('/database/query') }">
+                <div class="nav-icon">
+                  <i class="bi bi-terminal-fill"></i>
+                </div>
+                <span class="nav-text">SQL查询</span>
+                <div class="nav-indicator"></div>
               </router-link>
             </li>
           </ul>
           
-          <ul class="navbar-nav">
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                <i class="bi bi-person-circle"></i> 用户
+          <!-- 右侧用户区域 -->
+          <ul class="navbar-nav-modern">
+            <!-- 通知图标 -->
+            <li class="nav-item-modern">
+              <a class="nav-link-modern nav-icon-only" href="#" title="通知">
+                <div class="nav-icon">
+                  <i class="bi bi-bell"></i>
+                </div>
+                <div class="notification-dot"></div>
               </a>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="/admin/system/profile">
-                  <i class="bi bi-person"></i> 个人资料
+            </li>
+            
+            <!-- 用户菜单 -->
+            <li class="nav-item-modern dropdown">
+              <a class="nav-link-modern user-menu-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                <div class="user-avatar">
+                  <i class="bi bi-person-circle"></i>
+                </div>
+                <div class="user-info">
+                  <span class="user-name">管理员</span>
+                  <span class="user-role">Super Admin</span>
+                </div>
+                <div class="dropdown-arrow">
+                  <i class="bi bi-chevron-down"></i>
+                </div>
+              </a>
+              <ul class="dropdown-menu-modern dropdown-menu-end">
+                <li class="dropdown-header">
+                  <span>用户中心</span>
+                </li>
+                <li><a class="dropdown-item-modern" href="/admin/system/profile">
+                  <i class="bi bi-person me-3"></i>
+                  <div class="dropdown-item-content">
+                    <span class="dropdown-item-title">个人资料</span>
+                    <span class="dropdown-item-desc">管理个人信息</span>
+                  </div>
                 </a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="/admin/login">
-                  <i class="bi bi-box-arrow-right"></i> 退出登录
+                <li><a class="dropdown-item-modern" href="#">
+                  <i class="bi bi-gear me-3"></i>
+                  <div class="dropdown-item-content">
+                    <span class="dropdown-item-title">系统设置</span>
+                    <span class="dropdown-item-desc">配置系统参数</span>
+                  </div>
+                </a></li>
+                <li><hr class="dropdown-divider-modern"></li>
+                <li><a class="dropdown-item-modern text-danger" href="/admin/login">
+                  <i class="bi bi-box-arrow-right me-3"></i>
+                  <div class="dropdown-item-content">
+                    <span class="dropdown-item-title">退出登录</span>
+                    <span class="dropdown-item-desc">安全退出系统</span>
+                  </div>
                 </a></li>
               </ul>
             </li>
@@ -56,25 +125,51 @@
     </nav>
 
     <!-- 主要内容区域 -->
-    <main class="main-content">
-      <router-view />
+    <main class="main-content-modern">
+      <div class="content-wrapper">
+        <router-view />
+      </div>
     </main>
 
-    <!-- 底部信息 -->
-    <footer class="bg-light py-3">
+    <!-- 现代底部信息 -->
+    <footer class="footer-modern">
       <div class="container-fluid">
-        <div class="row">
-          <div class="col-md-6">
-            <small class="text-muted">
-              <i class="bi bi-code-slash"></i> 
-              基于 TypeORM + Vue3 + Bootstrap5 构建
-            </small>
+        <div class="footer-content">
+          <div class="footer-section">
+            <div class="footer-brand">
+              <i class="bi bi-database-gear"></i>
+              <span>数据库管理平台</span>
+            </div>
+            <div class="footer-description">
+              专业的数据库管理和监控工具
+            </div>
           </div>
-          <div class="col-md-6 text-end">
-            <small class="text-muted">
-              <i class="bi bi-clock"></i> 
-              版本 1.0.0 | {{ currentTime }}
-            </small>
+          
+          <div class="footer-section">
+            <div class="footer-links">
+              <a href="#" class="footer-link">文档中心</a>
+              <a href="#" class="footer-link">API接口</a>
+              <a href="#" class="footer-link">技术支持</a>
+            </div>
+          </div>
+          
+          <div class="footer-section text-end">
+            <div class="footer-info">
+              <div class="footer-stats">
+                <span class="stat-item">
+                  <i class="bi bi-cpu"></i>
+                  <span>版本 1.0.0</span>
+                </span>
+                <span class="stat-item">
+                  <i class="bi bi-clock-history"></i>
+                  <span>{{ currentTime }}</span>
+                </span>
+              </div>
+              <div class="footer-tech">
+                <i class="bi bi-stack"></i>
+                <span>TypeORM + Vue3 + Bootstrap5</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -105,48 +200,551 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 主布局样式 */
 .database-layout {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
-.navbar-brand {
-  font-weight: 600;
+/* 现代导航栏样式 */
+.navbar-modern {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 0.75rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  backdrop-filter: blur(10px);
 }
 
-.navbar-nav .nav-link {
+/* 品牌区域 */
+.navbar-brand-wrapper {
+  margin-right: 2rem;
+}
+
+.navbar-brand-modern {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+  color: #1e293b;
+  transition: all 0.3s ease;
+}
+
+.navbar-brand-modern:hover {
+  color: #667eea;
+  transform: translateX(2px);
+}
+
+.brand-icon {
+  width: 45px;
+  height: 45px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+}
+
+.brand-icon:hover {
+  transform: rotate(5deg) scale(1.05);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.025em;
+}
+
+.brand-subtitle {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* 移动端切换按钮 */
+.navbar-toggler-modern {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.navbar-toggler-line {
+  width: 25px;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+/* 导航折叠区域 */
+.navbar-collapse-modern {
+  background: transparent;
+}
+
+/* 主导航样式 */
+.navbar-nav-modern {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.navbar-nav .nav-link.active {
-  font-weight: 600;
+.nav-item-modern {
+  position: relative;
 }
 
-.main-content {
-  flex: 1;
-  padding: 0;
-  background-color: #f8f9fa;
-}
-
-footer {
-  border-top: 1px solid #dee2e6;
-}
-
-footer .row {
+.nav-link-modern {
+  display: flex;
   align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  color: #64748b;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-link-modern:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  transform: translateY(-1px);
+}
+
+.nav-link-modern.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.nav-icon {
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+}
+
+.nav-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+.nav-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.nav-link-modern.active .nav-indicator {
+  opacity: 1;
+}
+
+/* 用户菜单样式 */
+.nav-icon-only {
+  padding: 0.75rem;
+  min-width: auto;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 2px solid white;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.user-menu-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.user-menu-toggle:hover {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.25rem;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.user-role {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.dropdown-arrow {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.user-menu-toggle:hover .dropdown-arrow {
+  color: #667eea;
+  transform: translateY(1px);
+}
+
+/* 现代下拉菜单样式 */
+.dropdown-menu-modern {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05);
+  padding: 0.75rem;
+  min-width: 280px;
+  backdrop-filter: blur(10px);
+  margin-top: 0.75rem;
+}
+
+.dropdown-header {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 0.5rem;
+}
+
+.dropdown-item-modern {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  color: #374151;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  margin-bottom: 2px;
+}
+
+.dropdown-item-modern:hover {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #667eea;
+  transform: translateX(4px);
+}
+
+.dropdown-item-modern.text-danger:hover {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  color: #dc2626;
+}
+
+.dropdown-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropdown-item-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+.dropdown-item-desc {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.dropdown-divider-modern {
+  margin: 0.75rem -0.75rem;
+  border: none;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* 主要内容区域 */
+.main-content-modern {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+}
+
+.content-wrapper {
+  flex: 1;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 现代底部样式 */
+.footer-modern {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: #e2e8f0;
+  padding: 2rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.footer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.footer-brand i {
+  font-size: 1.25rem;
+}
+
+.footer-description {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footer-link {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  padding: 0.25rem 0;
+}
+
+.footer-link:hover {
+  color: #667eea;
+  transform: translateX(4px);
+}
+
+.footer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.footer-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.stat-item i {
+  color: #667eea;
+}
+
+.footer-tech {
+  color: #64748b;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.footer-tech i {
+  color: #667eea;
+}
+
+/* 动画效果 */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .footer-content {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem 1rem;
+  }
+  
+  .footer-section:last-child {
+    grid-column: span 2;
+    text-align: center;
+    align-items: center;
+  }
+  
+  .footer-info {
+    align-items: center;
+  }
 }
 
 @media (max-width: 768px) {
-  .navbar-nav {
-    margin-top: 1rem;
+  .navbar-brand-wrapper {
+    margin-right: 1rem;
   }
   
-  footer .text-md-end {
-    text-align: start !important;
+  .brand-name {
+    font-size: 1rem;
+  }
+  
+  .brand-subtitle {
+    display: none;
+  }
+  
+  .navbar-toggler-modern {
+    display: flex;
+  }
+  
+  .navbar-collapse-modern {
+    background: white;
+    border-radius: 12px;
+    margin-top: 1rem;
+    padding: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+  
+  .navbar-nav-modern {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+    width: 100%;
+  }
+  
+  .nav-link-modern {
+    padding: 1rem;
+    border-radius: 8px;
+  }
+  
+  .nav-text {
+    font-size: 1rem;
+  }
+  
+  .content-wrapper {
+    padding: 1rem;
+  }
+  
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    text-align: center;
+  }
+  
+  .footer-section:last-child {
+    grid-column: span 1;
+  }
+  
+  .footer-info {
+    align-items: center;
+  }
+  
+  .footer-stats {
+    align-items: center;
+  }
+  
+  .dropdown-menu-modern {
     margin-top: 0.5rem;
+    min-width: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+  
+  .navbar-brand-modern {
+    gap: 0.75rem;
+  }
+  
+  .footer-modern {
+    padding: 1.5rem 0;
+  }
+  
+  .footer-brand {
+    font-size: 1rem;
+  }
+  
+  .stat-item {
+    font-size: 0.8rem;
+  }
+  
+  .footer-tech {
+    font-size: 0.8rem;
   }
 }
 </style>
