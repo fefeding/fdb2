@@ -115,30 +115,38 @@ export class MySQLService extends BaseDatabaseService {
    * 获取MySQL索引信息
    */
   async getIndexes(dataSource: DataSource, database: string, table: string): Promise<IndexEntity[]> {
-    // 使用兼容的SQL查询，避免使用可能不兼容的字段
+    // 使用更兼容的SQL查询，避免使用保留关键字作为别名
     const result = await dataSource.query(`
       SELECT 
         INDEX_NAME as name,
         INDEX_TYPE as type,
-        COLUMN_NAME as column,
-        CASE WHEN NON_UNIQUE = 0 THEN 1 ELSE 0 END as unique
+        COLUMN_NAME as columnName
       FROM information_schema.STATISTICS 
       WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
       ORDER BY INDEX_NAME, SEQ_IN_INDEX
     `, [database, table]);
 
-    // 按索引名分组
+    // 按索引名分组并判断唯一性
     const indexMap = new Map<string, IndexEntity>();
     result.forEach((row: any) => {
       if (!indexMap.has(row.name)) {
+        // 主键索引是唯一的，其他索引需要通过SHOW INDEX查询确定
+        let isUnique = false;
+        if (row.name === 'PRIMARY') {
+          isUnique = true;
+        } else {
+          // 对于非主键索引，使用更简单的方法：检查索引名称是否包含UNIQUE关键字
+          isUnique = row.name.toUpperCase().includes('UNIQUE') || row.type === 'UNIQUE';
+        }
+        
         indexMap.set(row.name, {
           name: row.name,
           type: row.type,
           columns: [],
-          unique: row.unique === 1
+          unique: isUnique
         });
       }
-      indexMap.get(row.name)!.columns.push(row.column);
+      indexMap.get(row.name)!.columns.push(row.columnName);
     });
 
     return Array.from(indexMap.values());
@@ -150,24 +158,28 @@ export class MySQLService extends BaseDatabaseService {
   async getForeignKeys(dataSource: DataSource, database: string, table: string): Promise<ForeignKeyEntity[]> {
     const result = await dataSource.query(`
       SELECT 
-        CONSTRAINT_NAME as name,
-        COLUMN_NAME as column,
-        REFERENCED_TABLE_NAME as referencedTable,
-        REFERENCED_COLUMN_NAME as referencedColumn,
-        DELETE_RULE as onDelete,
-        UPDATE_RULE as onUpdate
-      FROM information_schema.KEY_COLUMN_USAGE 
-      WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
-        AND REFERENCED_TABLE_NAME IS NOT NULL
+        kcu.CONSTRAINT_NAME as name,
+        kcu.COLUMN_NAME as columnName,
+        kcu.REFERENCED_TABLE_NAME as referencedTable,
+        kcu.REFERENCED_COLUMN_NAME as referencedColumn,
+        rc.DELETE_RULE as onDelete,
+        rc.UPDATE_RULE as onUpdate
+      FROM information_schema.KEY_COLUMN_USAGE kcu
+      LEFT JOIN information_schema.REFERENTIAL_CONSTRAINTS rc 
+        ON kcu.CONSTRAINT_NAME = rc.CONSTRAINT_NAME 
+        AND kcu.CONSTRAINT_SCHEMA = rc.CONSTRAINT_SCHEMA
+      WHERE kcu.TABLE_SCHEMA = ? 
+        AND kcu.TABLE_NAME = ?
+        AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
     `, [database, table]);
 
     return result.map((row: any) => ({
       name: row.name,
-      column: row.column,
+      column: row.columnName,
       referencedTable: row.referencedTable,
       referencedColumn: row.referencedColumn,
-      onDelete: row.onDelete,
-      onUpdate: row.onUpdate
+      onDelete: row.onDelete || 'NO ACTION',
+      onUpdate: row.onUpdate || 'NO ACTION'
     }));
   }
 
@@ -181,5 +193,12 @@ export class MySQLService extends BaseDatabaseService {
       WHERE table_schema = ?
     `, [database]);
     return result[0]?.size || 0;
+  }
+
+  /**
+   * MySQL使用反引号标识符
+   */
+  protected quoteIdentifier(identifier: string): string {
+    return `\`${identifier}\``;
   }
 }

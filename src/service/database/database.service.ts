@@ -107,7 +107,7 @@ export class DatabaseService extends BaseService {
     where?: string,
     orderBy?: string
   ): Promise<{ data: any[], total: number }> {
-    const dataSource = await this.connectionService.getActiveConnection(connectionId);
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
     const databaseService = this.getDatabaseService(dataSource.options.type as string);
     return databaseService.getTableData(dataSource, databaseName, tableName, page, pageSize, where, orderBy);
   }

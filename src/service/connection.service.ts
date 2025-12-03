@@ -132,7 +132,7 @@ export class ConnectionService extends BaseService {
       await tempDataSource.destroy();
       return true;
     } catch (error) {
-      this.ctx.logger.error('数据库连接测试失败:', error);
+      //this.ctx.logger.error('数据库连接测试失败:', error);
       console.error(error);
       return false;
     }
@@ -141,9 +141,11 @@ export class ConnectionService extends BaseService {
   /**
    * 获取活跃的数据库连接
    */
-  async getActiveConnection(id: string): Promise<DataSource> {
-    if (this.activeConnections.has(id)) {
-      return this.activeConnections.get(id);
+  async getActiveConnection(id: string, database?: string): Promise<DataSource> {
+    const key = database ? `${id}_${database}` : id;
+    if (this.activeConnections.has(key)) {
+      const db = this.activeConnections.get(key);
+      return db;
     }
 
     const connectionConfig = await this.getConnectionById(id);
@@ -151,8 +153,10 @@ export class ConnectionService extends BaseService {
       throw new Error('连接配置不存在');
     }
 
-    const dataSource = await this.createTypeORMDataSource(connectionConfig);
-    this.activeConnections.set(id, dataSource);
+    const dataSource = await this.createTypeORMDataSource({
+      ...connectionConfig, database: database || connectionConfig.database
+    });
+    this.activeConnections.set(key, dataSource);
     
     return dataSource;
   }

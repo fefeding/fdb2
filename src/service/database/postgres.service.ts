@@ -182,4 +182,11 @@ export class PostgreSQLService extends BaseDatabaseService {
     `, [table]);
     return result.map((row: any) => row.column_name);
   }
+
+  /**
+   * PostgreSQL使用双引号标识符
+   */
+  protected quoteIdentifier(identifier: string): string {
+    return `"${identifier}"`;
+  }
 }
