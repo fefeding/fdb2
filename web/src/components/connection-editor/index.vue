@@ -314,7 +314,7 @@ async function saveConnection() {
     
     hide();
     emit('saved', connectionForm.value);
-    showToast('成功', editingConnection.value ? '连接配置更新成功' : '连接配置添加成功');
+    showToast('', editingConnection.value ? '连接配置更新成功' : '连接配置添加成功');
   } catch (error) {
     console.error('保存连接配置失败:', error);
     let errorMessage = '保存配置失败';
@@ -345,7 +345,7 @@ async function saveAndTestConnection() {
     
     hide();
     emit('saved', connectionForm.value);
-    showToast('成功', editingConnection.value ? '连接配置更新并测试成功' : '连接配置添加并测试成功');
+    showToast('', editingConnection.value ? '连接配置更新并测试成功' : '连接配置添加并测试成功');
   } catch (error) {
     console.error('保存并测试连接失败:', error);
     if (error.message && error.message.includes('连接测试失败')) {
@@ -353,7 +353,7 @@ async function saveAndTestConnection() {
       hide();
       emit('saved', connectionForm.value);
     } else {
-      showToast('错误', `操作失败: ${error.message || '未知错误'}`, 'error');
+      showToast('', `操作失败: ${error.message || '未知错误'}`, 'error');
     }
   }
 }
@@ -365,13 +365,13 @@ async function testConnection(connection: ConnectionEntity) {
     const response = await connectionService.testConnection(connection);
     
     if (response) {
-      showToast('成功', `"${connection.name}" 连接测试成功`, 'success');
+      showToast('', `"${connection.name}" 连接测试成功`, 'success');
     } else {
-      showToast('失败', `"${connection.name}" 连接测试失败`, 'error');
+      showToast('', `"${connection.name}" 连接测试失败`, 'error');
     }
   } catch (error) {
     console.error('测试连接失败:', error);
-    showToast('错误', `"${connection.name}" 连接测试失败: ${error.message || '未知错误'}`, 'error');
+    showToast('', `"${connection.name}" 连接测试失败: ${error.message || '未知错误'}`, 'error');
   }
 }
 

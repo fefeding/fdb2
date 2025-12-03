@@ -28,17 +28,29 @@
               :class="{ 'selected': selectedConnection?.id === connection.id }"
             >
               <!-- 连接节点 -->
-              <div class="node-content connection-content" @click="selectConnection(connection)">
-                <div class="node-icon">
-                  <div class="db-logo" :class="getDbLogoClass(connection.type)">
-                    {{ getDbLogoText(connection.type) }}
+              <div class="node-content connection-content">
+                <div class="node-expand" @click="toggleConnection(connection)">
+                  <i class="bi bi-chevron-right" :class="{ 'expanded': expandedConnections.has(connection.id) }"></i>
+                </div>
+                <div class="node-main" @click="selectConnection(connection)">
+                  <div class="node-icon">
+                    <div class="db-logo" :class="getDbLogoClass(connection.type)">
+                      {{ getDbLogoText(connection.type) }}
+                    </div>
+                  </div>
+                  <div class="node-label">
+                    <span class="connection-name">{{ connection.name }}</span>
+                    <span class="connection-type">{{ getDbTypeLabel(connection.type) }}</span>
                   </div>
                 </div>
-                <div class="node-label">
-                  <span class="connection-name">{{ connection.name }}</span>
-                  <span class="connection-type">{{ getDbTypeLabel(connection.type) }}</span>
-                </div>
                 <div class="node-actions">
+                  <button 
+                    class="btn btn-sm btn-icon" 
+                    @click.stop="refreshConnection(connection)"
+                    title="刷新连接"
+                  >
+                    <i class="bi bi-arrow-clockwise"></i>
+                  </button>
                   <button 
                     class="btn btn-sm btn-icon" 
                     @click.stop="editConnection(connection)"
@@ -54,6 +66,9 @@
                     <i class="bi bi-wifi"></i>
                   </button>
                 </div>
+                <div class="node-spinner" v-if="loadingConnections.has(connection.id)">
+                  <div class="spinner-border spinner-border-sm"></div>
+                </div>
               </div>
               
               <!-- 数据库子节点 -->
@@ -65,12 +80,26 @@
                   :class="{ 'selected': selectedDatabase === database && selectedConnection?.id === connection.id }"
                 >
                   <!-- 数据库节点 -->
-                  <div class="node-content database-content" @click="selectDatabase(connection, database)">
-                    <div class="node-icon">
-                      <i class="bi bi-database"></i>
+                  <div class="node-content database-content">
+                    <div class="node-expand" @click="toggleDatabase(connection, database)">
+                      <i class="bi bi-chevron-right" :class="{ 'expanded': expandedDatabases.has(`${connection.id}-${database}`) }"></i>
                     </div>
-                    <div class="node-label">
-                      <span class="database-name">{{ database }}</span>
+                    <div class="node-main" @click="selectDatabase(connection, database)">
+                      <div class="node-icon">
+                        <i class="bi bi-database"></i>
+                      </div>
+                      <div class="node-label">
+                        <span class="database-name">{{ database }}</span>
+                      </div>
+                    </div>
+                    <div class="node-actions">
+                      <button 
+                        class="btn btn-sm btn-icon" 
+                        @click.stop="refreshDatabase(connection, database)"
+                        title="刷新数据库"
+                      >
+                        <i class="bi bi-arrow-clockwise"></i>
+                      </button>
                     </div>
                     <div class="node-spinner" v-if="loadingDatabases.has(`${connection.id}-${database}`)">
                       <div class="spinner-border spinner-border-sm"></div>
@@ -86,15 +115,24 @@
                       :class="{ 'selected': selectedTable?.name === table.name && selectedDatabase === database }"
                     >
                       <!-- 表节点 -->
-                      <div class="node-content table-content" @click="selectTable(connection, database, table)">
+                      <div class="node-content table-content">
                         <div class="node-icon">
                           <i class="bi bi-table"></i>
                         </div>
-                        <div class="node-label">
-                          <span class="table-name">{{ table.name }}</span>
-                          <span class="table-info" v-if="table.rowCount !== undefined">{{ formatNumber(table.rowCount) }} 行</span>
+                        <div class="node-main" @click="selectTable(connection, database, table)">
+                          <div class="node-label">
+                            <span class="table-name">{{ table.name }}</span>
+                            <span class="table-info" v-if="table.rowCount !== undefined">{{ formatNumber(table.rowCount) }} 行</span>
+                          </div>
                         </div>
                         <div class="node-actions">
+                          <button 
+                            class="btn btn-sm btn-icon" 
+                            @click.stop="refreshTable(connection, database, table)"
+                            title="刷新表"
+                          >
+                            <i class="bi bi-arrow-clockwise"></i>
+                          </button>
                           <button 
                             class="btn btn-sm btn-icon" 
                             @click.stop="viewTableStructure(connection, database, table)"
@@ -504,6 +542,9 @@
       </div>
     </div>
 
+    <!-- 全局Loading -->
+    <Loading :isLoading="isGlobalLoading" :message="loadingMessage" />
+    
     <!-- 连接编辑器 -->
     <ConnectionEditor ref="connectionEditorRef" @saved="onConnectionSaved" />
     
@@ -518,6 +559,7 @@ import { ConnectionService, DatabaseService } from '@/service/database';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import ConnectionEditor from '@/components/connection-editor/index.vue';
 import Toast from '@/components/toast/toast.vue';
+import Loading from '@/components/loading/index.vue';
 
 const connectionService = new ConnectionService();
 const databaseService = new DatabaseService();
@@ -535,6 +577,7 @@ const expandedDatabases = ref(new Set<string>());
 // 加载状态
 const loadingDatabases = ref(new Set<string>());
 const loadingTables = ref(new Set<string>());
+const loadingConnections = ref(new Set<string>());
 
 // 数据缓存
 const databaseCache = ref<Map<string, string[]>>(new Map());
@@ -552,6 +595,10 @@ const tableColumns = ref<any[]>([]);
 const tableDataSearch = ref('');
 const currentPage = ref(1);
 const pageSize = ref(50);
+
+// 全局Loading状态
+const isGlobalLoading = ref(false);
+const loadingMessage = ref('加载中...');
 
 // 组件引用
 const connectionEditorRef = ref();
@@ -585,15 +632,11 @@ async function loadConnections() {
     connections.value = response || [];
   } catch (error) {
     console.error('加载连接失败:', error);
+    showToast('错误', `加载连接失败: ${error.message}`, 'error');
   }
 }
 
-function selectConnection(connection: ConnectionEntity) {
-  selectedConnection.value = connection;
-  selectedDatabase.value = '';
-  selectedTable.value = null;
-  
-  // 切换展开状态
+function toggleConnection(connection: ConnectionEntity) {
   if (expandedConnections.value.has(connection.id)) {
     expandedConnections.value.delete(connection.id);
   } else {
@@ -602,12 +645,22 @@ function selectConnection(connection: ConnectionEntity) {
   }
 }
 
-async function loadDatabasesForConnection(connection: ConnectionEntity) {
+function selectConnection(connection: ConnectionEntity) {
+  selectedConnection.value = connection;
+  selectedDatabase.value = '';
+  selectedTable.value = null;
+}
+
+async function loadDatabasesForConnection(connection: ConnectionEntity, forceRefresh = false) {
   const cacheKey = connection.id;
   
   // 检查缓存
-  if (databaseCache.value.has(cacheKey)) {
+  if (!forceRefresh && databaseCache.value.has(cacheKey)) {
     return;
+  }
+  
+  if (!loadingConnections.value.has(connection.id)) {
+    loadingConnections.value.add(connection.id);
   }
   
   try {
@@ -617,6 +670,19 @@ async function loadDatabasesForConnection(connection: ConnectionEntity) {
     console.error('加载数据库失败:', error);
     showToast('错误', `加载数据库失败: ${error.message}`, 'error');
     databaseCache.value.set(cacheKey, []);
+  } finally {
+    loadingConnections.value.delete(connection.id);
+  }
+}
+
+function toggleDatabase(connection: ConnectionEntity, database: string) {
+  const dbKey = `${connection.id}-${database}`;
+  if (expandedDatabases.value.has(dbKey)) {
+    expandedDatabases.value.delete(dbKey);
+  } else {
+    expandedDatabases.value.add(dbKey);
+    loadTablesForDatabase(connection, database);
+    loadDatabaseInfo(connection, database);
   }
 }
 
@@ -625,20 +691,17 @@ function selectDatabase(connection: ConnectionEntity, database: string) {
   selectedDatabase.value = database;
   selectedTable.value = null;
   activeTab.value = 'overview';
-  
-  // 展开数据库节点
-  const dbKey = `${connection.id}-${database}`;
-  if (!expandedDatabases.value.has(dbKey)) {
-    expandedDatabases.value.add(dbKey);
-    loadTablesForDatabase(connection, database);
-    loadDatabaseInfo(connection, database);
-  }
 }
 
-async function loadTablesForDatabase(connection: ConnectionEntity, database: string) {
+async function loadTablesForDatabase(connection: ConnectionEntity, database: string, forceRefresh = false) {
   const dbKey = `${connection.id}-${database}`;
   
   if (loadingTables.value.has(dbKey)) return;
+  
+  // 检查缓存
+  if (!forceRefresh && tableCache.value.has(dbKey)) {
+    return;
+  }
   
   loadingTables.value.add(dbKey);
   
@@ -648,6 +711,7 @@ async function loadTablesForDatabase(connection: ConnectionEntity, database: str
     tableCache.value.set(dbKey, tables);
   } catch (error) {
     console.error('加载表失败:', error);
+    showToast('错误', `加载表失败: ${error.message}`, 'error');
     tableCache.value.set(dbKey, []);
   } finally {
     loadingTables.value.delete(dbKey);
@@ -662,6 +726,7 @@ async function loadDatabaseInfo(connection: ConnectionEntity, database: string) 
     databaseInfoCache.value.set(dbKey, info);
   } catch (error) {
     console.error('加载数据库信息失败:', error);
+    showToast('错误', `加载数据库信息失败: ${error.message}`, 'error');
   }
 }
 
@@ -677,12 +742,17 @@ function selectTable(connection: ConnectionEntity, database: string, table: Tabl
 
 async function loadTableData(connection: ConnectionEntity, database: string, tableName: string) {
   try {
+    isGlobalLoading.value = true;
+    loadingMessage.value = `正在加载表 "${tableName}" 的数据...`;
     const data = await databaseService.getTableData(connection.id, database, tableName);
     tableData.value = data || [];
     currentPage.value = 1;
   } catch (error) {
     console.error('加载表数据失败:', error);
+    showToast('错误', `加载表数据失败: ${error.message}`, 'error');
     tableData.value = [];
+  } finally {
+    isGlobalLoading.value = false;
   }
 }
 
@@ -693,6 +763,7 @@ async function loadTableStructure(connection: ConnectionEntity, database: string
     tableColumns.value = structure?.columns || [];
   } catch (error) {
     console.error('加载表结构失败:', error);
+    showToast('错误', `加载表结构失败: ${error.message}`, 'error');
     tableStructure.value = null;
     tableColumns.value = [];
   }
@@ -716,12 +787,12 @@ async function testConnection(connection: ConnectionEntity) {
     const result = await connectionService.testConnection(connection);
     
     if (result) {
-      showToast('成功', `连接 "${connection.name}" 测试成功`, 'success');
+      showToast('', `连接 "${connection.name}" 测试成功`, 'success');
     } else {
-      showToast('失败', `连接 "${connection.name}" 测试失败`, 'error');
+      showToast('', `连接 "${connection.name}" 测试失败`, 'error');
     }
   } catch (error) {
-    showToast('错误', `连接测试失败: ${error.message}`, 'error');
+    showToast('', `连接测试失败: ${error.message}`, 'error');
   }
 }
 
@@ -740,9 +811,10 @@ function refreshAll() {
   loadConnections();
 }
 
-function refreshTableData() {
+async function refreshTableData() {
   if (selectedConnection.value && selectedDatabase.value && selectedTable.value) {
-    loadTableData(selectedConnection.value, selectedDatabase.value, selectedTable.value.name);
+    await loadTableData(selectedConnection.value, selectedDatabase.value, selectedTable.value.name);
+    showToast('', '表数据已刷新', 'success');
   }
 }
 
@@ -817,6 +889,44 @@ function formatCellValue(value: any): string {
     if (value.length > 50) return value.substring(0, 50) + '...';
   }
   return String(value);
+}
+
+async function refreshConnection(connection: ConnectionEntity) {
+  // 清除缓存并重新加载
+  databaseCache.value.delete(connection.id);
+  
+  // 如果该连接已展开，则重新加载数据库
+  if (expandedConnections.value.has(connection.id)) {
+    await loadDatabasesForConnection(connection, true);
+  }
+  
+  showToast('', `连接 "${connection.name}" 已刷新`, 'success');
+}
+
+async function refreshDatabase(connection: ConnectionEntity, database: string) {
+  const dbKey = `${connection.id}-${database}`;
+  
+  // 清除缓存
+  tableCache.value.delete(dbKey);
+  databaseInfoCache.value.delete(dbKey);
+  
+  // 如果数据库已展开，则重新加载表
+  if (expandedDatabases.value.has(dbKey)) {
+    await loadTablesForDatabase(connection, database, true);
+    await loadDatabaseInfo(connection, database);
+  }
+  
+  showToast('', `数据库 "${database}" 已刷新`, 'success');
+}
+
+async function refreshTable(connection: ConnectionEntity, database: string, table: TableEntity) {
+  // 重新加载表数据和结构
+  if (selectedTable.value?.name === table.name) {
+    await loadTableData(connection, database, table.name);
+    await loadTableStructure(connection, database, table.name);
+  }
+  
+  showToast('', `表 "${table.name}" 已刷新`, 'success');
 }
 
 function showToast(title: string, message: string, type: string = 'success') {
@@ -945,6 +1055,34 @@ function showToast(title: string, message: string, type: string = 'success') {
   position: relative;
   margin-right: 0.5rem;
   border-radius: 6px;
+  gap: 0.25rem;
+}
+
+.node-expand {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 0.25rem;
+}
+
+.node-expand i {
+  font-size: 0.6875rem;
+  color: #656d76;
+  transition: transform 0.15s ease;
+}
+
+.node-expand i.expanded {
+  transform: rotate(90deg);
+}
+
+.node-main {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
 }
 
 .node-content:hover {

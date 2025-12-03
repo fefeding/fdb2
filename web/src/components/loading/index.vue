@@ -4,8 +4,8 @@
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
-        <p class="mt-3 text-primary">{{ message }}</p>
       </div>
+        <p v-if="message" class="m-3 text-primary">{{ message }}</p>
     </div>
   </template>
   
