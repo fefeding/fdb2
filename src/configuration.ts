@@ -3,7 +3,7 @@ import * as busboy from '@midwayjs/busboy';
 import * as codeDye from '@midwayjs/code-dye';
 
 //import * as swagger from '@midwayjs/swagger';
-import * as orm from '@midwayjs/typeorm';
+//import * as orm from '@midwayjs/typeorm';
 import { join } from 'path';
 import { NotFoundFilter } from './filter/notfound.filter';
 import devopsConfig from './config/devops.config';
@@ -17,7 +17,7 @@ import * as baseMidwayjs from '@cicctencent/midwayjs-base';
             enabledEnvironment: ['local'],    // 只在本地启用
         },
         busboy,
-        orm,
+        //orm,
         baseMidwayjs,
     ],
     importConfigs: [join(__dirname, './config')],

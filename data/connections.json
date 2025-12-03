@@ -26,5 +26,19 @@
     "enabled": true,
     "createdAt": "2025-12-03T08:20:49.513Z",
     "updatedAt": "2025-12-03T08:20:49.513Z"
+  },
+  {
+    "id": "mipr23xidu6hzvy2ydg",
+    "name": "server.jm47.com",
+    "type": "mysql",
+    "host": "server.jm47.com",
+    "port": 3306,
+    "database": "",
+    "username": "root",
+    "password": "df@123456",
+    "options": {},
+    "enabled": true,
+    "createdAt": "2025-12-03T08:33:14.598Z",
+    "updatedAt": "2025-12-03T08:33:14.598Z"
   }
 ]

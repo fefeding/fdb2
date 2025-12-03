@@ -13,19 +13,19 @@ export default (appInfo: MidwayAppInfo) => {
         },
         typeorm: {
             dataSource: {
-                default: {
-                    type: 'mysql',
-                    host: process.env.DB_HOST||'',
-                    port: process.env.DB_PORT||3306,
-                    username: process.env.DB_USERNAME||'',
-                    password: process.env.DB_PASSWORD||'password',
-                    database: process.env.DB_DATABASE||'db_myproject',
-                    synchronize: false,
-                    // 启用延迟连接
-                    lazyConnect: true,
-                    // 或者扫描形式
-                    entities: ['**/model/**/*.entity{.ts,.js}'],
-                },
+                // default: {
+                //     type: 'mysql',
+                //     host: process.env.DB_HOST||'',
+                //     port: process.env.DB_PORT||3306,
+                //     username: process.env.DB_USERNAME||'',
+                //     password: process.env.DB_PASSWORD||'password',
+                //     database: process.env.DB_DATABASE||'db_myproject',
+                //     synchronize: false,
+                //     // 启用延迟连接
+                //     lazyConnect: true,
+                //     // 或者扫描形式
+                //     entities: ['**/model/**/*.entity{.ts,.js}'],
+                // },
             },
         },
         session: {
