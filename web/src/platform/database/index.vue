@@ -301,11 +301,11 @@ const features = ref([
 
 // 计算属性
 const enabledConnections = computed(() => 
-  connections.value.filter(c => c.enabled).length
+  connections.value?.filter?.(c => c.enabled)?.length
 );
 
 const dbTypesCount = computed(() => {
-  const types = new Set(connections.value.map(c => c.type));
+  const types = new Set(connections.value?.map?.(c => c.type)||[]);
   return types.size;
 });
 
@@ -318,7 +318,7 @@ onMounted(async () => {
 async function loadConnections() {
   try {
     const response = await connectionService.getAllConnections();
-    connections.value = response.data || [];
+    connections.value = response || [];
   } catch (error) {
     console.error('加载连接列表失败:', error);
   }

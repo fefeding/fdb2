@@ -70,83 +70,61 @@
       </div>
     </div>
 
-    <!-- 连接列表 - 现代卡片设计 -->
+      <!-- 连接列表 - 使用DataGrid组件 -->
     <div class="container-fluid">
-      <div class="connections-grid" v-if="connections.length > 0">
-        <div class="connection-card-modern" v-for="connection in connections" :key="connection.id">
-          <div class="card-header-modern">
+      <DataGrid 
+        :data="connections" 
+        :columns="tableColumns"
+        :isLoading="false"
+        :showPagination="false"
+        @rowClicked="onConnectionClicked"
+         v-if="connections.length > 0"
+      >
+        <!-- 自定义列渲染 -->
+        <template #name="{ row }">
+          <div class="connection-name-cell">
+            <div class="connection-avatar" :class="getDbTypeClass(row.type)">
+              <i :class="getDbTypeIcon(row.type)"></i>
+            </div>
             <div class="connection-info">
-              <div class="connection-avatar" :class="getDbTypeClass(connection.type)">
-                <i :class="getDbTypeIcon(connection.type)"></i>
-              </div>
-              <div class="connection-details">
-                <h3 class="connection-name">{{ connection.name }}</h3>
-                <p class="connection-type">{{ getDbTypeLabel(connection.type) }}</p>
-              </div>
-            </div>
-            <div class="connection-status">
-              <div class="status-indicator" :class="connection.enabled ? 'status-online' : 'status-offline'">
-                <div class="status-dot"></div>
-                <span class="status-text">{{ connection.enabled ? '启用' : '禁用' }}</span>
-              </div>
+              <strong>{{ row.name }}</strong>
+              <small class="text-muted">{{ getDbTypeLabel(row.type) }}</small>
             </div>
           </div>
-          
-          <div class="card-body-modern">
-            <div class="connection-meta">
-              <div class="meta-item">
-                <div class="meta-icon">
-                  <i class="bi bi-hdd-network"></i>
-                </div>
-                <div class="meta-content">
-                  <span class="meta-label">主机</span>
-                  <span class="meta-value">{{ connection.host }}</span>
-                </div>
-              </div>
-              <div class="meta-item">
-                <div class="meta-icon">
-                  <i class="bi bi-door-open"></i>
-                </div>
-                <div class="meta-content">
-                  <span class="meta-label">端口</span>
-                  <span class="meta-value">{{ connection.port }}</span>
-                </div>
-              </div>
-              <div class="meta-item" v-if="connection.database">
-                <div class="meta-icon">
-                  <i class="bi bi-database"></i>
-                </div>
-                <div class="meta-content">
-                  <span class="meta-label">数据库</span>
-                  <span class="meta-value">{{ connection.database }}</span>
-                </div>
-              </div>
-            </div>
+        </template>
+        
+        <template #type="{ row }">
+          <span class="badge bg-info">
+            <i :class="getDbTypeIcon(row.type)"></i>
+            {{ getDbTypeLabel(row.type) }}
+          </span>
+        </template>
+        
+        <template #status="{ row }">
+          <span :class="row.enabled ? 'text-success' : 'text-secondary'">
+            <i :class="row.enabled ? 'bi bi-circle-fill' : 'bi bi-circle'"></i>
+            {{ row.enabled ? '启用' : '禁用' }}
+          </span>
+        </template>
+        
+        <template #actions="{ row }">
+          <div class="action-buttons">
+            <button class="btn btn-sm btn-outline-primary me-1" @click="testConnection(row)" title="测试连接">
+              <i class="bi bi-check-lg"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-info me-1" @click="viewDatabases(row)" title="查看数据库">
+              <i class="bi bi-folder"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary me-1" @click="editConnection(row)" title="编辑连接">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" @click="deleteConnection(row)" title="删除连接">
+              <i class="bi bi-trash"></i>
+            </button>
           </div>
-          
-          <div class="card-footer-modern">
-            <div class="action-buttons">
-              <button class="btn-action btn-test" @click="testConnection(connection)">
-                <i class="bi bi-arrow-repeat"></i>
-                <span>测试</span>
-              </button>
-              <button class="btn-action btn-view" @click="viewDatabases(connection)">
-                <i class="bi bi-folder2-open"></i>
-                <span>查看</span>
-              </button>
-              <button class="btn-action btn-edit" @click="editConnection(connection)">
-                <i class="bi bi-pencil-square"></i>
-                <span>编辑</span>
-              </button>
-              <button class="btn-action btn-delete" @click="deleteConnection(connection)">
-                <i class="bi bi-trash3"></i>
-                <span>删除</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      
+        </template>
+      </DataGrid>
+    
       <!-- 空状态 -->
       <div class="empty-state-modern" v-else>
         <div class="empty-icon">
@@ -161,28 +139,17 @@
       </div>
     </div>
 
-    <!-- 现代化添加/编辑连接模态框 -->
-    <div class="modal fade" ref="connectionModal" tabindex="-1">
-      <div class="modal-dialog modal-xl">
-        <div class="modal-content-modern">
-          <div class="modal-header-modern">
-            <div class="modal-title-wrapper">
-              <div class="modal-icon">
-                <i :class="editingConnection ? 'bi bi-pencil-square' : 'bi bi-plus-lg'"></i>
-              </div>
-              <div class="modal-title-text">
-                <h2 class="modal-title">
-                  {{ editingConnection ? '编辑数据库连接' : '新增数据库连接' }}
-                </h2>
-                <p class="modal-subtitle">配置数据库连接参数</p>
-              </div>
-            </div>
-            <button type="button" class="btn-close-modern" data-bs-dismiss="modal">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-          <div class="modal-body-modern">
-            <form @submit.prevent="saveConnection" class="connection-form-modern">
+    <!-- 统一modal组件 - 添加/编辑连接 -->
+    <Modal 
+      ref="connectionModal"
+      :title="editingConnection ? '编辑数据库连接' : '新增数据库连接'"
+      :closeButton="{ text: '取消', show: true }"
+      :confirmButton="{ text: '', show: false }"
+      :isFullScreen="true"
+      :style="{ maxWidth: '800px' }"
+      @onClose="handleModalClose"
+    >
+      <form @submit.prevent="saveConnection" class="connection-form-modern">
               <!-- 基本信息 -->
               <div class="form-section">
                 <div class="section-header">
@@ -308,27 +275,37 @@
                 </div>
               </div>
             </form>
-          </div>
-          <div class="modal-footer-modern">
-            <button type="button" class="btn-modern btn-secondary-modern" data-bs-dismiss="modal">
-              <i class="bi bi-x-lg me-2"></i>取消
-            </button>
-            <button type="button" class="btn-modern btn-primary-modern" @click="saveConnection">
-              <i class="bi bi-check-lg me-2"></i>{{ editingConnection ? '更新连接' : '保存连接' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+      
+      <!-- 自定义footer -->
+      <template #footer>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i>取消
+        </button>
+        <button type="button" class="btn btn-outline-primary" @click="testConnection(connectionForm)">
+          <i class="bi bi-wifi me-1"></i>测试连接
+        </button>
+        <button type="button" class="btn btn-primary" @click="saveConnection">
+          <i class="bi bi-save me-1"></i>{{ editingConnection ? '更新配置' : '保存配置' }}
+        </button>
+        <button type="button" class="btn btn-success" @click="saveAndTestConnection">
+          <i class="bi bi-check-circle me-1"></i>保存并测试
+        </button>
+      </template>
+    </Modal>
+    
+    <!-- Toast组件 -->
+    <Toast ref="toastRef" />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { Modal } from 'bootstrap';
 import { ConnectionService } from '@/service/database';
 import type { ConnectionEntity } from '@/typings/database';
+import Modal from '@/components/modal/index.vue';
+import Toast from '@/components/toast/toast.vue';
+import DataGrid from '@/components/dataGrid/index.vue';
 
 const router = useRouter();
 const connectionService = new ConnectionService();
@@ -336,13 +313,24 @@ const connectionService = new ConnectionService();
 // 响应式数据
 const connections = ref<ConnectionEntity[]>([]);
 const databaseTypes = ref<any[]>([]);
-const connectionModal = ref<HTMLDivElement>();
-let modalInstance: Modal | null = null;
+const connectionModal = ref();
+const toastRef = ref();
+
+// 表格列配置
+const tableColumns = ref([
+  { name: 'name', text: '连接名称' },
+  { name: 'type', text: '类型' },
+  { name: 'host', text: '主机' },
+  { name: 'port', text: '端口' },
+  { name: 'database', text: '数据库' },
+  { name: 'status', text: '状态' },
+  { name: 'actions', text: '操作' }
+]);
 
 // 计算属性
-const enabledConnections = computed(() => connections.value.filter(c => c.enabled).length);
+const enabledConnections = computed(() => connections.value?.filter?.(c => c.enabled).length);
 const dbTypesCount = computed(() => {
-  const types = new Set(connections.value.map(c => c.type));
+  const types = new Set(connections.value?.map?.(c => c.type)||[]);
   return types.size;
 });
 const onlineConnections = computed(() => {
@@ -369,7 +357,6 @@ const connectionForm = ref<ConnectionEntity>({
 
 // 生命周期
 onMounted(async () => {
-  modalInstance = new Modal(connectionModal.value!);
   await loadConnections();
   await loadDatabaseTypes();
 });
@@ -378,7 +365,7 @@ onMounted(async () => {
 async function loadConnections() {
   try {
     const response = await connectionService.getAllConnections();
-    connections.value = response.data || [];
+    connections.value = response || [];
   } catch (error) {
     console.error('加载连接列表失败:', error);
   }
@@ -388,7 +375,7 @@ async function loadConnections() {
 async function loadDatabaseTypes() {
   try {
     const response = await connectionService.getDatabaseTypes();
-    databaseTypes.value = response.data || [];
+    databaseTypes.value = response || [];
   } catch (error) {
     console.error('加载数据库类型失败:', error);
   }
@@ -411,14 +398,14 @@ function showAddModal() {
     createdAt: new Date(),
     updatedAt: new Date()
   };
-  modalInstance?.show();
+  connectionModal.value?.show();
 }
 
 // 编辑连接
 function editConnection(connection: ConnectionEntity) {
   editingConnection.value = connection;
   connectionForm.value = { ...connection };
-  modalInstance?.show();
+  connectionModal.value?.show();
 }
 
 // 数据库类型变更
@@ -429,35 +416,112 @@ function onTypeChange() {
   }
 }
 
-// 保存连接
+// 验证连接配置（前端验证）
+function validateConnection(connection: ConnectionEntity): { isValid: boolean; message: string } {
+  if (!connection.name?.trim()) {
+    return { isValid: false, message: '连接名称不能为空' };
+  }
+  
+  if (!connection.type?.trim()) {
+    return { isValid: false, message: '数据库类型不能为空' };
+  }
+  
+  if (!connection.host?.trim()) {
+    return { isValid: false, message: '主机地址不能为空' };
+  }
+  
+  if (!connection.port || connection.port <= 0 || connection.port > 65535) {
+    return { isValid: false, message: '端口号必须在1-65535之间' };
+  }
+  
+  // 对于某些数据库类型，数据库名是必需的
+  if (['mysql', 'postgres', 'mssql'].includes(connection.type) && !connection.database?.trim()) {
+    return { isValid: false, message: `${connection.type.toUpperCase()} 数据库名不能为空` };
+  }
+  
+  return { isValid: true, message: '配置验证通过' };
+}
+
+// 保存连接配置（不测试连接）
 async function saveConnection() {
   try {
+    // 先进行前端验证
+    const validation = validateConnection(connectionForm.value);
+    if (!validation.isValid) {
+      showToast('错误', validation.message, 'error');
+      return;
+    }
+    
     if (editingConnection.value) {
       await connectionService.updateConnection(editingConnection.value.id!, connectionForm.value);
     } else {
       await connectionService.addConnection(connectionForm.value);
     }
     
-    modalInstance?.hide();
+    connectionModal.value?.hide();
     await loadConnections();
+    showToast('成功', editingConnection.value ? '连接配置更新成功' : '连接配置添加成功');
   } catch (error) {
-    console.error('保存连接失败:', error);
-    alert(error.message || '保存失败');
+    console.error('保存连接配置失败:', error);
+    // 提供更具体的错误信息
+    let errorMessage = '保存配置失败';
+    if (error.message) {
+      if (error.message.includes('连接') && error.message.includes('失败')) {
+        errorMessage = '配置保存失败，请检查服务器状态';
+      } else {
+        errorMessage = `保存配置失败: ${error.message}`;
+      }
+    }
+    showToast('错误', errorMessage, 'error');
   }
+}
+
+// 保存并测试连接
+async function saveAndTestConnection() {
+  try {
+    // 先保存配置
+    if (editingConnection.value) {
+      await connectionService.updateConnection(editingConnection.value.id!, connectionForm.value);
+    } else {
+      await connectionService.addConnection(connectionForm.value);
+    }
+    
+    // 然后测试连接
+    await testConnection(connectionForm.value);
+    
+    connectionModal.value?.hide();
+    await loadConnections();
+    showToast('成功', editingConnection.value ? '连接配置更新并测试成功' : '连接配置添加并测试成功');
+  } catch (error) {
+    console.error('保存并测试连接失败:', error);
+    // 如果是测试连接失败，但配置可能已经保存了
+    if (error.message && error.message.includes('连接测试失败')) {
+      showToast('警告', '配置已保存，但连接测试失败', 'warning');
+      connectionModal.value?.hide();
+      await loadConnections();
+    } else {
+      showToast('错误', `操作失败: ${error.message || '未知错误'}`, 'error');
+    }
+  }
+}
+
+// 处理模态框关闭
+function handleModalClose() {
+  // 可以在这里添加额外的关闭逻辑
 }
 
 // 测试连接
 async function testConnection(connection: ConnectionEntity) {
   try {
     const response = await connectionService.testConnection(connection);
-    if (response.data?.connected) {
-      alert('连接测试成功！');
+    if (response?.connected) {
+      showToast('成功', `"${connection.name}" 连接测试成功`, 'success');
     } else {
-      alert('连接测试失败！');
+      showToast('失败', `"${connection.name}" 连接测试失败`, 'error');
     }
   } catch (error) {
     console.error('测试连接失败:', error);
-    alert('连接测试失败: ' + (error.message || '未知错误'));
+    showToast('错误', `"${connection.name}" 连接测试失败: ${error.message || '未知错误'}`, 'error');
   }
 }
 
@@ -468,16 +532,13 @@ function viewDatabases(connection: ConnectionEntity) {
 
 // 删除连接
 async function deleteConnection(connection: ConnectionEntity) {
-  if (!confirm(`确定要删除连接 "${connection.name}" 吗？`)) {
-    return;
-  }
-
   try {
     await connectionService.deleteConnection(connection.id!);
     await loadConnections();
+    showToast('成功', `"${connection.name}" 连接删除成功`, 'success');
   } catch (error) {
     console.error('删除连接失败:', error);
-    alert(error.message || '删除失败');
+    showToast('错误', `"${connection.name}" 连接删除失败: ${error.message || '未知错误'}`, 'error');
   }
 }
 
@@ -515,6 +576,17 @@ function getDbTypeClass(type: string): string {
     oracle: 'db-oracle'
   };
   return classMap[type] || 'db-default';
+}
+
+// Toast提示方法
+function showToast(title: string, message: string, type: string = 'success', duration?: number) {
+  toastRef.value?.addToast(title, message, type, duration);
+}
+
+// 行点击事件处理
+function onConnectionClicked(connection: ConnectionEntity) {
+  // 可以在这里添加点击行的逻辑，比如查看详情
+  viewDatabases(connection);
 }
 </script>
 
@@ -1256,6 +1328,41 @@ function getDbTypeClass(type: string): string {
     padding: 1rem;
   }
 }
+
+/* DataGrid 自定义样式 */
+.connection-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.connection-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.connection-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* 数据库类型颜色 */
+.db-mysql { background: linear-gradient(135deg, #00758f 0%, #005a70 100%); }
+.db-postgres { background: linear-gradient(135deg, #336791 0%, #2a5278 100%); }
+.db-sqlite { background: linear-gradient(135deg, #003b57 0%, #002d42 100%); }
+.db-mssql { background: linear-gradient(135deg, #cc2927 0%, #a62220 100%); }
+.db-oracle { background: linear-gradient(135deg, #f80000 0%, #d40000 100%); }
+.db-default { background: linear-gradient(135deg, #64748b 0%, #475569 100%); }
 
 /* 动画效果 */
 @keyframes pulse {

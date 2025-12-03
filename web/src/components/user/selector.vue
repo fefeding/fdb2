@@ -301,8 +301,8 @@ const fetchUsers = async (filter: string) => {
       return;
     }
     
-    userList.value = response.data?.data || [];
-    totalUsers.value = response.data?.total || 0;
+    userList.value = response.data || [];
+    totalUsers.value = response.total || 0;
   } catch (error) {
     console.error('获取用户列表失败:', error);
     alert('获取用户列表时发生错误');

@@ -126,6 +126,7 @@ export class ConnectionService extends BaseService {
    */
   async testConnection(connection: ConnectionEntity): Promise<boolean> {
     try {
+      console.log('test', connection);
       const tempDataSource = await this.createTypeORMDataSource(connection);
       await tempDataSource.query('SELECT 1');
       await tempDataSource.destroy();

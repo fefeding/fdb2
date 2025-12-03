@@ -8,39 +8,53 @@ import { useSessionStore } from '@/stores/session';
 
 // 登陆
 export async function login(account: string, password: string) {
-    const res = await request('/api/session/loginByAccount', {
-        account,
-        password,
-    });
-    if(res?.ret === 0) {
+    try {
+        const res = await request('/api/session/loginByAccount', {
+            account,
+            password,
+        });
         const sessionStorre = useSessionStore();
-        sessionStorre.setSession(res.data);
+        sessionStorre.setSession(res);
+        return { ret: 0, msg: '登录成功', data: res };
+    } catch (error) {
+        return { ret: error.ret || -1, msg: error.msg || '登录失败' };
     }
-    return res;
 }
 
 
 export async function getLoginSession(token: string) {
-    const res = await request('/api/session/getLoginSession', {
-        token
-    });
-    return res;
+    try {
+        const res = await request('/api/session/getLoginSession', {
+            token
+        });
+        return { ret: 0, msg: '获取成功', data: res };
+    } catch (error) {
+        return { ret: error.ret || -1, msg: error.msg || '获取登录会话失败' };
+    }
 }
 
 
 export async function loginByCode(authCode: string,) {
-    const res = await request('/api/session/loginByCode', {
-        authCode,
-    });
-    return res;
+    try {
+        const res = await request('/api/session/loginByCode', {
+            authCode,
+        });
+        return { ret: 0, msg: '登录成功', data: res };
+    } catch (error) {
+        return { ret: error.ret || -1, msg: error.msg || '登录失败' };
+    }
 }
 
 export async function logout() {
-    const sessionStorre = useSessionStore();
-    sessionStorre.clearSession();
-    Cookies.remove('token');
-    const res = await request('/api/session/logout');
-    return res;
+    try {
+        const sessionStorre = useSessionStore();
+        sessionStorre.clearSession();
+        Cookies.remove('token');
+        const res = await request('/api/session/logout');
+        return { ret: 0, msg: '登出成功', data: res };
+    } catch (error) {
+        return { ret: error.ret || -1, msg: error.msg || '登出失败' };
+    }
 }
 
 export function getLoginUrl(redirectUrl = location.href) {

@@ -18,6 +18,56 @@
           <option v-for="db in databases" :key="db" :value="db">{{ db }}</option>
         </select>
       </div>
+      <div class="col-md-4" v-if="selectedConnectionId">
+        <label class="form-label">操作</label>
+        <div class="btn-group w-100" role="group">
+          <button type="button" class="btn btn-outline-primary" @click="editCurrentConnection">
+            <i class="bi bi-pencil-square me-1"></i>编辑连接
+          </button>
+          <button type="button" class="btn btn-outline-success" @click="testCurrentConnection">
+            <i class="bi bi-wifi me-1"></i>测试连接
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 连接错误提示 -->
+    <div v-if="databaseLoadError && selectedConnectionId" class="row mb-4">
+      <div class="col-12">
+        <div class="alert alert-danger d-flex align-items-center" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          <div class="flex-grow-1">
+            <strong>连接失败</strong><br>
+            无法连接到数据库服务器: {{ databaseLoadError.message || '未知错误' }}
+          </div>
+          <div class="ms-3">
+            <button type="button" class="btn btn-outline-danger btn-sm" @click.stop="editCurrentConnection">
+              <i class="bi bi-pencil-square me-1"></i>编辑连接配置
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm ms-2" @click="retryLoadDatabases">
+              <i class="bi bi-arrow-clockwise me-1"></i>重试
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 空状态提示 -->
+    <div v-if="selectedConnectionId && !databaseLoadError && databases.length === 0" class="row mb-4">
+      <div class="col-12">
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+          <i class="bi bi-info-circle-fill me-2"></i>
+          <div class="flex-grow-1">
+            <strong>暂无数据库</strong><br>
+            当前连接下没有找到数据库，请检查连接配置或数据库权限。
+          </div>
+          <div class="ms-3">
+            <button type="button" class="btn btn-outline-info btn-sm" @click="editCurrentConnection">
+              <i class="bi bi-pencil-square me-1"></i>检查连接配置
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 数据库信息卡片 -->
@@ -89,72 +139,74 @@
             <h5 class="mb-0">数据表</h5>
           </div>
           <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>表名</th>
-                    <th>类型</th>
-                    <th>引擎</th>
-                    <th>行数</th>
-                    <th>数据大小</th>
-                    <th>索引大小</th>
-                    <th>字符集</th>
-                    <th>创建时间</th>
-                    <th>操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="table in databaseInfo.tables" :key="table.name">
-                    <td>
-                      <strong>{{ table.name }}</strong>
-                      <br>
-                      <small class="text-muted" v-if="table.comment">{{ table.comment }}</small>
-                    </td>
-                    <td>
-                      <span class="badge bg-secondary">{{ table.type }}</span>
-                    </td>
-                    <td>{{ table.engine || '-' }}</td>
-                    <td>{{ formatNumber(table.rowCount) }}</td>
-                    <td>{{ formatSize(table.dataSize) }}</td>
-                    <td>{{ formatSize(table.indexSize) }}</td>
-                    <td>{{ table.collation || '-' }}</td>
-                    <td>{{ formatDate(table.createdAt) }}</td>
-                    <td>
-                      <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary" @click="viewTableData(table)">
-                          <i class="bi bi-eye"></i> 数据
-                        </button>
-                        <button class="btn btn-outline-info" @click="viewTableStructure(table)">
-                          <i class="bi bi-diagram-3"></i> 结构
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr v-if="!databaseInfo.tables || databaseInfo.tables.length === 0">
-                    <td colspan="9" class="text-center text-muted py-4">
-                      该数据库暂无数据表
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <DataGrid 
+              :data="databaseInfo?.tables || []" 
+              :columns="tableColumns"
+              :isLoading="false"
+              :showPagination="false"
+            >
+              <!-- 自定义列渲染 -->
+              <template #name="{ row }">
+                <div>
+                  <strong>{{ row.name }}</strong>
+                  <br>
+                  <small class="text-muted" v-if="row.comment">{{ row.comment }}</small>
+                </div>
+              </template>
+              
+              <template #type="{ row }">
+                <span class="badge bg-secondary">{{ row.type }}</span>
+              </template>
+              
+              <template #engine="{ row }">
+                {{ row.engine || '-' }}
+              </template>
+              
+              <template #rowCount="{ row }">
+                {{ formatNumber(row.rowCount) }}
+              </template>
+              
+              <template #dataSize="{ row }">
+                {{ formatSize(row.dataSize) }}
+              </template>
+              
+              <template #indexSize="{ row }">
+                {{ formatSize(row.indexSize) }}
+              </template>
+              
+              <template #collation="{ row }">
+                {{ row.collation || '-' }}
+              </template>
+              
+              <template #createdAt="{ row }">
+                {{ formatDate(row.createdAt) }}
+              </template>
+              
+              <template #actions="{ row }">
+                <div class="btn-group btn-group-sm">
+                  <button class="btn btn-outline-primary btn-sm" @click="viewTableData(row)" title="查看数据">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  <button class="btn btn-outline-info btn-sm" @click="viewTableStructure(row)" title="查看结构">
+                    <i class="bi bi-diagram-3"></i>
+                  </button>
+                </div>
+              </template>
+            </DataGrid>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 表结构模态框 -->
-    <div class="modal fade" ref="tableModal" tabindex="-1">
-      <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">
-              <i class="bi bi-diagram-3"></i> 表结构 - {{ selectedTable?.name }}
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
+    <Modal 
+      ref="tableModal"
+      :title="`表结构 - ${selectedTable?.name}`"
+      :closeButton="{ text: '关闭', show: true }"
+      :confirmButton="{ text: '查看数据', show: true }"
+      :isFullScreen="true"
+      @onConfirm="viewTableData(selectedTable!)"
+    >
             <ul class="nav nav-tabs" role="tablist">
               <li class="nav-item">
                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#columns">
@@ -284,25 +336,25 @@
                 </div>
               </div>
             </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
-            <button type="button" class="btn btn-primary" @click="viewTableData(selectedTable!)">
-              <i class="bi bi-eye"></i> 查看数据
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </Modal>
+    
+    <!-- 连接编辑组件 -->
+    <ConnectionEditor ref="connectionEditorRef" @saved="onConnectionSaved" />
+    
+    <!-- Toast组件 -->
+    <Toast ref="toastRef" />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { Modal } from 'bootstrap';
 import { ConnectionService, DatabaseService } from '@/service/database';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
+import Modal from '@/components/modal/index.vue';
+import DataGrid from '@/components/dataGrid/index.vue';
+import Toast from '@/components/toast/toast.vue';
+import ConnectionEditor from '@/components/connection-editor/index.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -318,28 +370,50 @@ const selectedDatabase = ref('');
 const databaseInfo = ref<any>(null);
 const selectedTable = ref<TableEntity | null>(null);
 const selectedTableInfo = ref<any>(null);
+const databaseLoadError = ref<any>(null);
 
-const tableModal = ref<HTMLDivElement>();
-let tableModalInstance: Modal | null = null;
+const tableModal = ref();
+const toastRef = ref();
+const connectionEditorRef = ref();
+
+// 表格列配置
+const tableColumns = ref([
+  { name: 'name', text: '表名' },
+  { name: 'type', text: '类型' },
+  { name: 'engine', text: '引擎' },
+  { name: 'rowCount', text: '行数' },
+  { name: 'dataSize', text: '数据大小' },
+  { name: 'indexSize', text: '索引大小' },
+  { name: 'collation', text: '字符集' },
+  { name: 'createdAt', text: '创建时间' },
+  { name: 'actions', text: '操作' }
+]);
+
+// Toast提示方法
+function showToast(title: string, message: string, type: string = 'success', duration?: number) {
+  toastRef.value?.addToast(title, message, type, duration);
+}
 
 // 生命周期
 onMounted(async () => {
-  tableModalInstance = new Modal(tableModal.value!);
+  // 先加载连接列表
+  await loadConnections();
   
   // 从路由参数获取连接ID
   if (route.query.connectionId) {
     selectedConnectionId.value = route.query.connectionId as string;
-    await loadDatabases();
+    // 延迟加载数据库，确保UI更新完成
+    setTimeout(() => {
+      loadDatabases();
+    }, 100);
   }
-  
-  await loadConnections();
 });
 
 // 加载连接列表
 async function loadConnections() {
   try {
     const response = await connectionService.getAllConnections();
-    connections.value = response.data || [];
+    connections.value = response || [];
   } catch (error) {
     console.error('加载连接列表失败:', error);
   }
@@ -351,11 +425,19 @@ async function loadDatabases() {
   
   try {
     const response = await databaseService.getDatabases(selectedConnectionId.value);
-    databases.value = response.data || [];
+    databases.value = response || [];
     selectedDatabase.value = '';
     databaseInfo.value = null;
+    databaseLoadError.value = null;
   } catch (error) {
     console.error('加载数据库列表失败:', error);
+    databases.value = [];
+    selectedDatabase.value = '';
+    databaseInfo.value = null;
+    databaseLoadError.value = error;
+    
+    // 显示错误提示并提供编辑选项
+    showToast('连接失败', `无法连接到数据库: ${error.message || '未知错误'}。请检查连接配置或点击"编辑连接"进行修改。`, 'error');
   }
 }
 
@@ -365,7 +447,7 @@ async function loadDatabaseInfo() {
   
   try {
     const response = await databaseService.getDatabaseInfo(selectedConnectionId.value, selectedDatabase.value);
-    databaseInfo.value = response.data;
+    databaseInfo.value = response;
   } catch (error) {
     console.error('加载数据库信息失败:', error);
   }
@@ -376,7 +458,7 @@ function viewTableData(table: TableEntity) {
   if (!selectedConnectionId.value || !selectedDatabase.value) return;
   
   router.push(`/database/tables/${selectedConnectionId.value}/${selectedDatabase.value}/${table.name}`);
-  tableModalInstance?.hide();
+  tableModal.value?.hide();
 }
 
 // 查看表结构
@@ -390,10 +472,11 @@ async function viewTableStructure(table: TableEntity) {
       selectedDatabase.value,
       table.name
     );
-    selectedTableInfo.value = response.data;
-    tableModalInstance?.show();
+    selectedTableInfo.value = response;
+    tableModal.value?.show();
   } catch (error) {
     console.error('加载表结构失败:', error);
+    showToast('错误', '加载表结构失败: ' + (error.message || '未知错误'), 'error');
   }
 }
 
@@ -415,6 +498,47 @@ function formatNumber(num: number): string {
 function formatDate(date: string | Date | undefined): string {
   if (!date) return '-';
   return new Date(date).toLocaleString('zh-CN');
+}
+
+// 编辑当前连接
+function editCurrentConnection() {
+  if (!selectedConnectionId.value) return;
+  
+  const connection = connections.value.find(c => c.id === selectedConnectionId.value);
+  if (connection) {
+    connectionEditorRef.value?.showEditModal(connection);
+  }
+}
+
+// 测试当前连接
+async function testCurrentConnection() {
+  if (!selectedConnectionId.value) return;
+  
+  const connection = connections.value.find(c => c.id === selectedConnectionId.value);
+  if (connection) {
+    try {
+      const response = await connectionService.testConnection(connection);
+      
+      if (response) {
+        showToast('成功', `连接 "${connection.name}" 测试成功`, 'success');
+        // 测试成功后重新加载数据库列表
+        await loadDatabases();
+      } else {
+        showToast('失败', `连接 "${connection.name}" 测试失败`, 'error');
+      }
+    } catch (error) {
+      console.error('测试连接失败:', error);
+      showToast('错误', `连接 "${connection.name}" 测试失败: ${error.message || '未知错误'}`, 'error');
+    }
+  }
+}
+
+// 重试加载数据库列表
+async function retryLoadDatabases() {
+  if (!selectedConnectionId.value) return;
+  
+  databaseLoadError.value = null;
+  await loadDatabases();
 }
 
 // 获取数据库类型标签

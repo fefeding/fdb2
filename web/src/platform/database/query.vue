@@ -73,27 +73,23 @@
               <div class="alert alert-info">
                 查询成功，共 {{ queryResult.data.length }} 条记录
               </div>
-              <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                  <thead class="table-dark sticky-top">
-                    <tr>
-                      <th>#</th>
-                      <th v-for="column in Object.keys(queryResult.data[0])" :key="column">
-                        {{ column }}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(row, index) in queryResult.data" :key="index">
-                      <td class="text-muted">{{ index + 1 }}</td>
-                      <td v-for="column in Object.keys(row)" :key="column">
-                        <code v-if="row[column] === null" class="text-muted">NULL</code>
-                        <span v-else>{{ row[column] }}</span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <DataGrid 
+                :data="queryResult.data || []" 
+                :columns="queryColumns"
+                :isLoading="false"
+                :showPagination="false"
+              >
+                <!-- 自定义序号列 -->
+                <template #_rowIndex="{ row, index }">
+                  {{ index + 1 }}
+                </template>
+                
+                <!-- 动态列渲染 -->
+                <template v-for="column in dynamicColumns" :key="column" #[`column`]="{ row }">
+                  <code v-if="row[column] === null" class="text-muted">NULL</code>
+                  <span v-else>{{ row[column] }}</span>
+                </template>
+              </DataGrid>
             </div>
             
             <div v-else-if="queryResult.affectedRows !== undefined" class="alert alert-success">
@@ -115,6 +111,9 @@
         </div>
       </div>
     </div>
+    
+    <!-- Toast组件 -->
+    <Toast ref="toastRef" />
   </div>
 </template>
 
@@ -122,6 +121,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { ConnectionService, DatabaseService } from '@/service/database';
 import type { ConnectionEntity } from '@/typings/database';
+import DataGrid from '@/components/dataGrid/index.vue';
+import Toast from '@/components/toast/toast.vue';
 
 const connectionService = new ConnectionService();
 const databaseService = new DatabaseService();
@@ -134,11 +135,35 @@ const queryResult = ref<any>(null);
 const currentLine = ref(1);
 const currentColumn = ref(1);
 const sqlEditor = ref<HTMLTextAreaElement>();
+const toastRef = ref();
 
 // 计算属性
 const canExecute = computed(() => {
   return selectedConnectionId.value && sqlQuery.value.trim() !== '';
 });
+
+// 动态列配置
+const queryColumns = computed(() => {
+  if (!queryResult.value?.data || queryResult.value.data.length === 0) {
+    return [];
+  }
+  
+  const columns = [
+    { name: '_rowIndex', text: '#' }
+  ];
+  
+  const dataKeys = Object.keys(queryResult.value.data[0]);
+  dataKeys.forEach(key => {
+    columns.push({ name: key, text: key });
+  });
+  
+  return columns;
+});
+
+// Toast提示方法
+function showToast(title: string, message: string, type: string = 'success', duration?: number) {
+  toastRef.value?.addToast(title, message, type, duration);
+}
 
 // 生命周期
 onMounted(async () => {
@@ -156,7 +181,7 @@ onMounted(async () => {
 async function loadConnections() {
   try {
     const response = await connectionService.getAllConnections();
-    connections.value = response.data || [];
+    connections.value = response || [];
   } catch (error) {
     console.error('加载连接列表失败:', error);
   }
@@ -192,11 +217,10 @@ function formatSQL() {
 
 // 清空编辑器
 function clearEditor() {
-  if (confirm('确定要清空SQL编辑器吗？')) {
-    sqlQuery.value = '';
-    queryResult.value = null;
-    updateCursorPosition();
-  }
+  sqlQuery.value = '';
+  queryResult.value = null;
+  updateCursorPosition();
+  showToast('提示', 'SQL编辑器已清空', 'info');
 }
 
 // 导出数据

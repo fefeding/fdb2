@@ -26,18 +26,8 @@ export class DatabaseController {
    */
   @All('/getConnections')
   async getConnections() {
-    try {
       const connections = await this.connectionService.getAllConnections();
-      this.ctx.body = {
-        success: true,
-        data: connections
-      };
-    } catch (error) {
-      this.ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
+      return connections;
   }
 
   /**
@@ -45,26 +35,9 @@ export class DatabaseController {
    */
   @All('/getConnection/:id')
   async getConnection(@Param('id') id: string) {
-    try {
-      const connection = await this.connectionService.getConnectionById(id);
-      if (!connection) {
-        this.ctx.body = {
-          success: false,
-          error: '连接配置不存在'
-        };
-        return;
-      }
-      
-      this.ctx.body = {
-        success: true,
-        data: connection
-      };
-    } catch (error) {
-      this.ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
+    
+      const connection = await this.connectionService.getConnectionById(id);  
+      return connection;
   }
 
   /**
@@ -72,18 +45,9 @@ export class DatabaseController {
    */
   @All('/addConnection')
   async addConnection(@Body() connectionData: ConnectionEntity) {
-    try {
+    
       const connection = await this.connectionService.addConnection(connectionData);
-      this.ctx.body = {
-        success: true,
-        data: connection
-      };
-    } catch (error) {
-      this.ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
+      return connection;
   }
 
   /**
@@ -91,18 +55,9 @@ export class DatabaseController {
    */
   @All('/updateConnection/:id')
   async updateConnection(@Param('id') id: string, @Body() updates: Partial<ConnectionEntity>) {
-    try {
+    
       const connection = await this.connectionService.updateConnection(id, updates);
-      this.ctx.body = {
-        success: true,
-        data: connection
-      };
-    } catch (error) {
-      this.ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
+      return connection;
   }
 
   /**
@@ -110,17 +65,9 @@ export class DatabaseController {
    */
   @All('/deleteConnection/:id')
   async deleteConnection(@Param('id') id: string) {
-    try {
+    
       await this.connectionService.deleteConnection(id);
-      this.ctx.body = {
-        success: true
-      };
-    } catch (error) {
-      this.ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
+      return true;
   }
 
   /**
@@ -128,20 +75,9 @@ export class DatabaseController {
    */
   @All('/testConnection')
   async testConnection(@Body() connectionData: ConnectionEntity) {
-    try {
+   
       const result = await this.connectionService.testConnection(connectionData);
-      this.ctx.body = {
-        success: true,
-        data: {
-          connected: result
-        }
-      };
-    } catch (error) {
-      this.ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
+      return result;
   }
 
   /**
@@ -149,18 +85,9 @@ export class DatabaseController {
    */
   @All('/getDatabases/:id')
   async getDatabases(@Param('id') connectionId: string) {
-    try {
+   
       const databases = await this.databaseService.getDatabases(connectionId);
-      this.ctx.body = {
-        success: true,
-        data: databases
-      };
-    } catch (error) {
-      this.ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
+      return databases;
   }
 
   /**
@@ -171,18 +98,8 @@ export class DatabaseController {
     @Param('id') connectionId: string,
     @Param('database') databaseName: string
   ) {
-    try {
       const databaseInfo = await this.databaseService.getDatabaseInfo(connectionId, databaseName);
-      this.ctx.body = {
-        success: true,
-        data: databaseInfo
-      };
-    } catch (error) {
-      this.ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
+      return databaseInfo;
   }
 
   /**
@@ -193,18 +110,8 @@ export class DatabaseController {
     @Param('id') connectionId: string,
     @Param('database') databaseName: string
   ) {
-    try {
       const tables = await this.databaseService.getTables(connectionId, databaseName);
-      this.ctx.body = {
-        success: true,
-        data: tables
-      };
-    } catch (error) {
-      this.ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
+      return tables;
   }
 
   /**
@@ -216,18 +123,8 @@ export class DatabaseController {
     @Param('database') databaseName: string,
     @Param('table') tableName: string
   ) {
-    try {
       const tableInfo = await this.databaseService.getTableInfo(connectionId, databaseName, tableName);
-      this.ctx.body = {
-        success: true,
-        data: tableInfo
-      };
-    } catch (error) {
-      this.ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
+      return tableInfo;
   }
 
   /**
@@ -243,7 +140,6 @@ export class DatabaseController {
     @Query('where') where?: string,
     @Query('orderBy') orderBy?: string
   ) {
-    try {
       const result = await this.databaseService.getTableData(
         connectionId,
         databaseName,
@@ -253,16 +149,7 @@ export class DatabaseController {
         where,
         orderBy
       );
-      this.ctx.body = {
-        success: true,
-        data: result
-      };
-    } catch (error) {
-      this.ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
+      return result;
   }
 
   /**
@@ -273,23 +160,12 @@ export class DatabaseController {
     @Param('id') connectionId: string,
     @Body('sql') sql: string
   ) {
-    try {
       if (!sql || sql.trim() === '') {
-        this.ctx.body = {
-          success: false,
-          error: 'SQL语句不能为空'
-        };
-        return;
+        throw Error('SQL语句不能为空');
       }
 
       const result = await this.databaseService.executeQuery(connectionId, sql);
-      this.ctx.body = result;
-    } catch (error) {
-      this.ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
+      return result;
   }
 
   /**
@@ -297,17 +173,9 @@ export class DatabaseController {
    */
   @All('/closeConnection/:id')
   async closeConnection(@Param('id') connectionId: string) {
-    try {
+    
       await this.connectionService.closeConnection(connectionId);
-      this.ctx.body = {
-        success: true
-      };
-    } catch (error) {
-      this.ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
+      return true;
   }
 
   /**
@@ -315,19 +183,9 @@ export class DatabaseController {
    */
   @All('/getSupportedDatabaseTypes')
   async getSupportedDatabaseTypes() {
-    try {
       const types = this.databaseService.getSupportedDatabaseTypes();
       
-      this.ctx.body = {
-        success: true,
-        data: types
-      };
-    } catch (error) {
-      this.ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
+      return types;
   }
 
   /**
@@ -341,7 +199,6 @@ export class DatabaseController {
     @Query('format') format: string = 'json',
     @Query('where') where?: string
   ) {
-    try {
       // 获取所有数据
       const result = await this.databaseService.getTableData(
         connectionId,
@@ -356,26 +213,15 @@ export class DatabaseController {
         case 'json':
           this.ctx.set('Content-Type', 'application/json');
           this.ctx.set('Content-Disposition', `attachment; filename="${tableName}.json"`);
-          this.ctx.body = result.data;
-          break;
+          return result.data;
         case 'csv':
           // CSV格式导出
           this.ctx.set('Content-Type', 'text/csv');
           this.ctx.set('Content-Disposition', `attachment; filename="${tableName}.csv"`);
-          this.ctx.body = this.convertToCSV(result.data);
-          break;
+          return this.convertToCSV(result.data);
         default:
-          this.ctx.body = {
-            success: false,
-            error: '不支持的导出格式'
-          };
+          throw Error('不支持的导出格式');
       }
-    } catch (error) {
-      this.ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
   }
 
   /**

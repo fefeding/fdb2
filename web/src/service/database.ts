@@ -31,14 +31,14 @@ export class ConnectionService {
    * 更新数据库连接配置
    */
   async updateConnection(id: string, updates: Partial<ConnectionEntity>) {
-    return request('/api/database/updateConnection/${id}', updates);
+    return request(`/api/database/updateConnection/${id}`, updates);
   }
 
   /**
    * 删除数据库连接配置
    */
   async deleteConnection(id: string) {
-    return request('/api/database/deleteConnection/${id}');
+    return request(`/api/database/deleteConnection/${id}`);
   }
 
   /**

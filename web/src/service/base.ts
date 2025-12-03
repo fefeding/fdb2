@@ -19,18 +19,34 @@ export async function requestServer(url: string, data?: any, option?: AxiosReque
 // 请求服务
 export async function request<T = any>(url: string, data?: any, option?: AxiosRequestConfig) {    
     const res = await requestServer(url, data, option);
-    if(res?.data.ret === 50001) {
-        console.error('登陆态失效，请重新登陆后再试');
-        res.data.msg = '登陆态失效，请重新登陆后再试';
-        eventBus.publish(eventBus.AUTHTIMEOUT, { message: res.data.msg });
-    }
+    
+    // 检查HTTP状态码
     if(res.status !== 200) {
         throw {
             ret: res.status,
             msg: res.statusText,
         };
     }
-    return res?.data as T;
+    
+    // 处理新的响应格式 {ret:0,msg:'',data:any}
+    const responseData = res.data;
+    
+    // 检查ret字段，非0表示异常
+    if(responseData.ret !== undefined && responseData.ret !== 0) {
+        throw {
+            ret: responseData.ret,
+            msg: responseData.msg || '请求失败',
+        };
+    }
+    
+    // 特殊处理登录态失效的情况
+    if(responseData.ret === 50001) {
+        console.error('登陆态失效，请重新登陆后再试');
+        eventBus.publish(eventBus.AUTHTIMEOUT, { message: responseData.msg || '登陆态失效，请重新登陆后再试' });
+    }
+    
+    // 返回data字段内容
+    return responseData.data as T;
 }
 
 // 请求管理端接口代理
