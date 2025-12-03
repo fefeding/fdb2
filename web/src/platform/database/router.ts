@@ -31,6 +31,16 @@ const routes = [
         }
       },
       {
+        path: 'explorer',
+        name: 'database-explorer',
+        component: () => import('./explorer.vue'),
+        meta: {
+          title: '数据库浏览器',
+          icon: 'bi-diagram-3',
+          needAuth: false
+        }
+      },
+      {
         path: 'schemas',
         name: 'database-schemas',
         component: () => import('./schemas.vue'),

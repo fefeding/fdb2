@@ -64,10 +64,11 @@ export class SQLServerService extends BaseDatabaseService {
    * 获取SQL Server列信息
    */
   async getColumns(dataSource: DataSource, database: string, table: string): Promise<ColumnEntity[]> {
+    // 使用兼容的SQL查询，避免使用可能不兼容的函数
     const result = await dataSource.query(`
       SELECT 
         c.name,
-        TYPE_NAME(c.user_type_id) as type,
+        t.name as type,
         c.max_length as length,
         c.precision,
         c.scale,
@@ -75,6 +76,7 @@ export class SQLServerService extends BaseDatabaseService {
         c.default_object_id,
         COLUMNPROPERTY(c.object_id, c.name, 'IsIdentity') as isIdentity
       FROM ${this.quoteIdentifier(database)}.sys.columns c
+      INNER JOIN ${this.quoteIdentifier(database)}.sys.types t ON c.user_type_id = t.user_type_id
       WHERE c.object_id = OBJECT_ID(?)
       ORDER BY c.column_id
     `, [`${database}.${table}`]);

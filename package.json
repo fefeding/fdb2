@@ -49,6 +49,7 @@
     "lodash": "^4.17.21",
     "mysql2": "^3.15.3",
     "oracledb": "^6.3.0",
+    "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
     "sqlserver": "latest",
     "swagger-ui-dist": "^5.30.3",

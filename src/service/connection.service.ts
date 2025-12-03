@@ -133,6 +133,7 @@ export class ConnectionService extends BaseService {
       return true;
     } catch (error) {
       this.ctx.logger.error('数据库连接测试失败:', error);
+      console.error(error);
       return false;
     }
   }

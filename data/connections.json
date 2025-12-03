@@ -12,5 +12,19 @@
     "enabled": true,
     "createdAt": "2025-12-03T03:02:45.091Z",
     "updatedAt": "2025-12-03T04:51:17.348Z"
+  },
+  {
+    "id": "mipqm50p8bmss5fbpgf",
+    "name": "local_postgresql",
+    "type": "postgres",
+    "host": "localhost",
+    "port": 5432,
+    "database": "",
+    "username": "postgres",
+    "password": "df123456",
+    "options": {},
+    "enabled": true,
+    "createdAt": "2025-12-03T08:20:49.513Z",
+    "updatedAt": "2025-12-03T08:20:49.513Z"
   }
 ]

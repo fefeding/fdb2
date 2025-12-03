@@ -363,7 +363,8 @@ async function testConnection(connection: ConnectionEntity) {
   try {
     const connectionService = new ConnectionService();
     const response = await connectionService.testConnection(connection);
-    if (response?.connected) {
+    
+    if (response) {
       showToast('成功', `"${connection.name}" 连接测试成功`, 'success');
     } else {
       showToast('失败', `"${connection.name}" 连接测试失败`, 'error');

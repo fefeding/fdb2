@@ -64,6 +64,7 @@ export class MySQLService extends BaseDatabaseService {
    * 获取MySQL列信息
    */
   async getColumns(dataSource: DataSource, database: string, table: string): Promise<ColumnEntity[]> {
+    // 使用兼容的SQL查询，避免使用某些MySQL版本不支持的NUMERIC_PRECISION和NUMERIC_SCALE
     const result = await dataSource.query(`
       SELECT 
         COLUMN_NAME as name,
@@ -73,8 +74,6 @@ export class MySQLService extends BaseDatabaseService {
         COLUMN_KEY as columnKey,
         EXTRA as extra,
         CHARACTER_MAXIMUM_LENGTH as length,
-        NUMERIC_PRECISION as precision,
-        NUMERIC_SCALE as scale,
         CHARACTER_SET_NAME as charset,
         COLLATION_NAME as collation,
         COLUMN_COMMENT as comment
@@ -82,32 +81,47 @@ export class MySQLService extends BaseDatabaseService {
       WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
     `, [database, table]);
 
-    return result.map((row: any) => ({
-      name: row.name,
-      type: row.type,
-      nullable: row.nullable === 'YES',
-      defaultValue: row.defaultValue,
-      isPrimary: row.columnKey === 'PRI',
-      isAutoIncrement: row.extra?.includes('auto_increment') || false,
-      length: row.length,
-      precision: row.precision,
-      scale: row.scale,
-      charset: row.charset,
-      collation: row.collation,
-      comment: row.comment
-    }));
+    return result.map((row: any) => {
+      // 从COLUMN_TYPE中解析精度信息
+      const columnType = row.type || '';
+      let precision = undefined;
+      let scale = undefined;
+      
+      // 解析DECIMAL(M,D)或NUMERIC(M,D)类型的精度
+      const decimalMatch = columnType.match(/(DECIMAL|NUMERIC)\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+      if (decimalMatch) {
+        precision = parseInt(decimalMatch[2]);
+        scale = parseInt(decimalMatch[3]);
+      }
+      
+      return {
+        name: row.name,
+        type: row.type,
+        nullable: row.nullable === 'YES',
+        defaultValue: row.defaultValue,
+        isPrimary: row.columnKey === 'PRI',
+        isAutoIncrement: row.extra?.includes('auto_increment') || false,
+        length: row.length,
+        precision: precision,
+        scale: scale,
+        charset: row.charset,
+        collation: row.collation,
+        comment: row.comment
+      };
+    });
   }
 
   /**
    * 获取MySQL索引信息
    */
   async getIndexes(dataSource: DataSource, database: string, table: string): Promise<IndexEntity[]> {
+    // 使用兼容的SQL查询，避免使用可能不兼容的字段
     const result = await dataSource.query(`
       SELECT 
         INDEX_NAME as name,
         INDEX_TYPE as type,
         COLUMN_NAME as column,
-        NON_UNIQUE as nonUnique
+        CASE WHEN NON_UNIQUE = 0 THEN 1 ELSE 0 END as unique
       FROM information_schema.STATISTICS 
       WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
       ORDER BY INDEX_NAME, SEQ_IN_INDEX
@@ -121,7 +135,7 @@ export class MySQLService extends BaseDatabaseService {
           name: row.name,
           type: row.type,
           columns: [],
-          unique: row.nonUnique === 0
+          unique: row.unique === 1
         });
       }
       indexMap.get(row.name)!.columns.push(row.column);

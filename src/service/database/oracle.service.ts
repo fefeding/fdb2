@@ -66,13 +66,12 @@ export class OracleService extends BaseDatabaseService {
    * 获取Oracle列信息
    */
   async getColumns(dataSource: DataSource, database: string, table: string): Promise<ColumnEntity[]> {
+    // 使用兼容的SQL查询，移除可能不兼容的字段
     const result = await dataSource.query(`
       SELECT 
         column_name as name,
         data_type as type,
         data_length as length,
-        data_precision as precision,
-        data_scale as scale,
         nullable as nullable,
         data_default as defaultValue
       FROM all_tab_columns 
@@ -87,17 +86,33 @@ export class OracleService extends BaseDatabaseService {
     // 获取主键信息
     const primaryKeys = await this.getPrimaryKeys(dataSource, database, table);
 
-    return result.map((row: any) => ({
-      name: row.name,
-      type: row.type + (row.length ? `(${row.length})` : ''),
-      nullable: row.nullable === 'Y',
-      defaultValue: row.defaultValue,
-      isPrimary: primaryKeys.includes(row.name),
-      isAutoIncrement: false, // Oracle不使用自增，使用序列
-      length: row.length,
-      precision: row.precision,
-      scale: row.scale
-    }));
+    // 从data_type中解析精度信息
+    return result.map((row: any) => {
+      const dataType = row.type || '';
+      let precision = undefined;
+      let scale = undefined;
+      
+      // 解析DECIMAL(M,D)或NUMBER(M,D)类型的精度
+      const decimalMatch = dataType.match(/(DECIMAL|NUMBER)\s*\(\s*(\d+)\s*(,\s*(\d+)\s*)?\s*\)/i);
+      if (decimalMatch) {
+        precision = parseInt(decimalMatch[2]);
+        if (decimalMatch[3]) {
+          scale = parseInt(decimalMatch[3].replace(/\D/g, ''));
+        }
+      }
+      
+      return {
+        name: row.name,
+        type: row.type + (row.length ? `(${row.length})` : ''),
+        nullable: row.nullable === 'Y',
+        defaultValue: row.defaultValue,
+        isPrimary: primaryKeys.includes(row.name),
+        isAutoIncrement: false, // Oracle不使用自增，使用序列
+        length: row.length,
+        precision: precision,
+        scale: scale
+      };
+    });
   }
 
   /**

@@ -46,9 +46,18 @@
               </router-link>
             </li>
             <li class="nav-item-modern">
-              <router-link to="/database/schemas" class="nav-link-modern" :class="{ active: isActive('/database/schemas') }">
+              <router-link to="/database/explorer" class="nav-link-modern" :class="{ active: isActive('/database/explorer') }">
                 <div class="nav-icon">
                   <i class="bi bi-diagram-3-fill"></i>
+                </div>
+                <span class="nav-text">数据库浏览器</span>
+                <div class="nav-indicator"></div>
+              </router-link>
+            </li>
+            <li class="nav-item-modern">
+              <router-link to="/database/schemas" class="nav-link-modern" :class="{ active: isActive('/database/schemas') }">
+                <div class="nav-icon">
+                  <i class="bi bi-diagram-3"></i>
                 </div>
                 <span class="nav-text">数据库结构</span>
                 <div class="nav-indicator"></div>

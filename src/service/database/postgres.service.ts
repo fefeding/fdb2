@@ -64,15 +64,14 @@ export class PostgreSQLService extends BaseDatabaseService {
    * 获取PostgreSQL列信息
    */
   async getColumns(dataSource: DataSource, database: string, table: string): Promise<ColumnEntity[]> {
+    // 使用兼容的SQL查询，移除可能不兼容的精度字段
     const result = await dataSource.query(`
       SELECT 
         column_name as name,
         data_type as type,
         is_nullable as nullable,
         column_default as defaultValue,
-        character_maximum_length as length,
-        numeric_precision as precision,
-        numeric_scale as scale
+        character_maximum_length as length
       FROM information_schema.columns 
       WHERE table_name = $1
     `, [table]);
@@ -80,17 +79,31 @@ export class PostgreSQLService extends BaseDatabaseService {
     // 获取主键信息
     const primaryKeys = await this.getPrimaryKeys(dataSource, table);
 
-    return result.map((row: any) => ({
-      name: row.name,
-      type: row.type,
-      nullable: row.nullable === 'YES',
-      defaultValue: row.defaultValue,
-      isPrimary: primaryKeys.includes(row.name),
-      isAutoIncrement: row.defaultValue?.includes('nextval') || false,
-      length: row.length,
-      precision: row.precision,
-      scale: row.scale
-    }));
+    // 从data_type中解析精度信息
+    return result.map((row: any) => {
+      const dataType = row.type || '';
+      let precision = undefined;
+      let scale = undefined;
+      
+      // 解析DECIMAL(M,D)或NUMERIC(M,D)类型的精度
+      const decimalMatch = dataType.match(/(DECIMAL|NUMERIC)\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+      if (decimalMatch) {
+        precision = parseInt(decimalMatch[2]);
+        scale = parseInt(decimalMatch[3]);
+      }
+      
+      return {
+        name: row.name,
+        type: row.type,
+        nullable: row.nullable === 'YES',
+        defaultValue: row.defaultValue,
+        isPrimary: primaryKeys.includes(row.name),
+        isAutoIncrement: row.defaultValue?.includes('nextval') || false,
+        length: row.length,
+        precision: precision,
+        scale: scale
+      };
+    });
   }
 
   /**

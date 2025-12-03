@@ -45,6 +45,7 @@ export class ConnectionService {
    * 测试数据库连接
    */
   async testConnection(connection: ConnectionEntity) {
+    debugger
     return request('/api/database/testConnection', connection);
   }
 

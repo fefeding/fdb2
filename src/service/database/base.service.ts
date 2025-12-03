@@ -156,7 +156,8 @@ export abstract class BaseDatabaseService extends BaseService {
       await dataSource.query('SELECT 1');
       return true;
     } catch (error) {
-      this.ctx.logger.error('数据库连接测试失败:', error);
+      //this.ctx.logger.error('数据库连接测试失败:', error);
+      console.error(error);
       return false;
     }
   }
