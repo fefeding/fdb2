@@ -314,7 +314,6 @@ export class DatabaseController {
     const result = await this.databaseService.executeQuery(connectionId, sql, databaseName);
     
     return {
-      success: true,
       sql: sql,
       result: result
     };
@@ -335,7 +334,6 @@ export class DatabaseController {
     const result = await this.databaseService.executeQuery(connectionId, sql, databaseName);
     
     return {
-      success: true,
       sql: sql,
       result: result
     };

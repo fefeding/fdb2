@@ -43,7 +43,7 @@
         <button class="btn btn-primary btn-sm" @click="refreshData">
           <i class="bi bi-arrow-clockwise"></i> 刷新数据
         </button>
-        <button class="btn btn-success btn-sm" @click="insertData">
+        <button class="btn btn-success btn-sm" @click="()=>insertData()">
           <i class="bi bi-plus-lg"></i> 插入数据
         </button>
         <div class="btn-group">
@@ -208,7 +208,7 @@
             <i class="bi bi-inbox"></i>
             <p v-if="searchQuery">没有找到匹配的数据</p>
             <p v-else>表中暂无数据</p>
-            <button class="btn btn-success" @click="insertData">
+            <button class="btn btn-success" @click="()=>insertData()">
               <i class="bi bi-plus"></i> 插入第一条数据
             </button>
           </div>
@@ -631,7 +631,7 @@ function refreshData() {
   emit('refresh-data');
 }
 
-function insertData(newData?: any) {
+function insertData(newData?: any) {  
   if (newData) {
     // 从编辑器来的新增数据
     performInsert(newData);
@@ -780,7 +780,7 @@ function editRow(row: any) {
 
 async function handleDataSubmit(result: any) {
   try {
-    if (result.success) {
+    if (result.result) {
       // 操作成功，刷新数据
       emit('refresh-data');
       closeDataEditor();

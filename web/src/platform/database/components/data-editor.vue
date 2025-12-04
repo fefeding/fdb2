@@ -122,6 +122,7 @@
 
 <script lang="ts" setup>
 import { ref, watch, computed } from 'vue';
+import { request } from '@/service/base';
 
 const props = defineProps<{
   visible: boolean;
@@ -156,7 +157,10 @@ function initializeFormData() {
   props.columns.forEach(column => {
     if (props.isEdit && props.data) {
       // 编辑模式：使用现有数据
-      formData.value[column.name] = props.data[column.name];
+      if(isDateInput(column.type)) {
+        formData.value[column.name] = props.data[column.name] ? new Date(props.data[column.name]).toISOString().replace('.000Z', '') : null;
+      }
+      else formData.value[column.name] = props.data[column.name];
     } else {
       // 新增模式：设置默认值
       if (column.isPrimary && column.isAutoIncrement) {
@@ -230,41 +234,26 @@ function closeModal() {
 // 提交表单
 async function handleSubmit() {
   try {
-    loading.value = true;
-    
+    loading.value = true;    
     let response;
     if (props.isEdit && props.data) {
       // 更新数据
       const whereClause = getPrimaryKeyWhere();
-      response = await fetch(`/api/database/updateData/${props.connection?.id}/${props.database}/${props.tableName}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      response = await request(`/api/database/updateData/${props.connection?.id}/${props.database}/${props.tableName}`, {
           data: formData.value,
           where: whereClause
-        })
-      });
+        });
     } else {
       // 插入新数据
-      response = await fetch(`/api/database/insertData/${props.connection?.id}/${props.database}/${props.tableName}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData.value)
-      });
+      response = await request(`/api/database/insertData/${props.connection?.id}/${props.database}/${props.tableName}`, formData.value);
     }
     
-    const result = await response.json();
-    
-    if (result.success) {
+    if (response.ret === 0) {
       alert(props.isEdit ? '数据更新成功' : '数据插入成功');
-      emit('submit', result);
+      emit('submit', response.data);
       closeModal();
     } else {
-      alert('操作失败');
+      alert('操作失败:' + response.msg);
     }
   } catch (error) {
     console.error('提交数据失败:', error);

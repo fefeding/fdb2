@@ -46,7 +46,7 @@ export async function request<T = any>(url: string, data?: any, option?: AxiosRe
     }
     
     // 返回data字段内容
-    return responseData.data as T;
+    return responseData as T;
 }
 
 // 请求管理端接口代理

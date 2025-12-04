@@ -132,20 +132,8 @@ export abstract class BaseDatabaseService extends BaseService {
    * 通用方法：执行SQL查询
    */
   async executeQuery(dataSource: DataSource, sql: string): Promise<any> {
-    try {
       const result = await dataSource.query(sql);
-      return {
-        success: true,
-        data: result,
-        affectedRows: result.affectedRows || 0,
-        insertId: result.insertId || null
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      };
-    }
+      return result;
   }
 
   /**

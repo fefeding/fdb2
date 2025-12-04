@@ -308,7 +308,7 @@ onMounted(() => {
 async function loadConnections() {
   try {
     const response = await connectionService.getAllConnections();
-    connections.value = response || [];
+    connections.value = response.data || [];
   } catch (error) {
     console.error('加载连接失败:', error);
     showToast('错误', `加载连接失败: ${error.message}`, 'error');
@@ -345,7 +345,7 @@ async function loadDatabasesForConnection(connection: ConnectionEntity, forceRef
   
   try {
     const databases = await databaseService.getDatabases(connection.id);
-    databaseCache.value.set(cacheKey, databases || []);
+    databaseCache.value.set(cacheKey, databases.data || []);
   } catch (error) {
     console.error('加载数据库失败:', error);
     showToast('错误', `加载数据库失败: ${error.message}`, 'error');
@@ -387,7 +387,7 @@ async function loadTablesForDatabase(connection: ConnectionEntity, database: str
   
   try {
     const info = await databaseService.getDatabaseInfo(connection.id, database);
-    const tables = info?.tables || [];
+    const tables = info?.data?.tables || [];
     tableCache.value.set(dbKey, tables);
   } catch (error) {
     console.error('加载表失败:', error);
@@ -403,7 +403,7 @@ async function loadDatabaseInfo(connection: ConnectionEntity, database: string) 
   
   try {
     const info = await databaseService.getDatabaseInfo(connection.id, database);
-    databaseInfoCache.value.set(dbKey, info);
+    databaseInfoCache.value.set(dbKey, info.data);
   } catch (error) {
     console.error('加载数据库信息失败:', error);
     showToast('错误', `加载数据库信息失败: ${error.message}`, 'error');
@@ -425,7 +425,8 @@ async function loadTableData(connection: ConnectionEntity, database: string, tab
     isGlobalLoading.value = true;
     loadingMessage.value = `正在加载表 "${tableName}" 的数据...`;
     const response = await databaseService.getTableData(connection.id, database, tableName);
-    tableData.value = response?.data || [];
+    
+    tableData.value = response?.data?.data || [];
     currentPage.value = 1;
   } catch (error) {
     console.error('加载表数据失败:', error);
@@ -439,8 +440,8 @@ async function loadTableData(connection: ConnectionEntity, database: string, tab
 async function loadTableStructure(connection: ConnectionEntity, database: string, tableName: string) {
   try {
     const structure = await databaseService.getTableInfo(connection.id, database, tableName);
-    tableStructure.value = structure;
-    tableColumns.value = structure?.columns || [];
+    tableStructure.value = structure.data;
+    tableColumns.value = structure?.data.columns || [];
   } catch (error) {
     console.error('加载表结构失败:', error);
     showToast('错误', `加载表结构失败: ${error.message}`, 'error');
@@ -466,7 +467,7 @@ async function testConnection(connection: ConnectionEntity) {
   try {
     const result = await connectionService.testConnection(connection);
     
-    if (result) {
+    if (result.ret === 0 && result.data) {
       showToast('', `连接 "${connection.name}" 测试成功`, 'success');
     } else {
       showToast('', `连接 "${connection.name}" 测试失败`, 'error');
@@ -727,7 +728,7 @@ async function handleExecuteSql(sql: string) {
     const databaseName = selectedTable.value ? selectedDatabase.value : selectedDatabase.value;
     const result = await databaseService.executeQuery(selectedConnection.value.id, sql, databaseName);
     
-    if (result.success) {
+    if (result.ret === 0 && result.data) {
       showToast('', 'SQL执行成功', 'success');
       
       // 保存SQL执行结果用于展示
