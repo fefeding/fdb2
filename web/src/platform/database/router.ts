@@ -21,16 +21,6 @@ const routes = [
         }
       },
       {
-        path: 'connections',
-        name: 'database-connections',
-        component: () => import('./connections.vue'),
-        meta: {
-          title: '数据库连接',
-          icon: 'bi-database-add',
-          needAuth: false
-        }
-      },
-      {
         path: 'explorer',
         name: 'database-explorer',
         component: () => import('./explorer.vue'),
@@ -40,26 +30,6 @@ const routes = [
           needAuth: false
         }
       },
-      {
-        path: 'schemas',
-        name: 'database-schemas',
-        component: () => import('./schemas.vue'),
-        meta: {
-          title: '数据库结构',
-          icon: 'bi-diagram-3',
-          needAuth: false
-        }
-      },
-      {
-        path: 'query',
-        name: 'database-query',
-        component: () => import('./query.vue'),
-        meta: {
-          title: 'SQL查询',
-          icon: 'bi-code-slash',
-          needAuth: false
-        }
-      }
     ]
   }
 ];

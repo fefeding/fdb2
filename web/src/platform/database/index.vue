@@ -25,12 +25,12 @@
                   专业的数据库管理和监控工具，为开发者提供一站式数据库操作体验。支持多种主流数据库类型，提供直观的可视化界面和强大的查询功能。
                 </p>
                 <div class="hero-actions">
-                  <router-link to="/database/connections" class="btn-hero btn-primary-hero">
+                  <router-link to="/database/explorer" class="btn-hero btn-primary-hero">
                     <i class="bi bi-plus-lg"></i>
                     <span>添加连接</span>
                     <div class="btn-glow"></div>
                   </router-link>
-                  <router-link to="/database/query" class="btn-hero btn-secondary-hero">
+                  <router-link to="/database/explorer" class="btn-hero btn-secondary-hero">
                     <i class="bi bi-terminal"></i>
                     <span>SQL查询</span>
                   </router-link>
@@ -219,7 +219,7 @@
         </div>
         
         <div class="view-all-connections" v-if="connections.length > 6">
-          <router-link to="/database/connections" class="view-all-btn">
+          <router-link to="/database/explorer" class="view-all-btn">
             <i class="bi bi-grid"></i>
             <span>查看所有连接 ({{ connections.length }})</span>
             <i class="bi bi-arrow-right"></i>
@@ -244,7 +244,7 @@
           <p class="empty-description">
             还没有配置数据库连接？让我们添加第一个连接，开始强大的数据库管理体验。
           </p>
-          <router-link to="/database/connections" class="btn-hero btn-primary-hero">
+          <router-link to="/database/explorer" class="btn-hero btn-primary-hero">
             <i class="bi bi-plus-lg"></i>
             <span>添加数据库连接</span>
             <div class="btn-glow"></div>
@@ -274,28 +274,28 @@ const features = ref([
     icon: 'bi bi-plugin',
     description: '支持MySQL、PostgreSQL、SQLite、SQL Server、Oracle等主流数据库的连接配置和管理',
     tags: ['多数据库支持', '安全连接', '连接池'],
-    link: '/database/connections'
+    link: '/database/explorer'
   },
   {
     title: '结构浏览',
     icon: 'bi bi-diagram-3',
     description: '直观展示数据库表结构、索引、外键关系、视图、存储过程等数据库对象',
     tags: ['可视化', '关系图', '详细视图'],
-    link: '/database/schemas'
+    link: '/database/explorer'
   },
   {
     title: '数据操作',
     icon: 'bi bi-table',
     description: '查看、编辑、删除表数据，支持批量操作、分页浏览、条件筛选和数据导入导出',
     tags: ['CRUD操作', '批量处理', '导入导出'],
-    link: '/database/schemas'
+    link: '/database/explorer'
   },
   {
     title: 'SQL查询',
     icon: 'bi bi-terminal',
     description: '强大的SQL编辑器，支持语法高亮、自动补全、查询历史和结果导出功能',
     tags: ['语法高亮', '查询历史', '结果导出'],
-    link: '/database/query'
+    link: '/database/explorer'
   }
 ]);
 
@@ -325,7 +325,7 @@ async function loadConnections() {
 }
 
 function goToSchemas(connection: ConnectionEntity) {
-  router.push(`/database/schemas?connectionId=${connection.id}`);
+  router.push(`/database/explorer?connectionId=${connection.id}`);
 }
 
 function getDbTypeLabel(type: string): string {

@@ -23,7 +23,11 @@ export class MySQLService extends BaseDatabaseService {
    */
   async getDatabases(dataSource: DataSource): Promise<string[]> {
     const result = await dataSource.query('SHOW DATABASES');
-    return result.map((row: any) => row.Database);
+    // 过滤掉系统数据库
+    const systemDatabases = ['information_schema', 'performance_schema', 'mysql', 'sys'];
+    return result
+      .map((row: any) => row.Database)
+      .filter((db: string) => !systemDatabases.includes(db));
   }
 
   /**

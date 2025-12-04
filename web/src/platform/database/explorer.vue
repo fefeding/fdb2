@@ -166,368 +166,39 @@
 
       <!-- 右侧内容区域 -->
       <div class="explorer-main">
-        <!-- 数据库信息标签页 -->
-        <div v-if="selectedConnection && selectedDatabase" class="content-tabs">
-          <ul class="nav nav-tabs" role="tablist">
-            <li class="nav-item">
-              <button 
-                class="nav-link" 
-                :class="{ active: activeTab === 'overview' }"
-                @click="activeTab = 'overview'"
-              >
-                <i class="bi bi-info-circle"></i> 概览
-              </button>
-            </li>
-            <li class="nav-item">
-              <button 
-                class="nav-link" 
-                :class="{ active: activeTab === 'tables' }"
-                @click="activeTab = 'tables'"
-              >
-                <i class="bi bi-table"></i> 数据表 ({{ databaseInfo?.tableCount || 0 }})
-              </button>
-            </li>
-            <li class="nav-item">
-              <button 
-                class="nav-link" 
-                :class="{ active: activeTab === 'views' }"
-                @click="activeTab = 'views'"
-              >
-                <i class="bi bi-eye"></i> 视图
-              </button>
-            </li>
-            <li class="nav-item">
-              <button 
-                class="nav-link" 
-                :class="{ active: activeTab === 'procedures' }"
-                @click="activeTab = 'procedures'"
-              >
-                <i class="bi bi-gear"></i> 存储过程
-              </button>
-            </li>
-          </ul>
+        <!-- 数据库详情组件 -->
+        <DatabaseDetail 
+          v-if="selectedConnection && selectedDatabase && !selectedTable"
+          :connection="selectedConnection"
+          :database="selectedDatabase"
+          :tables="getTablesForDatabase(selectedConnection.id, selectedDatabase)"
+          :database-info="databaseInfo"
+          :loading="loadingDatabases.has(`${selectedConnection.id}-${selectedDatabase}`)"
+          @select-table="selectTable"
+          @refresh-database="handleRefreshDatabase"
+          @create-table="handleCreateTable"
+        />
 
-          <div class="tab-content">
-            <!-- 概览标签页 -->
-            <div v-show="activeTab === 'overview'" class="tab-pane active">
-              <div class="overview-section">
-                <div class="info-cards">
-                  <div class="info-card">
-                    <div class="card-icon">
-                      <i class="bi bi-database"></i>
-                    </div>
-                    <div class="card-content">
-                      <h6>数据库名</h6>
-                      <p class="card-value">{{ selectedDatabase }}</p>
-                    </div>
-                  </div>
-                  <div class="info-card">
-                    <div class="card-icon">
-                      <i class="bi bi-plugin"></i>
-                    </div>
-                    <div class="card-content">
-                      <h6>连接</h6>
-                      <p class="card-value">{{ selectedConnection.name }}</p>
-                    </div>
-                  </div>
-                  <div class="info-card" v-if="databaseInfo">
-                    <div class="card-icon">
-                      <i class="bi bi-table"></i>
-                    </div>
-                    <div class="card-content">
-                      <h6>表数量</h6>
-                      <p class="card-value">{{ databaseInfo.tableCount }}</p>
-                    </div>
-                  </div>
-                  <div class="info-card" v-if="databaseInfo">
-                    <div class="card-icon">
-                      <i class="bi bi-hdd"></i>
-                    </div>
-                    <div class="card-content">
-                      <h6>大小</h6>
-                      <p class="card-value">{{ formatSize(databaseInfo.size) }}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 数据表标签页 -->
-            <div v-show="activeTab === 'tables'" class="tab-pane">
-              <div class="table-grid">
-                <div 
-                  v-for="table in getTablesForDatabase(selectedConnection.id, selectedDatabase)"
-                  :key="table.name"
-                  class="table-card"
-                  @click="selectTable(selectedConnection, selectedDatabase, table)"
-                >
-                  <div class="card-header">
-                    <div class="table-icon">
-                      <i class="bi bi-table"></i>
-                    </div>
-                    <div class="table-name">{{ table.name }}</div>
-                  </div>
-                  <div class="card-body">
-                    <div class="table-stats">
-                      <div class="stat">
-                        <span class="stat-label">行数</span>
-                        <span class="stat-value">{{ formatNumber(table.rowCount || 0) }}</span>
-                      </div>
-                      <div class="stat">
-                        <span class="stat-label">大小</span>
-                        <span class="stat-value">{{ formatSize(table.dataSize || 0) }}</span>
-                      </div>
-                    </div>
-                    <div class="table-comment" v-if="table.comment">
-                      {{ table.comment }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 视图标签页 -->
-            <div v-show="activeTab === 'views'" class="tab-pane">
-              <div class="empty-state">
-                <i class="bi bi-eye"></i>
-                <p>视图功能开发中...</p>
-              </div>
-            </div>
-
-            <!-- 存储过程标签页 -->
-            <div v-show="activeTab === 'procedures'" class="tab-pane">
-              <div class="empty-state">
-                <i class="bi bi-gear"></i>
-                <p>存储过程功能开发中...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 表信息标签页 -->
-        <div v-else-if="selectedTable && selectedConnection && selectedDatabase" class="content-tabs">
-          <ul class="nav nav-tabs" role="tablist">
-            <li class="nav-item">
-              <button 
-                class="nav-link" 
-                :class="{ active: activeTableTab === 'data' }"
-                @click="activeTableTab = 'data'"
-              >
-                <i class="bi bi-grid"></i> 数据
-              </button>
-            </li>
-            <li class="nav-item">
-              <button 
-                class="nav-link" 
-                :class="{ active: activeTableTab === 'structure' }"
-                @click="activeTableTab = 'structure'"
-              >
-                <i class="bi bi-diagram-3"></i> 结构
-              </button>
-            </li>
-            <li class="nav-item">
-              <button 
-                class="nav-link" 
-                :class="{ active: activeTableTab === 'indexes' }"
-                @click="activeTableTab = 'indexes'"
-              >
-                <i class="bi bi-key"></i> 索引
-              </button>
-            </li>
-            <li class="nav-item">
-              <button 
-                class="nav-link" 
-                :class="{ active: activeTableTab === 'relations' }"
-                @click="activeTableTab = 'relations'"
-              >
-                <i class="bi bi-link-45deg"></i> 关系
-              </button>
-            </li>
-          </ul>
-
-          <div class="tab-content">
-            <!-- 数据标签页 -->
-            <div v-show="activeTableTab === 'data'" class="tab-pane active">
-              <div class="data-toolbar">
-                <div class="toolbar-left">
-                  <button class="btn btn-sm btn-primary" @click="refreshTableData">
-                    <i class="bi bi-arrow-clockwise"></i> 刷新
-                  </button>
-                  <button class="btn btn-sm btn-success" @click="insertNewRow">
-                    <i class="bi bi-plus"></i> 新增
-                  </button>
-                </div>
-                <div class="toolbar-right">
-                  <input 
-                    type="text" 
-                    class="form-control form-control-sm" 
-                    placeholder="搜索..."
-                    v-model="tableDataSearch"
-                  >
-                </div>
-              </div>
-              
-              <div class="table-responsive">
-                <table class="table table-sm table-striped">
-                  <thead>
-                    <tr>
-                      <th v-for="column in tableColumns" :key="column.name">
-                        {{ column.name }}
-                        <small class="text-muted d-block">{{ column.type }}</small>
-                      </th>
-                      <th>操作</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(row, index) in paginatedTableData" :key="index">
-                      <td v-for="(value, key) in row" :key="key">
-                        {{ formatCellValue(value) }}
-                      </td>
-                      <td>
-                        <div class="btn-group btn-group-sm">
-                          <button class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-pencil"></i>
-                          </button>
-                          <button class="btn btn-outline-danger btn-sm">
-                            <i class="bi bi-trash"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              
-              <!-- 分页 -->
-              <nav v-if="tableData.length > pageSize">
-                <ul class="pagination pagination-sm">
-                  <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                    <a class="page-link" href="#" @click.prevent="currentPage--">上一页</a>
-                  </li>
-                  <li 
-                    v-for="page in totalPages" 
-                    :key="page"
-                    class="page-item" 
-                    :class="{ active: currentPage === page }"
-                  >
-                    <a class="page-link" href="#" @click.prevent="currentPage = page">{{ page }}</a>
-                  </li>
-                  <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                    <a class="page-link" href="#" @click.prevent="currentPage++">下一页</a>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-
-            <!-- 结构标签页 -->
-            <div v-show="activeTableTab === 'structure'" class="tab-pane">
-              <div class="table-responsive">
-                <table class="table table-sm">
-                  <thead>
-                    <tr>
-                      <th>列名</th>
-                      <th>数据类型</th>
-                      <th>可空</th>
-                      <th>默认值</th>
-                      <th>主键</th>
-                      <th>自增</th>
-                      <th>注释</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="column in tableStructure?.columns || []" :key="column.name">
-                      <td><strong>{{ column.name }}</strong></td>
-                      <td><code>{{ column.type }}</code></td>
-                      <td>
-                        <span :class="column.nullable ? 'text-warning' : 'text-success'">
-                          <i :class="column.nullable ? 'bi bi-unlock' : 'bi bi-lock-fill'"></i>
-                          {{ column.nullable ? 'YES' : 'NO' }}
-                        </span>
-                      </td>
-                      <td>{{ column.defaultValue || '-' }}</td>
-                      <td>
-                        <span v-if="column.isPrimary" class="badge bg-primary">
-                          <i class="bi bi-key-fill"></i> 主键
-                        </span>
-                        <span v-else>-</span>
-                      </td>
-                      <td>
-                        <span v-if="column.isAutoIncrement" class="badge bg-success">
-                          <i class="bi bi-arrow-up-circle"></i> 自增
-                        </span>
-                        <span v-else>-</span>
-                      </td>
-                      <td>{{ column.comment || '-' }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- 索引标签页 -->
-            <div v-show="activeTableTab === 'indexes'" class="tab-pane">
-              <div class="table-responsive">
-                <table class="table table-sm">
-                  <thead>
-                    <tr>
-                      <th>索引名</th>
-                      <th>类型</th>
-                      <th>唯一</th>
-                      <th>列</th>
-                      <th>注释</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="index in tableStructure?.indexes || []" :key="index.name">
-                      <td><strong>{{ index.name }}</strong></td>
-                      <td>
-                        <span class="badge bg-info">{{ index.type }}</span>
-                      </td>
-                      <td>
-                        <span :class="index.unique ? 'text-success' : 'text-secondary'">
-                          <i :class="index.unique ? 'bi bi-check-circle-fill' : 'bi bi-circle'"></i>
-                          {{ index.unique ? '是' : '否' }}
-                        </span>
-                      </td>
-                      <td>
-                        <code>{{ index.columns.join(', ') }}</code>
-                      </td>
-                      <td>{{ index.comment || '-' }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- 关系标签页 -->
-            <div v-show="activeTableTab === 'relations'" class="tab-pane">
-              <div class="table-responsive">
-                <table class="table table-sm">
-                  <thead>
-                    <tr>
-                      <th>约束名</th>
-                      <th>本表列</th>
-                      <th>目标表</th>
-                      <th>目标列</th>
-                      <th>删除规则</th>
-                      <th>更新规则</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="fk in tableStructure?.foreignKeys || []" :key="fk.name">
-                      <td><strong>{{ fk.name }}</strong></td>
-                      <td><code>{{ fk.column }}</code></td>
-                      <td><code>{{ fk.referencedTable }}</code></td>
-                      <td><code>{{ fk.referencedColumn }}</code></td>
-                      <td><span class="badge bg-warning">{{ fk.onDelete }}</span></td>
-                      <td><span class="badge bg-info">{{ fk.onUpdate }}</span></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- 表详情组件 -->
+        <TableDetail 
+          v-else-if="selectedConnection && selectedDatabase && selectedTable"
+          :connection="selectedConnection"
+          :database="selectedDatabase"
+          :table="selectedTable"
+          :table-data="tableData"
+          :table-structure="tableStructure"
+          :loading="isGlobalLoading"
+          :total="tableData.length"
+          :sql-result="sqlResult"
+          @refresh-data="refreshTableData"
+          @insert-data="handleInsertData"
+          @export-table="handleExportTable"
+          @truncate-table="handleTruncateTable"
+          @drop-table="handleDropTable"
+          @edit-row="handleEditRow"
+          @delete-row="handleDeleteRow"
+          @execute-sql="handleExecuteSql"
+        />
 
         <!-- 默认空状态 -->
         <div v-else class="default-state">
@@ -536,14 +207,14 @@
               <i class="bi bi-diagram-3"></i>
             </div>
             <h5>数据库浏览器</h5>
-            <p>请从左侧选择一个数据库或表来查看详细信息</p>
+            <p>请从左侧选择一个连接、数据库或表来查看详细信息</p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 全局Loading -->
-    <Loading :isLoading="isGlobalLoading" :message="loadingMessage" />
+    <!-- <Loading :isLoading="isGlobalLoading" :message="loadingMessage" /> -->
     
     <!-- 连接编辑器 -->
     <ConnectionEditor ref="connectionEditorRef" @saved="onConnectionSaved" />
@@ -560,6 +231,8 @@ import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import ConnectionEditor from '@/components/connection-editor/index.vue';
 import Toast from '@/components/toast/toast.vue';
 import Loading from '@/components/loading/index.vue';
+import DatabaseDetail from './components/database-detail.vue';
+import TableDetail from './components/table-detail.vue';
 
 const connectionService = new ConnectionService();
 const databaseService = new DatabaseService();
@@ -595,6 +268,9 @@ const tableColumns = ref<any[]>([]);
 const tableDataSearch = ref('');
 const currentPage = ref(1);
 const pageSize = ref(50);
+
+// SQL执行结果
+const sqlResult = ref<any>(null);
 
 // 全局Loading状态
 const isGlobalLoading = ref(false);
@@ -649,6 +325,7 @@ function selectConnection(connection: ConnectionEntity) {
   selectedConnection.value = connection;
   selectedDatabase.value = '';
   selectedTable.value = null;
+  activeTab.value = 'overview';
 }
 
 async function loadDatabasesForConnection(connection: ConnectionEntity, forceRefresh = false) {
@@ -690,7 +367,7 @@ function selectDatabase(connection: ConnectionEntity, database: string) {
   selectedConnection.value = connection;
   selectedDatabase.value = database;
   selectedTable.value = null;
-  activeTab.value = 'overview';
+  activeTab.value = 'tables';
 }
 
 async function loadTablesForDatabase(connection: ConnectionEntity, database: string, forceRefresh = false) {
@@ -744,8 +421,8 @@ async function loadTableData(connection: ConnectionEntity, database: string, tab
   try {
     isGlobalLoading.value = true;
     loadingMessage.value = `正在加载表 "${tableName}" 的数据...`;
-    const data = await databaseService.getTableData(connection.id, database, tableName);
-    tableData.value = data || [];
+    const response = await databaseService.getTableData(connection.id, database, tableName);
+    tableData.value = response?.data || [];
     currentPage.value = 1;
   } catch (error) {
     console.error('加载表数据失败:', error);
@@ -773,7 +450,7 @@ function getDatabasesForConnection(connectionId: string): string[] {
   return databaseCache.value.get(connectionId) || [];
 }
 
-function getTablesForDatabase(connectionId: string, database: string): TableEntity[] {
+function getTablesForDatabase(connectionId: string, database: string): TableEntity[] {  
   const dbKey = `${connectionId}-${database}`;
   return tableCache.value.get(dbKey) || [];
 }
@@ -927,6 +604,167 @@ async function refreshTable(connection: ConnectionEntity, database: string, tabl
   }
   
   showToast('', `表 "${table.name}" 已刷新`, 'success');
+}
+
+// 新增的处理方法
+function handleRefreshDatabase() {
+  if (selectedConnection.value && selectedDatabase.value) {
+    refreshDatabase(selectedConnection.value, selectedDatabase.value);
+  }
+}
+
+async function handleCreateTable(tableData: { name: string; comment: string }) {
+  try {
+    isGlobalLoading.value = true;
+    loadingMessage.value = `正在创建表 "${tableData.name}"...`;
+    
+    // TODO: 实现创建表的逻辑
+    console.log('创建表:', tableData);
+    
+    // 刷新数据库
+    await handleRefreshDatabase();
+    
+    showToast('成功', `表 "${tableData.name}" 创建成功`, 'success');
+  } catch (error) {
+    console.error('创建表失败:', error);
+    showToast('错误', `创建表失败: ${error.message}`, 'error');
+  } finally {
+    isGlobalLoading.value = false;
+  }
+}
+
+function handleInsertData() {
+  // TODO: 实现插入数据的逻辑
+  showToast('提示', '插入数据功能开发中...', 'info');
+}
+
+function handleExportTable() {
+  // TODO: 实现导出表的逻辑
+  showToast('提示', '导出表功能开发中...', 'info');
+}
+
+async function handleTruncateTable() {
+  if (!selectedTable.value || !selectedConnection.value || !selectedDatabase.value) return;
+  
+  if (confirm(`确定要清空表 "${selectedTable.value.name}" 吗？此操作将删除所有数据且不可恢复。`)) {
+    try {
+      isGlobalLoading.value = true;
+      loadingMessage.value = `正在清空表 "${selectedTable.value.name}"...`;
+      
+      // TODO: 实现清空表的逻辑
+      console.log('清空表:', selectedTable.value.name);
+      
+      // 刷新表数据
+      await refreshTableData();
+      
+      showToast('成功', `表 "${selectedTable.value.name}" 已清空`, 'success');
+    } catch (error) {
+      console.error('清空表失败:', error);
+      showToast('错误', `清空表失败: ${error.message}`, 'error');
+    } finally {
+      isGlobalLoading.value = false;
+    }
+  }
+}
+
+async function handleDropTable() {
+  if (!selectedTable.value || !selectedConnection.value || !selectedDatabase.value) return;
+  
+  if (confirm(`确定要删除表 "${selectedTable.value.name}" 吗？此操作将删除表结构和所有数据且不可恢复。`)) {
+    try {
+      isGlobalLoading.value = true;
+      loadingMessage.value = `正在删除表 "${selectedTable.value.name}"...`;
+      
+      // TODO: 实现删除表的逻辑
+      console.log('删除表:', selectedTable.value.name);
+      
+      // 清空选中状态
+      selectedTable.value = null;
+      
+      // 刷新数据库
+      await refreshDatabase();
+      
+      showToast('成功', `表 "${selectedTable.value.name}" 已删除`, 'success');
+    } catch (error) {
+      console.error('删除表失败:', error);
+      showToast('错误', `删除表失败: ${error.message}`, 'error');
+    } finally {
+      isGlobalLoading.value = false;
+    }
+  }
+}
+
+function handleEditRow(row: any) {
+  // TODO: 实现编辑行的逻辑
+  showToast('提示', '编辑行功能开发中...', 'info');
+}
+
+function handleDeleteRow(row: any) {
+  // TODO: 实现删除行的逻辑
+  showToast('提示', '删除行功能开发中...', 'info');
+}
+
+async function handleExecuteSql(sql: string) {
+  if (!selectedConnection.value) {
+    showToast('错误', '请先选择数据库连接', 'error');
+    return;
+  }
+  
+  if (!sql.trim()) {
+    showToast('错误', 'SQL语句不能为空', 'error');
+    return;
+  }
+  
+  try {
+    isGlobalLoading.value = true;
+    loadingMessage.value = '正在执行SQL...';
+    const result = await databaseService.executeQuery(selectedConnection.value.id, sql);
+    
+    if (result.success) {
+      showToast('', 'SQL执行成功', 'success');
+      
+      // 保存SQL执行结果用于展示
+      if (result.data && Array.isArray(result.data)) {
+        sqlResult.value = {
+          success: true,
+          data: result.data,
+          columns: result.data.length > 0 ? Object.keys(result.data[0]) : [],
+          affectedRows: result.affectedRows || 0,
+          insertId: result.insertId || null
+        };
+      } else {
+        sqlResult.value = {
+          success: true,
+          data: [],
+          columns: [],
+          affectedRows: result.affectedRows || 0,
+          insertId: result.insertId || null
+        };
+        showToast('', `执行成功，影响行数: ${result.affectedRows || 0}`, 'success');
+      }
+    } else {
+      sqlResult.value = {
+        success: false,
+        data: [],
+        columns: [],
+        affectedRows: 0,
+        error: result.error
+      };
+      showToast('错误', `SQL执行失败: ${result.error}`, 'error');
+    }
+  } catch (error) {
+    console.error('SQL执行失败:', error);
+    sqlResult.value = {
+      success: false,
+      data: [],
+      columns: [],
+      affectedRows: 0,
+      error: error.message
+    };
+    showToast('错误', `SQL执行失败: ${error.message}`, 'error');
+  } finally {
+    isGlobalLoading.value = false;
+  }
 }
 
 function showToast(title: string, message: string, type: string = 'success') {
@@ -1092,6 +930,8 @@ function showToast(title: string, message: string, type: string = 'success') {
 .tree-node.selected .node-content {
   background-color: #eff1ff;
   color: #0969da;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(9, 105, 218, 0.15);
 }
 
 .tree-node.selected .node-content::before {
@@ -1100,9 +940,9 @@ function showToast(title: string, message: string, type: string = 'success') {
   left: 0;
   top: 0;
   bottom: 0;
-  width: 2px;
-  background-color: #0969da;
-  border-radius: 2px 0 0 2px;
+  width: 3px;
+  background: linear-gradient(135deg, #0969da, #0550ae);
+  border-radius: 3px 0 0 3px;
 }
 
 .node-icon {
