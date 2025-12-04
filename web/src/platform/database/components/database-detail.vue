@@ -29,7 +29,7 @@
     <!-- 操作工具栏 -->
     <div class="database-toolbar">
       <div class="toolbar-left">
-        <button class="btn btn-primary btn-sm" @click="showCreateTableModal">
+        <button class="btn btn-primary btn-sm" @click="createNewTable">
           <i class="bi bi-plus-lg"></i> 创建表
         </button>
         <button class="btn btn-success btn-sm" @click="showCreateViewModal">
@@ -136,7 +136,7 @@
           <div v-if="!tables || tables.length === 0" class="empty-state">
             <i class="bi bi-inbox"></i>
             <p>暂无数据表</p>
-            <button class="btn btn-primary" @click="showCreateTableModal">
+            <button class="btn btn-primary" @click="createNewTable">
               <i class="bi bi-plus"></i> 创建第一个表
             </button>
           </div>
@@ -201,12 +201,23 @@
         </div>
       </div>
     </div>
+    
+    <!-- 表结构编辑器 -->
+    <TableEditor
+      :visible="showTableEditor"
+      :connection="connection"
+      :database="database"
+      :table-name="editingTableName"
+      @close="closeTableEditor"
+      @execute-sql="handleExecuteSQL"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
+import TableEditor from './table-editor.vue';
 
 // Props
 const props = defineProps<{
@@ -222,6 +233,7 @@ const emit = defineEmits<{
   'select-table': [table: TableEntity];
   'refresh-database': [];
   'create-table': [table: { name: string; comment: string }];
+  'execute-sql': [sql: string];
 }>();
 
 // 响应式数据
@@ -230,6 +242,10 @@ const showCreateTable = ref(false);
 const showCreateView = ref(false);
 const showCreateProcedure = ref(false);
 const newTable = ref({ name: '', comment: '' });
+
+// 表编辑器相关
+const showTableEditor = ref(false);
+const editingTableName = ref('');
 
 // 计算属性
 const tables = computed(() => {
@@ -286,13 +302,15 @@ function createTable() {
   if (!newTable.value.name.trim()) {
     return;
   }
-  emit('create-table', { ...newTable.value });
+  // 直接打开表编辑器，而不是创建空表
+  editingTableName.value = newTable.value.name;
+  showTableEditor.value = true;
   showCreateTable.value = false;
 }
 
 function editTable(table: TableEntity) {
-  // TODO: 实现编辑表功能
-  console.log('编辑表:', table);
+  editingTableName.value = table.name;
+  showTableEditor.value = true;
 }
 
 function deleteTable(table: TableEntity) {
@@ -300,6 +318,21 @@ function deleteTable(table: TableEntity) {
     // TODO: 实现删除表功能
     console.log('删除表:', table);
   }
+}
+
+function handleExecuteSQL(sql: string) {
+  // 这里应该发送SQL到后端执行
+  emit('execute-sql', sql);
+}
+
+function createNewTable() {
+  editingTableName.value = '';
+  showTableEditor.value = true;
+}
+
+function closeTableEditor() {
+  showTableEditor.value = false;
+  editingTableName.value = '';
 }
 </script>
 

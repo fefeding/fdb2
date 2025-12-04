@@ -25,7 +25,7 @@
               v-for="connection in connections" 
               :key="connection.id" 
               class="tree-node connection-node"
-              :class="{ 'selected': selectedConnection?.id === connection.id }"
+              :class="{ 'selected': selectedConnection?.id === connection.id && !selectedDatabase && !selectedTable }"
             >
               <!-- 连接节点 -->
               <div class="node-content connection-content">
@@ -77,7 +77,7 @@
                   v-for="database in getDatabasesForConnection(connection.id)"
                   :key="`${connection.id}-${database}`"
                   class="tree-node database-node"
-                  :class="{ 'selected': selectedDatabase === database && selectedConnection?.id === connection.id }"
+                  :class="{ 'selected': selectedDatabase === database && selectedConnection?.id === connection.id && !selectedTable }"
                 >
                   <!-- 数据库节点 -->
                   <div class="node-content database-content">
@@ -112,7 +112,7 @@
                       v-for="table in getTablesForDatabase(connection.id, database)"
                       :key="`${connection.id}-${database}-${table.name}`"
                       class="tree-node table-node"
-                      :class="{ 'selected': selectedTable?.name === table.name && selectedDatabase === database }"
+                      :class="{ 'selected': selectedTable?.name === table.name && selectedDatabase === database && selectedConnection?.id === connection.id }"
                     >
                       <!-- 表节点 -->
                       <div class="node-content table-content">
@@ -177,6 +177,7 @@
           @select-table="selectTable"
           @refresh-database="handleRefreshDatabase"
           @create-table="handleCreateTable"
+          @execute-sql="handleExecuteSql"
         />
 
         <!-- 表详情组件 -->
@@ -190,6 +191,7 @@
           :loading="isGlobalLoading"
           :total="tableData.length"
           :sql-result="sqlResult"
+          :sql-executing="sqlExecuting"
           @refresh-data="refreshTableData"
           @insert-data="handleInsertData"
           @export-table="handleExportTable"
@@ -271,6 +273,7 @@ const pageSize = ref(50);
 
 // SQL执行结果
 const sqlResult = ref<any>(null);
+const sqlExecuting = ref(false);
 
 // 全局Loading状态
 const isGlobalLoading = ref(false);
@@ -716,9 +719,13 @@ async function handleExecuteSql(sql: string) {
   }
   
   try {
-    isGlobalLoading.value = true;
-    loadingMessage.value = '正在执行SQL...';
-    const result = await databaseService.executeQuery(selectedConnection.value.id, sql);
+    // 清除之前的结果
+    sqlResult.value = null;
+    sqlExecuting.value = true;
+    
+    // 传入当前选中的数据库，如果选中的是表，则使用表所在的数据库
+    const databaseName = selectedTable.value ? selectedDatabase.value : selectedDatabase.value;
+    const result = await databaseService.executeQuery(selectedConnection.value.id, sql, databaseName);
     
     if (result.success) {
       showToast('', 'SQL执行成功', 'success');
@@ -759,11 +766,11 @@ async function handleExecuteSql(sql: string) {
       data: [],
       columns: [],
       affectedRows: 0,
-      error: error.message
+      error: error?.message || ''
     };
-    showToast('错误', `SQL执行失败: ${error.message}`, 'error');
+    showToast('错误', `SQL执行失败: ${error?.message||''}`, 'error');
   } finally {
-    isGlobalLoading.value = false;
+    sqlExecuting.value = false;
   }
 }
 

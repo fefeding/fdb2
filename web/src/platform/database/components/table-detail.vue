@@ -46,9 +46,22 @@
         <button class="btn btn-success btn-sm" @click="insertData">
           <i class="bi bi-plus-lg"></i> 插入数据
         </button>
-        <button class="btn btn-info btn-sm" @click="exportTable">
-          <i class="bi bi-download"></i> 导出
-        </button>
+        <div class="btn-group">
+          <button class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+            <i class="bi bi-download"></i> 导出
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" @click="exportTableData('csv')">
+              <i class="bi bi-file-earmark-spreadsheet me-2"></i>导出 CSV
+            </a></li>
+            <li><a class="dropdown-item" href="#" @click="exportTableData('json')">
+              <i class="bi bi-file-earmark-code me-2"></i>导出 JSON
+            </a></li>
+            <li><a class="dropdown-item" href="#" @click="exportTableData('excel')">
+              <i class="bi bi-file-earmark-excel me-2"></i>导出 Excel
+            </a></li>
+          </ul>
+        </div>
       </div>
       <div class="toolbar-right">
         <button class="btn btn-outline-warning btn-sm" @click="truncateTable" v-if="tableData.length > 0">
@@ -107,6 +120,15 @@
             @click="activeTab = 'sql'"
           >
             <i class="bi bi-code-slash"></i> SQL
+          </button>
+        </li>
+        <li class="nav-item">
+          <button 
+            class="nav-link" 
+            :class="{ active: activeTab === 'tools' }"
+            @click="activeTab = 'tools'"
+          >
+            <i class="bi bi-tools"></i> 工具
           </button>
         </li>
       </ul>
@@ -387,27 +409,52 @@
             </div>
             
             <!-- SQL执行结果显示 -->
-            <div v-if="props.sqlResult" class="sql-result">
+            <div v-if="props.sqlResult || props.sqlExecuting" class="sql-result">
               <div class="result-header">
                 <h6 class="result-title">
-                  <i class="bi bi-check-circle-fill text-success" v-if="props.sqlResult.success"></i>
-                  <i class="bi bi-x-circle-fill text-danger" v-else></i>
-                  执行结果
+                  <div v-if="props.sqlExecuting" class="sql-loading">
+                    <div class="spinner-border spinner-border-sm me-2"></div>
+                    执行中...
+                  </div>
+                  <template v-else-if="props.sqlResult">
+                    <i class="bi bi-check-circle-fill text-success" v-if="props.sqlResult.success"></i>
+                    <i class="bi bi-x-circle-fill text-danger" v-else></i>
+                    执行结果
+                  </template>
                 </h6>
-                <div class="result-stats" v-if="props.sqlResult.success">
+                <div class="result-stats" v-if="props.sqlResult && props.sqlResult.success">
                   <span class="badge bg-primary">影响行数: {{ props.sqlResult.affectedRows }}</span>
                   <span class="badge bg-success ms-2" v-if="props.sqlResult.insertId">插入ID: {{ props.sqlResult.insertId }}</span>
                 </div>
               </div>
               
+              <!-- 执行中的loading状态 -->
+              <div v-if="props.sqlExecuting" class="sql-loading-state">
+                <div class="d-flex align-items-center justify-content-center py-4">
+                  <div class="spinner-border text-primary me-3"></div>
+                  <div>
+                    <div class="fw-bold">正在执行SQL...</div>
+                    <div class="text-muted small">请稍候，复杂查询可能需要较长时间</div>
+                  </div>
+                </div>
+              </div>
+              
               <!-- 查询结果表格 -->
-              <div v-if="props.sqlResult.success && props.sqlResult.data.length > 0" class="result-table">
+              <div v-else-if="props.sqlResult && props.sqlResult.success && props.sqlResult.data.length > 0" class="result-table">
                 <div class="result-info">
                   查询到 {{ props.sqlResult.data.length }} 条记录
+                  <div class="result-actions ms-auto">
+                    <button class="btn btn-sm btn-outline-primary me-2" @click="exportSqlResult('csv')">
+                      <i class="bi bi-file-earmark-spreadsheet"></i> 导出CSV
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" @click="exportSqlResult('json')">
+                      <i class="bi bi-file-earmark-code"></i> 导出JSON
+                    </button>
+                  </div>
                 </div>
-                <div class="table-responsive">
+                <div class="table-responsive result-table-container">
                   <table class="table table-sm table-striped">
-                    <thead class="table-dark">
+                    <thead class="table-dark sticky-top">
                       <tr>
                         <th v-for="column in props.sqlResult.columns" :key="column">
                           {{ column }}
@@ -424,17 +471,52 @@
                   </table>
                 </div>
               </div>
+              
+              <!-- 错误结果显示 -->
+              <div v-else-if="props.sqlResult && !props.sqlResult.success" class="sql-error">
+                <div class="alert alert-danger">
+                  <h6 class="alert-heading">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    SQL执行失败
+                  </h6>
+                  <p class="mb-0">{{ props.sqlResult.error }}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- 工具标签页 -->
+        <div v-show="activeTab === 'tools'" class="tab-panel">
+          <DbTools 
+            :connection="connection"
+            :database="database"
+            @execute-sql="handleExecuteSqlFromTool"
+          />
+        </div>
       </div>
     </div>
+      
+    <!-- 数据编辑器 -->
+    <DataEditor
+      :visible="showDataEditor"
+      :is-edit="isEditMode"
+      :data="editingRow"
+      :columns="tableColumns"
+      :connection="connection"
+      :database="database"
+      :table-name="table?.name"
+      @close="closeDataEditor"
+      @submit="handleDataSubmit"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
+import DataEditor from './data-editor.vue';
+import DbTools from './db-tools.vue';
 
 // Props
 const props = defineProps<{
@@ -445,6 +527,7 @@ const props = defineProps<{
   tableStructure: any;
   loading: boolean;
   total: number;
+  sqlExecuting?: boolean;
   sqlResult?: {
     success: boolean;
     data: any[];
@@ -473,6 +556,11 @@ const currentPage = ref(1);
 const pageSize = ref(50);
 const sqlQuery = ref('');
 
+// 数据编辑相关
+const showDataEditor = ref(false);
+const isEditMode = ref(false);
+const editingRow = ref<any>(null);
+
 // 计算属性
 const tableColumns = computed(() => props.tableStructure?.columns || []);
 
@@ -497,7 +585,7 @@ const totalPages = computed(() => {
 });
 
 const visiblePages = computed(() => {
-  const pages = [];
+  const pages: number[] = [];
   const start = Math.max(1, currentPage.value - 2);
   const end = Math.min(totalPages.value, start + 4);
   
@@ -543,12 +631,133 @@ function refreshData() {
   emit('refresh-data');
 }
 
-function insertData() {
-  emit('insert-data');
+function insertData(newData?: any) {
+  if (newData) {
+    // 从编辑器来的新增数据
+    performInsert(newData);
+  } else {
+    // 新增按钮点击，打开编辑器
+    editingRow.value = null;
+    isEditMode.value = false;
+    showDataEditor.value = true;
+  }
+}
+
+async function performInsert(data: any) {
+  try {
+    // 构建INSERT语句
+    const columns = [];
+    const values = [];
+    
+    props.tableColumns.forEach((column: any) => {
+      if (!column.isPrimary || !column.isAutoIncrement) {
+        columns.push(column.name);
+        values.push(formatValueForSQL(data[column.name], column.type));
+      }
+    });
+    
+    const sql = `INSERT INTO \`${props.table?.name}\` (${columns.join(', ')}) VALUES (${values.join(', ')})`;
+    
+    // 发送执行SQL请求
+    const result = await fetch('/api/database/executeQuery/' + props.connection?.id, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sql: sql,
+        database: props.database
+      })
+    });
+    
+    if (result.ok) {
+      emit('refresh-data');
+      closeDataEditor();
+      alert('数据插入成功');
+    } else {
+      alert('数据插入失败');
+    }
+  } catch (error) {
+    console.error('插入数据失败:', error);
+    alert('数据插入失败');
+  }
 }
 
 function exportTable() {
-  emit('export-table');
+  exportTableData('csv');
+}
+
+function exportTableData(format: 'csv' | 'json' | 'excel') {
+  if (format === 'csv') {
+    exportToCSV();
+  } else if (format === 'json') {
+    exportToJSON();
+  } else if (format === 'excel') {
+    exportToExcel();
+  }
+}
+
+function exportToCSV() {
+  const headers = props.tableColumns.map((col: any) => col.name).join(',');
+  const rows = props.tableData.map(row => {
+    return props.tableColumns.map((col: any) => {
+      const value = row[col.name];
+      if (value === null || value === undefined) {
+        return '';
+      }
+      // 处理CSV特殊字符
+      let strValue = String(value);
+      if (strValue.includes(',') || strValue.includes('"') || strValue.includes('\n')) {
+        strValue = `"${strValue.replace(/"/g, '""')}"`;
+      }
+      return strValue;
+    }).join(',');
+  }).join('\n');
+  
+  const csv = `${headers}\n${rows}`;
+  downloadFile(csv, `${props.table?.name}_data.csv`, 'text/csv;charset=utf-8');
+}
+
+function exportToJSON() {
+  const jsonData = props.tableData.map(row => {
+    const filteredRow: any = {};
+    props.tableColumns.forEach((col: any) => {
+      filteredRow[col.name] = row[col.name];
+    });
+    return filteredRow;
+  });
+  
+  const json = JSON.stringify(jsonData, null, 2);
+  downloadFile(json, `${props.table?.name}_data.json`, 'application/json;charset=utf-8');
+}
+
+function exportToExcel() {
+  // 简单的Excel导出实现（使用HTML表格格式）
+  const headers = props.tableColumns.map((col: any) => `<th>${col.name}</th>`).join('');
+  const rows = props.tableData.map(row => {
+    const cells = props.tableColumns.map((col: any) => {
+      const value = row[col.name];
+      return `<td>${value !== null && value !== undefined ? value : ''}</td>`;
+    }).join('');
+    return `<tr>${cells}</tr>`;
+  }).join('');
+  
+  const html = `
+    <table border="1">
+      <thead><tr>${headers}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+  
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${props.table?.name}_data.xls`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 function truncateTable() {
@@ -564,7 +773,98 @@ function dropTable() {
 }
 
 function editRow(row: any) {
-  emit('edit-row', row);
+  editingRow.value = row;
+  isEditMode.value = true;
+  showDataEditor.value = true;
+}
+
+async function handleDataSubmit(result: any) {
+  try {
+    if (result.success) {
+      // 操作成功，刷新数据
+      emit('refresh-data');
+      closeDataEditor();
+    } else {
+      alert('操作失败');
+    }
+  } catch (error) {
+    console.error('处理数据提交失败:', error);
+    alert('操作失败');
+  }
+}
+
+function closeDataEditor() {
+  showDataEditor.value = false;
+  editingRow.value = null;
+  isEditMode.value = false;
+}
+
+async function updateRow(originalRow: any, newData: any) {
+  try {
+    // 构建UPDATE语句
+    const setClauses = [];
+    const whereClauses = [];
+    
+    props.tableColumns.forEach((column: any) => {
+      if (column.isPrimary && column.isAutoIncrement) {
+        // 自增主键作为WHERE条件
+        whereClauses.push(`${column.name} = ${formatValueForSQL(originalRow[column.name], column.type)}`);
+      } else if (newData[column.name] !== originalRow[column.name]) {
+        // 需要更新的字段
+        setClauses.push(`${column.name} = ${formatValueForSQL(newData[column.name], column.type)}`);
+      }
+    });
+    
+    if (setClauses.length === 0) {
+      return; // 没有数据需要更新
+    }
+    
+    const sql = `UPDATE \`${props.table?.name}\` SET ${setClauses.join(', ')} WHERE ${whereClauses.join(' AND ')}`;
+    
+    // 发送执行SQL请求
+    const result = await fetch('/api/database/executeQuery/' + props.connection?.id, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sql: sql,
+        database: props.database
+      })
+    });
+    
+    if (result.ok) {
+      emit('refresh-data');
+      alert('数据更新成功');
+    } else {
+      alert('数据更新失败');
+    }
+  } catch (error) {
+    console.error('更新数据失败:', error);
+    alert('数据更新失败');
+  }
+}
+
+function formatValueForSQL(value: any, columnType: string): string {
+  if (value === null || value === undefined || value === '') {
+    return 'NULL';
+  }
+  
+  if (isNumberInput(columnType) || isBooleanInput(columnType)) {
+    return String(value);
+  }
+  
+  // 字符串类型需要加引号
+  return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+function isNumberInput(type: string): boolean {
+  return ['int', 'integer', 'tinyint', 'smallint', 'mediumint', 'bigint', 
+          'decimal', 'numeric', 'float', 'double', 'real'].some(t => type.toLowerCase().includes(t));
+}
+
+function isBooleanInput(type: string): boolean {
+  return ['boolean', 'bool', 'bit'].some(t => type.toLowerCase().includes(t));
 }
 
 function deleteRow(row: any) {
@@ -619,12 +919,54 @@ function generateSelectSql() {
 }
 
 function generateInsertSql() {
-  const columns = tableColumns.value.map(col => col.name).join(', ');
+  const columns = tableColumns.value.map((col: any) => col.name).join(', ');
   sqlQuery.value = `INSERT INTO \`${props.table?.name}\` (${columns}) VALUES (...);`;
 }
 
 function generateUpdateSql() {
   sqlQuery.value = `UPDATE \`${props.table?.name}\` SET ... WHERE ...;`;
+}
+
+function exportSqlResult(format: 'csv' | 'json') {
+  if (!props.sqlResult || !props.sqlResult.data || props.sqlResult.data.length === 0) {
+    return;
+  }
+  
+  if (format === 'csv') {
+    const headers = props.sqlResult.columns.join(',');
+    const rows = props.sqlResult.data.map(row => 
+      props.sqlResult.columns.map(col => {
+        const value = row[col];
+        // 处理CSV特殊字符
+        if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+      }).join(',')
+    ).join('\n');
+    
+    const csv = `${headers}\n${rows}`;
+    downloadFile(csv, 'sql_result.csv', 'text/csv;charset=utf-8');
+  } else if (format === 'json') {
+    const json = JSON.stringify(props.sqlResult.data, null, 2);
+    downloadFile(json, 'sql_result.json', 'application/json;charset=utf-8');
+  }
+}
+
+function downloadFile(content: string, filename: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function handleExecuteSqlFromTool(sql: string) {
+  emit('execute-sql', sql);
 }
 </script>
 
@@ -927,5 +1269,60 @@ function generateUpdateSql() {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* SQL执行状态样式 */
+.sql-loading {
+  color: #007bff;
+  display: flex;
+  align-items: center;
+}
+
+.sql-loading-state {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 0 0 8px 8px;
+}
+
+.sql-error {
+  margin-top: 1rem;
+}
+
+.sql-error .alert {
+  margin: 0;
+  border-radius: 0 0 8px 8px;
+}
+
+.result-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0 0 8px 8px;
+}
+
+.result-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.result-table-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.result-table-container .table {
+  margin-bottom: 0;
+}
+
+.result-table-container .sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #495057;
 }
 </style>

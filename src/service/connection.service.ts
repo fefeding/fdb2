@@ -145,7 +145,26 @@ export class ConnectionService extends BaseService {
     const key = database ? `${id}_${database}` : id;
     if (this.activeConnections.has(key)) {
       const db = this.activeConnections.get(key);
-      return db;
+      // 检查连接是否仍然有效
+      if (db.isInitialized) {
+        return db;
+      } else {
+        // 连接已关闭，从缓存中移除
+        this.activeConnections.delete(key);
+      }
+    }
+
+    // 连接池大小限制，防止连接数无限增长
+    if (this.activeConnections.size >= 10) {
+      // 关闭最旧的连接
+      const oldestKey = this.activeConnections.keys().next().value;
+      const oldestConnection = this.activeConnections.get(oldestKey);
+      try {
+        await oldestConnection.destroy();
+      } catch (error) {
+        this.ctx.logger.error(`关闭旧连接 ${oldestKey} 失败:`, error);
+      }
+      this.activeConnections.delete(oldestKey);
     }
 
     const connectionConfig = await this.getConnectionById(id);
@@ -153,9 +172,13 @@ export class ConnectionService extends BaseService {
       throw new Error('连接配置不存在');
     }
 
-    const dataSource = await this.createTypeORMDataSource({
-      ...connectionConfig, database: database || connectionConfig.database
-    });
+    // 创建一个新的连接配置，使用指定的数据库
+    const updatedConnectionConfig: ConnectionEntity = {
+      ...connectionConfig,
+      database: database || connectionConfig.database
+    };
+
+    const dataSource = await this.createTypeORMDataSource(updatedConnectionConfig);
     this.activeConnections.set(key, dataSource);
     
     return dataSource;
@@ -164,11 +187,35 @@ export class ConnectionService extends BaseService {
   /**
    * 关闭数据库连接
    */
-  async closeConnection(id: string): Promise<void> {
-    if (this.activeConnections.has(id)) {
+  async closeConnection(id: string, database?: string): Promise<void> {
+    const key = database ? `${id}_${database}` : id;
+    if (this.activeConnections.has(key)) {
+      await this.activeConnections.get(key).destroy();
+      this.activeConnections.delete(key);
+    }
+    // 也关闭默认连接（如果存在）
+    if (database && this.activeConnections.has(id)) {
       await this.activeConnections.get(id).destroy();
       this.activeConnections.delete(id);
     }
+  }
+
+  /**
+   * 关闭特定连接的所有数据库连接
+   */
+  async closeAllConnectionsForId(connectionId: string): Promise<void> {
+    const keysToDelete: string[] = [];
+    for (const [key, dataSource] of this.activeConnections) {
+      if (key.startsWith(connectionId + '_') || key === connectionId) {
+        try {
+          await dataSource.destroy();
+          keysToDelete.push(key);
+        } catch (error) {
+          this.ctx.logger.error(`关闭连接 ${key} 失败:`, error);
+        }
+      }
+    }
+    keysToDelete.forEach(key => this.activeConnections.delete(key));
   }
 
   /**

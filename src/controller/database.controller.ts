@@ -158,13 +158,14 @@ export class DatabaseController {
   @All('/executeQuery/:id')
   async executeQuery(
     @Param('id') connectionId: string,
-    @Body('sql') sql: string
+    @Body('sql') sql: string,
+    @Body('database') databaseName?: string
   ) {
       if (!sql || sql.trim() === '') {
         throw Error('SQL语句不能为空');
       }
 
-      const result = await this.databaseService.executeQuery(connectionId, sql);
+      const result = await this.databaseService.executeQuery(connectionId, sql, databaseName);
       return result;
   }
 
@@ -173,8 +174,9 @@ export class DatabaseController {
    */
   @All('/closeConnection/:id')
   async closeConnection(@Param('id') connectionId: string) {
-    
       await this.connectionService.closeConnection(connectionId);
+      // 也清理该连接的所有数据库连接
+      await this.connectionService.closeAllConnectionsForId(connectionId);
       return true;
   }
 
@@ -247,5 +249,334 @@ export class DatabaseController {
     });
 
     return [csvHeaders, ...csvRows].join('\n');
+  }
+
+  /**
+   * 保存表结构
+   */
+  @All('/saveTableStructure/:id')
+  async saveTableStructure(
+    @Param('id') connectionId: string,
+    @Body() body: { database: string; table: any; columns: any[] }
+  ) {
+    const { database, table, columns } = body;
+    
+    // 生成CREATE TABLE或ALTER TABLE SQL
+    const sql = this.generateTableSQL(table.name, columns, table);
+    
+    // 执行SQL
+    const result = await this.databaseService.executeQuery(connectionId, sql, database);
+    
+    return {
+      success: true,
+      sql: sql,
+      result: result
+    };
+  }
+
+  /**
+   * 修改表结构
+   */
+  @All('/alterTable/:id')
+  async alterTable(
+    @Param('id') connectionId: string,
+    @Body() body: { database: string; tableName: string; columns: any[]; oldColumns?: any[] }
+  ) {
+    const { database, tableName, columns, oldColumns } = body;
+    
+    // 生成ALTER TABLE SQL
+    const sqlStatements = this.generateAlterTableSQL(tableName, columns, oldColumns);
+    
+    const results = [];
+    for (const sql of sqlStatements) {
+      const result = await this.databaseService.executeQuery(connectionId, sql, database);
+      results.push({ sql, result });
+    }
+    
+    return {
+      success: true,
+      statements: sqlStatements,
+      results: results
+    };
+  }
+
+  /**
+   * 插入数据
+   */
+  @All('/insertData/:id/:database/:table')
+  async insertData(
+    @Param('id') connectionId: string,
+    @Param('database') databaseName: string,
+    @Param('table') tableName: string,
+    @Body() data: any
+  ) {
+    const sql = this.generateInsertSQL(tableName, data);
+    const result = await this.databaseService.executeQuery(connectionId, sql, databaseName);
+    
+    return {
+      success: true,
+      sql: sql,
+      result: result
+    };
+  }
+
+  /**
+   * 更新数据
+   */
+  @All('/updateData/:id/:database/:table')
+  async updateData(
+    @Param('id') connectionId: string,
+    @Param('database') databaseName: string,
+    @Param('table') tableName: string,
+    @Body() body: { data: any; where: any }
+  ) {
+    const { data, where } = body;
+    const sql = this.generateUpdateSQL(tableName, data, where);
+    const result = await this.databaseService.executeQuery(connectionId, sql, databaseName);
+    
+    return {
+      success: true,
+      sql: sql,
+      result: result
+    };
+  }
+
+  /**
+   * 删除数据
+   */
+  @All('/deleteData/:id/:database/:table')
+  async deleteData(
+    @Param('id') connectionId: string,
+    @Param('database') databaseName: string,
+    @Param('table') tableName: string,
+    @Body() where: any
+  ) {
+    const sql = this.generateDeleteSQL(tableName, where);
+    const result = await this.databaseService.executeQuery(connectionId, sql, databaseName);
+    
+    return {
+      success: true,
+      sql: sql,
+      result: result
+    };
+  }
+
+  /**
+   * 生成表SQL
+   */
+  private generateTableSQL(tableName: string, columns: any[], tableInfo: any): string {
+    let sql = `CREATE TABLE \`${tableName}\` (\n`;
+    
+    const primaryKeys = [];
+    
+    columns.forEach((column, index) => {
+      const columnDef = [];
+      columnDef.push(`  \`${column.name}\``);
+      columnDef.push(this.getColumnTypeDefinition(column));
+      
+      if (!column.nullable) {
+        columnDef.push('NOT NULL');
+      }
+      
+      if (column.defaultValue !== null && column.defaultValue !== '') {
+        columnDef.push(`DEFAULT ${this.formatDefaultValue(column.defaultValue, column.type)}`);
+      }
+      
+      if (column.isAutoIncrement) {
+        columnDef.push('AUTO_INCREMENT');
+      }
+      
+      if (column.comment) {
+        columnDef.push(`COMMENT '${column.comment}'`);
+      }
+      
+      sql += columnDef.join(' ');
+      
+      if (index < columns.length - 1) {
+        sql += ',\n';
+      }
+      
+      if (column.isPrimary) {
+        primaryKeys.push(column.name);
+      }
+    });
+    
+    // 添加主键约束
+    if (primaryKeys.length > 0) {
+      sql += `,\n  PRIMARY KEY (\`${primaryKeys.join('`, `')}\`)`;
+    }
+    
+    sql += `\n) ENGINE=${tableInfo.engine} DEFAULT CHARSET=${tableInfo.charset} COLLATE=${tableInfo.collation}`;
+    
+    if (tableInfo.comment) {
+      sql += ` COMMENT='${tableInfo.comment}'`;
+    }
+    
+    sql += ';';
+    
+    return sql;
+  }
+
+  /**
+   * 生成修改表SQL
+   */
+  private generateAlterTableSQL(tableName: string, newColumns: any[], oldColumns: any[] = []): string[] {
+    const statements = [];
+    
+    // 简化实现：删除所有列，重新添加列
+    // 注意：实际生产中需要更复杂的对比逻辑
+    statements.push(`DROP TABLE IF EXISTS \`${tableName}_temp\`;`);
+    
+    let createTempSQL = `CREATE TABLE \`${tableName}_temp\` (\n`;
+    const primaryKeys = [];
+    
+    newColumns.forEach((column, index) => {
+      const columnDef = [];
+      columnDef.push(`  \`${column.name}\``);
+      columnDef.push(this.getColumnTypeDefinition(column));
+      
+      if (!column.nullable) {
+        columnDef.push('NOT NULL');
+      }
+      
+      if (column.defaultValue !== null && column.defaultValue !== '') {
+        columnDef.push(`DEFAULT ${this.formatDefaultValue(column.defaultValue, column.type)}`);
+      }
+      
+      if (column.isAutoIncrement) {
+        columnDef.push('AUTO_INCREMENT');
+      }
+      
+      if (column.comment) {
+        columnDef.push(`COMMENT '${column.comment}'`);
+      }
+      
+      createTempSQL += columnDef.join(' ');
+      
+      if (index < newColumns.length - 1) {
+        createTempSQL += ',\n';
+      }
+      
+      if (column.isPrimary) {
+        primaryKeys.push(column.name);
+      }
+    });
+    
+    if (primaryKeys.length > 0) {
+      createTempSQL += `,\n  PRIMARY KEY (\`${primaryKeys.join('`, `')}\`)`;
+    }
+    
+    createTempSQL += '\n);';
+    statements.push(createTempSQL);
+    
+    // 复制数据和重命名
+    statements.push(`INSERT INTO \`${tableName}_temp\` SELECT * FROM \`${tableName}\`;`);
+    statements.push(`DROP TABLE \`${tableName}\`;`);
+    statements.push(`RENAME TABLE \`${tableName}_temp\` TO \`${tableName}\`;`);
+    
+    return statements;
+  }
+
+  /**
+   * 生成插入SQL
+   */
+  private generateInsertSQL(tableName: string, data: any): string {
+    const columns = Object.keys(data);
+    const values = Object.values(data);
+    
+    const quotedColumns = columns.map(col => `\`${col}\``).join(', ');
+    const quotedValues = values.map(val => this.formatValue(val)).join(', ');
+    
+    return `INSERT INTO \`${tableName}\` (${quotedColumns}) VALUES (${quotedValues});`;
+  }
+
+  /**
+   * 生成更新SQL
+   */
+  private generateUpdateSQL(tableName: string, data: any, where: any): string {
+    const setClause = Object.entries(data)
+      .map(([key, value]) => `\`${key}\` = ${this.formatValue(value)}`)
+      .join(', ');
+    
+    const whereClause = Object.entries(where)
+      .map(([key, value]) => `\`${key}\` = ${this.formatValue(value)}`)
+      .join(' AND ');
+    
+    return `UPDATE \`${tableName}\` SET ${setClause} WHERE ${whereClause};`;
+  }
+
+  /**
+   * 生成删除SQL
+   */
+  private generateDeleteSQL(tableName: string, where: any): string {
+    const whereClause = Object.entries(where)
+      .map(([key, value]) => `\`${key}\` = ${this.formatValue(value)}`)
+      .join(' AND ');
+    
+    return `DELETE FROM \`${tableName}\` WHERE ${whereClause};`;
+  }
+
+  /**
+   * 获取字段类型定义
+   */
+  private getColumnTypeDefinition(column: any): string {
+    let type = column.type.toUpperCase();
+    
+    if (this.needsLength(column.type) && column.length) {
+      type += `(${column.length})`;
+    }
+    
+    return type;
+  }
+
+  /**
+   * 判断类型是否需要长度
+   */
+  private needsLength(type: string): boolean {
+    const typesNeedingLength = ['varchar', 'char', 'decimal', 'float', 'double'];
+    return typesNeedingLength.some(t => type.startsWith(t));
+  }
+
+  /**
+   * 格式化默认值
+   */
+  private formatDefaultValue(value: string, type: string): string {
+    if (value === '' || value === null || value === undefined) {
+      return 'NULL';
+    }
+    
+    if (this.isNumberType(type) || ['float', 'double', 'decimal'].includes(type)) {
+      return value;
+    }
+    
+    // 字符串类型需要加引号
+    return `'${value.replace(/'/g, "''")}'`;
+  }
+
+  /**
+   * 格式化值
+   */
+  private formatValue(value: any): string {
+    if (value === null || value === undefined) {
+      return 'NULL';
+    }
+    
+    if (typeof value === 'number' || typeof value === 'boolean') {
+      return String(value);
+    }
+    
+    if (value instanceof Date) {
+      return `'${value.toISOString().slice(0, 19).replace('T', ' ')}'`;
+    }
+    
+    // 字符串类型需要加引号
+    return `'${String(value).replace(/'/g, "''")}'`;
+  }
+
+  /**
+   * 判断是否为数字类型
+   */
+  private isNumberType(type: string): boolean {
+    return ['int', 'bigint', 'tinyint', 'smallint', 'mediumint'].includes(type);
   }
 }

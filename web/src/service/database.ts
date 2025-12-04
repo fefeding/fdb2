@@ -114,8 +114,8 @@ export class DatabaseService {
   /**
    * 执行SQL查询
    */
-  async executeQuery(connectionId: string, sql: string) {
-    return request(`/api/database/executeQuery/${connectionId}`, { sql });
+  async executeQuery(connectionId: string, sql: string, databaseName?: string) {
+    return request(`/api/database/executeQuery/${connectionId}`, { sql, database: databaseName });
   }
 
   /**

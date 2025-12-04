@@ -72,7 +72,7 @@ export class DatabaseService extends BaseService {
    * 获取数据库详细信息
    */
   async getDatabaseInfo(connectionId: string, databaseName: string): Promise<DatabaseEntity> {
-    const dataSource = await this.connectionService.getActiveConnection(connectionId);
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
     const databaseService = this.getDatabaseService(dataSource.options.type as string);
     return databaseService.getDatabaseInfo(dataSource, databaseName);
   }
@@ -81,7 +81,7 @@ export class DatabaseService extends BaseService {
    * 获取数据库表列表
    */
   async getTables(connectionId: string, databaseName: string): Promise<TableEntity[]> {
-    const dataSource = await this.connectionService.getActiveConnection(connectionId);
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
     const databaseService = this.getDatabaseService(dataSource.options.type as string);
     return databaseService.getTables(dataSource, databaseName);
   }
@@ -90,7 +90,7 @@ export class DatabaseService extends BaseService {
    * 获取表详细信息
    */
   async getTableInfo(connectionId: string, databaseName: string, tableName: string): Promise<TableEntity> {
-    const dataSource = await this.connectionService.getActiveConnection(connectionId);
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
     const databaseService = this.getDatabaseService(dataSource.options.type as string);
     return databaseService.getTableInfo(dataSource, databaseName, tableName);
   }
@@ -115,8 +115,8 @@ export class DatabaseService extends BaseService {
   /**
    * 执行SQL查询
    */
-  async executeQuery(connectionId: string, sql: string): Promise<any> {
-    const dataSource = await this.connectionService.getActiveConnection(connectionId);
+  async executeQuery(connectionId: string, sql: string, databaseName?: string): Promise<any> {
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
     const databaseService = this.getDatabaseService(dataSource.options.type as string);
     return databaseService.executeQuery(dataSource, sql);
   }
