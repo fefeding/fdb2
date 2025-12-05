@@ -1,0 +1,44 @@
+[
+  {
+    "id": "mipf93dvp3ubkfwy5yj",
+    "name": "localhost",
+    "type": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "database": "mysql",
+    "username": "root",
+    "password": "123456",
+    "options": {},
+    "enabled": true,
+    "createdAt": "2025-12-03T03:02:45.091Z",
+    "updatedAt": "2025-12-03T04:51:17.348Z"
+  },
+  {
+    "id": "mipqm50p8bmss5fbpgf",
+    "name": "local_postgresql",
+    "type": "postgres",
+    "host": "localhost",
+    "port": 5432,
+    "database": "",
+    "username": "postgres",
+    "password": "df123456",
+    "options": {},
+    "enabled": true,
+    "createdAt": "2025-12-03T08:20:49.513Z",
+    "updatedAt": "2025-12-05T02:09:00.890Z"
+  },
+  {
+    "id": "mipr23xidu6hzvy2ydg",
+    "name": "server.jm47.com",
+    "type": "mysql",
+    "host": "server.jm47.com",
+    "port": 3306,
+    "database": "",
+    "username": "root",
+    "password": "df@123456",
+    "options": {},
+    "enabled": true,
+    "createdAt": "2025-12-03T08:33:14.598Z",
+    "updatedAt": "2025-12-03T08:33:14.598Z"
+  }
+]

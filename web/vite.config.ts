@@ -1,6 +1,6 @@
 import { fileURLToPath, URL } from 'node:url';
-
-import { defineConfig, type PluginOption } from 'vite';
+import * as http from "node:http";
+import { defineConfig, Connect, type PluginOption } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vueJsx from '@vitejs/plugin-vue-jsx';
 import CopyPlugin from 'vite-plugin-files-copy';
@@ -8,6 +8,8 @@ import ViteNunjucksPlugin from '@fefeding/vite-nunjucks-plugin';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as dotenv from 'dotenv';
+
+import serverRoute from './server/index';
 
 const envPath = path.join(__dirname, '../.env');
 if(fs.existsSync(envPath)) {
@@ -105,7 +107,23 @@ const config = defineConfig({
                     );
                 }
                 return html;
-              },
+            },
+        },
+        {
+            name: 'server-api',
+            configureServer(server) {
+                server.middlewares.use((req: Connect.IncomingMessage, res: http.ServerResponse, next: Connect.NextFunction) => {
+                    if (req.url?.startsWith('/api/')) {
+                        // 示例：直接执行机器操作（如读取文件）
+                        if (!serverRoute(req, res, next)) {
+                            res.statusCode = 404;
+                            res.end('Not Found');
+                        }
+                    } else {
+                        next();
+                    }
+                });
+            },
         },
     ],
     resolve: {

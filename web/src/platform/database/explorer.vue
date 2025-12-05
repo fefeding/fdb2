@@ -183,7 +183,7 @@
           v-else-if="selectedConnection && selectedDatabase && !selectedTable"
           :connection="selectedConnection"
           :database="selectedDatabase"
-          :tables="getTablesForDatabase(selectedConnection.id, selectedDatabase)"
+          :tables="getTablesForDatabase(selectedConnection.id||'', selectedDatabase)"
           :database-info="databaseInfo"
           :loading="loadingDatabases.has(`${selectedConnection.id}-${selectedDatabase}`)"
           @select-table="selectTable"
@@ -321,18 +321,20 @@ onMounted(() => {
 async function loadConnections() {
   try {
     const response = await connectionService.getAllConnections();
-    connections.value = response.data || [];
+    connections.value = (response as any)?.data || [];
   } catch (error) {
     console.error('加载连接失败:', error);
-    showToast('错误', `加载连接失败: ${error.message}`, 'error');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    showToast('错误', `加载连接失败: ${errorMessage}`, 'error');
   }
 }
 
 function toggleConnection(connection: ConnectionEntity) {
-  if (expandedConnections.value.has(connection.id)) {
-    expandedConnections.value.delete(connection.id);
+  const connectionId = connection.id || '';
+  if (expandedConnections.value.has(connectionId)) {
+    expandedConnections.value.delete(connectionId);
   } else {
-    expandedConnections.value.add(connection.id);
+    expandedConnections.value.add(connectionId);
     loadDatabasesForConnection(connection);
   }
 }
@@ -345,26 +347,27 @@ function selectConnection(connection: ConnectionEntity) {
 }
 
 async function loadDatabasesForConnection(connection: ConnectionEntity, forceRefresh = false) {
-  const cacheKey = connection.id;
+  const cacheKey = connection.id || '';
   
   // 检查缓存
   if (!forceRefresh && databaseCache.value.has(cacheKey)) {
     return;
   }
   
-  if (!loadingConnections.value.has(connection.id)) {
-    loadingConnections.value.add(connection.id);
+  if (!loadingConnections.value.has(cacheKey)) {
+    loadingConnections.value.add(cacheKey);
   }
   
   try {
-    const databases = await databaseService.getDatabases(connection.id);
-    databaseCache.value.set(cacheKey, databases.data || []);
+    const databases = await databaseService.getDatabases(cacheKey);
+    databaseCache.value.set(cacheKey, (databases as any)?.data || []);
   } catch (error) {
     console.error('加载数据库失败:', error);
-    showToast('错误', `加载数据库失败: ${error.message}`, 'error');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    showToast('错误', `加载数据库失败: ${errorMessage}`, 'error');
     databaseCache.value.set(cacheKey, []);
   } finally {
-    loadingConnections.value.delete(connection.id);
+    loadingConnections.value.delete(cacheKey);
   }
 }
 
@@ -374,8 +377,8 @@ function toggleDatabase(connection: ConnectionEntity, database: string) {
     expandedDatabases.value.delete(dbKey);
   } else {
     expandedDatabases.value.add(dbKey);
-    loadTablesForDatabase(connection, database);
     loadDatabaseInfo(connection, database);
+    //loadTablesForDatabase(connection, database);
   }
 }
 
@@ -384,6 +387,9 @@ function selectDatabase(connection: ConnectionEntity, database: string) {
   selectedDatabase.value = database;
   selectedTable.value = null;
   activeTab.value = 'tables';
+
+  loadDatabaseInfo(connection, database);
+  //loadTablesForDatabase(connection, database);
 }
 
 async function loadTablesForDatabase(connection: ConnectionEntity, database: string, forceRefresh = false) {
@@ -404,7 +410,8 @@ async function loadTablesForDatabase(connection: ConnectionEntity, database: str
     tableCache.value.set(dbKey, tables);
   } catch (error) {
     console.error('加载表失败:', error);
-    showToast('错误', `加载表失败: ${error.message}`, 'error');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    showToast('错误', `加载表失败: ${errorMessage}`, 'error');
     tableCache.value.set(dbKey, []);
   } finally {
     loadingTables.value.delete(dbKey);
@@ -415,11 +422,14 @@ async function loadDatabaseInfo(connection: ConnectionEntity, database: string) 
   const dbKey = `${connection.id}-${database}`;
   
   try {
-    const info = await databaseService.getDatabaseInfo(connection.id, database);
+    const info = await databaseService.getDatabaseInfo(connection.id || '', database);
     databaseInfoCache.value.set(dbKey, info.data);
+
+    loadTablesForDatabase(connection, database);
   } catch (error) {
     console.error('加载数据库信息失败:', error);
-    showToast('错误', `加载数据库信息失败: ${error.message}`, 'error');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    showToast('错误', `加载数据库信息失败: ${errorMessage}`, 'error');
   }
 }
 
@@ -443,7 +453,8 @@ async function loadTableData(connection: ConnectionEntity, database: string, tab
     currentPage.value = 1;
   } catch (error) {
     console.error('加载表数据失败:', error);
-    showToast('错误', `加载表数据失败: ${error.message}`, 'error');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    showToast('错误', `加载表数据失败: ${errorMessage}`, 'error');
     tableData.value = [];
   } finally {
     isGlobalLoading.value = false;
@@ -457,7 +468,8 @@ async function loadTableStructure(connection: ConnectionEntity, database: string
     tableColumns.value = structure?.data.columns || [];
   } catch (error) {
     console.error('加载表结构失败:', error);
-    showToast('错误', `加载表结构失败: ${error.message}`, 'error');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    showToast('错误', `加载表结构失败: ${errorMessage}`, 'error');
     tableStructure.value = null;
     tableColumns.value = [];
   }
@@ -467,7 +479,8 @@ function getDatabasesForConnection(connectionId: string): string[] {
   return databaseCache.value.get(connectionId) || [];
 }
 
-function getTablesForDatabase(connectionId: string, database: string): TableEntity[] {  
+function getTablesForDatabase(connectionId: string | undefined, database: string): TableEntity[] {  
+  if(!connectionId) return [];
   const dbKey = `${connectionId}-${database}`;
   return tableCache.value.get(dbKey) || [];
 }
@@ -633,10 +646,10 @@ async function refreshDatabase(connection: ConnectionEntity, database: string) {
   databaseInfoCache.value.delete(dbKey);
   
   // 如果数据库已展开，则重新加载表
-  if (expandedDatabases.value.has(dbKey)) {
+  //if (expandedDatabases.value.has(dbKey)) {
     await loadTablesForDatabase(connection, database, true);
     await loadDatabaseInfo(connection, database);
-  }
+  //}
   
   showToast('', `数据库 "${database}" 已刷新`, 'success');
 }

@@ -43,6 +43,9 @@
         <button class="btn btn-primary btn-sm" @click="refreshData">
           <i class="bi bi-arrow-clockwise"></i> 刷新数据
         </button>
+        <button class="btn btn-info btn-sm" @click="editTableStructure">
+          <i class="bi bi-pencil-square"></i> 修改表结构
+        </button>
         <button class="btn btn-success btn-sm" @click="()=>insertData()">
           <i class="bi bi-plus-lg"></i> 插入数据
         </button>
@@ -161,7 +164,7 @@
             <table class="table table-sm table-striped table-hover">
               <thead class="table-light">
                 <tr>
-                  <th v-for="column in tableColumns" :key="column.name">
+                  <th v-for="column in safeTableColumns" :key="column.name">
                     <div class="column-header">
                       <span>{{ column.name }}</span>
                       <small class="text-muted d-block">{{ column.type }}</small>
@@ -242,6 +245,15 @@
 
         <!-- 结构标签页 -->
         <div v-show="activeTab === 'structure'" class="tab-panel">
+          <div class="structure-actions mb-3">
+            <button class="btn btn-success btn-sm" @click="addColumn">
+              <i class="bi bi-plus-lg"></i> 新增字段
+            </button>
+            <button class="btn btn-info btn-sm" @click="editTableStructure">
+              <i class="bi bi-pencil-square"></i> 修改表结构
+            </button>
+          </div>
+          
           <div class="structure-table">
             <table class="table table-bordered">
               <thead class="table-dark">
@@ -502,12 +514,23 @@
       :visible="showDataEditor"
       :is-edit="isEditMode"
       :data="editingRow"
-      :columns="tableColumns"
+      :columns="safeTableColumns"
       :connection="connection"
       :database="database"
       :table-name="table?.name"
       @close="closeDataEditor"
       @submit="handleDataSubmit"
+    />
+
+    <!-- 表格编辑器 -->
+    <TableEditor
+      :visible="showTableEditor"
+      :connection="connection"
+      :database="database"
+      :table="table"
+      :mode="tableEditorMode"
+      @close="closeTableEditor"
+      @submit="handleTableStructureChange"
     />
   </div>
 </template>
@@ -518,6 +541,8 @@ import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import { DatabaseService } from '@/service/database';
 import DataEditor from './data-editor.vue';
 import DbTools from './db-tools.vue';
+import TableEditor from './table-editor.vue';
+import { exportDataToCSV, exportDataToJSON, exportDataToExcel, formatFileName } from '../utils/export';
 
 // Props
 const props = defineProps<{
@@ -531,9 +556,10 @@ const props = defineProps<{
   sqlExecuting?: boolean;
   sqlResult?: {
     success: boolean;
-    data: any[];
-    columns: string[];
-    affectedRows: number;
+    message?: string;
+    data?: any[];
+    columns?: string[];
+    affectedRows?: number;
     insertId?: any;
     error?: string;
   };
@@ -542,12 +568,13 @@ const props = defineProps<{
 // Emits
 const emit = defineEmits<{
   'refresh-data': [];
-  'insert-data': [];
-  'export-table': [];
+  'refresh-structure': [];
   'truncate-table': [];
   'drop-table': [];
-  'edit-row': [row: any];
   'delete-row': [row: any];
+  'insert-data': [];
+  'export-table': [];
+  'edit-row': [row: any];
   'execute-sql': [sql: string];
 }>();
 
@@ -565,8 +592,26 @@ const showDataEditor = ref(false);
 const isEditMode = ref(false);
 const editingRow = ref<any>(null);
 
+// 表格编辑器相关
+const showTableEditor = ref(false);
+const tableEditorMode = ref<'create' | 'edit'>('edit');
+
 // 计算属性
 const tableColumns = computed(() => props.tableStructure?.columns || []);
+
+// 类型安全的表列数据
+const safeTableColumns = computed(() => {
+  const columns = props.tableStructure?.columns || [];
+  return columns.map(col => ({
+    ...col,
+    name: col.name || '',
+    type: col.type || '',
+    nullable: !!col.nullable,
+    isPrimary: !!col.isPrimary,
+    isAutoIncrement: !!col.isAutoIncrement,
+    comment: col.comment || ''
+  }));
+});
 
 const filteredData = computed(() => {
   if (!searchQuery.value) return props.tableData;
@@ -653,7 +698,7 @@ async function performInsert(data: any) {
     const columns = [];
     const values = [];
     
-    props.tableColumns.forEach((column: any) => {
+    safeTableColumns.value.forEach((column: any) => {
       if (!column.isPrimary || !column.isAutoIncrement) {
         columns.push(column.name);
         values.push(formatValueForSQL(data[column.name], column.type));
@@ -687,19 +732,36 @@ function exportTable() {
 }
 
 function exportTableData(format: 'csv' | 'json' | 'excel') {
-  if (format === 'csv') {
-    exportToCSV();
-  } else if (format === 'json') {
-    exportToJSON();
-  } else if (format === 'excel') {
-    exportToExcel();
+  if (!props.tableData || props.tableData.length === 0) {
+    console.warn('没有数据可导出');
+    return;
+  }
+
+  // 生成表头映射
+  const headers: Record<string, string> = {};
+  tableColumns.value.forEach((col: any) => {
+    headers[col.name] = col.comment || col.name;
+  });
+
+  const filename = formatFileName(props.table?.name || 'data', format);
+
+  switch (format) {
+    case 'csv':
+      exportDataToCSV(props.tableData, headers, filename);
+      break;
+    case 'json':
+      exportDataToJSON(props.tableData, filename);
+      break;
+    case 'excel':
+      exportDataToExcel(props.tableData, headers, filename);
+      break;
   }
 }
 
 function exportToCSV() {
-  const headers = props.tableColumns.map((col: any) => col.name).join(',');
+  const headers = tableColumns.value.map((col: any) => col.name).join(',');
   const rows = props.tableData.map(row => {
-    return props.tableColumns.map((col: any) => {
+    return tableColumns.value.map((col: any) => {
       const value = row[col.name];
       if (value === null || value === undefined) {
         return '';
@@ -720,7 +782,7 @@ function exportToCSV() {
 function exportToJSON() {
   const jsonData = props.tableData.map(row => {
     const filteredRow: any = {};
-    props.tableColumns.forEach((col: any) => {
+    tableColumns.value.forEach((col: any) => {
       filteredRow[col.name] = row[col.name];
     });
     return filteredRow;
@@ -732,9 +794,9 @@ function exportToJSON() {
 
 function exportToExcel() {
   // 简单的Excel导出实现（使用HTML表格格式）
-  const headers = props.tableColumns.map((col: any) => `<th>${col.name}</th>`).join('');
+  const headers = tableColumns.value.map((col: any) => `<th>${col.name}</th>`).join('');
   const rows = props.tableData.map(row => {
-    const cells = props.tableColumns.map((col: any) => {
+    const cells = tableColumns.value.map((col: any) => {
       const value = row[col.name];
       return `<td>${value !== null && value !== undefined ? value : ''}</td>`;
     }).join('');
@@ -798,13 +860,46 @@ function closeDataEditor() {
   isEditMode.value = false;
 }
 
+// 表格编辑相关方法
+function editTableStructure() {
+  tableEditorMode.value = 'edit';
+  showTableEditor.value = true;
+}
+
+function addColumn() {
+  // 这里可以打开列编辑器或直接调用表格编辑器
+  tableEditorMode.value = 'edit';
+  showTableEditor.value = true;
+}
+
+function closeTableEditor() {
+  showTableEditor.value = false;
+}
+
+async function handleTableStructureChange(result: any) {
+  try {
+    if (result.success) {
+      // 表结构修改成功，刷新结构
+      emit('refresh-structure');
+      emit('refresh-data');
+      closeTableEditor();
+      alert('表结构修改成功');
+    } else {
+      alert('表结构修改失败');
+    }
+  } catch (error) {
+    console.error('处理表结构修改失败:', error);
+    alert('表结构修改失败');
+  }
+}
+
 async function updateRow(originalRow: any, newData: any) {
   try {
     // 构建UPDATE语句
     const setClauses = [];
     const whereClauses = [];
     
-    props.tableColumns.forEach((column: any) => {
+    safeTableColumns.value.forEach((column: any) => {
       if (column.isPrimary && column.isAutoIncrement) {
         // 自增主键作为WHERE条件
         whereClauses.push(`${column.name} = ${formatValueForSQL(originalRow[column.name], column.type)}`);
@@ -867,13 +962,51 @@ function deleteRow(row: any) {
   }
 }
 
-function editColumn(column: any) {
-  console.log('编辑列:', column);
+async function editColumn(column: any) {
+  try {
+    // 构建ALTER TABLE语句来修改列
+    const sql = `ALTER TABLE \`${props.table?.name}\` MODIFY COLUMN \`${column.name}\` ${column.type} ${column.nullable ? 'NULL' : 'NOT NULL'} ${column.defaultValue ? `DEFAULT ${column.defaultValue}` : ''} ${column.comment ? `COMMENT '${column.comment}'` : ''}`;
+    
+    const result = await databaseService.executeQuery(
+      props.connection?.id || '',
+      sql,
+      props.database
+    );
+    
+    if (result.ok) {
+      emit('refresh-structure');
+      alert('列修改成功');
+    } else {
+      alert('列修改失败');
+    }
+  } catch (error) {
+    console.error('修改列失败:', error);
+    alert('列修改失败');
+  }
 }
 
-function deleteColumn(column: any) {
-  if (confirm(`确定要删除列 "${column.name}" 吗？`)) {
-    console.log('删除列:', column);
+async function deleteColumn(column: any) {
+  if (confirm(`确定要删除列 "${column.name}" 吗？此操作不可恢复。`)) {
+    try {
+      // 构建ALTER TABLE语句来删除列
+      const sql = `ALTER TABLE \`${props.table?.name}\` DROP COLUMN \`${column.name}\``;
+      
+      const result = await databaseService.executeQuery(
+        props.connection?.id || '',
+        sql,
+        props.database
+      );
+      
+      if (result.ok) {
+        emit('refresh-structure');
+        alert('列删除成功');
+      } else {
+        alert('列删除失败');
+      }
+    } catch (error) {
+      console.error('删除列失败:', error);
+      alert('列删除失败');
+    }
   }
 }
 
@@ -927,9 +1060,9 @@ function exportSqlResult(format: 'csv' | 'json') {
   }
   
   if (format === 'csv') {
-    const headers = props.sqlResult.columns.join(',');
-    const rows = props.sqlResult.data.map(row => 
-      props.sqlResult.columns.map(col => {
+    const headers = (props.sqlResult?.columns || []).join(',');
+    const rows = (props.sqlResult?.data || []).map(row => 
+      (props.sqlResult?.columns || []).map(col => {
         const value = row[col];
         // 处理CSV特殊字符
         if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
@@ -966,7 +1099,6 @@ function handleExecuteSqlFromTool(sql: string) {
 
 <style scoped>
 .table-detail {
-  height: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -1021,7 +1153,7 @@ function handleExecuteSqlFromTool(sql: string) {
   background: rgba(16, 185, 129, 0.1);
   color: #10b981;
   padding: 0.25rem 0.5rem;
-  border-radius: 8px;
+  border-radius: 0;
   font-weight: 500;
 }
 
@@ -1139,7 +1271,7 @@ function handleExecuteSqlFromTool(sql: string) {
 
 .table-responsive {
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 0;
 }
 
 .loading-state, .empty-state {

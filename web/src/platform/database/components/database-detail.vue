@@ -230,7 +230,7 @@ const props = defineProps<{
 
 // Emits
 const emit = defineEmits<{
-  'select-table': [table: TableEntity];
+  'select-table': [connection: ConnectionEntity, database: string, table: TableEntity];
   'refresh-database': [];
   'create-table': [table: { name: string; comment: string }];
   'execute-sql': [sql: string];
@@ -278,7 +278,8 @@ function formatNumber(num: number): string {
 }
 
 function selectTable(table: TableEntity) {
-  emit('select-table', table);
+  // @ts-ignore
+  emit('select-table', props.connection, props.database, table);
 }
 
 function handleRefreshDatabase() {
