@@ -1,4 +1,3 @@
-import { Provide } from '@midwayjs/core';
 import { DataSource } from 'typeorm';
 import { BaseDatabaseService } from './base.service';
 import { 
@@ -11,7 +10,6 @@ import {
 /**
  * SQL Server数据库服务实现
  */
-@Provide()
 export class SQLServerService extends BaseDatabaseService {
 
   getDatabaseType(): string {

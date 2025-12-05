@@ -1,5 +1,3 @@
-import { Provide } from '@midwayjs/core';
-import { BaseService } from '@cicctencent/midwayjs-base';
 import { DataSource } from 'typeorm';
 import { 
   DatabaseEntity, 
@@ -13,8 +11,7 @@ import {
  * 数据库服务基础类
  * 提供所有数据库类型的通用操作
  */
-@Provide()
-export abstract class BaseDatabaseService extends BaseService {
+export abstract class BaseDatabaseService {
 
   /**
    * 获取数据库类型

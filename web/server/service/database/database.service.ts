@@ -1,5 +1,3 @@
-import { Provide, Inject } from '@midwayjs/core';
-import { BaseService } from '@cicctencent/midwayjs-base';
 import { ConnectionService } from '../connection.service';
 import { BaseDatabaseService } from './base.service';
 import { MySQLService } from './mysql.service';
@@ -16,26 +14,23 @@ import {
  * 数据库服务管理类
  * 负责根据数据库类型选择相应的服务实现
  */
-@Provide()
-export class DatabaseService extends BaseService {
+export class DatabaseService {
 
-  @Inject()
-  connectionService: ConnectionService;
+  private connectionService: ConnectionService;
+  private mysqlService: MySQLService;
+  private postgreSQLService: PostgreSQLService;
+  private sqliteService: SQLiteService;
+  private oracleService: OracleService;
+  private sqlServerService: SQLServerService;
 
-  @Inject()
-  mysqlService: MySQLService;
-
-  @Inject()
-  postgreSQLService: PostgreSQLService;
-
-  @Inject()
-  sqliteService: SQLiteService;
-
-  @Inject()
-  oracleService: OracleService;
-
-  @Inject()
-  sqlServerService: SQLServerService;
+  constructor() {
+    this.connectionService = new ConnectionService();
+    this.mysqlService = new MySQLService();
+    this.postgreSQLService = new PostgreSQLService();
+    this.sqliteService = new SQLiteService();
+    this.oracleService = new OracleService();
+    this.sqlServerService = new SQLServerService();
+  }
 
   /**
    * 获取数据库服务实例

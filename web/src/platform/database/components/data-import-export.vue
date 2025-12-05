@@ -521,14 +521,6 @@ async function loadConnections() {
     const errorMessage = error instanceof Error ? error.message : '未知错误';
     showToast('错误', `加载连接失败: ${errorMessage}`, 'error');
   }
-  } catch (error) {
-    console.error('加载连接失败:', error);
-    const errorMessage = error instanceof Error ? error.message : '未知错误';
-    showToast('错误', `加载连接失败: ${errorMessage}`, 'error');
-  }
-  } catch (error) {
-    console.error('加载连接列表失败:', error);
-  }
 }
 
 async function loadTables() {

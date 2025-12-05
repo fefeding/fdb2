@@ -1,5 +1,3 @@
-import { Provide,  } from '@midwayjs/core';
-import { BaseService } from '@cicctencent/midwayjs-base';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ConnectionEntity } from '../model/connection.entity';
@@ -9,8 +7,7 @@ import { DataSource, DataSourceOptions } from 'typeorm';
  * 数据库连接管理服务
  * 负责管理数据库连接配置和连接实例
  */
-@Provide()
-export class ConnectionService extends BaseService {
+export class ConnectionService {
 
   /**
    * 连接配置文件路径

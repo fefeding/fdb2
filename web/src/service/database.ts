@@ -10,14 +10,14 @@ export class ConnectionService {
    * 获取所有数据库连接配置
    */
   async getAllConnections() {
-    return request('/api/database/getConnections');
+    return request('/api/database/getConnections', {});
   }
 
   /**
    * 根据ID获取数据库连接配置
    */
   async getConnectionById(id: string) {
-    return request(`/api/database/getConnection/${id}`);
+    return request('/api/database/getConnection', { id });
   }
 
   /**
@@ -31,14 +31,14 @@ export class ConnectionService {
    * 更新数据库连接配置
    */
   async updateConnection(id: string, updates: Partial<ConnectionEntity>) {
-    return request(`/api/database/updateConnection/${id}`, updates);
+    return request('/api/database/updateConnection', { id, ...updates });
   }
 
   /**
    * 删除数据库连接配置
    */
   async deleteConnection(id: string) {
-    return request(`/api/database/deleteConnection/${id}`);
+    return request('/api/database/deleteConnection', { id });
   }
 
   /**
@@ -65,28 +65,28 @@ export class DatabaseService {
    * 获取数据库列表
    */
   async getDatabases(connectionId: string) {
-    return request(`/api/database/getDatabases/${connectionId}`);
+    return request('/api/database/getDatabases', { id: connectionId });
   }
 
   /**
    * 获取数据库详细信息
    */
   async getDatabaseInfo(connectionId: string, databaseName: string) {
-    return request(`/api/database/getDatabaseInfo/${connectionId}/${databaseName}`);
+    return request('/api/database/getDatabaseInfo', { id: connectionId, database: databaseName });
   }
 
   /**
    * 获取数据库表列表
    */
   async getTables(connectionId: string, databaseName: string) {
-    return request(`/api/database/getTables/${connectionId}/${databaseName}`);
+    return request('/api/database/getTables', { id: connectionId, database: databaseName });
   }
 
   /**
    * 获取表详细信息
    */
   async getTableInfo(connectionId: string, databaseName: string, tableName: string) {
-    return request(`/api/database/getTableInfo/${connectionId}/${databaseName}/${tableName}`);
+    return request('/api/database/getTableInfo', { id: connectionId, database: databaseName, table: tableName });
   }
 
   /**
@@ -102,26 +102,29 @@ export class DatabaseService {
     orderBy?: string
   ) {
     const params = {
+      id: connectionId,
+      database: databaseName,
+      table: tableName,
       page,
       pageSize,
       where,
       orderBy
     };
-    return request(`/api/database/getTableData/${connectionId}/${databaseName}/${tableName}`, params);
+    return request('/api/database/getTableData', params);
   }
 
   /**
    * 执行SQL查询
    */
   async executeQuery(connectionId: string, sql: string, databaseName?: string) {
-    return request(`/api/database/executeQuery/${connectionId}`, { sql, database: databaseName });
+    return request('/api/database/executeQuery', { id: connectionId, sql, database: databaseName });
   }
 
   /**
    * 关闭数据库连接
    */
   async closeConnection(connectionId: string) {
-    return request(`/api/database/closeConnection/${connectionId}`);
+    return request('/api/database/closeConnection', { id: connectionId });
   }
 
   /**
@@ -134,8 +137,13 @@ export class DatabaseService {
     format: string = 'json',
     where?: string
   ) {
-    const params = { format, where };
-    return request(`/api/database/exportTableData/${connectionId}/${databaseName}/${tableName}`, params);
+    return request('/api/database/exportTableData', {
+      id: connectionId,
+      database: databaseName,
+      table: tableName,
+      format,
+      where
+    });
   }
 
   /**
@@ -147,7 +155,8 @@ export class DatabaseService {
     table: any,
     columns: any[]
   ) {
-    return request(`/api/database/saveTableStructure/${connectionId}`, {
+    return request('/api/database/saveTableStructure', {
+      id: connectionId,
       database,
       table,
       columns
@@ -164,7 +173,8 @@ export class DatabaseService {
     columns: any[],
     oldColumns?: any[]
   ) {
-    return request(`/api/database/alterTable/${connectionId}`, {
+    return request('/api/database/alterTable', {
+      id: connectionId,
       database,
       tableName,
       columns,
@@ -181,7 +191,12 @@ export class DatabaseService {
     tableName: string,
     data: any
   ) {
-    return request(`/api/database/insertData/${connectionId}/${database}/${tableName}`, data);
+    return request('/api/database/insertData', {
+      id: connectionId,
+      database,
+      table: tableName,
+      data
+    });
   }
 
   /**
@@ -194,7 +209,10 @@ export class DatabaseService {
     data: any,
     where: any
   ) {
-    return request(`/api/database/updateData/${connectionId}/${database}/${tableName}`, {
+    return request('/api/database/updateData', {
+      id: connectionId,
+      database,
+      table: tableName,
       data,
       where
     });
@@ -209,7 +227,12 @@ export class DatabaseService {
     tableName: string,
     where: any
   ) {
-    return request(`/api/database/deleteData/${connectionId}/${database}/${tableName}`, where);
+    return request('/api/database/deleteData', {
+      id: connectionId,
+      database,
+      table: tableName,
+      where
+    });
   }
 
   /**
