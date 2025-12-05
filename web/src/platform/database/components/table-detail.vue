@@ -515,6 +515,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
+import { DatabaseService } from '@/service/database';
 import DataEditor from './data-editor.vue';
 import DbTools from './db-tools.vue';
 
@@ -534,6 +535,7 @@ const props = defineProps<{
     columns: string[];
     affectedRows: number;
     insertId?: any;
+    error?: string;
   };
 }>();
 
@@ -548,6 +550,8 @@ const emit = defineEmits<{
   'delete-row': [row: any];
   'execute-sql': [sql: string];
 }>();
+
+const databaseService = new DatabaseService();
 
 // 响应式数据
 const activeTab = ref('data');
@@ -659,16 +663,11 @@ async function performInsert(data: any) {
     const sql = `INSERT INTO \`${props.table?.name}\` (${columns.join(', ')}) VALUES (${values.join(', ')})`;
     
     // 发送执行SQL请求
-    const result = await fetch('/api/database/executeQuery/' + props.connection?.id, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        sql: sql,
-        database: props.database
-      })
-    });
+    const result = await databaseService.executeQuery(
+      props.connection?.id || '',
+      sql,
+      props.database
+    );
     
     if (result.ok) {
       emit('refresh-data');
@@ -822,16 +821,11 @@ async function updateRow(originalRow: any, newData: any) {
     const sql = `UPDATE \`${props.table?.name}\` SET ${setClauses.join(', ')} WHERE ${whereClauses.join(' AND ')}`;
     
     // 发送执行SQL请求
-    const result = await fetch('/api/database/executeQuery/' + props.connection?.id, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        sql: sql,
-        database: props.database
-      })
-    });
+    const result = await databaseService.executeQuery(
+      props.connection?.id || '',
+      sql,
+      props.database
+    );
     
     if (result.ok) {
       emit('refresh-data');

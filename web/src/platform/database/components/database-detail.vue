@@ -137,7 +137,7 @@
             <i class="bi bi-inbox"></i>
             <p>暂无数据表</p>
             <button class="btn btn-primary" @click="createNewTable">
-              <i class="bi bi-plus"></i> 创建第一个表
+              <i class="bi bi-plus"></i> 创建表
             </button>
           </div>
         </div>
@@ -561,10 +561,10 @@ function closeTableEditor() {
   height: 200px;
   color: #64748b;
   text-align: center;
+  font-size: 1.5rem;
 }
 
 .empty-state i {
-  font-size: 3rem;
   margin-bottom: 1rem;
   opacity: 0.5;
 }

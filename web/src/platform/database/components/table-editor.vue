@@ -220,6 +220,9 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
+import { DatabaseService } from '@/service/database';
+
+const databaseService = new DatabaseService();
 
 const props = defineProps<{
   visible: boolean;
@@ -268,8 +271,11 @@ async function initializeData() {
 // 加载表结构
 async function loadTableStructure() {
   try {
-    const response = await fetch(`/api/database/getTableInfo/${props.connection?.id}/${props.database}/${props.tableName}`);
-    const tableData = await response.json();
+    const tableData = await databaseService.getTableInfo(
+      props.connection?.id || '',
+      props.database || '',
+      props.tableName || ''
+    );
     
     if (tableData && tableData.columns) {
       columns.value = tableData.columns.map((col: any) => ({
@@ -459,19 +465,12 @@ async function saveTable() {
     
     if (!props.tableName) {
       // 新建表
-      const response = await fetch(`/api/database/saveTableStructure/${props.connection?.id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          database: props.database,
-          table: tableInfo.value,
-          columns: columns.value
-        })
-      });
-      
-      const result = await response.json();
+      const result = await databaseService.saveTableStructure(
+        props.connection?.id || '',
+        props.database || '',
+        tableInfo.value,
+        columns.value
+      );
       
       if (result.success) {
         alert('表创建成功');
@@ -481,19 +480,12 @@ async function saveTable() {
       }
     } else {
       // 修改表结构
-      const response = await fetch(`/api/database/alterTable/${props.connection?.id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          database: props.database,
-          tableName: props.tableName,
-          columns: columns.value
-        })
-      });
-      
-      const result = await response.json();
+      const result = await databaseService.alterTable(
+        props.connection?.id || '',
+        props.database || '',
+        props.tableName,
+        columns.value
+      );
       
       if (result.success) {
         alert('表结构修改成功');

@@ -44,8 +44,7 @@ export class ConnectionService {
   /**
    * 测试数据库连接
    */
-  async testConnection(connection: ConnectionEntity) {
-    debugger
+  async testConnection(connection: ConnectionEntity) {    
     return request('/api/database/testConnection', connection);
   }
 
@@ -137,5 +136,152 @@ export class DatabaseService {
   ) {
     const params = { format, where };
     return request(`/api/database/exportTableData/${connectionId}/${databaseName}/${tableName}`, params);
+  }
+
+  /**
+   * 保存表结构（新建表）
+   */
+  async saveTableStructure(
+    connectionId: string,
+    database: string,
+    table: any,
+    columns: any[]
+  ) {
+    return request(`/api/database/saveTableStructure/${connectionId}`, {
+      database,
+      table,
+      columns
+    });
+  }
+
+  /**
+   * 修改表结构
+   */
+  async alterTable(
+    connectionId: string,
+    database: string,
+    tableName: string,
+    columns: any[],
+    oldColumns?: any[]
+  ) {
+    return request(`/api/database/alterTable/${connectionId}`, {
+      database,
+      tableName,
+      columns,
+      oldColumns
+    });
+  }
+
+  /**
+   * 插入数据
+   */
+  async insertData(
+    connectionId: string,
+    database: string,
+    tableName: string,
+    data: any
+  ) {
+    return request(`/api/database/insertData/${connectionId}/${database}/${tableName}`, data);
+  }
+
+  /**
+   * 更新数据
+   */
+  async updateData(
+    connectionId: string,
+    database: string,
+    tableName: string,
+    data: any,
+    where: any
+  ) {
+    return request(`/api/database/updateData/${connectionId}/${database}/${tableName}`, {
+      data,
+      where
+    });
+  }
+
+  /**
+   * 删除数据
+   */
+  async deleteData(
+    connectionId: string,
+    database: string,
+    tableName: string,
+    where: any
+  ) {
+    return request(`/api/database/deleteData/${connectionId}/${database}/${tableName}`, where);
+  }
+
+  /**
+   * 截断表
+   */
+  async truncateTable(
+    connectionId: string,
+    database: string,
+    tableName: string
+  ) {
+    return request(`/api/database/truncateTable/${connectionId}/${database}/${tableName}`);
+  }
+
+  /**
+   * 删除表
+   */
+  async dropTable(
+    connectionId: string,
+    database: string,
+    tableName: string
+  ) {
+    return request(`/api/database/dropTable/${connectionId}/${database}/${tableName}`);
+  }
+
+  /**
+   * 数据库备份
+   */
+  async backupDatabase(
+    connectionId: string,
+    database: string,
+    options?: any
+  ) {
+    return request(`/api/database/backup/${connectionId}/${database}`, options);
+  }
+
+  /**
+   * 恢复数据库
+   */
+  async restoreDatabase(
+    connectionId: string,
+    data: any
+  ) {
+    return request('/api/database/restore', data);
+  }
+
+  /**
+   * 获取数据库统计信息
+   */
+  async getDatabaseStats(
+    connectionId: string,
+    database: string
+  ) {
+    return request(`/api/database/getStats/${connectionId}/${database}`);
+  }
+
+  /**
+   * 优化数据库
+   */
+  async optimizeDatabase(
+    connectionId: string,
+    database: string
+  ) {
+    return request(`/api/database/optimize/${connectionId}/${database}`);
+  }
+
+  /**
+   * 检查数据库健康状态
+   */
+  async checkDatabaseHealth(
+    connectionId: string,
+    database: string
+  ) {
+    return request(`/api/database/health/${connectionId}/${database}`);
   }
 }

@@ -122,7 +122,9 @@
 
 <script lang="ts" setup>
 import { ref, watch, computed } from 'vue';
-import { request } from '@/service/base';
+import { DatabaseService } from '@/service/database';
+
+const databaseService = new DatabaseService();
 
 const props = defineProps<{
   visible: boolean;
@@ -239,13 +241,21 @@ async function handleSubmit() {
     if (props.isEdit && props.data) {
       // 更新数据
       const whereClause = getPrimaryKeyWhere();
-      response = await request(`/api/database/updateData/${props.connection?.id}/${props.database}/${props.tableName}`, {
-          data: formData.value,
-          where: whereClause
-        });
+      response = await databaseService.updateData(
+        props.connection?.id || '',
+        props.database || '',
+        props.tableName || '',
+        formData.value,
+        whereClause
+      );
     } else {
       // 插入新数据
-      response = await request(`/api/database/insertData/${props.connection?.id}/${props.database}/${props.tableName}`, formData.value);
+      response = await databaseService.insertData(
+        props.connection?.id || '',
+        props.database || '',
+        props.tableName || '',
+        formData.value
+      );
     }
     
     if (response.ret === 0) {

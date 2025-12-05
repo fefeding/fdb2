@@ -166,9 +166,21 @@
 
       <!-- 右侧内容区域 -->
       <div class="explorer-main">
+        <!-- 连接详情组件 -->
+        <ConnectionDetail 
+          v-if="selectedConnection && !selectedDatabase && !selectedTable"
+          :connection="selectedConnection"
+          @test-connection="handleTestConnection"
+          @edit-connection="handleEditConnection"
+          @refresh-all="handleRefreshAll"
+          @open-sql-query="handleOpenSqlQuery"
+          @export-schema="handleExportSchema"
+          @view-logs="handleViewLogs"
+        />
+
         <!-- 数据库详情组件 -->
         <DatabaseDetail 
-          v-if="selectedConnection && selectedDatabase && !selectedTable"
+          v-else-if="selectedConnection && selectedDatabase && !selectedTable"
           :connection="selectedConnection"
           :database="selectedDatabase"
           :tables="getTablesForDatabase(selectedConnection.id, selectedDatabase)"
@@ -233,6 +245,7 @@ import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import ConnectionEditor from '@/components/connection-editor/index.vue';
 import Toast from '@/components/toast/toast.vue';
 import Loading from '@/components/loading/index.vue';
+import ConnectionDetail from './components/connection-detail.vue';
 import DatabaseDetail from './components/database-detail.vue';
 import TableDetail from './components/table-detail.vue';
 
@@ -483,6 +496,34 @@ function showAddConnectionModal() {
 
 function onConnectionSaved() {
   loadConnections();
+}
+
+// 连接详情相关事件处理
+function handleTestConnection(connection: ConnectionEntity) {
+  testConnection(connection);
+}
+
+function handleEditConnection(connection: ConnectionEntity) {
+  editConnection(connection);
+}
+
+function handleRefreshAll(connection: ConnectionEntity) {
+  refreshConnection(connection);
+}
+
+function handleOpenSqlQuery(connection: ConnectionEntity) {
+  // TODO: 打开SQL查询界面
+  showToast('提示', 'SQL查询功能开发中...', 'info');
+}
+
+function handleExportSchema(connection: ConnectionEntity) {
+  // TODO: 导出数据库架构
+  showToast('提示', '架构导出功能开发中...', 'info');
+}
+
+function handleViewLogs(connection: ConnectionEntity) {
+  // TODO: 查看连接日志
+  showToast('提示', '日志查看功能开发中...', 'info');
 }
 
 function refreshAll() {

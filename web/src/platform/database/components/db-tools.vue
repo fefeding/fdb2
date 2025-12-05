@@ -198,6 +198,7 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { DatabaseService } from '@/service/database';
 
 const props = defineProps<{
   connection: any;
@@ -207,6 +208,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   'execute-sql': [sql: string];
 }>();
+
+const databaseService = new DatabaseService();
 
 // 状态管理
 const restoreModalVisible = ref(false);
@@ -406,15 +409,12 @@ async function performRestore() {
     restoring.value = true;
     const formData = new FormData();
     formData.append('file', selectedFile.value);
-    formData.append('database', props.database);
+    formData.append('connectionId', props.connection?.id || '');
     formData.append('dropExisting', restoreOptions.value.dropExisting.toString());
     
-    const response = await fetch('/api/database/restore', {
-      method: 'POST',
-      body: formData
-    });
+    const response = await databaseService.restoreDatabase(formData);
     
-    if (response.ok) {
+    if (response) {
       alert('数据库恢复成功');
       closeRestoreModal();
     } else {
