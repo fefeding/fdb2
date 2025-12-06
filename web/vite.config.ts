@@ -1,6 +1,8 @@
 import { fileURLToPath, URL } from 'node:url';
 import * as http from "node:http";
-import { defineConfig, Connect, type PluginOption } from 'vite';
+import * as url from "node:url";
+import { defineConfig, type Connect, type PluginOption } from 'vite';
+
 import vue from '@vitejs/plugin-vue';
 import vueJsx from '@vitejs/plugin-vue-jsx';
 import CopyPlugin from 'vite-plugin-files-copy';
@@ -9,7 +11,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as dotenv from 'dotenv';
 
-import serverRoute from './server/index';
+import * as serverRoute from './server/index';
 
 const envPath = path.join(__dirname, '../.env');
 if(fs.existsSync(envPath)) {
@@ -189,4 +191,68 @@ function getViewInputs(dir: string): { [key: string]: string } {
     //   mobile: resolve(__dirname, "./view/mobile.html"),
     // }
     return inputObj;
+}
+
+
+
+// 路由处理函数
+async function serverRoute(req: Connect.IncomingMessage, res: http.ServerResponse, next: Connect.NextFunction) {
+  try {
+    console.log('request', req.url);
+    if (!req.url?.startsWith('/api/')) {
+      return next();
+    }
+
+    const parsedUrl = url.parse(req.url, true);
+    const pathname = parsedUrl.pathname || '';
+    const method = req.method?.toLowerCase();
+
+    // 统一处理为POST请求
+    if (method !== 'post') {
+      return sendError(res, 'Only POST method is allowed', 405);
+    }
+
+    const body = await getRequestBody(req);
+
+    // 路由分发
+    if (pathname.startsWith('/api/database/')) {
+      const data = await serverRoute.handleDatabaseRoutes(pathname, body);
+      sendJSON(res, data);
+    } else {
+      sendError(res, 'API not found', 404);
+    }
+  } catch (error: any) {
+    console.error('Route error:', error);
+    sendError(res, error.message || 'Internal server error', 500);
   }
+
+  // 响应助手函数
+    function sendJSON(res: http.ServerResponse, data: any, statusCode = 200) {
+        res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ret: 0, msg: 'success', data }));
+    }
+
+    function sendError(res: http.ServerResponse, message: string, statusCode = 500) {
+        res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ret: statusCode, msg: message }));
+    }
+
+    // 获取POST请求体
+    async function getRequestBody(req: http.IncomingMessage): Promise<any> {
+        return new Promise((resolve, reject) => {
+            let body = '';
+            req.on('data', chunk => {
+            body += chunk.toString();
+            });
+            req.on('end', () => {
+            try {
+                resolve(body ? JSON.parse(body) : {});
+            } catch (e) {
+                reject(e);
+            }
+            });
+            req.on('error', reject);
+        });
+    }
+}
+

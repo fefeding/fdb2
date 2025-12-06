@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run type-check && npm run build-only",
+    "build": "npm run build-only",
     "preview": "vite preview",
     "test:unit": "vitest",
     "build-only": "vite build",

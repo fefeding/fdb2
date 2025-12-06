@@ -8,253 +8,179 @@ import { DatabaseService } from './service/database/database.service';
 const connectionService = new ConnectionService();
 const databaseService = new DatabaseService();
 
-// 响应助手函数
-function sendJSON(res: http.ServerResponse, data: any, statusCode = 200) {
-  res.writeHead(statusCode, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ ret: 0, msg: 'success', data }));
-}
-
-function sendError(res: http.ServerResponse, message: string, statusCode = 500) {
-  res.writeHead(statusCode, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ ret: statusCode, msg: message }));
-}
-
-// 获取POST请求体
-async function getRequestBody(req: http.IncomingMessage): Promise<any> {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', chunk => {
-      body += chunk.toString();
-    });
-    req.on('end', () => {
-      try {
-        resolve(body ? JSON.parse(body) : {});
-      } catch (e) {
-        reject(e);
-      }
-    });
-    req.on('error', reject);
-  });
-}
-
-// 路由处理函数
-export default async function route(req: Connect.IncomingMessage, res: http.ServerResponse, next: Connect.NextFunction) {
-  try {
-    console.log('request', req.url);
-    if (!req.url?.startsWith('/api/')) {
-      return next();
-    }
-
-    const parsedUrl = url.parse(req.url, true);
-    const pathname = parsedUrl.pathname;
-    const method = req.method?.toLowerCase();
-
-    // 统一处理为POST请求
-    if (method !== 'post') {
-      return sendError(res, 'Only POST method is allowed', 405);
-    }
-
-    const body = await getRequestBody(req);
-    const pathParts = pathname.split('/').filter(Boolean);
-
-    // 路由分发
-    if (pathname.startsWith('/api/database/')) {
-      await handleDatabaseRoutes(pathname, pathParts, body, res);
-    } else {
-      sendError(res, 'API not found', 404);
-    }
-  } catch (error: any) {
-    console.error('Route error:', error);
-    sendError(res, error.message || 'Internal server error', 500);
-  }
-}
 
 // 数据库相关路由处理
-async function handleDatabaseRoutes(pathname: string, pathParts: string[], body: any, res: http.ServerResponse) {
+export async function handleDatabaseRoutes(pathname: string, pathParts: string[], body: any, res: http.ServerResponse) {
   // /api/database/getConnections
   if (pathname === '/api/database/getConnections') {
     const result = await connectionService.getAllConnections();
-    return sendJSON(res, result);
+    return result;
   }
 
   // /api/database/getConnection
   if (pathname === '/api/database/getConnection') {
     const { id } = body;
-    if (!id) return sendError(res, 'Missing parameter: id');
     const result = await connectionService.getConnectionById(id);
-    return sendJSON(res, result);
+    return result;
   }
 
   // /api/database/addConnection
   if (pathname === '/api/database/addConnection') {
     const result = await connectionService.addConnection(body);
-    return sendJSON(res, result);
+    return result;
   }
 
   // /api/database/updateConnection
   if (pathname === '/api/database/updateConnection') {
     const { id, ...updates } = body;
-    if (!id) return sendError(res, 'Missing parameter: id');
+    if (!id) throw Error('Missing parameter: id');
     const result = await connectionService.updateConnection(id, updates);
-    return sendJSON(res, result);
+    return result;
   }
 
   // /api/database/deleteConnection
   if (pathname === '/api/database/deleteConnection') {
     const { id } = body;
-    if (!id) return sendError(res, 'Missing parameter: id');
+    if (!id) throw Error('Missing parameter: id');
     await connectionService.deleteConnection(id);
-    return sendJSON(res, true);
+    return true;
   }
 
   // /api/database/testConnection
   if (pathname === '/api/database/testConnection') {
     const result = await connectionService.testConnection(body);
-    return sendJSON(res, result);
+    return result;
   }
 
   // /api/database/getDatabases
   if (pathname === '/api/database/getDatabases') {
     const { id } = body;
-    if (!id) return sendError(res, 'Missing parameter: id');
+    if (!id) throw Error('Missing parameter: id');
     const result = await databaseService.getDatabases(id);
-    return sendJSON(res, result);
+    return result;
   }
 
   // /api/database/getDatabaseInfo
   if (pathname === '/api/database/getDatabaseInfo') {
     const { id, database } = body;
-    if (!id || !database) return sendError(res, 'Missing parameters: id, database');
+    if (!id || !database) throw Error('Missing parameters: id, database');
     const result = await databaseService.getDatabaseInfo(id, database);
-    return sendJSON(res, result);
+    return result;
   }
 
   // /api/database/getTables
   if (pathname === '/api/database/getTables') {
     const { id, database } = body;
-    if (!id || !database) return sendError(res, 'Missing parameters: id, database');
+    if (!id || !database) throw Error('Missing parameters: id, database');
     const result = await databaseService.getTables(id, database);
-    return sendJSON(res, result);
+    return result;
   }
 
   // /api/database/getTableInfo
   if (pathname === '/api/database/getTableInfo') {
     const { id, database, table } = body;
-    if (!id || !database || !table) return sendError(res, 'Missing parameters: id, database, table');
+    if (!id || !database || !table) throw Error('Missing parameters: id, database, table');
     const result = await databaseService.getTableInfo(id, database, table);
-    return sendJSON(res, result);
+    return result;
   }
 
   // /api/database/getTableData
   if (pathname === '/api/database/getTableData') {
     const { id, database, table, page = 1, pageSize = 100, where, orderBy } = body;
-    if (!id || !database || !table) return sendError(res, 'Missing parameters: id, database, table');
+    if (!id || !database || !table) throw Error('Missing parameters: id, database, table');
     const result = await databaseService.getTableData(id, database, table, page, pageSize, where, orderBy);
-    return sendJSON(res, result);
+    return result;
   }
 
   // /api/database/executeQuery
   if (pathname === '/api/database/executeQuery') {
     const { id, sql, database } = body;
-    if (!id || !sql) return sendError(res, 'Missing parameters: id, sql');
-    if (!sql.trim()) return sendError(res, 'SQL语句不能为空');
+    if (!id || !sql) throw Error('Missing parameters: id, sql');
+    if (!sql.trim()) throw Error('SQL语句不能为空');
     const result = await databaseService.executeQuery(id, sql, database);
-    return sendJSON(res, result);
+    return result;
   }
 
   // /api/database/closeConnection
   if (pathname === '/api/database/closeConnection') {
     const { id } = body;
-    if (!id) return sendError(res, 'Missing parameter: id');
+    if (!id) throw Error('Missing parameter: id');
     await connectionService.closeConnection(id);
     await connectionService.closeAllConnectionsForId(id);
-    return sendJSON(res, true);
+    return true;
   }
 
   // /api/database/getSupportedDatabaseTypes
   if (pathname === '/api/database/getSupportedDatabaseTypes') {
     const types = databaseService.getSupportedDatabaseTypes();
-    return sendJSON(res, types);
+    return types;
   }
 
   // /api/database/exportTableData
   if (pathname === '/api/database/exportTableData') {
     const { id, database, table, format = 'json', where } = body;
-    if (!id || !database || !table) return sendError(res, 'Missing parameters: id, database, table');
+    if (!id || !database || !table) throw Error('Missing parameters: id, database, table');
     
     // 获取所有数据
     const result = await databaseService.getTableData(id, database, table, 1, 10000, where);
-
-    switch (format.toLowerCase()) {
-      case 'json':
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(result.data));
-        return;
-      case 'csv':
-        const csv = convertToCSV(result.data);
-        res.writeHead(200, { 'Content-Type': 'text/csv' });
-        res.end(csv);
-        return;
-      default:
-        return sendError(res, '不支持的导出格式');
-    }
+    return result;
   }
 
   // /api/database/saveTableStructure
   if (pathname === '/api/database/saveTableStructure') {
     const { id, database, table, columns } = body;
-    if (!id || !database || !table || !columns) return sendError(res, 'Missing parameters');
+    if (!id || !database || !table || !columns) throw Error('Missing parameters');
     
     const sql = generateTableSQL(table.name, columns, table);
     const result = await databaseService.executeQuery(id, sql, database);
-    return sendJSON(res, { success: true, sql, result });
+    return { success: true, sql, result };
   }
 
   // /api/database/alterTable
   if (pathname === '/api/database/alterTable') {
     const { id, database, tableName, columns, oldColumns } = body;
-    if (!id || !database || !tableName || !columns) return sendError(res, 'Missing parameters');
+    if (!id || !database || !tableName || !columns) throw Error('Missing parameters');
     
     const sqlStatements = generateAlterTableSQL(tableName, columns, oldColumns);
-    const results = [];
+    const results = [] as Array<any>;
     for (const sql of sqlStatements) {
       const result = await databaseService.executeQuery(id, sql, database);
       results.push({ sql, result });
     }
-    return sendJSON(res, { success: true, statements: sqlStatements, results });
+    return { success: true, statements: sqlStatements, results };
   }
 
   // /api/database/insertData
   if (pathname === '/api/database/insertData') {
     const { id, database, table, data } = body;
-    if (!id || !database || !table || !data) return sendError(res, 'Missing parameters');
+    if (!id || !database || !table || !data) throw Error('Missing parameters');
     
     const sql = generateInsertSQL(table, data);
     const result = await databaseService.executeQuery(id, sql, database);
-    return sendJSON(res, { sql, result });
+    return { sql, result };
   }
 
   // /api/database/updateData
   if (pathname === '/api/database/updateData') {
     const { id, database, table, data, where } = body;
-    if (!id || !database || !table || !data || !where) return sendError(res, 'Missing parameters');
+    if (!id || !database || !table || !data || !where) throw Error('Missing parameters');
     
     const sql = generateUpdateSQL(table, data, where);
     const result = await databaseService.executeQuery(id, sql, database);
-    return sendJSON(res, { sql, result });
+    return { sql, result };
   }
 
   // /api/database/deleteData
   if (pathname === '/api/database/deleteData') {
     const { id, database, table, where } = body;
-    if (!id || !database || !table || !where) return sendError(res, 'Missing parameters');
+    if (!id || !database || !table || !where) throw Error('Missing parameters');
     
     const sql = generateDeleteSQL(table, where);
     const result = await databaseService.executeQuery(id, sql, database);
-    return sendJSON(res, { success: true, sql, result });
+    return  { success: true, sql, result };
   }
 
-  return sendError(res, 'API endpoint not found', 404);
+   throw Error('API endpoint not found');
 }
 
 // 工具函数
@@ -283,10 +209,10 @@ function convertToCSV(data: any[]): string {
 function generateTableSQL(tableName: string, columns: any[], tableInfo: any): string {
   let sql = `CREATE TABLE \`${tableName}\` (\n`;
   
-  const primaryKeys = [];
+  const primaryKeys = [] as Array<string>;
   
   columns.forEach((column, index) => {
-    const columnDef = [];
+    const columnDef = [] as Array<string>;
     columnDef.push(`  \`${column.name}\``);
     columnDef.push(getColumnTypeDefinition(column));
     
@@ -334,17 +260,17 @@ function generateTableSQL(tableName: string, columns: any[], tableInfo: any): st
 }
 
 function generateAlterTableSQL(tableName: string, newColumns: any[], oldColumns: any[] = []): string[] {
-  const statements = [];
+  const statements = [] as Array<string>;
   
   // 简化实现：删除所有列，重新添加列
   // 注意：实际生产中需要更复杂的对比逻辑
   statements.push(`DROP TABLE IF EXISTS \`${tableName}_temp\`;`);
   
   let createTempSQL = `CREATE TABLE \`${tableName}_temp\` (\n`;
-  const primaryKeys = [];
+  const primaryKeys = [] as Array<string>;
   
   newColumns.forEach((column, index) => {
-    const columnDef = [];
+    const columnDef = [] as Array<string>;
     columnDef.push(`  \`${column.name}\``);
     columnDef.push(getColumnTypeDefinition(column));
     

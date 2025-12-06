@@ -4,6 +4,8 @@ import type { AxiosRequestConfig } from 'axios';
 import * as eventBus from '../base/eventBus';
 import config from '../base/config';
 
+import * as serverRoute from '../../server/index';
+
 export function getRequestUrl(api: string) {
     if(/^(http(s)?:)?\/\//.test(api)) return api;
     const apiUrl = config.apiUrl || `${location.protocol}//${location.hostname}${[80,443].includes(Number(location.port))?'':(':'+location.port)}`;
@@ -11,6 +13,7 @@ export function getRequestUrl(api: string) {
 }
 
 export async function requestServer(url: string, data?: any, option?: AxiosRequestConfig) {
+    console.log(serverRoute.handleDatabaseRoutes);
     url = getRequestUrl(url);
     const res = await requestHelper.request(url, data, option);
     return res;

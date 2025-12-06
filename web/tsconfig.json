@@ -5,6 +5,7 @@
         "env.d.ts",
         "src/typings/*.d.ts",
         "src/**/*",
+        "server/**/*.ts",
         "src/**/*.vue",
         "src/**/**/**/**/**/*.vue",
         "package.json",
