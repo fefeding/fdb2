@@ -40,6 +40,7 @@ async function getRequestBody(req: http.IncomingMessage): Promise<any> {
 // 路由处理函数
 export default async function route(req: Connect.IncomingMessage, res: http.ServerResponse, next: Connect.NextFunction) {
   try {
+    console.log('request', req.url);
     if (!req.url?.startsWith('/api/')) {
       return next();
     }

@@ -40,7 +40,7 @@ export class ConnectionService {
       const data = fs.readFileSync(this.configPath, 'utf8');
       return JSON.parse(data) as ConnectionEntity[];
     } catch (error) {
-      this.ctx.logger.error('读取连接配置失败:', error);
+      console.error('读取连接配置失败:', error);
       return [];
     }
   }
@@ -129,7 +129,6 @@ export class ConnectionService {
       await tempDataSource.destroy();
       return true;
     } catch (error) {
-      //this.ctx.logger.error('数据库连接测试失败:', error);
       console.error(error);
       return false;
     }
@@ -159,7 +158,7 @@ export class ConnectionService {
       try {
         await oldestConnection.destroy();
       } catch (error) {
-        this.ctx.logger.error(`关闭旧连接 ${oldestKey} 失败:`, error);
+        console.error(`关闭旧连接 ${oldestKey} 失败:`, error);
       }
       this.activeConnections.delete(oldestKey);
     }
@@ -208,7 +207,7 @@ export class ConnectionService {
           await dataSource.destroy();
           keysToDelete.push(key);
         } catch (error) {
-          this.ctx.logger.error(`关闭连接 ${key} 失败:`, error);
+          console.error(`关闭连接 ${key} 失败:`, error);
         }
       }
     }
@@ -223,7 +222,7 @@ export class ConnectionService {
       try {
         await dataSource.destroy();
       } catch (error) {
-        this.ctx.logger.error(`关闭连接 ${id} 失败:`, error);
+        console.error(`关闭连接 ${id} 失败:`, error);
       }
     }
     this.activeConnections.clear();
@@ -313,7 +312,7 @@ export class ConnectionService {
     try {
       fs.writeFileSync(this.configPath, JSON.stringify(connections, null, 2), 'utf8');
     } catch (error) {
-      this.ctx.logger.error('保存连接配置失败:', error);
+      console.error('保存连接配置失败:', error);
       throw error;
     }
   }
