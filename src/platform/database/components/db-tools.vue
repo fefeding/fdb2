@@ -308,7 +308,7 @@ async function repairTables() {
   }
 }
 
-function clearLogs() {
+async function clearLogs() {
   const logs = [
     'TRUNCATE TABLE mysql.slow_log',
     'TRUNCATE TABLE mysql.general_log',
