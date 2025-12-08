@@ -1,36 +1,33 @@
 {
-  "compileOnSave": true,
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "inlineSourceMap":true,
-    "noImplicitThis": true,
-    "noUnusedLocals": true,
-    "stripInternal": true,
-    "skipLibCheck": true,
-    "pretty": true,
-    "declaration": true,
-    "forceConsistentCasingInFileNames": true,
-    "typeRoots": [
-      "./typings",
-      "./node_modules/@types"
+    "extends": "@vue/tsconfig/tsconfig.dom.json",
+    "files": [],
+    "include": [
+        "env.d.ts",
+        "src/typings/*.d.ts",
+        "src/**/*",
+        "server/**/*.ts",
+        "src/**/*.vue",
+        "src/**/**/**/**/**/*.vue",
+        "package.json",
+        "../src/config/devops.config.ts",
+        "vite.config.*",
+        "vitest.config.*",
+        "cypress.config.*",
+        "playwright.config.*"
     ],
-    "types": [
-      "node"
-    ],
-    "outDir": "dist"
-  },
-  "exclude": [
-    "dist",
-    "node_modules",
-    "test"
-  ],
-  "ts-node": {
+    "exclude": ["src/**/__tests__/*"],
     "compilerOptions": {
-      "module": "commonjs"
+        "composite": true,
+        "module": "ESNext",
+        "types": ["vue", "node", "jsdom"],
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./src/*"],
+            "#/*": ["../*"]
+        },
+        "noImplicitAny": false,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "moduleResolution": "bundler"
     }
-  }
 }
