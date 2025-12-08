@@ -101,6 +101,7 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import * as userService from '@/service/account';
+import { modal } from '@/utils/modal';
 
 interface User {
   userId: number;  // 用户ID，number类型
@@ -295,7 +296,7 @@ const fetchUsers = async (filter: string) => {
     });
     
     if (response.ret !== 0) {
-      alert(`获取用户失败: ${response.msg || '未知错误'}`);
+      await modal.error(`获取用户失败: ${response.msg || '未知错误'}`);
       userList.value = [];
       totalUsers.value = 0;
       return;
@@ -305,7 +306,7 @@ const fetchUsers = async (filter: string) => {
     totalUsers.value = response.total || 0;
   } catch (error) {
     console.error('获取用户列表失败:', error);
-    alert('获取用户列表时发生错误');
+    await modal.error('获取用户列表时发生错误');
     userList.value = [];
     totalUsers.value = 0;
   } finally {

@@ -199,6 +199,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { DatabaseService } from '@/service/database';
+import { modal } from '@/utils/modal';
 
 const props = defineProps<{
   connection: any;
@@ -228,24 +229,24 @@ async function backupDatabase() {
   try {
     const sql = `BACKUP DATABASE \`${props.database}\` TO DISK = '${props.database}_${new Date().toISOString().slice(0,10)}.bak' WITH INIT, STATS`;
     emit('execute-sql', sql);
-    alert('备份任务已启动');
+    await modal.info('备份任务已启动');
   } catch (error) {
     console.error('备份失败:', error);
-    alert('备份失败');
+    await modal.error('备份失败');
   }
 }
 
 // 用户管理
 function showUsersList() {
-  alert('用户列表功能开发中...');
+  modal.info('用户列表功能开发中...');
 }
 
 function showCreateUserModal() {
-  alert('创建用户功能开发中...');
+  modal.info('创建用户功能开发中...');
 }
 
 function showPermissionsModal() {
-  alert('权限管理功能开发中...');
+  modal.info('权限管理功能开发中...');
 }
 
 // 性能监控
@@ -272,10 +273,10 @@ async function optimizeDatabase() {
       const sql = `OPTIMIZE TABLE \`${table}\``;
       emit('execute-sql', sql);
     }
-    alert('数据库优化完成');
+    await modal.success('数据库优化完成');
   } catch (error) {
     console.error('优化失败:', error);
-    alert('优化失败');
+    await modal.error('优化失败');
   }
 }
 
@@ -286,10 +287,10 @@ async function analyzeTables() {
       const sql = `ANALYZE TABLE \`${table}\``;
       emit('execute-sql', sql);
     }
-    alert('表分析完成');
+    await modal.success('表分析完成');
   } catch (error) {
     console.error('分析失败:', error);
-    alert('分析失败');
+    await modal.error('分析失败');
   }
 }
 
@@ -300,10 +301,10 @@ async function repairTables() {
       const sql = `REPAIR TABLE \`${table}\``;
       emit('execute-sql', sql);
     }
-    alert('表修复完成');
+    await modal.success('表修复完成');
   } catch (error) {
     console.error('修复失败:', error);
-    alert('修复失败');
+    await modal.error('修复失败');
   }
 }
 
@@ -315,20 +316,20 @@ function clearLogs() {
   ];
   
   logs.forEach(sql => emit('execute-sql', sql));
-  alert('日志清理完成');
+  await modal.success('日志清理完成');
 }
 
 // 数据迁移
 function showExportModal() {
-  alert('导出结构功能开发中...');
+  modal.info('导出结构功能开发中...');
 }
 
 function showImportModal() {
-  alert('导入数据功能开发中...');
+  modal.info('导入数据功能开发中...');
 }
 
 function showSyncModal() {
-  alert('数据同步功能开发中...');
+  modal.info('数据同步功能开发中...');
 }
 
 // 健康检查
@@ -415,14 +416,14 @@ async function performRestore() {
     const response = await databaseService.restoreDatabase(formData);
     
     if (response) {
-      alert('数据库恢复成功');
+      await modal.success('数据库恢复成功');
       closeRestoreModal();
     } else {
-      alert('数据库恢复失败');
+      await modal.error('数据库恢复失败');
     }
   } catch (error) {
     console.error('恢复失败:', error);
-    alert('恢复失败');
+    await modal.error('恢复失败');
   } finally {
     restoring.value = false;
   }
@@ -441,7 +442,7 @@ async function fetchTableList(): Promise<string[]> {
 }
 
 function showScheduleModal() {
-  alert('定时备份功能开发中...');
+  modal.info('定时备份功能开发中...');
 }
 </script>
 

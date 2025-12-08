@@ -543,6 +543,7 @@ import DataEditor from './data-editor.vue';
 import DbTools from './db-tools.vue';
 import TableEditor from './table-editor.vue';
 import { exportDataToCSV, exportDataToJSON, exportDataToExcel, formatFileName } from '../utils/export';
+import { modal } from '@/utils/modal';
 
 // Props
 const props = defineProps<{
@@ -717,13 +718,13 @@ async function performInsert(data: any) {
     if (result.ok) {
       emit('refresh-data');
       closeDataEditor();
-      alert('数据插入成功');
+      await modal.success('数据插入成功');
     } else {
-      alert('数据插入失败');
+      await modal.error('数据插入失败');
     }
   } catch (error) {
     console.error('插入数据失败:', error);
-    alert('数据插入失败');
+    await modal.error('数据插入失败');
   }
 }
 
@@ -821,14 +822,16 @@ function exportToExcel() {
   URL.revokeObjectURL(url);
 }
 
-function truncateTable() {
-  if (confirm(`确定要清空表 "${props.table?.name}" 吗？此操作将删除所有数据且不可恢复。`)) {
+async function truncateTable() {
+  const result = await modal.confirm(`确定要清空表 "${props.table?.name}" 吗？此操作将删除所有数据且不可恢复。`);
+  if (result) {
     emit('truncate-table');
   }
 }
 
-function dropTable() {
-  if (confirm(`确定要删除表 "${props.table?.name}" 吗？此操作将删除表结构和所有数据且不可恢复。`)) {
+async function dropTable() {
+  const result = await modal.confirm(`确定要删除表 "${props.table?.name}" 吗？此操作将删除表结构和所有数据且不可恢复。`);
+  if (result) {
     emit('drop-table');
   }
 }
@@ -846,11 +849,11 @@ async function handleDataSubmit(result: any) {
       emit('refresh-data');
       closeDataEditor();
     } else {
-      alert('操作失败');
+      await modal.error('操作失败');
     }
   } catch (error) {
     console.error('处理数据提交失败:', error);
-    alert('操作失败');
+    await modal.error('操作失败');
   }
 }
 
@@ -883,13 +886,13 @@ async function handleTableStructureChange(result: any) {
       emit('refresh-structure');
       emit('refresh-data');
       closeTableEditor();
-      alert('表结构修改成功');
+      await modal.success('表结构修改成功');
     } else {
-      alert('表结构修改失败');
+      await modal.error('表结构修改失败');
     }
   } catch (error) {
     console.error('处理表结构修改失败:', error);
-    alert('表结构修改失败');
+    await modal.error('表结构修改失败');
   }
 }
 
@@ -924,13 +927,13 @@ async function updateRow(originalRow: any, newData: any) {
     
     if (result.ok) {
       emit('refresh-data');
-      alert('数据更新成功');
+      await modal.success('数据更新成功');
     } else {
-      alert('数据更新失败');
+      await modal.error('数据更新失败');
     }
   } catch (error) {
     console.error('更新数据失败:', error);
-    alert('数据更新失败');
+    await modal.error('数据更新失败');
   }
 }
 
@@ -956,8 +959,9 @@ function isBooleanInput(type: string): boolean {
   return ['boolean', 'bool', 'bit'].some(t => type.toLowerCase().includes(t));
 }
 
-function deleteRow(row: any) {
-  if (confirm(`确定要删除这条记录吗？`)) {
+async function deleteRow(row: any) {
+  const result = await modal.confirm(`确定要删除这条记录吗？`);
+  if (result) {
     emit('delete-row', row);
   }
 }
@@ -973,20 +977,21 @@ async function editColumn(column: any) {
       props.database
     );
     
-    if (result.ok) {
-      emit('refresh-structure');
-      alert('列修改成功');
-    } else {
-      alert('列修改失败');
+      if (result.ok) {
+        emit('refresh-structure');
+        await modal.success('列修改成功');
+      } else {
+        await modal.error('列修改失败');
+      }
+    } catch (error) {
+      console.error('修改列失败:', error);
+      await modal.error('列修改失败');
     }
-  } catch (error) {
-    console.error('修改列失败:', error);
-    alert('列修改失败');
-  }
 }
 
 async function deleteColumn(column: any) {
-  if (confirm(`确定要删除列 "${column.name}" 吗？此操作不可恢复。`)) {
+  const result = await modal.confirm(`确定要删除列 "${column.name}" 吗？此操作不可恢复。`);
+  if (result) {
     try {
       // 构建ALTER TABLE语句来删除列
       const sql = `ALTER TABLE \`${props.table?.name}\` DROP COLUMN \`${column.name}\``;
@@ -999,13 +1004,13 @@ async function deleteColumn(column: any) {
       
       if (result.ok) {
         emit('refresh-structure');
-        alert('列删除成功');
+        await modal.success('列删除成功');
       } else {
-        alert('列删除失败');
+        await modal.error('列删除失败');
       }
     } catch (error) {
       console.error('删除列失败:', error);
-      alert('列删除失败');
+      await modal.error('列删除失败');
     }
   }
 }
@@ -1014,8 +1019,9 @@ function editIndex(index: any) {
   console.log('编辑索引:', index);
 }
 
-function deleteIndex(index: any) {
-  if (confirm(`确定要删除索引 "${index.name}" 吗？`)) {
+async function deleteIndex(index: any) {
+  const result = await modal.confirm(`确定要删除索引 "${index.name}" 吗？`);
+  if (result) {
     console.log('删除索引:', index);
   }
 }
@@ -1025,8 +1031,9 @@ function editForeignKey(fk: any) {
   console.log('编辑外键:', fk);
 }
 
-function deleteForeignKey(fk: any) {
-  if (confirm(`确定要删除外键 "${fk.name}" 吗？`)) {
+async function deleteForeignKey(fk: any) {
+  const result = await modal.confirm(`确定要删除外键 "${fk.name}" 吗？`);
+  if (result) {
     console.log('删除外键:', fk);
   }
 }

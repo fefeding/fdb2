@@ -123,6 +123,7 @@
 <script lang="ts" setup>
 import { ref, watch, computed } from 'vue';
 import { DatabaseService } from '@/service/database';
+import { modal } from '@/utils/modal';
 
 const databaseService = new DatabaseService();
 
@@ -259,16 +260,16 @@ async function handleSubmit() {
     }
     
     if (response.ret === 0) {
-      alert(props.isEdit ? '数据更新成功' : '数据插入成功');
+      await modal.success(props.isEdit ? '数据更新成功' : '数据插入成功');
       emit('submit', response.data);
       closeModal();
     } else {
-      alert('操作失败:' + response.msg);
+      await modal.error('操作失败:' + response.msg);
     }
   } catch (error) {
     console.error('提交数据失败:', error);
     // @ts-ignore
-    alert('操作失败:' + error.msg || error.message);
+    await modal.error('操作失败:' + (error.msg || error.message));
   } finally {
     loading.value = false;
   }

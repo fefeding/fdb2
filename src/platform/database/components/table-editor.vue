@@ -174,6 +174,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import { DatabaseService } from '@/service/database';
+import { modal } from '@/utils/modal';
 
 // Props
 const props = defineProps<{
@@ -326,19 +327,19 @@ function generateSQL(): string {
 async function submit() {
   try {
     if (!formData.value.tableName) {
-      alert('请输入表名');
+      await modal.warning('请输入表名');
       return;
     }
     
     if (formData.value.columns.some(col => !col.name || !col.type)) {
-      alert('请完善所有字段信息');
+      await modal.warning('请完善所有字段信息');
       return;
     }
     
     const sql = generateSQL();
     
     if (!props.connection?.id) {
-      alert('请先选择数据库连接');
+      await modal.warning('请先选择数据库连接');
       return;
     }
     

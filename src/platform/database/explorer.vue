@@ -248,6 +248,7 @@ import Loading from '@/components/loading/index.vue';
 import ConnectionDetail from './components/connection-detail.vue';
 import DatabaseDetail from './components/database-detail.vue';
 import TableDetail from './components/table-detail.vue';
+import { modal } from '@/utils/modal';
 
 const connectionService = new ConnectionService();
 const databaseService = new DatabaseService();
@@ -704,7 +705,8 @@ function handleExportTable() {
 async function handleTruncateTable() {
   if (!selectedTable.value || !selectedConnection.value || !selectedDatabase.value) return;
   
-  if (confirm(`确定要清空表 "${selectedTable.value.name}" 吗？此操作将删除所有数据且不可恢复。`)) {
+  const result = await modal.confirm(`确定要清空表 "${selectedTable.value.name}" 吗？此操作将删除所有数据且不可恢复。`);
+  if (result) {
     try {
       isGlobalLoading.value = true;
       loadingMessage.value = `正在清空表 "${selectedTable.value.name}"...`;
@@ -728,7 +730,8 @@ async function handleTruncateTable() {
 async function handleDropTable() {
   if (!selectedTable.value || !selectedConnection.value || !selectedDatabase.value) return;
   
-  if (confirm(`确定要删除表 "${selectedTable.value.name}" 吗？此操作将删除表结构和所有数据且不可恢复。`)) {
+  const result = await modal.confirm(`确定要删除表 "${selectedTable.value.name}" 吗？此操作将删除表结构和所有数据且不可恢复。`);
+  if (result) {
     try {
       isGlobalLoading.value = true;
       loadingMessage.value = `正在删除表 "${selectedTable.value.name}"...`;
