@@ -3,8 +3,9 @@ import * as requestHelper from '@/utils/request';
 import type { AxiosRequestConfig } from 'axios';
 import * as eventBus from '../base/eventBus';
 import config from '../base/config';
+import { isBrowser } from '@/base/detect';
 
-import * as serverRoute from '../../server/index';
+
 
 export function getRequestUrl(api: string) {
     if(/^(http(s)?:)?\/\//.test(api)) return api;
@@ -13,7 +14,10 @@ export function getRequestUrl(api: string) {
 }
 
 export async function requestServer(url: string, data?: any, option?: AxiosRequestConfig) {
-    console.log(serverRoute.handleDatabaseRoutes);
+    if(!isBrowser) {
+        const serverRoute = await import('../../server/index');
+        return await serverRoute.handleDatabaseRoutes(url, data);
+    }
     url = getRequestUrl(url);
     const res = await requestHelper.request(url, data, option);
     return res;

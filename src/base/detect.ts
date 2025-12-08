@@ -1,8 +1,17 @@
-// 探测运行环境并标记各个全局环境变量
-const UA = navigator.userAgent;
 
+// @ts-ignore  // 在nwjs中
+export const isNWjs = typeof process !== 'undefined' && process.__nwjs !== undefined;
+// @ts-ignore 扩展进程
+export const isVSCode = typeof acquireVsCodeApi !== 'undefined' || (typeof process !== 'undefined' && process.env.VSCODE_PID);
+// @ts-ignore 判断是否是 Chrome 扩展环境
+export const isChromeExtension = !isNWjs && !isVSCode && typeof chrome !== 'undefined' && Boolean(chrome.runtime) && Boolean(chrome.runtime.id);
+// @ts-ignore 检查是否是 Electron
+export const isElectron = typeof process === 'object' && process.versions?.electron !== undefined;
+export const isBrowser = typeof window !== 'undefined' && !isNWjs && !isVSCode && !isChromeExtension && !isElectron;
 // 在iframe中
-export const isInIframe = window.top !== window;
+export const isInIframe = isBrowser && window.top !== window;
+// 探测运行环境并标记各个全局环境变量
+const UA = isBrowser? navigator.userAgent: '';
 
 // 平台
 export enum PLATFORM {
@@ -37,12 +46,12 @@ export const IS_WEIXIN = Boolean(VER_WEIXIN);
 // 是否是开发者工具
 export const IS_WECHATTOOLS = /wechatdevtools\//i.test(UA);
 // @ts-ignore
-export const IS_WKWEBVIEW = window.__wxjs_is_wkwebview;
+export const IS_WKWEBVIEW = isBrowser && window.__wxjs_is_wkwebview;
 export const IS_PCWEIXIN = /(Windows|Mac)Wechat/i.test(UA);
 // 是否是企业微信
 export const IS_WXWORK = /wxwork\//i.test(UA);
 // @ts-ignore
-const VER_MINA = window.__wxjs_environment === 'miniprogram' || /miniProgram/i.test(UA);
+const VER_MINA = isBrowser && (window.__wxjs_environment === 'miniprogram' || /miniProgram/i.test(UA));
 export const IS_MINA = Boolean(VER_MINA);
 
 let platformVersion = '0.0.0';

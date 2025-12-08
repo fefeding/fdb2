@@ -11,7 +11,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as dotenv from 'dotenv';
 
-import * as serverRoute from './server/index';
+import * as server from './server/index';
 
 const envPath = path.join(__dirname, '../.env');
 if(fs.existsSync(envPath)) {
@@ -140,7 +140,8 @@ const config = defineConfig({
         manifest: true, // 关键！生成 manifest.json
         // 禁用 CSS 代码分割（避免生成额外的 <link>）
         //cssCodeSplit: false,
-        modulePreload: true,
+        modulePreload: false,
+        target: 'esnext',    // 确保使用最新的 ES 特性
         rollupOptions: {
             input: getViewInputs(viewDir),
             output: {
@@ -165,7 +166,7 @@ const config = defineConfig({
     base: urlPrefix,
     server: {
         host: '0.0.0.0',
-        port: +`${process.env.VITE_PORT}` || 5173,
+        port: +`${process.env.VITE_PORT}` || 9300,
         cors: true,
     },
 });
@@ -216,7 +217,7 @@ async function serverRoute(req: Connect.IncomingMessage, res: http.ServerRespons
 
     // 路由分发
     if (pathname.startsWith('/api/database/')) {
-      const data = await serverRoute.handleDatabaseRoutes(pathname, body);
+      const data = await server.handleDatabaseRoutes(pathname, body);
       sendJSON(res, data);
     } else {
       sendError(res, 'API not found', 404);

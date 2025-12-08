@@ -10,7 +10,7 @@ const databaseService = new DatabaseService();
 
 
 // 数据库相关路由处理
-export async function handleDatabaseRoutes(pathname: string, pathParts: string[], body: any, res: http.ServerResponse) {
+export async function handleDatabaseRoutes(pathname: string, body: any) {
   // /api/database/getConnections
   if (pathname === '/api/database/getConnections') {
     const result = await connectionService.getAllConnections();
