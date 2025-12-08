@@ -217,8 +217,14 @@ async function serverRoute(req: Connect.IncomingMessage, res: http.ServerRespons
 
     // 路由分发
     if (pathname.startsWith('/api/database/')) {
-      const data = await server.handleDatabaseRoutes(pathname, body);
-      sendJSON(res, data);
+        try {
+            const data = await server.handleDatabaseRoutes(pathname, body);
+            sendJSON(res, data);
+        }
+        catch(error) {
+            // @ts-ignore
+            sendError(res, error?.message || '系统异常', 200);
+        }
     } else {
       sendError(res, 'API not found', 404);
     }

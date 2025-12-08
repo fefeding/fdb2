@@ -165,31 +165,6 @@
         </button>
       </div>
     </div>
-
-    <!-- 最近活动 -->
-    <div class="recent-activity">
-      <div class="activity-header">
-        <h6 class="activity-title">
-          <i class="bi bi-clock-history"></i>
-          最近活动
-        </h6>
-      </div>
-      <div class="activity-list">
-        <div class="activity-item" v-for="activity in recentActivities" :key="activity.id">
-          <div class="activity-icon" :class="`activity-${activity.type}`">
-            <i :class="getActivityIcon(activity.type)"></i>
-          </div>
-          <div class="activity-content">
-            <div class="activity-text">{{ activity.description }}</div>
-            <div class="activity-time">{{ formatTime(activity.timestamp) }}</div>
-          </div>
-        </div>
-        <div v-if="recentActivities.length === 0" class="no-activity">
-          <i class="bi bi-inbox"></i>
-          <p>暂无最近活动</p>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -218,21 +193,6 @@ const connectionStats = ref({
   lastConnected: null as string | null
 });
 
-// 最近活动
-const recentActivities = ref([
-  {
-    id: 1,
-    type: 'query',
-    description: '执行了SQL查询',
-    timestamp: new Date(Date.now() - 1000 * 60 * 5)
-  },
-  {
-    id: 2,
-    type: 'connect',
-    description: '成功连接到数据库',
-    timestamp: new Date(Date.now() - 1000 * 60 * 30)
-  }
-]);
 
 // 生命周期
 onMounted(() => {
@@ -304,15 +264,6 @@ function formatTime(timestamp: Date): string {
   return `${days}天前`;
 }
 
-function getActivityIcon(type: string): string {
-  const iconMap: Record<string, string> = {
-    query: 'bi-terminal',
-    connect: 'bi-wifi',
-    error: 'bi-exclamation-triangle',
-    success: 'bi-check-circle'
-  };
-  return iconMap[type] || 'bi-circle';
-}
 
 // 操作方法
 function testConnection() {
@@ -620,103 +571,6 @@ function viewLogs() {
   text-align: center;
 }
 
-/* 最近活动 */
-.recent-activity {
-  margin-bottom: 2rem;
-}
-
-.activity-header {
-  margin-bottom: 1rem;
-}
-
-.activity-title {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1e293b;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.activity-list {
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  overflow: hidden;
-}
-
-.activity-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.activity-item:last-child {
-  border-bottom: none;
-}
-
-.activity-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 0.875rem;
-  flex-shrink: 0;
-}
-
-.activity-query {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-}
-
-.activity-connect {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.activity-error {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-}
-
-.activity-success {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.activity-content {
-  flex-grow: 1;
-}
-
-.activity-text {
-  font-size: 0.95rem;
-  color: #1e293b;
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-}
-
-.activity-time {
-  font-size: 0.875rem;
-  color: #64748b;
-}
-
-.no-activity {
-  text-align: center;
-  padding: 2rem;
-  color: #64748b;
-}
-
-.no-activity i {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-.no-activity p {
-  margin: 0;
-}
 
 /* 数据库类型颜色 */
 .db-mysql { background: linear-gradient(135deg, #00758f 0%, #005a70 100%); }

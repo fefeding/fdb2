@@ -267,7 +267,8 @@ async function handleSubmit() {
     }
   } catch (error) {
     console.error('提交数据失败:', error);
-    alert('操作失败');
+    // @ts-ignore
+    alert('操作失败:' + error.msg || error.message);
   } finally {
     loading.value = false;
   }

@@ -836,7 +836,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 
 <style scoped>
 .database-explorer {
-  height: calc(100vh - 200px);
+  height: 100vh;
   min-height: 600px;
 }
 

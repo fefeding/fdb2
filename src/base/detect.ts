@@ -4,7 +4,7 @@ export const isNWjs = typeof process !== 'undefined' && process.__nwjs !== undef
 // @ts-ignore 扩展进程
 export const isVSCode = typeof acquireVsCodeApi !== 'undefined' || (typeof process !== 'undefined' && process.env.VSCODE_PID);
 // @ts-ignore 判断是否是 Chrome 扩展环境
-export const isChromeExtension = !isNWjs && !isVSCode && typeof chrome !== 'undefined' && Boolean(chrome.runtime) && Boolean(chrome.runtime.id);
+export const isChromeExtension = !isNWjs && !isVSCode && (()=>{try{return typeof chrome !== 'undefined' && Boolean(chrome?.runtime) && Boolean(chrome?.runtime?.id)}catch(e){return false}})();
 // @ts-ignore 检查是否是 Electron
 export const isElectron = typeof process === 'object' && process.versions?.electron !== undefined;
 export const isBrowser = typeof window !== 'undefined' && !isNWjs && !isVSCode && !isChromeExtension && !isElectron;

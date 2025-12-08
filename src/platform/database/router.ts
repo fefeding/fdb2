@@ -13,7 +13,7 @@ const routes = [
       {
         path: 'index',
         name: 'database-index',
-        component: () => import('./index.vue'),
+        component: () => import('./explorer.vue'),
         meta: {
           title: '数据库管理首页',
           icon: 'bi-house',
