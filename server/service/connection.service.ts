@@ -91,10 +91,10 @@ export class ConnectionService {
     if (updates.name && connections.find((conn, idx) => conn.name === updates.name && idx !== index)) {
       throw new Error('连接名称已存在');
     }
-
+    // @ts-ignore
     connections[index] = { ...connections[index], ...updates, updatedAt: new Date() };
     await this.saveConnections(connections);
-    
+    // @ts-ignore
     return connections[index];
   }
 
@@ -111,7 +111,7 @@ export class ConnectionService {
 
     // 关闭活跃连接
     if (this.activeConnections.has(id)) {
-      await this.activeConnections.get(id).destroy();
+      await this.activeConnections.get(id)?.destroy();
       this.activeConnections.delete(id);
     }
 
@@ -142,7 +142,7 @@ export class ConnectionService {
     if (this.activeConnections.has(key)) {
       const db = this.activeConnections.get(key);
       // 检查连接是否仍然有效
-      if (db.isInitialized) {
+      if (db?.isInitialized) {
         return db;
       } else {
         // 连接已关闭，从缓存中移除
@@ -153,10 +153,10 @@ export class ConnectionService {
     // 连接池大小限制，防止连接数无限增长
     if (this.activeConnections.size >= 10) {
       // 关闭最旧的连接
-      const oldestKey = this.activeConnections.keys().next().value;
+      const oldestKey = this.activeConnections.keys().next().value || '';
       const oldestConnection = this.activeConnections.get(oldestKey);
       try {
-        await oldestConnection.destroy();
+        await oldestConnection?.destroy();
       } catch (error) {
         console.error(`关闭旧连接 ${oldestKey} 失败:`, error);
       }
@@ -186,12 +186,12 @@ export class ConnectionService {
   async closeConnection(id: string, database?: string): Promise<void> {
     const key = database ? `${id}_${database}` : id;
     if (this.activeConnections.has(key)) {
-      await this.activeConnections.get(key).destroy();
+      await this.activeConnections.get(key)?.destroy();
       this.activeConnections.delete(key);
     }
     // 也关闭默认连接（如果存在）
     if (database && this.activeConnections.has(id)) {
-      await this.activeConnections.get(id).destroy();
+      await this.activeConnections.get(id)?.destroy();
       this.activeConnections.delete(id);
     }
   }
