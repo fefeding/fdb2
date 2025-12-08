@@ -218,6 +218,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import TableEditor from './table-editor.vue';
+import { modal } from '@/utils/modal';
 
 // Props
 const props = defineProps<{
@@ -314,8 +315,9 @@ function editTable(table: TableEntity) {
   showTableEditor.value = true;
 }
 
-function deleteTable(table: TableEntity) {
-  if (confirm(`确定要删除表 "${table.name}" 吗？此操作不可恢复。`)) {
+async function deleteTable(table: TableEntity) {
+  const result = await modal.confirm(`确定要删除表 "${table.name}" 吗？此操作不可恢复。`);
+  if (result) {
     // TODO: 实现删除表功能
     console.log('删除表:', table);
   }

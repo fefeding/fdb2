@@ -28,7 +28,7 @@ export class ModalHelper {
     if (modal?.success) {
       return modal.success(content, title);
     }
-    return showAlert(content, 'success', title);
+    return showAlert(content, 'success', title) || Promise.resolve(true);
   }
 
   /**
@@ -39,7 +39,7 @@ export class ModalHelper {
     if (modal?.error) {
       return modal.error(content, title);
     }
-    return showAlert(content, 'error', title);
+    return showAlert(content, 'error', title) || Promise.resolve(true);
   }
 
   /**
@@ -50,7 +50,7 @@ export class ModalHelper {
     if (modal?.warning) {
       return modal.warning(content, title);
     }
-    return showAlert(content, 'warning', title);
+    return showAlert(content, 'warning', title) || Promise.resolve(true);
   }
 
   /**
@@ -61,7 +61,7 @@ export class ModalHelper {
     if (modal?.info) {
       return modal.info(content, title);
     }
-    return showAlert(content, 'info', title);
+    return showAlert(content, 'info', title) || Promise.resolve(true);
   }
 
   /**
@@ -72,7 +72,7 @@ export class ModalHelper {
     if (modal?.alert) {
       return modal.alert(content);
     }
-    return showAlert(content, 'info');
+    return showAlert(content, 'info') || Promise.resolve(true);
   }
 
   /**
@@ -87,7 +87,7 @@ export class ModalHelper {
     if (modal?.confirm) {
       return modal.confirm(content, options);
     }
-    return showConfirm(content, options);
+    return showConfirm(content, options) || Promise.resolve(false);
   }
 }
 

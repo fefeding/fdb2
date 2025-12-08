@@ -12,6 +12,7 @@ import 'bootstrap';
 import toastPlugin from '@/components/toast/index';
 import Modal from '@/components/modal/index.vue';
 import DataGrid from '@/components/dataGrid/index.vue';
+import modalPlugin from '@/components/modal/index';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -20,6 +21,7 @@ pinia.use(piniaPluginPersistedstate);
 app.use(router);
 app.use(pinia);
 app.use(toastPlugin);
+app.use(modalPlugin);
 
 app.component('Modal', Modal)
 app.component('DataGrid', DataGrid)
