@@ -1,6 +1,6 @@
 <template>
     <div class="modal fade" :id="modalId" ref="modalContainer" tabindex="-1" aria-labelledby="modalLabel">
-        <div class="modal-dialog modal-dialog-centered" :class="{'modal-fullscreen': isFullScreen}" :style="style">
+        <div class="modal-dialog modal-dialog-centered" :class="{'modal-fullscreen': isFullScreen}" :style="dynamicStyle">
             <div class="modal-content" :class="contentClass" style="width:max-content; margin: auto;">
                 <div class="modal-header" :class="headerClass" style="padding: 1rem 1.5rem;">
                     <h5 class="modal-title d-flex align-items-center" id="modalLabel">
@@ -106,6 +106,7 @@
     });
 
     // 动态属性 - 用于全局modal服务
+    const dynamicOptions = ref<any>({});
     const dynamicTitle = ref('');
     const dynamicContent = ref('');
     const dynamicType = ref<'success' | 'error' | 'warning' | 'info' | ''>('');
@@ -114,6 +115,12 @@
     const dynamicShowCancel = ref(false);
     const detailsExpanded = ref(false);
     const dynamicErrorDetails = ref<any>(null);
+    const dynamicStyle = computed(() => {        
+        return {
+            ...(Object.keys(props.style).length ? props.style : {}),
+            ...(dynamicOptions.value?.style || {}),
+        };
+    });
 
     // 判断是否应该显示详情按钮
     const shouldShowDetails = () => {
@@ -134,7 +141,6 @@
             return String(dynamicErrorDetails.value);
         }
     };
-    const dynamicOptions = ref<any>({});
 
     // 类型相关的计算属性
     const typeIcon = computed(() => {

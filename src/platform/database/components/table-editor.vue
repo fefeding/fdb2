@@ -1,6 +1,6 @@
 <template>
   <div v-if="visible" class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" @click="close">
-    <div class="modal-dialog modal-lg" @click.stop>
+    <div class="modal-dialog modal-lg" style="width: 80%; max-width: node;" @click.stop>
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
