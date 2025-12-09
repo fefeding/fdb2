@@ -208,6 +208,7 @@
       :connection="connection"
       :database="database"
       :table-name="editingTableName"
+      :mode="editingTableName ? 'edit' : 'create'"
       @close="closeTableEditor"
       @execute-sql="handleExecuteSQL"
     />

@@ -1,5 +1,5 @@
 import { getCurrentInstance } from 'vue';
-import { showAlert, showConfirm } from '@/components/modal';
+import { getModalInstance, showAlert, showConfirm, type ModalTypeWithMethods } from '@/components/modal';
 
 /**
  * 全局Modal工具类
@@ -9,15 +9,15 @@ export class ModalHelper {
   /**
    * 获取全局modal实例
    */
-  private getModal() {
-    const instance = getCurrentInstance();
+  private getModal(): ModalTypeWithMethods|null {
+    const instance = getModalInstance();
     if (!instance) {
       console.warn('ModalHelper: Vue实例不存在，使用默认实现');
       return null;
     }
     
     // @ts-ignore
-    return instance.appContext.config?.globalProperties?.$modal;
+    return instance;
   }
 
   /**
@@ -85,7 +85,10 @@ export class ModalHelper {
   }): Promise<boolean> {
     const modal = this.getModal();
     if (modal?.confirm) {
-      return modal.confirm(content, options);
+      return modal.confirm({
+        ...options,
+        content,
+      });
     }
     return showConfirm(content, options) || Promise.resolve(false);
   }

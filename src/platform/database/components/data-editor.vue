@@ -260,16 +260,16 @@ async function handleSubmit() {
     }
     
     if (response.ret === 0) {
-      await modal.success(props.isEdit ? '数据更新成功' : '数据插入成功');
+      modal.success(props.isEdit ? '数据更新成功' : '数据插入成功');
       emit('submit', response.data);
       closeModal();
     } else {
-      await modal.error('操作失败:' + response.msg);
+      modal.error(response.msg);
     }
   } catch (error) {
     console.error('提交数据失败:', error);
     // @ts-ignore
-    await modal.error('操作失败:' + (error.msg || error.message));
+    modal.error((error.msg || error.message));
   } finally {
     loading.value = false;
   }

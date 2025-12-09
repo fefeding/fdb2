@@ -1,8 +1,8 @@
 <template>
     <div class="modal fade" :id="modalId" ref="modalContainer" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" :class="{'modal-fullscreen': isFullScreen}" :style="style">
-            <div class="modal-content" :class="contentClass">
-                <div class="modal-header" :class="headerClass">
+            <div class="modal-content" :class="contentClass" style="width:max-content; margin: auto;">
+                <div class="modal-header" :class="headerClass" style="padding: 1rem 1.5rem;">
                     <h5 class="modal-title d-flex align-items-center" id="modalLabel">
                         <i v-if="typeIcon" :class="typeIcon" class="me-2"></i>
                         {{dynamicTitle || props.title}}
@@ -58,7 +58,7 @@
             type: Object,
             default: {
                 text: '关闭',
-                show: true
+                show: false
             }
         },
         confirmButton: {
@@ -101,6 +101,7 @@
     const dynamicConfirmText = ref('');
     const dynamicCancelText = ref('');
     const dynamicShowCancel = ref(false);
+    const dynamicOptions = ref<any>({});
 
     // 类型相关的计算属性
     const typeIcon = computed(() => {
@@ -182,7 +183,7 @@
         }
     };
 
-    const emits = defineEmits(['onConfirm', 'onClose', 'onCancel', 'hidden']);
+    const emits = defineEmits(['onConfirm', 'onClose', 'onCancel', 'onHidden']);
   
     const modalShow = ref(false);
     const modalContainer = ref<HTMLElement>(null as any);
@@ -233,7 +234,9 @@
         modalShow.value = false;
         emits('onClose');
         emits('onCancel');
-        emits('hidden');
+        emits('onHidden');
+        
+        dynamicOptions.value?.onCancel?.();
     }
 
     function show() {
@@ -248,6 +251,7 @@
 
     function confirm() {
         emits('onConfirm');
+        dynamicOptions.value?.onConfirm?.();
     }
 
     watch(()=>props.visible, (visible) => {
@@ -301,6 +305,7 @@
             if (options.confirmText) dynamicConfirmText.value = options.confirmText;
             if (options.cancelText) dynamicCancelText.value = options.cancelText;
             if (options.showCancel !== undefined) dynamicShowCancel.value = options.showCancel;
+            dynamicOptions.value = options;
         }
     });
 </script>

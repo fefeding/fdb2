@@ -8,6 +8,20 @@ export type ModalType = {
   close: () => void,
 };
 
+
+// modal方法类型定义
+const modalMethods = {
+  alert: {} as (options: ModalOptions | string) => Promise<boolean>,
+  confirm: {} as (options: ModalOptions | string) => Promise<boolean>,
+  success: {} as (content: string, title?: string) => Promise<boolean>,
+  error: {} as (content: string, title?: string) => Promise<boolean>,
+  warning: {} as (content: string, title?: string) => Promise<boolean>,
+  info: {} as (content: string, title?: string) => Promise<boolean>,
+  showModal: {} as (options: ModalOptions) => Promise<boolean>
+};
+
+export type ModalTypeWithMethods = ModalType & typeof modalMethods;
+
 export type ModalOptions = {
   title?: string;
   content?: string;
@@ -21,6 +35,7 @@ export type ModalOptions = {
 
 // 全局modal实例
 let globalModalInstance: any = null;
+let modalInstance: ModalTypeWithMethods;
 const modalQueue = ref<ModalOptions[]>([]);
 
 export default {
@@ -34,87 +49,55 @@ export default {
     globalModalInstance = modalApp.mount(mount) as any;
     
     // 全局注入
-    app.config.globalProperties.$modal = {
+    app.config.globalProperties.$modal = modalInstance = {
       show: () => globalModalInstance.show(),
       hide: () => globalModalInstance.hide(),
       open: () => globalModalInstance.show(),
       close: () => globalModalInstance.hide(),
       // 新增方法
-      alert: (options: ModalOptions | string) => {
+      alert(options: ModalOptions | string) {
         const opts = typeof options === 'string' 
-          ? { content: options, type: 'info' as const }
+          ? { content: options, type: 'info' as const, showCancel: false }
           : { ...options, showCancel: false };
-        return this.showModal(opts);
+        return showModal(opts);
       },
-      confirm: (options: ModalOptions | string) => {
+      confirm(options: ModalOptions | string) {
         const opts = typeof options === 'string'
           ? { content: options, type: 'warning' as const }
           : { ...options, showCancel: true };
-        return this.showModal(opts);
+        return showModal(opts);
       },
-      success: (content: string, title = '成功') => {
+      success(content: string, title = '成功') {
         return this.alert({ title, content, type: 'success' as const, confirmText: '确定' });
       },
-      error: (content: string, title = '错误') => {
+      error (content: string, title = '错误') {
         return this.alert({ title, content, type: 'error' as const, confirmText: '确定' });
       },
-      warning: (content: string, title = '警告') => {
+      warning(content: string, title = '警告') {
         return this.alert({ title, content, type: 'warning' as const, confirmText: '确定' });
       },
-      info: (content: string, title = '提示') => {
+      info(content: string, title = '提示') {
         return this.alert({ title, content, type: 'info' as const, confirmText: '确定' });
       },
-      showModal: (options: ModalOptions) => {
-        return new Promise((resolve) => {
-          const finalOptions = {
-            title: '提示',
-            confirmText: '确定',
-            cancelText: '取消',
-            showCancel: false,
-            ...options,
-            onConfirm: () => {
-              options.onConfirm?.();
-              resolve(true);
-              globalModalInstance.hide();
-            },
-            onCancel: () => {
-              options.onCancel?.();
-              resolve(false);
-              globalModalInstance.hide();
-            }
-          };
-          
-          // 设置modal属性并显示
-          Object.assign(globalModalInstance, finalOptions);
-          globalModalInstance.show();
-        });
-      }
-    } as ModalType & typeof modalMethods;
+    } as ModalTypeWithMethods;
   },
   get() {
     const instance  = getCurrentInstance();
     if(!instance ) return null;
     // @ts-ignore
-    const modal = instance.appContext.config?.globalProperties?.$modal as ModalType & typeof modalMethods;
+    const modal = instance.appContext.config?.globalProperties?.$modal as ModalTypeWithMethods;
     return modal;
   }
 };
 
-// modal方法类型定义
-const modalMethods = {
-  alert: {} as (options: ModalOptions | string) => Promise<boolean>,
-  confirm: {} as (options: ModalOptions | string) => Promise<boolean>,
-  success: {} as (content: string, title?: string) => Promise<boolean>,
-  error: {} as (content: string, title?: string) => Promise<boolean>,
-  warning: {} as (content: string, title?: string) => Promise<boolean>,
-  info: {} as (content: string, title?: string) => Promise<boolean>,
-  showModal: {} as (options: ModalOptions) => Promise<boolean>
-};
+export const getModalInstance = (): ModalTypeWithMethods => {
+  return modalInstance;
+}
 
 // 导出便捷函数供非Vue环境使用
 export const showModal = (options: ModalOptions) => {
   if (globalModalInstance) {
-    return new Promise((resolve) => {
+    return new Promise<boolean>((resolve) => {
       const finalOptions = {
         title: '提示',
         confirmText: '确定',
@@ -133,7 +116,8 @@ export const showModal = (options: ModalOptions) => {
         }
       };
       
-      Object.assign(globalModalInstance, finalOptions);
+      //Object.assign(globalModalInstance, finalOptions);
+      globalModalInstance.setOptions?.(finalOptions);
       globalModalInstance.show();
     });
   }
