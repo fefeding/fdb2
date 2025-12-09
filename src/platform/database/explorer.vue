@@ -205,10 +205,10 @@
           :sql-result="sqlResult"
           :sql-executing="sqlExecuting"
           @refresh-data="refreshTableData"
+          @refresh-database="handleRefreshDatabase"
           @insert-data="handleInsertData"
           @export-table="handleExportTable"
           @truncate-table="handleTruncateTable"
-          @drop-table="handleDropTable"
           @edit-row="handleEditRow"
           @delete-row="handleDeleteRow"
           @execute-sql="handleExecuteSql"
@@ -672,7 +672,8 @@ async function refreshConnection(connection: ConnectionEntity) {
 
 async function refreshDatabase(connection: ConnectionEntity, database: string) {
   const dbKey = `${connection.id}-${database}`;
-  
+    selectedTable.value = null;
+    
   // 清除缓存
   tableCache.value.delete(dbKey);
   databaseInfoCache.value.delete(dbKey);
@@ -760,40 +761,6 @@ async function handleTruncateTable() {
 
       modal.error(error.msg || error.message || '清空表失败', {
         operation: 'TRUNCATE_TABLE',
-        stack: error.stack
-      });
-    } finally {
-      isGlobalLoading.value = false;
-    }
-  }
-}
-
-async function handleDropTable() {
-  
-  if (!selectedTable.value || !selectedConnection.value || !selectedDatabase.value) return;
-  const tableName = selectedTable.value.name;
-  const result = await modal.confirm(`确定要删除表 "${tableName}" 吗？此操作将删除表结构和所有数据且不可恢复。`);
-  if (result) {
-    try {
-      isGlobalLoading.value = true;
-      loadingMessage.value = `正在删除表 "${tableName}"...`;
-      
-      // TODO: 实现删除表的逻辑
-      console.log('删除表:', tableName);
-      
-      // 清空选中状态
-      selectedTable.value = null;
-      
-      // 刷新数据库
-      await refreshDatabase(selectedConnection.value, selectedDatabase.value);
-      
-      showToast('成功', `表 "${tableName}" 已删除`, 'success');
-    } catch (error) {
-      console.error('删除表失败:', error);
-      
-
-      modal.error(error.msg || error.message || '删除表失败', {
-        operation: 'DROP_TABLE',
         stack: error.stack
       });
     } finally {

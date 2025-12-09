@@ -180,6 +180,127 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
     return  { success: true, sql, result };
   }
 
+  // /api/database/truncateTable/:id/:database/:table
+  if (pathname.startsWith('/api/database/truncateTable/')) {
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts.length < 5) throw Error('Invalid URL format');
+    const id = parts[3];
+    const database = parts[4];
+    const table = parts[5];
+    if (!id || !database || !table) throw Error('Missing parameters');
+    
+    const sql = `TRUNCATE TABLE \`${table}\``;
+    const result = await databaseService.executeQuery(id, sql, database);
+    return { success: true, sql, result };
+  }
+
+  // /api/database/dropTable/:id/:database/:table
+  if (pathname.startsWith('/api/database/dropTable/')) {
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts.length < 5) throw Error('Invalid URL format');
+    const id = parts[3];
+    const database = parts[4];
+    const table = parts[5];
+    if (!id || !database || !table) throw Error('Missing parameters');
+    
+    const sql = `DROP TABLE \`${table}\``;
+    const result = await databaseService.executeQuery(id, sql, database);
+    return { success: true, sql, result };
+  }
+
+  // /api/database/getViews
+  if (pathname === '/api/database/getViews') {
+    const { id, database } = body;
+    if (!id || !database) throw Error('Missing parameters: id, database');
+    
+    const sql = `
+      SELECT 
+        TABLE_NAME as name,
+        TABLE_COMMENT as comment,
+        TABLE_SCHEMA as schemaName,
+        CHECKSUM as checksum
+      FROM information_schema.VIEWS 
+      WHERE TABLE_SCHEMA = '${database}'
+      ORDER BY TABLE_NAME
+    `;
+    
+    const result = await databaseService.executeQuery(id, sql, database);
+    return result;
+  }
+
+  // /api/database/getViewDefinition
+  if (pathname === '/api/database/getViewDefinition') {
+    const { id, database, viewName } = body;
+    if (!id || !database || !viewName) throw Error('Missing parameters: id, database, viewName');
+    
+    const sql = `
+      SELECT VIEW_DEFINITION as definition
+      FROM information_schema.VIEWS 
+      WHERE TABLE_SCHEMA = '${database}' 
+      AND TABLE_NAME = '${viewName}'
+    `;
+    
+    const result = await databaseService.executeQuery(id, sql, database);
+    return result;
+  }
+
+  // /api/database/createView
+  if (pathname === '/api/database/createView') {
+    const { id, database, viewName, definition } = body;
+    if (!id || !database || !viewName || !definition) throw Error('Missing parameters: id, database, viewName, definition');
+    
+    const sql = `CREATE VIEW \`${viewName}\` AS ${definition}`;
+    const result = await databaseService.executeQuery(id, sql, database);
+    return { success: true, sql, result };
+  }
+
+  // /api/database/dropView
+  if (pathname === '/api/database/dropView') {
+    const { id, database, viewName } = body;
+    if (!id || !database || !viewName) throw Error('Missing parameters: id, database, viewName');
+    
+    const sql = `DROP VIEW \`${viewName}\``;
+    const result = await databaseService.executeQuery(id, sql, database);
+    return { success: true, sql, result };
+  }
+
+  // /api/database/getProcedures
+  if (pathname === '/api/database/getProcedures') {
+    const { id, database } = body;
+    if (!id || !database) throw Error('Missing parameters: id, database');
+    
+    const sql = `
+      SELECT 
+        ROUTINE_NAME as name,
+        ROUTINE_COMMENT as comment,
+        ROUTINE_TYPE as type,
+        DTD_IDENTIFIER as returnType,
+        EXTERNAL_LANGUAGE as language
+      FROM information_schema.ROUTINES 
+      WHERE ROUTINE_SCHEMA = '${database}'
+      ORDER BY ROUTINE_NAME
+    `;
+    
+    const result = await databaseService.executeQuery(id, sql, database);
+    return result;
+  }
+
+  // /api/database/getProcedureDefinition
+  if (pathname === '/api/database/getProcedureDefinition') {
+    const { id, database, procedureName } = body;
+    if (!id || !database || !procedureName) throw Error('Missing parameters: id, database, procedureName');
+    
+    const sql = `
+      SELECT ROUTINE_DEFINITION as definition
+      FROM information_schema.ROUTINES 
+      WHERE ROUTINE_SCHEMA = '${database}' 
+      AND ROUTINE_NAME = '${procedureName}'
+    `;
+    
+    const result = await databaseService.executeQuery(id, sql, database);
+    return result;
+  }
+
    throw Error('API endpoint not found');
 }
 

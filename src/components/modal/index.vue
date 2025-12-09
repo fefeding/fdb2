@@ -1,5 +1,5 @@
 <template>
-    <div class="modal fade" :id="modalId" ref="modalContainer" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal fade" :id="modalId" ref="modalContainer" tabindex="-1" aria-labelledby="modalLabel">
         <div class="modal-dialog modal-dialog-centered" :class="{'modal-fullscreen': isFullScreen}" :style="style">
             <div class="modal-content" :class="contentClass" style="width:max-content; margin: auto;">
                 <div class="modal-header" :class="headerClass" style="padding: 1rem 1.5rem;">
@@ -33,7 +33,7 @@
                         <button type="button" 
                                 v-if="dynamicShowCancel || props.closeButton.show" 
                                 class="btn btn-secondary" 
-                                data-bs-dismiss="modal">
+                                @click="cancel">
                             {{dynamicCancelText || props.closeButton.text}}
                         </button>
                         <button type="button" 
@@ -53,7 +53,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
+    import { ref, onMounted, onUnmounted, watch, computed, nextTick } from 'vue';
     import * as bootstrap from 'bootstrap';
     import Loading from '@/components/loading/index.vue';
 
@@ -215,9 +215,23 @@
         }
     };
 
+    // 强制重置Bootstrap Modal状态
+    const resetModalState = () => {
+        if (modalContainer.value) {
+            // 移除Bootstrap的类
+            modalContainer.value.classList.remove('show', 'fade');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+        }
+    };
+
     const emits = defineEmits(['onConfirm', 'onClose', 'onCancel', 'onHidden']);
   
     const modalShow = ref(false);
+    const isShowing = ref(false); // 防止重复显示的标志
+    const isHiding = ref(false); // 防止隐藏过程中的冲突
     const modalContainer = ref<HTMLElement>(null as any);
     let modal: bootstrap.Modal | null = null;
 
@@ -226,20 +240,28 @@
         if(modal) return modal;
         if(!modalContainer.value) return null;
         
-        // 在事件处理中检查事件源是否为当前modal
-        const handleModalHide = (e: Event) => {
-            // 确保事件源是当前modal元素
-            if (e.target === modalContainer.value) {
+        // 使用更可靠的事件处理方式
+        const handleModalHide = (e: any) => {
+            // 确保事件源是当前modal元素，并且不是在隐藏过程中
+            if (e.target === modalContainer.value && !isHiding.value) {
+                console.log(`Modal ${modalId} hidden event triggered`);
                 ModalHide();
             }
         };
         
-        const handleModalShow = (e: Event) => {
+        const handleModalShow = (e: any) => {
             if (e.target === modalContainer.value) {
+                console.log(`Modal ${modalId} show event triggered`);
                 ModalShow();
             }
         };
-        
+
+        // 使用Bootstrap Modal的实例方法来监听事件，而不是DOM事件
+        const m = new bootstrap.Modal(modalContainer.value, {
+            backdrop: false,
+        });
+
+        // 直接绑定到Bootstrap Modal实例
         modalContainer.value.addEventListener('hidden.bs.modal', handleModalHide);
         modalContainer.value.addEventListener('show.bs.modal', handleModalShow);
         
@@ -247,43 +269,95 @@
         (modalContainer.value as any).handleModalHide = handleModalHide;
         (modalContainer.value as any).handleModalShow = handleModalShow;
         
-        const m = new bootstrap.Modal(modalContainer.value, {
-                backdrop: false,
-            });
         return m;
     }
 
     function ModalShow(){
-        console.log(`Modal ${modalId} shown`);
+        console.log(`Modal ${modalId} shown function called`);
         if (props.teleport) {
             teleportModal(); // 启用传送时才执行
         }
         modalShow.value = true;
+        isShowing.value = true;
+        isHiding.value = false;
     }
     
     function ModalHide(){
-        console.log(`Modal ${modalId} hidden`);
+        console.log(`Modal ${modalId} hidden function called`);
         modalShow.value = false;
-        emits('onClose');
-        emits('onCancel');
+        isShowing.value = false;
+        isHiding.value = false;
         emits('onHidden');
-        
-        dynamicOptions.value?.onCancel?.();
     }
 
     function show() {
-        const modal = getModal();
-        modal?.show();
+        // 防止重复显示
+        if (isShowing.value && !isHiding.value) {
+            console.log('Modal already showing, skipping');
+            return Promise.resolve();
+        }
+        
+        console.log(`Attempting to show modal ${modalId}`);
+        
+        // 强制重置状态
+        resetModalState();
+        
+        const modalInstance = getModal();
+        if (modalInstance) {
+            // 重置状态
+            isHiding.value = false;
+            
+            return new Promise<void>((resolve) => {
+                // 使用双重nextTick确保DOM完全更新
+                nextTick(() => {
+                    nextTick(() => {
+                        modalInstance.show();
+                        resolve();
+                    });
+                });
+            });
+        }
+        return Promise.resolve();
     }
 
     function hide() {
-        const m = bootstrap.Modal.getInstance(modalContainer.value);
-        return m?.hide();
+        if (isHiding.value) {
+            console.log('Modal already hiding, skipping');
+            return Promise.resolve();
+        }
+        
+        console.log(`Attempting to hide modal ${modalId}`);
+        const modalInstance = getModal();
+        if (modalInstance) {
+            isHiding.value = true;
+            isShowing.value = false;
+            
+            return new Promise<void>((resolve) => {
+                // 监听实际隐藏完成
+                const checkHidden = () => {
+                    if (!modalContainer.value?.classList.contains('show')) {
+                        resolve();
+                    } else {
+                        setTimeout(checkHidden, 50);
+                    }
+                };
+                
+                modalInstance.hide();
+                setTimeout(checkHidden, 100); // 给一些时间开始隐藏动画
+            });
+        }
+        return Promise.resolve();
     }
 
     function confirm() {
         emits('onConfirm');
         dynamicOptions.value?.onConfirm?.();
+    }
+
+    function cancel() {
+        hide();
+        emits('onCancel');
+        dynamicOptions.value?.onCancel?.();
     }
 
     watch(()=>props.visible, (visible) => {

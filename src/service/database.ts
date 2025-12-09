@@ -307,4 +307,83 @@ export class DatabaseService {
   ) {
     return request(`/api/database/health/${connectionId}/${database}`);
   }
+
+  /**
+   * 获取视图列表
+   */
+  async getViews(connectionId: string, databaseName: string) {
+    return request('/api/database/getViews', { id: connectionId, database: databaseName });
+  }
+
+  /**
+   * 获取视图定义
+   */
+  async getViewDefinition(connectionId: string, databaseName: string, viewName: string) {
+    return request('/api/database/getViewDefinition', { id: connectionId, database: databaseName, viewName });
+  }
+
+  /**
+   * 创建视图
+   */
+  async createView(connectionId: string, databaseName: string, viewName: string, definition: string) {
+    return request('/api/database/createView', { 
+      id: connectionId, 
+      database: databaseName, 
+      viewName, 
+      definition 
+    });
+  }
+
+  /**
+   * 删除视图
+   */
+  async dropView(connectionId: string, databaseName: string, viewName: string) {
+    return request('/api/database/dropView', { 
+      id: connectionId, 
+      database: databaseName, 
+      viewName 
+    });
+  }
+
+  /**
+   * 获取存储过程列表
+   */
+  async getProcedures(connectionId: string, databaseName: string) {
+    return request('/api/database/getProcedures', { id: connectionId, database: databaseName });
+  }
+
+  /**
+   * 获取存储过程定义
+   */
+  async getProcedureDefinition(connectionId: string, databaseName: string, procedureName: string) {
+    return request('/api/database/getProcedureDefinition', { 
+      id: connectionId, 
+      database: databaseName, 
+      procedureName 
+    });
+  }
+
+  /**
+   * 创建存储过程
+   */
+  async createProcedure(connectionId: string, databaseName: string, procedureName: string, definition: string) {
+    const sql = `CREATE PROCEDURE \`${procedureName}\` ${definition}`;
+    return request('/api/database/executeQuery', { 
+      id: connectionId, 
+      sql, 
+      database: databaseName 
+    });
+  }
+
+  /**
+   * 删除存储过程
+   */
+  async dropProcedure(connectionId: string, databaseName: string, procedureName: string) {
+    const sql = `DROP PROCEDURE \`${procedureName}\``;
+    return request('/api/database/executeQuery', { 
+      id: connectionId, 
+      sql, 
+      database: databaseName 
+    });
+  }
 }

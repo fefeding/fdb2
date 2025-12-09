@@ -571,6 +571,7 @@ const props = defineProps<{
 // Emits
 const emit = defineEmits<{
   'refresh-data': [];
+  'refresh-database': [];
   'refresh-structure': [];
   'truncate-table': [];
   'drop-table': [];
@@ -829,17 +830,58 @@ function exportToExcel() {
 }
 
 async function truncateTable() {
-  //const result = await modal.confirm(`确定要清空表 "${props.table?.name}" 吗？此操作将删除所有数据且不可恢复。`);
-  //if (result) {
-    emit('truncate-table');
-  //}
+  const result = await modal.confirm(`确定要清空表 "${props.table?.name}" 吗？此操作将删除所有数据且不可恢复。`);
+  if (result) {
+    try {
+      const response = await databaseService.truncateTable(
+        props.connection?.id || '',
+        props.database,
+        props.table?.name || ''
+      );
+      
+      if (response.ret === 0 && response.data?.success) {
+        await modal.success('表清空成功');
+        emit('refresh-data');
+      } else {
+        await modal.error('表清空失败');
+      }
+    } catch (error) {
+      console.error('清空表失败:', error);
+      modal.error(error.message || '清空表失败', {
+        operation: 'TRUNCATE_TABLE',
+        table: props.table?.name,
+        stack: error.stack
+      });
+    }
+  }
 }
 
-async function dropTable() {  
-  //const result = await modal.confirm(`确定要删除表 "${props.table?.name}" 吗？此操作将删除表结构和所有数据且不可恢复。`);
-  //if (result) {
-    emit('drop-table');
-  //}
+async function dropTable() {
+  const result = await modal.confirm(`确定要删除表 "${props.table?.name}" 吗？此操作将删除表结构和所有数据且不可恢复。`);
+  if (result) {
+    try {
+      const response = await databaseService.dropTable(
+        props.connection?.id || '',
+        props.database,
+        props.table?.name || ''
+      );
+      
+      if (response.ret === 0 && response.data?.success) {
+        await modal.success('表删除成功');
+        // 表删除后需要返回到数据库视图，这里通过事件通知父组件
+        emit('refresh-database');
+      } else {
+        await modal.error('表删除失败');
+      }
+    } catch (error) {
+      console.error('删除表失败:', error);
+      modal.error(error.msg || error.message || '删除表失败', {
+        operation: 'DROP_TABLE',
+        table: props.table?.name,
+        stack: error.stack
+      });
+    }
+  }
 }
 
 function editRow(row: any) {

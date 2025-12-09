@@ -1,4 +1,4 @@
-import { createApp, getCurrentInstance } from 'vue';
+import { createApp, getCurrentInstance, nextTick } from 'vue';
 import BootstrapModal from './index.vue';
 
 export type ModalType = {
@@ -93,33 +93,70 @@ export const getModalInstance = (): ModalTypeWithMethods => {
   return modalInstance;
 }
 
+// 全局modal状态管理
+let isModalActive = false;
+let pendingModalOptions: ModalOptions | null = null;
+
 // 导出便捷函数供非Vue环境使用
 export const showModal = (options: ModalOptions) => {
-  if (globalModalInstance) {
-    return new Promise<boolean>((resolve) => {
-      const finalOptions = {
-        title: '提示',
-        confirmText: '确定',
-        cancelText: '取消',
-        showCancel: false,
-        ...options,
-        onConfirm: () => {
-          options.onConfirm?.();
+  if (!globalModalInstance) return Promise.resolve(false);
+
+  return new Promise<boolean>((resolve) => {
+    const finalOptions = {
+      title: '提示',
+      confirmText: '确定',
+      cancelText: '取消',
+      showCancel: false,
+      type: 'info',
+      ...options,
+      onConfirm: () => {
+        options.onConfirm?.();
+        globalModalInstance.hide();
+        isModalActive = false;
+        nextTick(() => {
           resolve(true);
-          globalModalInstance.hide();
-        },
-        onCancel: () => {
-          options.onCancel?.();
+          // 处理待显示的modal
+          if (pendingModalOptions) {
+            const pending = pendingModalOptions;
+            pendingModalOptions = null;
+            showModal(pending);
+          }
+        });
+      },
+      onCancel: () => {
+        options.onCancel?.();
+        globalModalInstance.hide();
+        isModalActive = false;
+        nextTick(() => {
           resolve(false);
-          globalModalInstance.hide();
-        }
-      };
-      
-      //Object.assign(globalModalInstance, finalOptions);
+          // 处理待显示的modal
+          if (pendingModalOptions) {
+            const pending = pendingModalOptions;
+            pendingModalOptions = null;
+            showModal(pending);
+          }
+        });
+      }
+    };
+
+    // 如果当前有modal正在显示，将新的请求加入队列
+    if (isModalActive) {
+      console.log('Modal busy, queuing new modal');
+      pendingModalOptions = options;
+      return;
+    }
+
+    // 显示新的modal
+    const showModalInstance = () => {
       globalModalInstance.setOptions?.(finalOptions);
-      globalModalInstance.show();
-    });
-  }
+      isModalActive = true;
+      
+      // 使用Promise链确保正确的执行顺序
+      return globalModalInstance.show?.() || Promise.resolve();
+    };
+
+    showModalInstance();
+  });
 };
 
 export const showAlert = (content: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', details?: any) => {
