@@ -724,7 +724,11 @@ async function performInsert(data: any) {
     }
   } catch (error) {
     console.error('插入数据失败:', error);
-    await modal.error('数据插入失败');
+    modal.error(error.msg || error.message || '插入失败', {
+      operation: 'INSERT',
+      table: props.table?.name,
+      stack: error.stack
+    });
   }
 }
 
@@ -853,7 +857,12 @@ async function handleDataSubmit(result: any) {
     }
   } catch (error) {
     console.error('处理数据提交失败:', error);
-    await modal.error('操作失败');
+    
+    modal.error(error.msg || error.message || '操作失败', {
+      //operation: operation,
+      table: props.table?.name,
+      stack: error.stack
+    });
   }
 }
 
@@ -892,7 +901,12 @@ async function handleTableStructureChange(result: any) {
     }
   } catch (error) {
     console.error('处理表结构修改失败:', error);
-    await modal.error('表结构修改失败');
+    
+    modal.error(error.msg || error.message || '表结构修改失败', {
+      operation: 'MODIFY_TABLE',
+      table: props.table?.name,
+      stack: error.stack
+    });
   }
 }
 
@@ -933,7 +947,13 @@ async function updateRow(originalRow: any, newData: any) {
     }
   } catch (error) {
     console.error('更新数据失败:', error);
-    await modal.error('数据更新失败');
+    
+    modal.error(error.msg || error.message || '数据更新失败', {
+      operation: 'UPDATE',
+      table: props.table?.name,
+      //sql: sql,
+      stack: error.stack
+    });
   }
 }
 
@@ -985,7 +1005,14 @@ async function editColumn(column: any) {
       }
     } catch (error) {
       console.error('修改列失败:', error);
-      await modal.error('列修改失败');
+      
+      modal.error(error.msg || error.message || '列修改失败', {
+        operation: 'MODIFY_COLUMN',
+        table: props.table?.name,
+        column: column.name,
+        //sql: sql,
+        stack: error.stack
+      });
     }
 }
 
@@ -1010,7 +1037,14 @@ async function deleteColumn(column: any) {
       }
     } catch (error) {
       console.error('删除列失败:', error);
-      await modal.error('列删除失败');
+      
+      modal.error(error.msg || error.message || '列删除失败', {
+        operation: 'DELETE_COLUMN',
+        table: props.table?.name,
+        column: column.name,
+        //sql: sql,
+        stack: error.stack
+      });
     }
   }
 }

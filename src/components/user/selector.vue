@@ -296,7 +296,10 @@ const fetchUsers = async (filter: string) => {
     });
     
     if (response.ret !== 0) {
-      await modal.error(`获取用户失败: ${response.msg || '未知错误'}`);
+      modal.error(response.msg || '获取用户失败', {
+        operation: 'GET_USER_LIST',
+        code: response.ret
+      });
       userList.value = [];
       totalUsers.value = 0;
       return;
@@ -306,7 +309,11 @@ const fetchUsers = async (filter: string) => {
     totalUsers.value = response.total || 0;
   } catch (error) {
     console.error('获取用户列表失败:', error);
-    await modal.error('获取用户列表时发生错误');
+    
+    modal.error(error.message || '获取用户列表失败', {
+      operation: 'GET_USER_LIST',
+      stack: error.stack
+    });
     userList.value = [];
     totalUsers.value = 0;
   } finally {

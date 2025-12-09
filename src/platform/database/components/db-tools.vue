@@ -232,7 +232,13 @@ async function backupDatabase() {
     await modal.info('备份任务已启动');
   } catch (error) {
     console.error('备份失败:', error);
-    await modal.error('备份失败');
+    
+    modal.error(error.msg || error.message || '备份失败', {
+      operation: 'BACKUP',
+      database: props.database,
+      //options: backupOptions.value,
+      stack: error.stack
+    });
   }
 }
 
@@ -276,7 +282,13 @@ async function optimizeDatabase() {
     await modal.success('数据库优化完成');
   } catch (error) {
     console.error('优化失败:', error);
-    await modal.error('优化失败');
+    
+    modal.error(error.msg || error.message || '优化失败', {
+      operation: 'OPTIMIZE',
+      database: props.database,
+      //options: optimizationOptions.value,
+      stack: error.stack
+    });
   }
 }
 
@@ -290,7 +302,13 @@ async function analyzeTables() {
     await modal.success('表分析完成');
   } catch (error) {
     console.error('分析失败:', error);
-    await modal.error('分析失败');
+    
+    modal.error(error.msg || error.message || '分析失败', {
+      operation: 'ANALYZE',
+      database: props.database,
+      //options: analysisOptions.value,
+      stack: error.stack
+    });
   }
 }
 
@@ -304,7 +322,13 @@ async function repairTables() {
     await modal.success('表修复完成');
   } catch (error) {
     console.error('修复失败:', error);
-    await modal.error('修复失败');
+    
+    modal.error(error.msg || error.message || '修复失败', {
+      operation: 'REPAIR',
+      database: props.database,
+      //options: repairOptions.value,
+      stack: error.stack
+    });
   }
 }
 
@@ -423,7 +447,13 @@ async function performRestore() {
     }
   } catch (error) {
     console.error('恢复失败:', error);
-    await modal.error('恢复失败');
+    
+    modal.error(error.msg || error.message || '恢复失败', {
+      operation: 'RESTORE',
+      database: props.database,
+      //file: restoreFile.value,
+      stack: error.stack
+    });
   } finally {
     restoring.value = false;
   }

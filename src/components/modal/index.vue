@@ -11,9 +11,20 @@
                 </div>
                 <div class="modal-body" v-if="modalShow">
                     <slot v-if="$slots.default"></slot>
-                    <div v-else class="d-flex align-items-center">
-                        <i v-if="typeIcon" :class="typeIcon" class="me-3 fs-1"></i>
-                        <div>{{dynamicContent}}</div>
+                    <div v-else>
+                        <div v-if="typeIcon" class="d-flex align-items-center mb-3">
+                            <i :class="typeIcon" class="me-3 fs-1"></i>
+                            <div class="flex-grow-1">{{dynamicContent}}</div>
+                        </div>
+                        <div v-if="shouldShowDetails()" class="error-details-toggle mt-2">
+                            <button class="btn btn-sm btn-outline-secondary" @click="toggleDetails">
+                                {{detailsExpanded ? '隐藏' : '详情'}}
+                                <i class="bi bi-chevron-{{detailsExpanded ? 'up' : 'down'}} ms-1"></i>
+                            </button>
+                            <div v-if="detailsExpanded" class="error-details-content mt-2">
+                                <pre class="error-json">{{formatErrorDetails()}}</pre>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -101,6 +112,28 @@
     const dynamicConfirmText = ref('');
     const dynamicCancelText = ref('');
     const dynamicShowCancel = ref(false);
+    const detailsExpanded = ref(false);
+    const dynamicErrorDetails = ref<any>(null);
+
+    // 判断是否应该显示详情按钮
+    const shouldShowDetails = () => {
+        return dynamicType.value === 'error' && dynamicErrorDetails.value;
+    };
+
+    // 切换详情展开状态
+    const toggleDetails = () => {
+        detailsExpanded.value = !detailsExpanded.value;
+    };
+
+    // 格式化错误详情
+    const formatErrorDetails = () => {
+        if (!dynamicErrorDetails.value) return '';
+        try {
+            return JSON.stringify(dynamicErrorDetails.value, null, 2);
+        } catch {
+            return String(dynamicErrorDetails.value);
+        }
+    };
     const dynamicOptions = ref<any>({});
 
     // 类型相关的计算属性
@@ -140,7 +173,6 @@
     });
     
     const originalParent = ref<Node | null>(null); // 保存原始父节点
-    const targetContainer = ref<HTMLElement | null>(null); // 目标容器（传送目的地）
 
     // 计算传送目标容器
     const getTargetContainer = () => {
@@ -305,6 +337,7 @@
             if (options.confirmText) dynamicConfirmText.value = options.confirmText;
             if (options.cancelText) dynamicCancelText.value = options.cancelText;
             if (options.showCancel !== undefined) dynamicShowCancel.value = options.showCancel;
+            if (options.details !== undefined) dynamicErrorDetails.value = options.details;
             dynamicOptions.value = options;
         }
     });
@@ -317,33 +350,94 @@
 }
 
 .modal-success .modal-header {
-    background-color: var(--bs-success);
-    color: white;
+  background-color: var(--bs-success);
+  color: white;
 }
 
 .modal-error .modal-header {
-    background-color: var(--bs-danger);
-    color: white;
+  background-color: var(--bs-danger);
+  color: white;
 }
 
 .modal-warning .modal-header {
-    background-color: var(--bs-warning);
-    color: var(--bs-dark);
+  background-color: var(--bs-warning);
+  color: var(--bs-dark);
 }
 
 .modal-info .modal-header {
-    background-color: var(--bs-info);
-    color: white;
+  background-color: var(--bs-info);
+  color: white;
 }
 
 .modal-body {
-    min-height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.error-details {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.error-content {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.error-details-toggle {
+    width: 100%;
+}
+
+.error-details-content {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-top: 0.5rem;
+}
+
+.error-json {
+    background-color: #212529;
+    color: #f8f9fa;
+    border-radius: 0.25rem;
+    padding: 0.75rem;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.error-meta {
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .modal-body .fs-1 {
-    font-size: 2.5rem;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+/* 响应式调整 */
+@media (max-width: 576px) {
+    .error-content,
+    .error-json {
+        font-size: 0.75rem;
+        max-height: 150px;
+    }
 }
 </style>

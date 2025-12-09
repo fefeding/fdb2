@@ -1,4 +1,4 @@
-import { createApp, getCurrentInstance, ref } from 'vue';
+import { createApp, getCurrentInstance } from 'vue';
 import BootstrapModal from './index.vue';
 
 export type ModalType = {
@@ -8,15 +8,14 @@ export type ModalType = {
   close: () => void,
 };
 
-
 // modal方法类型定义
 const modalMethods = {
   alert: {} as (options: ModalOptions | string) => Promise<boolean>,
   confirm: {} as (options: ModalOptions | string) => Promise<boolean>,
-  success: {} as (content: string, title?: string) => Promise<boolean>,
-  error: {} as (content: string, title?: string) => Promise<boolean>,
-  warning: {} as (content: string, title?: string) => Promise<boolean>,
-  info: {} as (content: string, title?: string) => Promise<boolean>,
+  success: {} as (content: string) => Promise<boolean>,
+  error: {} as (content: string, details?: any) => Promise<boolean>,
+  warning: {} as (content: string) => Promise<boolean>,
+  info: {} as (content: string) => Promise<boolean>,
   showModal: {} as (options: ModalOptions) => Promise<boolean>
 };
 
@@ -29,6 +28,7 @@ export type ModalOptions = {
   confirmText?: string;
   cancelText?: string;
   showCancel?: boolean;
+  details?: any;
   onConfirm?: () => void;
   onCancel?: () => void;
 };
@@ -36,7 +36,6 @@ export type ModalOptions = {
 // 全局modal实例
 let globalModalInstance: any = null;
 let modalInstance: ModalTypeWithMethods;
-const modalQueue = ref<ModalOptions[]>([]);
 
 export default {
   install(app: any) {
@@ -67,17 +66,17 @@ export default {
           : { ...options, showCancel: true };
         return showModal(opts);
       },
-      success(content: string, title = '成功') {
-        return this.alert({ title, content, type: 'success' as const, confirmText: '确定' });
+      success(content: string) {
+        return this.alert({ content, type: 'success' as const, confirmText: '确定' });
       },
-      error (content: string, title = '错误') {
-        return this.alert({ title, content, type: 'error' as const, confirmText: '确定' });
+      error(content: string, details?: any) {
+        return this.alert({ content, type: 'error' as const, confirmText: '确定', details });
       },
-      warning(content: string, title = '警告') {
-        return this.alert({ title, content, type: 'warning' as const, confirmText: '确定' });
+      warning(content: string) {
+        return this.alert({ content, type: 'warning' as const, confirmText: '确定' });
       },
-      info(content: string, title = '提示') {
-        return this.alert({ title, content, type: 'info' as const, confirmText: '确定' });
+      info(content: string) {
+        return this.alert({ content, type: 'info' as const, confirmText: '确定' });
       },
     } as ModalTypeWithMethods;
   },
@@ -123,18 +122,12 @@ export const showModal = (options: ModalOptions) => {
   }
 };
 
-export const showAlert = (content: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', title?: string) => {
-  const titles = {
-    success: '成功',
-    error: '错误', 
-    warning: '警告',
-    info: '提示'
-  };
+export const showAlert = (content: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', details?: any) => {
   return showModal({
-    title: title || titles[type],
     content,
     type,
-    showCancel: false
+    showCancel: false,
+    details
   });
 };
 

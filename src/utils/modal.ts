@@ -34,13 +34,29 @@ export class ModalHelper {
   /**
    * 错误提示
    */
-  error(content: string, title?: string): Promise<boolean> {
+  error(content: string | Error, title?: string): Promise<boolean> {
     const modal = this.getModal();
-    if (modal?.error) {
-      return modal.error(content, title);
+    
+    // 处理错误对象
+    let errorMessage: string;
+    if (content instanceof Error) {
+      errorMessage = content.message;
+      console.error('Error details:', {
+        name: content.name,
+        message: content.message,
+        stack: content.stack
+      });
+    } else {
+      errorMessage = String(content);
     }
-    return showAlert(content, 'error', title) || Promise.resolve(true);
+    
+    if (modal?.error) {
+      return modal.error(errorMessage, title);
+    }
+    return showAlert(errorMessage, 'error', title) || Promise.resolve(true);
   }
+
+
 
   /**
    * 警告提示

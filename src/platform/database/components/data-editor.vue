@@ -264,12 +264,20 @@ async function handleSubmit() {
       emit('submit', response.data);
       closeModal();
     } else {
-      modal.error(response.msg);
+      modal.error(response.msg, {
+        code: response.ret,
+        operation: props.isEdit ? 'UPDATE' : 'INSERT',
+        table: props.tableName,
+        requestData: formData.value
+      });
     }
   } catch (error) {
     console.error('提交数据失败:', error);
-    // @ts-ignore
-    modal.error((error.msg || error.message));
+    modal.error(error.msg || error.message || error, {
+      operation: props.isEdit ? 'UPDATE' : 'INSERT',
+      table: props.tableName,
+      stack: error.stack
+    });
   } finally {
     loading.value = false;
   }

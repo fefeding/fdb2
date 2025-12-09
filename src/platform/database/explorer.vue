@@ -325,8 +325,10 @@ async function loadConnections() {
     connections.value = (response as any)?.data || [];
   } catch (error) {
     console.error('加载连接失败:', error);
-    const errorMessage = error instanceof Error ? error.message : '未知错误';
-    showToast('错误', `加载连接失败: ${errorMessage}`, 'error');
+    modal.error(error.msg || error.message || '加载连接失败', {
+      operation: 'LOAD_CONNECTIONS',
+      stack: error.stack
+    });
   }
 }
 
@@ -364,8 +366,12 @@ async function loadDatabasesForConnection(connection: ConnectionEntity, forceRef
     databaseCache.value.set(cacheKey, (databases as any)?.data || []);
   } catch (error) {
     console.error('加载数据库失败:', error);
-    const errorMessage = error instanceof Error ? error.message : '未知错误';
-    showToast('错误', `加载数据库失败: ${errorMessage}`, 'error');
+    
+    modal.error(error.msg || error.message || '加载数据库失败', {
+      operation: 'LOAD_DATABASES',
+      connectionId: connection.id,
+      stack: error.stack
+    });
     databaseCache.value.set(cacheKey, []);
   } finally {
     loadingConnections.value.delete(cacheKey);
@@ -411,8 +417,13 @@ async function loadTablesForDatabase(connection: ConnectionEntity, database: str
     tableCache.value.set(dbKey, tables);
   } catch (error) {
     console.error('加载表失败:', error);
-    const errorMessage = error instanceof Error ? error.message : '未知错误';
-    showToast('错误', `加载表失败: ${errorMessage}`, 'error');
+    
+
+    modal.error(error.msg || error.message || '加载表失败', {
+      operation: 'LOAD_TABLES',
+      database: database,
+      stack: error.stack
+    });
     tableCache.value.set(dbKey, []);
   } finally {
     loadingTables.value.delete(dbKey);
@@ -429,8 +440,13 @@ async function loadDatabaseInfo(connection: ConnectionEntity, database: string) 
     loadTablesForDatabase(connection, database);
   } catch (error) {
     console.error('加载数据库信息失败:', error);
-    const errorMessage = error instanceof Error ? error.message : '未知错误';
-    showToast('错误', `加载数据库信息失败: ${errorMessage}`, 'error');
+    
+
+    modal.error(error.msg || error.message || '加载数据库信息失败', {
+      operation: 'LOAD_DATABASE_INFO',
+      database: database,
+      stack: error.stack
+    });
   }
 }
 
@@ -454,8 +470,13 @@ async function loadTableData(connection: ConnectionEntity, database: string, tab
     currentPage.value = 1;
   } catch (error) {
     console.error('加载表数据失败:', error);
-    const errorMessage = error instanceof Error ? error.message : '未知错误';
-    showToast('错误', `加载表数据失败: ${errorMessage}`, 'error');
+    
+
+    modal.error(error.msg || error.message || '加载表数据失败', {
+      operation: 'LOAD_TABLE_DATA',
+      table: tableName,
+      stack: error.stack
+    });
     tableData.value = [];
   } finally {
     isGlobalLoading.value = false;
@@ -469,8 +490,13 @@ async function loadTableStructure(connection: ConnectionEntity, database: string
     tableColumns.value = structure?.data.columns || [];
   } catch (error) {
     console.error('加载表结构失败:', error);
-    const errorMessage = error instanceof Error ? error.message : '未知错误';
-    showToast('错误', `加载表结构失败: ${errorMessage}`, 'error');
+    
+
+    modal.error(error.msg || error.message || '加载表结构失败', {
+      operation: 'LOAD_TABLE_STRUCTURE',
+      table: tableName,
+      stack: error.stack
+    });
     tableStructure.value = null;
     tableColumns.value = [];
   }
@@ -500,7 +526,12 @@ async function testConnection(connection: ConnectionEntity) {
       showToast('', `连接 "${connection.name}" 测试失败`, 'error');
     }
   } catch (error) {
-    showToast('', `连接测试失败: ${error.message}`, 'error');
+
+    modal.error(error.msg || error.message || '连接测试失败', {
+      operation: 'TEST_CONNECTION',
+      connectionId: connection.id,
+      stack: error.stack
+    });
   }
 }
 
@@ -686,7 +717,12 @@ async function handleCreateTable(tableData: { name: string; comment: string }) {
     showToast('成功', `表 "${tableData.name}" 创建成功`, 'success');
   } catch (error) {
     console.error('创建表失败:', error);
-    showToast('错误', `创建表失败: ${error.message}`, 'error');
+    
+
+    modal.error(error.msg || error.message || '创建表失败', {
+      operation: 'CREATE_TABLE',
+      stack: error.stack
+    });
   } finally {
     isGlobalLoading.value = false;
   }
@@ -720,7 +756,12 @@ async function handleTruncateTable() {
       showToast('成功', `表 "${selectedTable.value.name}" 已清空`, 'success');
     } catch (error) {
       console.error('清空表失败:', error);
-      showToast('错误', `清空表失败: ${error.message}`, 'error');
+      
+
+      modal.error(error.msg || error.message || '清空表失败', {
+        operation: 'TRUNCATE_TABLE',
+        stack: error.stack
+      });
     } finally {
       isGlobalLoading.value = false;
     }
@@ -743,12 +784,17 @@ async function handleDropTable() {
       selectedTable.value = null;
       
       // 刷新数据库
-      await refreshDatabase();
+      await refreshDatabase(selectedConnection.value, selectedDatabase.value);
       
       showToast('成功', `表 "${selectedTable.value.name}" 已删除`, 'success');
     } catch (error) {
       console.error('删除表失败:', error);
-      showToast('错误', `删除表失败: ${error.message}`, 'error');
+      
+
+      modal.error(error.msg || error.message || '删除表失败', {
+        operation: 'DROP_TABLE',
+        stack: error.stack
+      });
     } finally {
       isGlobalLoading.value = false;
     }
@@ -826,7 +872,13 @@ async function handleExecuteSql(sql: string) {
       affectedRows: 0,
       error: error?.message || ''
     };
-    showToast('错误', `SQL执行失败: ${error?.message||''}`, 'error');
+    
+
+    modal.error(error.msg || error.message || 'SQL执行失败', {
+      operation: 'EXECUTE_SQL',
+      sql: sql,
+      stack: error.stack
+    });
   } finally {
     sqlExecuting.value = false;
   }
