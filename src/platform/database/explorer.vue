@@ -769,16 +769,17 @@ async function handleTruncateTable() {
 }
 
 async function handleDropTable() {
-  if (!selectedTable.value || !selectedConnection.value || !selectedDatabase.value) return;
   
-  const result = await modal.confirm(`确定要删除表 "${selectedTable.value.name}" 吗？此操作将删除表结构和所有数据且不可恢复。`);
+  if (!selectedTable.value || !selectedConnection.value || !selectedDatabase.value) return;
+  const tableName = selectedTable.value.name;
+  const result = await modal.confirm(`确定要删除表 "${tableName}" 吗？此操作将删除表结构和所有数据且不可恢复。`);
   if (result) {
     try {
       isGlobalLoading.value = true;
-      loadingMessage.value = `正在删除表 "${selectedTable.value.name}"...`;
+      loadingMessage.value = `正在删除表 "${tableName}"...`;
       
       // TODO: 实现删除表的逻辑
-      console.log('删除表:', selectedTable.value.name);
+      console.log('删除表:', tableName);
       
       // 清空选中状态
       selectedTable.value = null;
@@ -786,7 +787,7 @@ async function handleDropTable() {
       // 刷新数据库
       await refreshDatabase(selectedConnection.value, selectedDatabase.value);
       
-      showToast('成功', `表 "${selectedTable.value.name}" 已删除`, 'success');
+      showToast('成功', `表 "${tableName}" 已删除`, 'success');
     } catch (error) {
       console.error('删除表失败:', error);
       

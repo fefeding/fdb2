@@ -2,26 +2,28 @@
   <div class="database-detail">
     <!-- 数据库头部信息 -->
     <div class="database-header">
-      <div class="database-info">
-        <div class="database-icon">
-          <i class="bi bi-database"></i>
-        </div>
-        <div class="database-meta">
-          <h4 class="database-name">{{ database }}</h4>
-          <div class="connection-info">
-            <span class="connection-name">{{ connection?.name }}</span>
-            <span class="connection-type">{{ getDbTypeLabel(connection?.type) }}</span>
+      <div class="database-header-content">
+        <div class="database-info">
+          <div class="database-icon">
+            <i class="bi bi-database"></i>
+          </div>
+          <div class="database-meta">
+            <h4 class="database-name">{{ database }}</h4>
+            <div class="connection-info">
+              <span class="connection-name">{{ connection?.name }}</span>
+              <span class="connection-type">{{ getDbTypeLabel(connection?.type) }}</span>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="database-stats">
-        <div class="stat-item">
-          <div class="stat-value">{{ databaseInfo?.tableCount || 0 }}</div>
-          <div class="stat-label">表</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">{{ formatSize(databaseInfo?.size || 0) }}</div>
-          <div class="stat-label">大小</div>
+        <div class="database-stats">
+          <div class="stat-item">
+            <div class="stat-value">{{ databaseInfo?.tableCount || 0 }}</div>
+            <div class="stat-label">表</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ formatSize(databaseInfo?.size || 0) }}</div>
+            <div class="stat-label">大小</div>
+          </div>
         </div>
       </div>
     </div>
@@ -348,16 +350,22 @@ function closeTableEditor() {
 }
 
 .database-header {
-  padding: 1.5rem;
+  padding: 1rem;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   border-bottom: 1px solid #e2e8f0;
+}
+
+.database-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
 }
 
 .database-info {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1.5rem;
 }
 
 .database-icon {

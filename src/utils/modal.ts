@@ -23,12 +23,12 @@ export class ModalHelper {
   /**
    * 成功提示
    */
-  success(content: string, title?: string): Promise<boolean> {
+  success(content: string): Promise<boolean> {
     const modal = this.getModal();
     if (modal?.success) {
-      return modal.success(content, title);
+      return modal.success(content);
     }
-    return showAlert(content, 'success', title) || Promise.resolve(true);
+    return showAlert(content, 'success') || Promise.resolve(true);
   }
 
   /**
@@ -61,23 +61,23 @@ export class ModalHelper {
   /**
    * 警告提示
    */
-  warning(content: string, title?: string): Promise<boolean> {
+  warning(content: string): Promise<boolean> {
     const modal = this.getModal();
     if (modal?.warning) {
-      return modal.warning(content, title);
+      return modal.warning(content);
     }
-    return showAlert(content, 'warning', title) || Promise.resolve(true);
+    return showAlert(content, 'warning') || Promise.resolve(true);
   }
 
   /**
    * 信息提示
    */
-  info(content: string, title?: string): Promise<boolean> {
+  info(content: string): Promise<boolean> {
     const modal = this.getModal();
     if (modal?.info) {
-      return modal.info(content, title);
+      return modal.info(content);
     }
-    return showAlert(content, 'info', title) || Promise.resolve(true);
+    return showAlert(content, 'info') || Promise.resolve(true);
   }
 
   /**

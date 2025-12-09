@@ -12,8 +12,8 @@
                 <div class="modal-body" v-if="modalShow">
                     <slot v-if="$slots.default"></slot>
                     <div v-else>
-                        <div v-if="typeIcon" class="d-flex align-items-center mb-3">
-                            <i :class="typeIcon" class="me-3 fs-1"></i>
+                        <div class="d-flex align-items-center mb-3">
+                            <i v-if="typeIcon" :class="typeIcon" class="me-3 fs-1"></i>
                             <div class="flex-grow-1">{{dynamicContent}}</div>
                         </div>
                         <div v-if="shouldShowDetails()" class="error-details-toggle mt-2">

@@ -2,37 +2,39 @@
   <div class="table-detail">
     <!-- 表头部信息 -->
     <div class="table-header">
-      <div class="table-info">
-        <div class="table-icon">
-          <i class="bi bi-table"></i>
-        </div>
-        <div class="table-meta">
-          <h4 class="table-name">{{ table?.name }}</h4>
-          <div class="table-breadcrumb">
-            <span class="connection">{{ connection?.name }}</span>
-            <i class="bi bi-chevron-right"></i>
-            <span class="database">{{ database }}</span>
-            <i class="bi bi-chevron-right"></i>
-            <span class="table">{{ table?.name }}</span>
+      <div class="table-header-content">
+        <div class="table-info">
+          <div class="table-icon">
+            <i class="bi bi-table"></i>
+          </div>
+          <div class="table-meta">
+            <h4 class="table-name">{{ table?.name }}</h4>
+            <div class="table-breadcrumb">
+              <span class="connection">{{ connection?.name }}</span>
+              <i class="bi bi-chevron-right"></i>
+              <span class="database">{{ database }}</span>
+              <i class="bi bi-chevron-right"></i>
+              <span class="table">{{ table?.name }}</span>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="table-stats">
-        <div class="stat-item">
-          <div class="stat-value">{{ formatNumber(table?.rowCount || 0) }}</div>
-          <div class="stat-label">行数据</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">{{ tableStructure?.columns?.length || 0 }}</div>
-          <div class="stat-label">列</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">{{ tableStructure?.indexes?.length || 0 }}</div>
-          <div class="stat-label">索引</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">{{ formatSize(table?.dataSize || 0) }}</div>
-          <div class="stat-label">大小</div>
+        <div class="table-stats">
+          <div class="stat-item">
+            <div class="stat-value">{{ formatNumber(table?.rowCount || 0) }}</div>
+            <div class="stat-label">行数据</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ tableStructure?.columns?.length || 0 }}</div>
+            <div class="stat-label">列</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ tableStructure?.indexes?.length || 0 }}</div>
+            <div class="stat-label">索引</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ formatSize(table?.dataSize || 0) }}</div>
+            <div class="stat-label">大小</div>
+          </div>
         </div>
       </div>
     </div>
@@ -827,17 +829,17 @@ function exportToExcel() {
 }
 
 async function truncateTable() {
-  const result = await modal.confirm(`确定要清空表 "${props.table?.name}" 吗？此操作将删除所有数据且不可恢复。`);
-  if (result) {
+  //const result = await modal.confirm(`确定要清空表 "${props.table?.name}" 吗？此操作将删除所有数据且不可恢复。`);
+  //if (result) {
     emit('truncate-table');
-  }
+  //}
 }
 
-async function dropTable() {
-  const result = await modal.confirm(`确定要删除表 "${props.table?.name}" 吗？此操作将删除表结构和所有数据且不可恢复。`);
-  if (result) {
+async function dropTable() {  
+  //const result = await modal.confirm(`确定要删除表 "${props.table?.name}" 吗？此操作将删除表结构和所有数据且不可恢复。`);
+  //if (result) {
     emit('drop-table');
-  }
+  //}
 }
 
 function editRow(row: any) {
@@ -1145,16 +1147,22 @@ function handleExecuteSqlFromTool(sql: string) {
 }
 
 .table-header {
-  padding: 1.5rem;
+  padding: 1rem;
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
   border-bottom: 1px solid #e2e8f0;
+}
+
+.table-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
 }
 
 .table-info {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1.5rem;
 }
 
 .table-icon {
