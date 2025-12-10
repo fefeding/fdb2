@@ -54,6 +54,27 @@ export class ConnectionService {
   async getDatabaseTypes() {
     return request('/api/database/getSupportedDatabaseTypes');
   }
+
+  /**
+   * 创建数据库
+   */
+  async createDatabase(connectionId: string, databaseName: string, options?: any) {
+    return request('/api/database/createDatabase', { 
+      id: connectionId, 
+      databaseName, 
+      options 
+    });
+  }
+
+  /**
+   * 删除数据库
+   */
+  async dropDatabase(connectionId: string, databaseName: string) {
+    return request('/api/database/dropDatabase', { 
+      id: connectionId, 
+      databaseName 
+    });
+  }
 }
 
 /**

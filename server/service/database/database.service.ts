@@ -16,7 +16,7 @@ import {
  */
 export class DatabaseService {
 
-  private connectionService: ConnectionService;
+  public connectionService: ConnectionService;
   private mysqlService: MySQLService;
   private postgreSQLService: PostgreSQLService;
   private sqliteService: SQLiteService;
@@ -35,7 +35,7 @@ export class DatabaseService {
   /**
    * 获取数据库服务实例
    */
-  private getDatabaseService(type: string): BaseDatabaseService {
+  public getDatabaseService(type: string): BaseDatabaseService {
     switch (type.toLowerCase()) {
       case 'mysql':
         return this.mysqlService;
@@ -117,6 +117,42 @@ export class DatabaseService {
   }
 
   /**
+   * 获取视图列表
+   */
+  async getViews(connectionId: string, databaseName: string): Promise<any[]> {
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+    const databaseService = this.getDatabaseService(dataSource.options.type as string);
+    return databaseService.getViews(dataSource, databaseName);
+  }
+
+  /**
+   * 获取视图定义
+   */
+  async getViewDefinition(connectionId: string, databaseName: string, viewName: string): Promise<string> {
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+    const databaseService = this.getDatabaseService(dataSource.options.type as string);
+    return databaseService.getViewDefinition(dataSource, databaseName, viewName);
+  }
+
+  /**
+   * 获取存储过程列表
+   */
+  async getProcedures(connectionId: string, databaseName: string): Promise<any[]> {
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+    const databaseService = this.getDatabaseService(dataSource.options.type as string);
+    return databaseService.getProcedures(dataSource, databaseName);
+  }
+
+  /**
+   * 获取存储过程定义
+   */
+  async getProcedureDefinition(connectionId: string, databaseName: string, procedureName: string): Promise<string> {
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+    const databaseService = this.getDatabaseService(dataSource.options.type as string);
+    return databaseService.getProcedureDefinition(dataSource, databaseName, procedureName);
+  }
+
+  /**
    * 测试数据库连接
    */
   async testConnection(connectionId: string): Promise<boolean> {
@@ -135,37 +171,103 @@ export class DatabaseService {
         label: 'MySQL',
         icon: 'bi-database',
         defaultPort: 3306,
-        description: 'MySQL数据库'
+        description: 'MySQL数据库',
+        features: {
+          supportSchemas: false,
+          supportProcedures: true,
+          supportTriggers: true,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: true
+        }
       },
       {
         value: 'postgres',
         label: 'PostgreSQL',
         icon: 'bi-database',
         defaultPort: 5432,
-        description: 'PostgreSQL数据库'
+        description: 'PostgreSQL数据库',
+        features: {
+          supportSchemas: true,
+          supportProcedures: true,
+          supportTriggers: true,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: true,
+          supportArrays: true,
+          supportEnum: true
+        }
       },
       {
         value: 'sqlite',
         label: 'SQLite',
         icon: 'bi-database',
         defaultPort: null,
-        description: 'SQLite数据库文件'
+        description: 'SQLite数据库文件',
+        features: {
+          supportSchemas: false,
+          supportProcedures: false,
+          supportTriggers: true,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: false,
+          supportArrays: false
+        }
       },
       {
         value: 'oracle',
         label: 'Oracle',
         icon: 'bi-database',
         defaultPort: 1521,
-        description: 'Oracle数据库'
+        description: 'Oracle数据库',
+        features: {
+          supportSchemas: true,
+          supportProcedures: true,
+          supportTriggers: true,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: false,
+          supportArrays: false,
+          supportSequences: true,
+          supportSynonyms: true
+        }
       },
       {
         value: 'mssql',
         label: 'SQL Server',
         icon: 'bi-database',
         defaultPort: 1433,
-        description: 'Microsoft SQL Server'
+        description: 'Microsoft SQL Server',
+        features: {
+          supportSchemas: false,
+          supportProcedures: true,
+          supportTriggers: true,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: true,
+          supportArrays: false,
+          supportStoredProcedures: true
+        }
       }
     ];
+  }
+
+  /**
+   * 创建数据库
+   */
+  async createDatabase(connectionId: string, databaseName: string, options?: any): Promise<void> {
+    const dataSource = await this.connectionService.getActiveConnection(connectionId);
+    const databaseService = this.getDatabaseService(dataSource.options.type as string);
+    return databaseService.createDatabase(dataSource, databaseName, options);
+  }
+
+  /**
+   * 删除数据库
+   */
+  async dropDatabase(connectionId: string, databaseName: string): Promise<void> {
+    const dataSource = await this.connectionService.getActiveConnection(connectionId);
+    const databaseService = this.getDatabaseService(dataSource.options.type as string);
+    return databaseService.dropDatabase(dataSource, databaseName);
   }
 
   /**

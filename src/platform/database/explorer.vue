@@ -176,6 +176,7 @@
           @open-sql-query="handleOpenSqlQuery"
           @export-schema="handleExportSchema"
           @view-logs="handleViewLogs"
+          @create-database="handleCreateDatabase"
         />
 
         <!-- 数据库详情组件 -->

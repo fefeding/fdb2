@@ -116,6 +116,22 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
     return types;
   }
 
+  // /api/database/createDatabase
+  if (pathname === '/api/database/createDatabase') {
+    const { id, databaseName, options } = body;
+    if (!id || !databaseName) throw Error('Missing parameters: id, databaseName');
+    await databaseService.createDatabase(id, databaseName, options);
+    return { success: true };
+  }
+
+  // /api/database/dropDatabase
+  if (pathname === '/api/database/dropDatabase') {
+    const { id, databaseName } = body;
+    if (!id || !databaseName) throw Error('Missing parameters: id, databaseName');
+    await databaseService.dropDatabase(id, databaseName);
+    return { success: true };
+  }
+
   // /api/database/exportTableData
   if (pathname === '/api/database/exportTableData') {
     const { id, database, table, format = 'json', where } = body;
@@ -189,7 +205,10 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
     const table = parts[5];
     if (!id || !database || !table) throw Error('Missing parameters');
     
-    const sql = `TRUNCATE TABLE \`${table}\``;
+    // 使用数据库服务生成正确的TRUNCATE语法
+    const dataSource = await databaseService['connectionService'].getActiveConnection(id, database);
+    const dbService = databaseService['getDatabaseService'](dataSource.options.type as string);
+    const sql = `TRUNCATE TABLE ${dbService['quoteIdentifier'](table)}`;
     const result = await databaseService.executeQuery(id, sql, database);
     return { success: true, sql, result };
   }
@@ -203,7 +222,10 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
     const table = parts[5];
     if (!id || !database || !table) throw Error('Missing parameters');
     
-    const sql = `DROP TABLE \`${table}\``;
+    // 使用数据库服务生成正确的DROP语法
+    const dataSource = await databaseService['connectionService'].getActiveConnection(id, database);
+    const dbService = databaseService['getDatabaseService'](dataSource.options.type as string);
+    const sql = `DROP TABLE ${dbService['quoteIdentifier'](table)}`;
     const result = await databaseService.executeQuery(id, sql, database);
     return { success: true, sql, result };
   }
@@ -213,18 +235,7 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
     const { id, database } = body;
     if (!id || !database) throw Error('Missing parameters: id, database');
     
-    const sql = `
-      SELECT 
-        TABLE_NAME as name,
-        TABLE_COMMENT as comment,
-        TABLE_SCHEMA as schemaName,
-        CHECKSUM as checksum
-      FROM information_schema.VIEWS 
-      WHERE TABLE_SCHEMA = '${database}'
-      ORDER BY TABLE_NAME
-    `;
-    
-    const result = await databaseService.executeQuery(id, sql, database);
+    const result = await databaseService.getViews(id, database);
     return result;
   }
 
@@ -233,14 +244,7 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
     const { id, database, viewName } = body;
     if (!id || !database || !viewName) throw Error('Missing parameters: id, database, viewName');
     
-    const sql = `
-      SELECT VIEW_DEFINITION as definition
-      FROM information_schema.VIEWS 
-      WHERE TABLE_SCHEMA = '${database}' 
-      AND TABLE_NAME = '${viewName}'
-    `;
-    
-    const result = await databaseService.executeQuery(id, sql, database);
+    const result = await databaseService.getViewDefinition(id, database, viewName);
     return result;
   }
 
@@ -249,7 +253,10 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
     const { id, database, viewName, definition } = body;
     if (!id || !database || !viewName || !definition) throw Error('Missing parameters: id, database, viewName, definition');
     
-    const sql = `CREATE VIEW \`${viewName}\` AS ${definition}`;
+    // 使用数据库服务生成正确的CREATE VIEW语法
+    const dataSource = await databaseService['connectionService'].getActiveConnection(id, database);
+    const dbService = databaseService['getDatabaseService'](dataSource.options.type as string);
+    const sql = `CREATE VIEW ${dbService['quoteIdentifier'](viewName)} AS ${definition}`;
     const result = await databaseService.executeQuery(id, sql, database);
     return { success: true, sql, result };
   }
@@ -259,7 +266,10 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
     const { id, database, viewName } = body;
     if (!id || !database || !viewName) throw Error('Missing parameters: id, database, viewName');
     
-    const sql = `DROP VIEW \`${viewName}\``;
+    // 使用数据库服务生成正确的DROP VIEW语法
+    const dataSource = await databaseService['connectionService'].getActiveConnection(id, database);
+    const dbService = databaseService['getDatabaseService'](dataSource.options.type as string);
+    const sql = `DROP VIEW ${dbService['quoteIdentifier'](viewName)}`;
     const result = await databaseService.executeQuery(id, sql, database);
     return { success: true, sql, result };
   }
@@ -269,19 +279,7 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
     const { id, database } = body;
     if (!id || !database) throw Error('Missing parameters: id, database');
     
-    const sql = `
-      SELECT 
-        ROUTINE_NAME as name,
-        ROUTINE_COMMENT as comment,
-        ROUTINE_TYPE as type,
-        DTD_IDENTIFIER as returnType,
-        EXTERNAL_LANGUAGE as language
-      FROM information_schema.ROUTINES 
-      WHERE ROUTINE_SCHEMA = '${database}'
-      ORDER BY ROUTINE_NAME
-    `;
-    
-    const result = await databaseService.executeQuery(id, sql, database);
+    const result = await databaseService.getProcedures(id, database);
     return result;
   }
 
@@ -290,14 +288,7 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
     const { id, database, procedureName } = body;
     if (!id || !database || !procedureName) throw Error('Missing parameters: id, database, procedureName');
     
-    const sql = `
-      SELECT ROUTINE_DEFINITION as definition
-      FROM information_schema.ROUTINES 
-      WHERE ROUTINE_SCHEMA = '${database}' 
-      AND ROUTINE_NAME = '${procedureName}'
-    `;
-    
-    const result = await databaseService.executeQuery(id, sql, database);
+    const result = await databaseService.getProcedureDefinition(id, database, procedureName);
     return result;
   }
 

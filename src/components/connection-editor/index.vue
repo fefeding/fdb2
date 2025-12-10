@@ -6,7 +6,7 @@
     :closeButton="{ text: '取消', show: true }"
     :confirmButton="{ text: '', show: false }"
     :isFullScreen="true"
-    :style="{ maxWidth: '800px' }"
+    :style="{ maxWidth: '800px', width: '100%' }"
     @onClose="handleModalClose"
   >
     <form @submit.prevent="saveConnection" class="connection-form-modern">

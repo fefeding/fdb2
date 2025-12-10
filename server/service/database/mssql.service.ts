@@ -191,7 +191,141 @@ export class SQLServerService extends BaseDatabaseService {
   /**
    * SQL Server的标识符引用方式
    */
-  protected quoteIdentifier(identifier: string): string {
+  public quoteIdentifier(identifier: string): string {
     return `[${identifier}]`;
+  }
+
+  /**
+   * 获取SQL Server视图列表
+   */
+  async getViews(dataSource: DataSource, database: string): Promise<any[]> {
+    const result = await dataSource.query(`
+      SELECT 
+        TABLE_NAME as name,
+        '' as comment,
+        TABLE_SCHEMA as schemaName
+      FROM ${this.quoteIdentifier(database)}.INFORMATION_SCHEMA.VIEWS
+      ORDER BY TABLE_NAME
+    `);
+
+    return result.map((row: any) => ({
+      name: row.name,
+      comment: row.comment || '',
+      schemaName: row.schemaname
+    }));
+  }
+
+  /**
+   * 获取SQL Server视图定义
+   */
+  async getViewDefinition(dataSource: DataSource, database: string, viewName: string): Promise<string> {
+    const result = await dataSource.query(`
+      SELECT VIEW_DEFINITION as definition
+      FROM ${this.quoteIdentifier(database)}.INFORMATION_SCHEMA.VIEWS 
+      WHERE TABLE_NAME = ?
+    `, [viewName]);
+
+    return result[0]?.definition || '';
+  }
+
+  /**
+   * 获取SQL Server存储过程列表
+   */
+  async getProcedures(dataSource: DataSource, database: string): Promise<any[]> {
+    const result = await dataSource.query(`
+      SELECT 
+        ROUTINE_NAME as name,
+        '' as comment,
+        ROUTINE_TYPE as type,
+        '' as returnType,
+        'SQL' as language
+      FROM ${this.quoteIdentifier(database)}.INFORMATION_SCHEMA.ROUTINES 
+      WHERE ROUTINE_SCHEMA NOT IN ('sys', 'INFORMATION_SCHEMA')
+      ORDER BY ROUTINE_NAME
+    `);
+
+    return result.map((row: any) => ({
+      name: row.name,
+      comment: row.comment || '',
+      type: row.type,
+      returnType: row.returnType || '',
+      language: row.language || 'SQL'
+    }));
+  }
+
+  /**
+   * 获取SQL Server存储过程定义
+   */
+  async getProcedureDefinition(dataSource: DataSource, database: string, procedureName: string): Promise<string> {
+    const result = await dataSource.query(`
+      SELECT ROUTINE_DEFINITION as definition
+      FROM ${this.quoteIdentifier(database)}.INFORMATION_SCHEMA.ROUTINES 
+      WHERE ROUTINE_NAME = ?
+    `, [procedureName]);
+
+    return result[0]?.definition || '';
+  }
+
+  /**
+   * 创建SQL Server数据库
+   */
+  async createDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<void> {
+    let sql = `CREATE DATABASE ${this.quoteIdentifier(databaseName)}`;
+    
+    if (options) {
+      const clauses = [];
+      
+      if (options.collation) {
+        clauses.push(`COLLATE ${options.collation}`);
+      }
+      
+      if (options.containment) {
+        clauses.push(`CONTAINMENT = ${options.containment}`);
+      }
+      
+      if (options.compatibilityLevel) {
+        clauses.push(`COMPATIBILITY_LEVEL = ${options.compatibilityLevel}`);
+      }
+      
+      // 添加数据文件配置
+      if (options.dataFiles) {
+        const fileClauses = options.dataFiles.map((file: any) => {
+          let fileClause = `(NAME = '${file.name}', FILENAME = '${file.filename}'`;
+          if (file.size) fileClause += `, SIZE = ${file.size}`;
+          if (file.maxSize) fileClause += `, MAXSIZE = ${file.maxSize}`;
+          if (file.growth) fileClause += `, FILEGROWTH = ${file.growth}`;
+          fileClause += ')';
+          return fileClause;
+        });
+        clauses.push(`ON ${fileClauses.join(', ')}`);
+      }
+      
+      // 添加日志文件配置
+      if (options.logFiles) {
+        const logClauses = options.logFiles.map((log: any) => {
+          let logClause = `(NAME = '${log.name}', FILENAME = '${log.filename}'`;
+          if (log.size) logClause += `, SIZE = ${log.size}`;
+          if (log.maxSize) logClause += `, MAXSIZE = ${log.maxSize}`;
+          if (log.growth) logClause += `, FILEGROWTH = ${log.growth}`;
+          logClause += ')';
+          return logClause;
+        });
+        clauses.push(`LOG ON ${logClauses.join(', ')}`);
+      }
+      
+      if (clauses.length > 0) {
+        sql += ' ' + clauses.join(' ');
+      }
+    }
+    
+    await dataSource.query(sql);
+  }
+
+  /**
+   * 删除SQL Server数据库
+   */
+  async dropDatabase(dataSource: DataSource, databaseName: string): Promise<void> {
+    const sql = `DROP DATABASE ${this.quoteIdentifier(databaseName)}`;
+    await dataSource.query(sql);
   }
 }

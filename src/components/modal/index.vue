@@ -1,7 +1,7 @@
 <template>
     <div class="modal fade" :id="modalId" ref="modalContainer" tabindex="-1" aria-labelledby="modalLabel">
         <div class="modal-dialog modal-dialog-centered" :class="{'modal-fullscreen': isFullScreen}" :style="dynamicStyle">
-            <div class="modal-content" :class="contentClass" style="width:max-content; margin: auto;">
+            <div class="modal-content" :class="contentClass" style=" margin: auto;">
                 <div class="modal-header" :class="headerClass" style="padding: 1rem 1.5rem;">
                     <h5 class="modal-title d-flex align-items-center" id="modalLabel">
                         <i v-if="typeIcon" :class="typeIcon" class="me-2"></i>

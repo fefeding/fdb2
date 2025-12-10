@@ -200,7 +200,112 @@ export class MySQLService extends BaseDatabaseService {
   /**
    * MySQL使用反引号标识符
    */
-  protected quoteIdentifier(identifier: string): string {
+  public quoteIdentifier(identifier: string): string {
     return `\`${identifier}\``;
+  }
+
+  /**
+   * 获取MySQL视图列表
+   */
+  async getViews(dataSource: DataSource, database: string): Promise<any[]> {
+    // 完全移除TABLE_COMMENT字段，因为某些MySQL版本中不存在该字段
+    const result = await dataSource.query(`
+      SELECT 
+        TABLE_NAME as name,
+        TABLE_SCHEMA as schemaName
+      FROM information_schema.VIEWS 
+      WHERE TABLE_SCHEMA = ?
+      ORDER BY TABLE_NAME
+    `, [database]);
+
+    return result.map((row: any) => ({
+      name: row.name,
+      comment: '',
+      schemaName: row.schemaName
+    }));
+  }
+
+  /**
+   * 获取MySQL视图定义
+   */
+  async getViewDefinition(dataSource: DataSource, database: string, viewName: string): Promise<string> {
+    const result = await dataSource.query(`
+      SELECT VIEW_DEFINITION as definition
+      FROM information_schema.VIEWS 
+      WHERE TABLE_SCHEMA = ? 
+      AND TABLE_NAME = ?
+    `, [database, viewName]);
+
+    return result[0]?.definition || '';
+  }
+
+  /**
+   * 获取MySQL存储过程列表
+   */
+  async getProcedures(dataSource: DataSource, database: string): Promise<any[]> {
+    const result = await dataSource.query(`
+      SELECT 
+        ROUTINE_NAME as name,
+        ROUTINE_TYPE as type,
+        ROUTINE_COMMENT as comment
+      FROM information_schema.ROUTINES 
+      WHERE ROUTINE_SCHEMA = ?
+      ORDER BY ROUTINE_NAME
+    `, [database]);
+
+    return result.map((row: any) => ({
+      name: row.name,
+      comment: row.comment || '',
+      type: row.type,
+      returnType: '',
+      language: 'SQL'
+    }));
+  }
+
+  /**
+   * 获取MySQL存储过程定义
+   */
+  async getProcedureDefinition(dataSource: DataSource, database: string, procedureName: string): Promise<string> {
+    const result = await dataSource.query(`
+      SELECT ROUTINE_DEFINITION as definition
+      FROM information_schema.ROUTINES 
+      WHERE ROUTINE_SCHEMA = ? 
+      AND ROUTINE_NAME = ?
+    `, [database, procedureName]);
+
+    return result[0]?.definition || '';
+  }
+
+  /**
+   * 创建MySQL数据库
+   */
+  async createDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<void> {
+    let sql = `CREATE DATABASE ${this.quoteIdentifier(databaseName)}`;
+    
+    if (options) {
+      const clauses = [];
+      
+      if (options.charset) {
+        clauses.push(`CHARACTER SET ${options.charset}`);
+      }
+      
+      if (options.collation) {
+        clauses.push(`COLLATE ${options.collation}`);
+      }
+      
+      if (clauses.length > 0) {
+        sql += ' ' + clauses.join(' ');
+      }
+    }
+    
+    await dataSource.query(sql);
+  }
+
+  /**
+   * 删除MySQL数据库
+   */
+  async dropDatabase(dataSource: DataSource, databaseName: string): Promise<void> {
+    const sql = `DROP DATABASE ${this.quoteIdentifier(databaseName)}`;
+    await dataSource.query(sql);
   }
 }

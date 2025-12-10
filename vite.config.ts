@@ -222,6 +222,7 @@ async function serverRoute(req: Connect.IncomingMessage, res: http.ServerRespons
             sendJSON(res, data);
         }
         catch(error) {
+            console.error(error);
             // @ts-ignore
             sendError(res, error?.message || '系统异常', 200);
         }

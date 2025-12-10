@@ -184,7 +184,139 @@ export class PostgreSQLService extends BaseDatabaseService {
   /**
    * PostgreSQL使用双引号标识符
    */
-  protected quoteIdentifier(identifier: string): string {
+  public quoteIdentifier(identifier: string): string {
     return `"${identifier}"`;
+  }
+
+  /**
+   * 获取PostgreSQL视图列表
+   */
+  async getViews(dataSource: DataSource, database: string): Promise<any[]> {
+    const result = await dataSource.query(`
+      SELECT 
+        table_name as name,
+        COALESCE(obj_description(c.oid), '') as comment,
+        table_schema as schemaName
+      FROM information_schema.views v
+      LEFT JOIN pg_class c ON c.relname = v.table_name
+      WHERE v.table_schema NOT IN ('information_schema', 'pg_catalog')
+      ORDER BY v.table_name
+    `);
+
+    return result.map((row: any) => ({
+      name: row.name,
+      comment: row.comment || '',
+      schemaName: row.schemaname
+    }));
+  }
+
+  /**
+   * 获取PostgreSQL视图定义
+   */
+  async getViewDefinition(dataSource: DataSource, database: string, viewName: string): Promise<string> {
+    const result = await dataSource.query(`
+      SELECT view_definition as definition
+      FROM information_schema.views 
+      WHERE table_name = $1
+        AND table_schema NOT IN ('information_schema', 'pg_catalog')
+    `, [viewName]);
+
+    return result[0]?.definition || '';
+  }
+
+  /**
+   * 获取PostgreSQL存储过程列表
+   */
+  async getProcedures(dataSource: DataSource, database: string): Promise<any[]> {
+    const result = await dataSource.query(`
+      SELECT 
+        routine_name as name,
+        COALESCE(routine_comment, '') as comment,
+        routine_type as type,
+        COALESCE(data_type, '') as returnType,
+        external_language as language
+      FROM information_schema.routines 
+      WHERE routine_schema NOT IN ('information_schema', 'pg_catalog')
+      ORDER BY routine_name
+    `);
+
+    return result.map((row: any) => ({
+      name: row.name,
+      comment: row.comment || '',
+      type: row.type,
+      returnType: row.returntype || '',
+      language: row.language || 'SQL'
+    }));
+  }
+
+  /**
+   * 获取PostgreSQL存储过程定义
+   */
+  async getProcedureDefinition(dataSource: DataSource, database: string, procedureName: string): Promise<string> {
+    const result = await dataSource.query(`
+      SELECT routine_definition as definition
+      FROM information_schema.routines 
+      WHERE routine_name = $1
+        AND routine_schema NOT IN ('information_schema', 'pg_catalog')
+    `, [procedureName]);
+
+    return result[0]?.definition || '';
+  }
+
+  /**
+   * 创建PostgreSQL数据库
+   */
+  async createDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<void> {
+    let sql = `CREATE DATABASE ${this.quoteIdentifier(databaseName)}`;
+    
+    if (options) {
+      const clauses = [];
+      
+      if (options.owner) {
+        clauses.push(`OWNER ${options.owner}`);
+      }
+      
+      if (options.template) {
+        clauses.push(`TEMPLATE ${options.template}`);
+      }
+      
+      if (options.encoding) {
+        clauses.push(`ENCODING '${options.encoding}'`);
+      }
+      
+      if (options.lcCollate) {
+        clauses.push(`LC_COLLATE '${options.lcCollate}'`);
+      }
+      
+      if (options.lcCtype) {
+        clauses.push(`LC_CTYPE '${options.lcCtype}'`);
+      }
+      
+      if (options.tablespace) {
+        clauses.push(`TABLESPACE ${options.tablespace}`);
+      }
+      
+      if (options.allowConnections !== undefined) {
+        clauses.push(`ALLOW_CONNECTIONS ${options.allowConnections}`);
+      }
+      
+      if (options.connectionLimit !== undefined) {
+        clauses.push(`CONNECTION LIMIT ${options.connectionLimit}`);
+      }
+      
+      if (clauses.length > 0) {
+        sql += ' ' + clauses.join(' ');
+      }
+    }
+    
+    await dataSource.query(sql);
+  }
+
+  /**
+   * 删除PostgreSQL数据库
+   */
+  async dropDatabase(dataSource: DataSource, databaseName: string): Promise<void> {
+    const sql = `DROP DATABASE ${this.quoteIdentifier(databaseName)}`;
+    await dataSource.query(sql);
   }
 }

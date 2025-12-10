@@ -139,6 +139,12 @@
         </h6>
       </div>
       <div class="actions-grid">
+        <button class="action-btn" @click="showCreateDatabaseModal">
+          <div class="action-icon">
+            <i class="bi bi-plus-circle"></i>
+          </div>
+          <div class="action-text">创建数据库</div>
+        </button>
         <button class="action-btn" @click="refreshAll">
           <div class="action-icon">
             <i class="bi bi-arrow-clockwise"></i>
@@ -165,12 +171,95 @@
         </button>
       </div>
     </div>
+
+    <!-- 创建数据库模态框 -->
+    <div v-if="showCreateDatabase" class="modal fade show d-block" style="background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">创建数据库</h5>
+            <button type="button" class="btn-close" @click="showCreateDatabase = false"></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="mb-3">
+                <label class="form-label">数据库名称 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" v-model="newDatabase.name" placeholder="输入数据库名称" required>
+              </div>
+              
+              <!-- MySQL特定选项 -->
+              <div v-if="connection?.type === 'mysql'">
+                <div class="mb-3">
+                  <label class="form-label">字符集</label>
+                  <select class="form-select" v-model="newDatabase.options.charset">
+                    <option value="">默认</option>
+                    <option value="utf8mb4">utf8mb4</option>
+                    <option value="utf8">utf8</option>
+                    <option value="latin1">latin1</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">排序规则</label>
+                  <select class="form-select" v-model="newDatabase.options.collation">
+                    <option value="">默认</option>
+                    <option value="utf8mb4_unicode_ci">utf8mb4_unicode_ci</option>
+                    <option value="utf8mb4_general_ci">utf8mb4_general_ci</option>
+                    <option value="utf8_unicode_ci">utf8_unicode_ci</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- PostgreSQL特定选项 -->
+              <div v-if="connection?.type === 'postgres'">
+                <div class="mb-3">
+                  <label class="form-label">所有者</label>
+                  <input type="text" class="form-control" v-model="newDatabase.options.owner" placeholder="数据库所有者">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">模板</label>
+                  <input type="text" class="form-control" v-model="newDatabase.options.template" placeholder="模板数据库">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">编码</label>
+                  <select class="form-select" v-model="newDatabase.options.encoding">
+                    <option value="">默认</option>
+                    <option value="UTF8">UTF8</option>
+                    <option value="LATIN1">LATIN1</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">表空间</label>
+                  <input type="text" class="form-control" v-model="newDatabase.options.tablespace" placeholder="表空间">
+                </div>
+              </div>
+
+              <!-- SQL Server特定选项 -->
+              <div v-if="connection?.type === 'mssql'">
+                <div class="mb-3">
+                  <label class="form-label">排序规则</label>
+                  <input type="text" class="form-control" v-model="newDatabase.options.collation" placeholder="排序规则">
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="showCreateDatabase = false">取消</button>
+            <button type="button" class="btn btn-primary" @click="createDatabase" :disabled="!newDatabase.name || creatingDatabase">
+              <span v-if="creatingDatabase" class="spinner-border spinner-border-sm me-2"></span>
+              创建
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue';
 import type { ConnectionEntity } from '@/typings/database';
+import { DatabaseService } from '@/service/database';
+import { modal } from '@/utils/modal';
 
 const props = defineProps<{
   connection: ConnectionEntity | null;
@@ -183,6 +272,7 @@ const emit = defineEmits<{
   'open-sql-query': [connection: ConnectionEntity];
   'export-schema': [connection: ConnectionEntity];
   'view-logs': [connection: ConnectionEntity];
+  'create-database': [];
 }>();
 
 // 连接统计信息
@@ -192,6 +282,23 @@ const connectionStats = ref({
   totalSize: 0,
   lastConnected: null as string | null
 });
+
+// 创建数据库相关
+const showCreateDatabase = ref(false);
+const creatingDatabase = ref(false);
+const newDatabase = ref({
+  name: '',
+  options: {
+    charset: '',
+    collation: '',
+    owner: '',
+    template: '',
+    encoding: '',
+    tablespace: ''
+  }
+});
+
+const databaseService = new DatabaseService();
 
 
 // 生命周期
@@ -299,6 +406,51 @@ function exportSchema() {
 function viewLogs() {
   if (props.connection) {
     emit('view-logs', props.connection);
+  }
+}
+
+function showCreateDatabaseModal() {
+  newDatabase.value = {
+    name: '',
+    options: {
+      charset: '',
+      collation: '',
+      owner: '',
+      template: '',
+      encoding: '',
+      tablespace: ''
+    }
+  };
+  showCreateDatabase.value = true;
+}
+
+async function createDatabase() {
+  if (!props.connection || !newDatabase.value.name.trim()) {
+    modal.error('请输入数据库名称');
+    return;
+  }
+
+  try {
+    creatingDatabase.value = true;
+    
+    // 过滤掉空的选项
+    const options = Object.fromEntries(
+      Object.entries(newDatabase.value.options).filter(([_, value]) => value !== '')
+    );
+    
+    await databaseService.createDatabase(props.connection.id, newDatabase.value.name, options);
+    
+    modal.success('数据库创建成功');
+    showCreateDatabase.value = false;
+    
+    // 触发刷新
+    emit('create-database');
+    emit('refresh-all', props.connection);
+  } catch (error: any) {
+    console.error('创建数据库失败:', error);
+    modal.error(error.message || '创建数据库失败');
+  } finally {
+    creatingDatabase.value = false;
   }
 }
 </script>

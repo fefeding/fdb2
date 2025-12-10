@@ -150,7 +150,7 @@ export abstract class BaseDatabaseService {
   /**
    * 通用方法：给标识符加引号
    */
-  protected quoteIdentifier(identifier: string): string {
+  public quoteIdentifier(identifier: string): string {
     return `"${identifier}"`;
   }
 
@@ -167,5 +167,53 @@ export abstract class BaseDatabaseService {
    */
   protected buildCountQuery(baseQuery: string): string {
     return `SELECT COUNT(*) as total FROM (${baseQuery}) as count_query`;
+  }
+
+  /**
+   * 获取视图列表 - 子类实现（如果支持）
+   */
+  async getViews(dataSource: DataSource, database: string): Promise<any[]> {
+    // 默认实现，子类可以重写
+    throw new Error(`数据库类型 ${this.getDatabaseType()} 不支持视图`);
+  }
+
+  /**
+   * 获取视图定义 - 子类实现（如果支持）
+   */
+  async getViewDefinition(dataSource: DataSource, database: string, viewName: string): Promise<string> {
+    // 默认实现，子类可以重写
+    throw new Error(`数据库类型 ${this.getDatabaseType()} 不支持视图`);
+  }
+
+  /**
+   * 获取存储过程列表 - 子类实现（如果支持）
+   */
+  async getProcedures(dataSource: DataSource, database: string): Promise<any[]> {
+    // 默认实现，子类可以重写
+    throw new Error(`数据库类型 ${this.getDatabaseType()} 不支持存储过程`);
+  }
+
+  /**
+   * 获取存储过程定义 - 子类实现（如果支持）
+   */
+  async getProcedureDefinition(dataSource: DataSource, database: string, procedureName: string): Promise<string> {
+    // 默认实现，子类可以重写
+    throw new Error(`数据库类型 ${this.getDatabaseType()} 不支持存储过程`);
+  }
+
+  /**
+   * 创建数据库 - 子类实现（如果支持）
+   */
+  async createDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<void> {
+    // 默认实现，子类可以重写
+    throw new Error(`数据库类型 ${this.getDatabaseType()} 不支持创建数据库`);
+  }
+
+  /**
+   * 删除数据库 - 子类实现（如果支持）
+   */
+  async dropDatabase(dataSource: DataSource, databaseName: string): Promise<void> {
+    // 默认实现，子类可以重写
+    throw new Error(`数据库类型 ${this.getDatabaseType()} 不支持删除数据库`);
   }
 }

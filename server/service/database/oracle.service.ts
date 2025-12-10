@@ -252,7 +252,138 @@ export class OracleService extends BaseDatabaseService {
   /**
    * Oracle的标识符引用方式
    */
-  protected quoteIdentifier(identifier: string): string {
+  public quoteIdentifier(identifier: string): string {
     return `"${identifier.toUpperCase()}"`;
+  }
+
+  /**
+   * 获取Oracle视图列表
+   */
+  async getViews(dataSource: DataSource, database: string): Promise<any[]> {
+    const result = await dataSource.query(`
+      SELECT 
+        view_name as name,
+        '' as comment
+      FROM all_views 
+      WHERE owner = ?
+      ORDER BY view_name
+    `, [database.toUpperCase()]);
+
+    return result.map((row: any) => ({
+      name: row.name,
+      comment: row.comment || '',
+      schemaName: database
+    }));
+  }
+
+  /**
+   * 获取Oracle视图定义
+   */
+  async getViewDefinition(dataSource: DataSource, database: string, viewName: string): Promise<string> {
+    const result = await dataSource.query(`
+      SELECT text as definition
+      FROM all_views 
+      WHERE owner = ? 
+        AND view_name = ?
+    `, [database.toUpperCase(), viewName.toUpperCase()]);
+
+    return result[0]?.definition || '';
+  }
+
+  /**
+   * 获取Oracle存储过程列表
+   */
+  async getProcedures(dataSource: DataSource, database: string): Promise<any[]> {
+    const result = await dataSource.query(`
+      SELECT 
+        object_name as name,
+        '' as comment,
+        'PROCEDURE' as type,
+        '' as returnType,
+        'PL/SQL' as language
+      FROM all_objects 
+      WHERE owner = ? 
+        AND object_type IN ('PROCEDURE', 'FUNCTION')
+        AND status = 'VALID'
+      ORDER BY object_name
+    `, [database.toUpperCase()]);
+
+    return result.map((row: any) => ({
+      name: row.name,
+      comment: row.comment || '',
+      type: row.type,
+      returnType: row.returnType || '',
+      language: row.language || 'PL/SQL'
+    }));
+  }
+
+  /**
+   * 获取Oracle存储过程定义
+   */
+  async getProcedureDefinition(dataSource: DataSource, database: string, procedureName: string): Promise<string> {
+    const result = await dataSource.query(`
+      SELECT text as definition
+      FROM all_source 
+      WHERE owner = ? 
+        AND name = ?
+      ORDER BY line
+    `, [database.toUpperCase(), procedureName.toUpperCase()]);
+
+    return result.map((row: any) => row.definition).join('\n') || '';
+  }
+
+  /**
+   * 创建Oracle数据库
+   */
+  async createDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<void> {
+    // Oracle数据库创建比较复杂，通常需要DBA权限
+    // 这里提供基本的创建语法
+    let sql = `CREATE DATABASE ${this.quoteIdentifier(databaseName)}`;
+    
+    if (options) {
+      const clauses = [];
+      
+      if (options.user) {
+        clauses.push(`USER ${options.user}`);
+      }
+      
+      if (options.password) {
+        clauses.push(`IDENTIFIED BY ${options.password}`);
+      }
+      
+      if (options.defaultTablespace) {
+        clauses.push(`DEFAULT TABLESPACE ${options.defaultTablespace}`);
+      }
+      
+      if (options.tempTablespace) {
+        clauses.push(`TEMPORARY TABLESPACE ${options.tempTablespace}`);
+      }
+      
+      if (options.datafile) {
+        clauses.push(`DATAFILE '${options.datafile}'`);
+      }
+      
+      if (options.size) {
+        clauses.push(`SIZE ${options.size}`);
+      }
+      
+      if (options.autoExtend) {
+        clauses.push(`AUTOEXTEND ON`);
+      }
+      
+      if (clauses.length > 0) {
+        sql += ' ' + clauses.join(' ');
+      }
+    }
+    
+    await dataSource.query(sql);
+  }
+
+  /**
+   * 删除Oracle数据库
+   */
+  async dropDatabase(dataSource: DataSource, databaseName: string): Promise<void> {
+    const sql = `DROP DATABASE ${this.quoteIdentifier(databaseName)}`;
+    await dataSource.query(sql);
   }
 }

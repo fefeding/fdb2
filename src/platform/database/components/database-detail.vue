@@ -376,6 +376,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import TableEditor from './table-editor.vue';
 import { modal } from '@/utils/modal';
+import { DatabaseService } from '@/service/database';
 
 // Props
 const props = defineProps<{
@@ -394,6 +395,7 @@ const emit = defineEmits<{
   'execute-sql': [sql: string];
 }>();
 
+const databaseService = new DatabaseService();
 // 响应式数据
 const activeTab = ref('tables');
 const showCreateTable = ref(false);
@@ -539,7 +541,6 @@ async function loadViews() {
   if (!props.connection?.id) return;
   
   try {
-    const databaseService = new DatabaseService();
     const result = await databaseService.getViews(props.connection.id, props.database);
     views.value = result.data || [];
   } catch (error) {
@@ -559,7 +560,6 @@ function showCreateViewModal() {
 
 async function editView(view: any) {
   try {
-    const databaseService = new DatabaseService();
     const result = await databaseService.getViewDefinition(props.connection?.id || '', props.database, view.name);
     editingView.value = {
       name: view.name,
@@ -580,7 +580,6 @@ async function createOrUpdateView() {
   }
 
   try {
-    const databaseService = new DatabaseService();
     
     if (views.value.some(v => v.name === editingView.value.name)) {
       // 编辑视图 - 先删除再创建
@@ -612,7 +611,6 @@ async function deleteView(view: any) {
   const result = await modal.confirm(`确定要删除视图 "${view.name}" 吗？此操作不可恢复。`);
   if (result) {
     try {
-      const databaseService = new DatabaseService();
       const response = await databaseService.dropView(props.connection?.id || '', props.database, view.name);
       
       if (response.success || response.ok) {
@@ -633,7 +631,6 @@ async function loadProcedures() {
   if (!props.connection?.id) return;
   
   try {
-    const databaseService = new DatabaseService();
     const result = await databaseService.getProcedures(props.connection.id, props.database);
     procedures.value = result.data || [];
   } catch (error) {
@@ -653,7 +650,6 @@ function showCreateProcedureModal() {
 
 async function editProcedure(procedure: any) {
   try {
-    const databaseService = new DatabaseService();
     const result = await databaseService.getProcedureDefinition(props.connection?.id || '', props.database, procedure.name);
     editingProcedure.value = {
       name: procedure.name,
@@ -674,7 +670,6 @@ async function createOrUpdateProcedure() {
   }
 
   try {
-    const databaseService = new DatabaseService();
     
     // 如果是编辑模式，先删除旧的存储过程
     if (procedures.value.some(p => p.name === editingProcedure.value.name)) {
@@ -706,7 +701,6 @@ async function deleteProcedure(procedure: any) {
   const result = await modal.confirm(`确定要删除存储过程 "${procedure.name}" 吗？此操作不可恢复。`);
   if (result) {
     try {
-      const databaseService = new DatabaseService();
       const response = await databaseService.dropProcedure(props.connection?.id || '', props.database, procedure.name);
       
       if (response.success || response.ok) {

@@ -124,6 +124,7 @@
 import { ref, watch, computed } from 'vue';
 import { DatabaseService } from '@/service/database';
 import { modal } from '@/utils/modal';
+import { isNumericType, isBooleanType, isDateTimeType, isTextType } from '@/utils/database-types';
 
 const databaseService = new DatabaseService();
 
@@ -183,30 +184,23 @@ function initializeFormData() {
 
 // 判断输入类型
 function isTextInput(type: string): boolean {
-  const textTypes = ['varchar', 'char', 'text', 'longtext', 'mediumtext', 'tinytext', 
-          'nvarchar', 'nchar', 'ntext'];
-  return textTypes.some(t => type.toLowerCase().includes(t));
+  return !isNumericType(type) && !isBooleanType(type) && !isDateTimeType(type) && !isEnumInput(type);
 }
 
 function isNumberInput(type: string): boolean {
-  const numberTypes = ['int', 'integer', 'tinyint', 'smallint', 'mediumint', 'bigint', 
-          'decimal', 'numeric', 'float', 'double', 'real'];
-  return numberTypes.some(t => type.toLowerCase().includes(t));
+  return isNumericType(type);
 }
 
 function isDecimalInput(type: string): boolean {
-  const decimalTypes = ['decimal', 'numeric'];
-  return decimalTypes.some(t => type.toLowerCase().includes(t));
+  return isNumericType(type) && (type.toLowerCase().includes('decimal') || type.toLowerCase().includes('numeric'));
 }
 
 function isDateInput(type: string): boolean {
-  const dateTypes = ['date', 'datetime', 'timestamp', 'time'];
-  return dateTypes.some(t => type.toLowerCase().includes(t));
+  return isDateTimeType(type);
 }
 
 function isTextArea(type: string): boolean {
-  const textAreaTypes = ['text', 'longtext', 'mediumtext', 'tinytext'];
-  return textAreaTypes.some(t => type.toLowerCase().includes(t));
+  return isTextType(type);
 }
 
 function isEnumInput(type: string): boolean {
@@ -214,8 +208,7 @@ function isEnumInput(type: string): boolean {
 }
 
 function isBooleanInput(type: string): boolean {
-  const booleanTypes = ['boolean', 'bool', 'bit'];
-  return booleanTypes.some(t => type.toLowerCase().includes(t));
+  return isBooleanType(type);
 }
 
 // 获取枚举选项

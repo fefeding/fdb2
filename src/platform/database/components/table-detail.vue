@@ -1015,12 +1015,11 @@ function formatValueForSQL(value: any, columnType: string): string {
 }
 
 function isNumberInput(type: string): boolean {
-  return ['int', 'integer', 'tinyint', 'smallint', 'mediumint', 'bigint', 
-          'decimal', 'numeric', 'float', 'double', 'real'].some(t => type.toLowerCase().includes(t));
+  return isNumericType(type);
 }
 
 function isBooleanInput(type: string): boolean {
-  return ['boolean', 'bool', 'bit'].some(t => type.toLowerCase().includes(t));
+  return isBooleanType(type);
 }
 
 async function deleteRow(row: any) {

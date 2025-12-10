@@ -218,7 +218,7 @@ export interface ColumnEntity {
   length?: number;
 
   /**
-   * 小数位数
+   * 数值精度
    */
   precision?: number;
 
