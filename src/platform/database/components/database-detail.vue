@@ -366,6 +366,7 @@
       :table-name="editingTableName"
       :mode="editingTableName ? 'edit' : 'create'"
       @close="closeTableEditor"
+      @submit="handleTableChange"
       @execute-sql="handleExecuteSQL"
     />
   </div>
@@ -593,7 +594,7 @@ async function createOrUpdateView() {
       editingView.value.definition
     );
     
-    if (result.success || result.ok) {
+    if (result.success || result.ret === 0) {
       await modal.success('视图保存成功');
       showCreateView.value = false;
       editingView.value = null;
@@ -683,7 +684,7 @@ async function createOrUpdateProcedure() {
       editingProcedure.value.definition
     );
     
-    if (result.success || result.ok) {
+    if (result.success || result.ret === 0) {
       await modal.success('存储过程保存成功');
       showCreateProcedure.value = false;
       editingProcedure.value = null;
@@ -714,6 +715,25 @@ async function deleteProcedure(procedure: any) {
       modal.error(error.message || '删除存储过程失败');
     }
   }
+}
+
+async function handleTableChange(result: any) {
+  try {      
+      if (result.success) {
+        // 表结构修改成功，刷新结构
+        emit('refresh-database');
+        await modal.success('表结构修改成功');
+      } else {
+        await modal.error('表结构修改失败');
+      }
+    } catch (error) {
+      console.error('处理表结构修改失败:', error);
+      
+      modal.error(error.msg || error.message || '表结构修改失败', {
+        operation: 'MODIFY_TABLE',
+        stack: error.stack
+      });
+    }
 }
 </script>
 

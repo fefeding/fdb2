@@ -2,7 +2,7 @@
   <div class="modal fade" :class="{ show: visible }" :style="{ display: visible ? 'block' : 'none' }">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <div class="modal-header">
+        <div class="modal-header" style="padding: 15px;">
           <h5 class="modal-title">
             <i class="bi bi-pencil-square" v-if="isEdit"></i>
             <i class="bi bi-plus-circle" v-else></i>
@@ -117,11 +117,10 @@
       </div>
     </div>
   </div>
-  <div v-if="visible" class="modal-backdrop fade show" @click="closeModal"></div>
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, nextTick } from 'vue';
 import { DatabaseService } from '@/service/database';
 import { modal } from '@/utils/modal';
 import { isNumericType, isBooleanType, isDateTimeType, isTextType } from '@/utils/database-types';
@@ -224,6 +223,7 @@ function getEnumOptions(type: string): string[] {
 
 // 关闭模态框
 function closeModal() {
+  loading.value = false;
   emit('close');
 }
 
@@ -254,9 +254,12 @@ async function handleSubmit() {
     
     if (response.ret === 0) {
       modal.success(props.isEdit ? '数据更新成功' : '数据插入成功');
-      emit('submit', response.data);
       closeModal();
+      nextTick(() => {
+        emit('submit', response);
+      });
     } else {
+      loading.value = false;
       modal.error(response.msg, {
         code: response.ret,
         operation: props.isEdit ? 'UPDATE' : 'INSERT',
@@ -271,9 +274,8 @@ async function handleSubmit() {
       table: props.tableName,
       stack: error.stack
     });
-  } finally {
     loading.value = false;
-  }
+  } 
 }
 
 // 获取主键条件

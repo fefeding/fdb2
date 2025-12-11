@@ -522,8 +522,8 @@ async function submit() {
     );
     
     emit('submit', {
-      success: result.ok,
-      message: result.ok ? '操作成功' : '操作失败',
+      success: result.ret === 0,
+      message: result.ret === 0 ? '操作成功' : '操作失败',
       data: result.data
     });
     

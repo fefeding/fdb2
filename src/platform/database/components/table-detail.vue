@@ -140,109 +140,149 @@
 
       <div class="tab-content">
         <!-- 数据标签页 -->
-        <div v-show="activeTab === 'data'" class="tab-panel">
-          <div class="data-toolbar">
-            <div class="toolbar-left">
-              <div class="pagination-info">
-                显示 {{ formatNumber((currentPage - 1) * pageSize + 1) }} - {{ formatNumber(Math.min(currentPage * pageSize, total)) }} 条，共 {{ formatNumber(total) }} 条
+        <div v-show="activeTab === 'data'" class="tab-panel">    
+          <div class="data-content" :class="{ 'loading': loading }">
+            <div class="table-responsive" v-if="!loading && paginatedData.length > 0">
+              <table class="table table-sm table-striped table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th v-for="column in safeTableColumns" :key="column.name">
+                      <div class="column-header">
+                        <span>{{ column.name }}</span>
+                        <small class="text-muted d-block">{{ column.type }}</small>
+                        <span class="column-key" v-if="column.isPrimary">
+                          <i class="bi bi-key-fill"></i>
+                        </span>
+                      </div>
+                    </th>
+                    <th width="100">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(row, index) in paginatedData" :key="index">
+                    <td v-for="(value, key) in row" :key="key">
+                      <div class="cell-value">
+                        {{ formatCellValue(value) }}
+                      </div>
+                    </td>
+                    <td>
+                      <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary btn-sm" @click="editRow(row)">
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" @click="deleteRow(row)">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- 加载状态 -->
+            <div v-if="loading" class="loading-state">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">加载中...</span>
               </div>
+              <p>正在加载数据...</p>
             </div>
-            <div class="toolbar-right">
-              <input 
-                type="text" 
-                class="form-control form-control-sm" 
-                placeholder="搜索..."
-                v-model="searchQuery"
-              >
-              <select class="form-select form-select-sm ms-2" v-model="pageSize">
-                <option :value="50">50条/页</option>
-                <option :value="100">100条/页</option>
-                <option :value="200">200条/页</option>
-              </select>
+
+            <!-- 空状态 -->
+            <div v-if="!loading && paginatedData.length === 0" class="empty-state">
+              <i class="bi bi-inbox"></i>
+              <p v-if="searchQuery">没有找到匹配的数据</p>
+              <p v-else>表中暂无数据</p>
+              <button class="btn btn-success" @click="()=>insertData()">
+                <i class="bi bi-plus"></i> 插入第一条数据
+              </button>
             </div>
-          </div>
 
-          <div class="table-responsive" v-if="!loading && paginatedData.length > 0">
-            <table class="table table-sm table-striped table-hover">
-              <thead class="table-light">
-                <tr>
-                  <th v-for="column in safeTableColumns" :key="column.name">
-                    <div class="column-header">
-                      <span>{{ column.name }}</span>
-                      <small class="text-muted d-block">{{ column.type }}</small>
-                      <span class="column-key" v-if="column.isPrimary">
-                        <i class="bi bi-key-fill"></i>
-                      </span>
-                    </div>
-                  </th>
-                  <th width="100">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(row, index) in paginatedData" :key="index">
-                  <td v-for="(value, key) in row" :key="key">
-                    <div class="cell-value">
-                      {{ formatCellValue(value) }}
-                    </div>
-                  </td>
-                  <td>
-                    <div class="btn-group btn-group-sm">
-                      <button class="btn btn-outline-primary btn-sm" @click="editRow(row)">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-outline-danger btn-sm" @click="deleteRow(row)">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <!-- 分页 -->
+            <nav v-if="!loading && totalPages > 0" class="pagination-nav">
+              <div class="pagination-container">
+                <div class="pagination-info">
+                  共 {{ formatNumber(total) }} 条记录，第 {{ formatNumber(currentPage) }} 页/共 {{ formatNumber(totalPages) }} 页
+                </div>
+                <ul class="pagination pagination-sm">
+                  <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                    <a class="page-link" href="#" @click.prevent="goToPage(1)" title="首页">
+                      <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                  </li>
+                  <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                    <a class="page-link" href="#" @click.prevent="goToPage(currentPage - 1)" title="上一页">
+                      <i class="bi bi-chevron-left"></i>
+                    </a>
+                  </li>
+                  
+                  <!-- 第一页和省略号 -->
+                  <li v-if="currentPage > 4" class="page-item">
+                    <a class="page-link" href="#" @click.prevent="goToPage(1)">1</a>
+                  </li>
+                  <li v-if="currentPage > 5" class="page-item disabled">
+                    <span class="page-link">...</span>
+                  </li>
+                  
+                  <!-- 中间页码 -->
+                  <li 
+                    v-for="page in visiblePages" 
+                    :key="page"
+                    class="page-item" 
+                    :class="{ active: currentPage === page }"
+                  >
+                    <a class="page-link" href="#" @click.prevent="goToPage(page)">{{ page }}</a>
+                  </li>
+                  
+                  <!-- 省略号和最后一页 -->
+                  <li v-if="currentPage < totalPages - 4" class="page-item disabled">
+                    <span class="page-link">...</span>
+                  </li>
+                  <li v-if="currentPage < totalPages - 3" class="page-item">
+                    <a class="page-link" href="#" @click.prevent="goToPage(totalPages)">{{ totalPages }}</a>
+                  </li>
+                  
+                  <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                    <a class="page-link" href="#" @click.prevent="goToPage(currentPage + 1)" title="下一页">
+                      <i class="bi bi-chevron-right"></i>
+                    </a>
+                  </li>
+                  <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                    <a class="page-link" href="#" @click.prevent="goToPage(totalPages)" title="末页">
+                      <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                  </li>
+                </ul>
+                <div class="page-size-selector">
+                  <label class="form-label-sm mb-0">每页显示：</label>
+                  <select class="form-select form-select-sm ms-2" v-model="pageSize" style="width: 80px;">
+                    <option :value="10">10</option>
+                    <option :value="20">20</option>
+                    <option :value="50">50</option>
+                    <option :value="100">100</option>
+                    <option :value="200">200</option>
+                    <option :value="500">500</option>
+                  </select>
+                </div>
+                <div class="page-jump">
+                  <label class="form-label-sm mb-0">跳转到：</label>
+                  <input 
+                    type="number" 
+                    class="form-control form-control-sm ms-2" 
+                    v-model.number="jumpToPage"
+                    min="1" 
+                    :max="totalPages"
+                    style="width: 70px;"
+                    @keyup.enter="jumpToPageHandler"
+                    @blur="jumpToPageHandler"
+                  >
+                  <button class="btn btn-primary btn-sm ms-2" @click="jumpToPageHandler">
+                    跳转
+                  </button>
+                </div>
+              </div>
+            </nav>
           </div>
-
-          <!-- 加载状态 -->
-          <div v-if="loading" class="loading-state">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">加载中...</span>
-            </div>
-            <p>正在加载数据...</p>
-          </div>
-
-          <!-- 空状态 -->
-          <div v-if="!loading && paginatedData.length === 0" class="empty-state">
-            <i class="bi bi-inbox"></i>
-            <p v-if="searchQuery">没有找到匹配的数据</p>
-            <p v-else>表中暂无数据</p>
-            <button class="btn btn-success" @click="()=>insertData()">
-              <i class="bi bi-plus"></i> 插入第一条数据
-            </button>
-          </div>
-
-          <!-- 分页 -->
-          <nav v-if="!loading && totalPages > 1" class="pagination-nav">
-            <ul class="pagination pagination-sm">
-              <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <a class="page-link" href="#" @click.prevent="currentPage = 1">首页</a>
-              </li>
-              <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <a class="page-link" href="#" @click.prevent="currentPage--">上一页</a>
-              </li>
-              <li 
-                v-for="page in visiblePages" 
-                :key="page"
-                class="page-item" 
-                :class="{ active: currentPage === page }"
-              >
-                <a class="page-link" href="#" @click.prevent="currentPage = page">{{ page }}</a>
-              </li>
-              <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                <a class="page-link" href="#" @click.prevent="currentPage++">下一页</a>
-              </li>
-              <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                <a class="page-link" href="#" @click.prevent="currentPage = totalPages">末页</a>
-              </li>
-            </ul>
-          </nav>
         </div>
 
         <!-- 结构标签页 -->
@@ -256,136 +296,142 @@
             </button>
           </div>
           
-          <div class="structure-table">
-            <table class="table table-bordered">
-              <thead class="table-dark">
-                <tr>
-                  <th>列名</th>
-                  <th>数据类型</th>
-                  <th>可空</th>
-                  <th>默认值</th>
-                  <th>主键</th>
-                  <th>自增</th>
-                  <th>注释</th>
-                  <th width="100">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="column in tableStructure?.columns || []" :key="column.name">
-                  <td><strong>{{ column.name }}</strong></td>
-                  <td><code>{{ column.type }}</code></td>
-                  <td>
-                    <span :class="column.nullable ? 'text-warning' : 'text-success'">
-                      <i :class="column.nullable ? 'bi bi-unlock' : 'bi bi-lock-fill'"></i>
-                      {{ column.nullable ? 'YES' : 'NO' }}
-                    </span>
-                  </td>
-                  <td>{{ column.defaultValue || '-' }}</td>
-                  <td>
-                    <span v-if="column.isPrimary" class="badge bg-primary">
-                      <i class="bi bi-key-fill"></i> 主键
-                    </span>
-                    <span v-else>-</span>
-                  </td>
-                  <td>
-                    <span v-if="column.isAutoIncrement" class="badge bg-success">
-                      <i class="bi bi-arrow-up-circle"></i> 自增
-                    </span>
-                    <span v-else>-</span>
-                  </td>
-                  <td>{{ column.comment || '-' }}</td>
-                  <td>
-                    <div class="btn-group btn-group-sm">
-                      <button class="btn btn-outline-primary btn-sm" @click="editColumn(column)">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-outline-danger btn-sm" @click="deleteColumn(column)">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="structure-content">
+            <div class="structure-table">
+              <table class="table table-bordered">
+                <thead class="table-dark">
+                  <tr>
+                    <th>列名</th>
+                    <th>数据类型</th>
+                    <th>可空</th>
+                    <th>默认值</th>
+                    <th>主键</th>
+                    <th>自增</th>
+                    <th>注释</th>
+                    <th width="100">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="column in tableStructure?.columns || []" :key="column.name">
+                    <td><strong>{{ column.name }}</strong></td>
+                    <td><code>{{ column.type }}</code></td>
+                    <td>
+                      <span :class="column.nullable ? 'text-warning' : 'text-success'">
+                        <i :class="column.nullable ? 'bi bi-unlock' : 'bi bi-lock-fill'"></i>
+                        {{ column.nullable ? 'YES' : 'NO' }}
+                      </span>
+                    </td>
+                    <td>{{ column.defaultValue || '-' }}</td>
+                    <td>
+                      <span v-if="column.isPrimary" class="badge bg-primary">
+                        <i class="bi bi-key-fill"></i> 主键
+                      </span>
+                      <span v-else>-</span>
+                    </td>
+                    <td>
+                      <span v-if="column.isAutoIncrement" class="badge bg-success">
+                        <i class="bi bi-arrow-up-circle"></i> 自增
+                      </span>
+                      <span v-else>-</span>
+                    </td>
+                    <td>{{ column.comment || '-' }}</td>
+                    <td>
+                      <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary btn-sm" @click="editColumn(column)">
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" @click="deleteColumn(column)">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
         <!-- 索引标签页 -->
         <div v-show="activeTab === 'indexes'" class="tab-panel">
-          <div class="indexes-table">
-            <table class="table table-bordered">
-              <thead class="table-dark">
-                <tr>
-                  <th>索引名</th>
-                  <th>类型</th>
-                  <th>唯一</th>
-                  <th>列</th>
-                  <th width="100">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="index in tableStructure?.indexes || []" :key="index.name">
-                  <td><strong>{{ index.name }}</strong></td>
-                  <td><span class="badge bg-info">{{ index.type }}</span></td>
-                  <td>
-                    <span :class="index.unique ? 'text-success' : 'text-secondary'">
-                      <i :class="index.unique ? 'bi bi-check-circle-fill' : 'bi bi-circle'"></i>
-                      {{ index.unique ? '是' : '否' }}
-                    </span>
-                  </td>
-                  <td><code>{{ index.columns.join(', ') }}</code></td>
-                  <td>
-                    <div class="btn-group btn-group-sm">
-                      <button class="btn btn-outline-primary btn-sm" @click="editIndex(index)">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-outline-danger btn-sm" @click="deleteIndex(index)">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="indexes-content">
+            <div class="indexes-table">
+              <table class="table table-bordered">
+                <thead class="table-dark">
+                  <tr>
+                    <th>索引名</th>
+                    <th>类型</th>
+                    <th>唯一</th>
+                    <th>列</th>
+                    <th width="100">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="index in tableStructure?.indexes || []" :key="index.name">
+                    <td><strong>{{ index.name }}</strong></td>
+                    <td><span class="badge bg-info">{{ index.type }}</span></td>
+                    <td>
+                      <span :class="index.unique ? 'text-success' : 'text-secondary'">
+                        <i :class="index.unique ? 'bi bi-check-circle-fill' : 'bi bi-circle'"></i>
+                        {{ index.unique ? '是' : '否' }}
+                      </span>
+                    </td>
+                    <td><code>{{ index.columns.join(', ') }}</code></td>
+                    <td>
+                      <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary btn-sm" @click="editIndex(index)">
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" @click="deleteIndex(index)">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
         <!-- 关系标签页 -->
         <div v-show="activeTab === 'relations'" class="tab-panel">
-          <div class="relations-table">
-            <table class="table table-bordered">
-              <thead class="table-dark">
-                <tr>
-                  <th>约束名</th>
-                  <th>本表列</th>
-                  <th>目标表</th>
-                  <th>目标列</th>
-                  <th>删除规则</th>
-                  <th>更新规则</th>
-                  <th width="100">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="fk in tableStructure?.foreignKeys || []" :key="fk.name">
-                  <td><strong>{{ fk.name }}</strong></td>
-                  <td><code>{{ fk.column }}</code></td>
-                  <td><code>{{ fk.referencedTable }}</code></td>
-                  <td><code>{{ fk.referencedColumn }}</code></td>
-                  <td><span class="badge bg-warning">{{ fk.onDelete }}</span></td>
-                  <td><span class="badge bg-info">{{ fk.onUpdate }}</span></td>
-                  <td>
-                    <div class="btn-group btn-group-sm">
-                      <button class="btn btn-outline-primary btn-sm" @click="editForeignKey(fk)">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-outline-danger btn-sm" @click="deleteForeignKey(fk)">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="relations-content">
+            <div class="relations-table">
+              <table class="table table-bordered">
+                <thead class="table-dark">
+                  <tr>
+                    <th>约束名</th>
+                    <th>本表列</th>
+                    <th>目标表</th>
+                    <th>目标列</th>
+                    <th>删除规则</th>
+                    <th>更新规则</th>
+                    <th width="100">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="fk in tableStructure?.foreignKeys || []" :key="fk.name">
+                    <td><strong>{{ fk.name }}</strong></td>
+                    <td><code>{{ fk.column }}</code></td>
+                    <td><code>{{ fk.referencedTable }}</code></td>
+                    <td><code>{{ fk.referencedColumn }}</code></td>
+                    <td><span class="badge bg-warning">{{ fk.onDelete }}</span></td>
+                    <td><span class="badge bg-info">{{ fk.onUpdate }}</span></td>
+                    <td>
+                      <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary btn-sm" @click="editForeignKey(fk)">
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" @click="deleteForeignKey(fk)">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -546,6 +592,7 @@ import DbTools from './db-tools.vue';
 import TableEditor from './table-editor.vue';
 import { exportDataToCSV, exportDataToJSON, exportDataToExcel, formatFileName } from '../utils/export';
 import { modal } from '@/utils/modal';
+import { isNumericType, isBooleanType } from '@/utils/database-types';
 
 // Props
 const props = defineProps<{
@@ -570,7 +617,7 @@ const props = defineProps<{
 
 // Emits
 const emit = defineEmits<{
-  'refresh-data': [];
+  'refresh-data': [page: number, pageSize: number, searchQuery?: string];
   'refresh-database': [];
   'refresh-structure': [];
   'truncate-table': [];
@@ -590,6 +637,8 @@ const searchQuery = ref('');
 const currentPage = ref(1);
 const pageSize = ref(50);
 const sqlQuery = ref('');
+const jumpToPage = ref(1);
+const searchTimeout = ref<NodeJS.Timeout | null>(null);
 
 // 数据编辑相关
 const showDataEditor = ref(false);
@@ -617,30 +666,25 @@ const safeTableColumns = computed(() => {
   }));
 });
 
-const filteredData = computed(() => {
-  if (!searchQuery.value) return props.tableData;
-  
-  return props.tableData.filter(row => {
-    return Object.values(row).some(value => 
-      String(value).toLowerCase().includes(searchQuery.value.toLowerCase())
-    );
-  });
-});
-
+// 直接使用后端返回的数据，不需要前端分页和过滤
 const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  const end = start + pageSize.value;
-  return filteredData.value?.slice?.(start, end) || [];
+  return props.tableData || [];
 });
 
 const totalPages = computed(() => {
-  return Math.ceil(filteredData.value.length / pageSize.value);
+  const total = parseInt(props.total) || 0;
+  return Math.ceil(total / pageSize.value);
 });
 
 const visiblePages = computed(() => {
   const pages: number[] = [];
-  const start = Math.max(1, currentPage.value - 2);
-  const end = Math.min(totalPages.value, start + 4);
+  let start = Math.max(1, currentPage.value - 2);
+  let end = Math.min(totalPages.value, start + 4);
+  
+  // 如果显示的页码数不足5个，调整起始位置
+  if (end - start < 4) {
+    start = Math.max(1, end - 4);
+  }
   
   for (let i = start; i <= end; i++) {
     pages.push(i);
@@ -657,6 +701,13 @@ watch(() => props.table, () => {
 
 watch(pageSize, () => {
   currentPage.value = 1;
+  jumpToPage.value = 1;
+  // 调用后端分页接口
+  emit('refresh-data', currentPage.value, pageSize.value, searchQuery.value);
+});
+
+watch(currentPage, (newPage) => {
+  jumpToPage.value = newPage;
 });
 
 // 方法
@@ -680,8 +731,40 @@ function formatCellValue(value: any): string {
   return String(value);
 }
 
+function goToPage(page: number) {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+    // 调用后端分页接口
+    emit('refresh-data', currentPage.value, pageSize.value, searchQuery.value);
+  }
+}
+
+function jumpToPageHandler() {
+  if (jumpToPage.value >= 1 && jumpToPage.value <= totalPages.value) {
+    currentPage.value = jumpToPage.value;
+    // 调用后端分页接口
+    emit('refresh-data', currentPage.value, pageSize.value, searchQuery.value);
+  } else {
+    // 重置到有效范围
+    jumpToPage.value = Math.max(1, Math.min(jumpToPage.value, totalPages.value));
+    currentPage.value = jumpToPage.value;
+    emit('refresh-data', currentPage.value, pageSize.value, searchQuery.value);
+  }
+}
+
+function handleSearch() {
+  // 使用防抖，避免频繁调用后端接口
+  clearTimeout(searchTimeout.value);
+  searchTimeout.value = setTimeout(() => {
+    currentPage.value = 1;
+    jumpToPage.value = 1;
+    // 调用后端搜索接口
+    emit('refresh-data', currentPage.value, pageSize.value, searchQuery.value);
+  }, 500);
+}
+
 function refreshData() {
-  emit('refresh-data');
+  emit('refresh-data', currentPage.value, pageSize.value, searchQuery.value);
 }
 
 function insertData(newData?: any) {  
@@ -718,7 +801,7 @@ async function performInsert(data: any) {
       props.database
     );
     
-    if (result.ok) {
+    if (result.ret === 0) {
       emit('refresh-data');
       closeDataEditor();
       await modal.success('数据插入成功');
@@ -892,7 +975,8 @@ function editRow(row: any) {
 
 async function handleDataSubmit(result: any) {
   try {
-    if (result.result) {
+    
+    if (result.ret === 0) {
       // 操作成功，刷新数据
       emit('refresh-data');
       closeDataEditor();
@@ -934,10 +1018,11 @@ function closeTableEditor() {
 
 async function handleTableStructureChange(result: any) {
   try {
+    
     if (result.success) {
       // 表结构修改成功，刷新结构
       emit('refresh-structure');
-      emit('refresh-data');
+      emit('refresh-database');
       closeTableEditor();
       await modal.success('表结构修改成功');
     } else {
@@ -983,7 +1068,7 @@ async function updateRow(originalRow: any, newData: any) {
       props.database
     );
     
-    if (result.ok) {
+    if (result.ret === 0) {
       emit('refresh-data');
       await modal.success('数据更新成功');
     } else {
@@ -1040,7 +1125,7 @@ async function editColumn(column: any) {
       props.database
     );
     
-      if (result.ok) {
+      if (result.ret === 0) {
         emit('refresh-structure');
         await modal.success('列修改成功');
       } else {
@@ -1072,7 +1157,7 @@ async function deleteColumn(column: any) {
         props.database
       );
       
-      if (result.ok) {
+      if (result.ret === 0) {
         emit('refresh-structure');
         await modal.success('列删除成功');
       } else {
@@ -1185,6 +1270,8 @@ function handleExecuteSqlFromTool(sql: string) {
 .table-detail {
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .table-header {
@@ -1290,7 +1377,10 @@ function handleExecuteSqlFromTool(sql: string) {
 
 .table-tabs {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+  min-height: 0;
 }
 
 .nav-tabs {
@@ -1321,9 +1411,12 @@ function handleExecuteSqlFromTool(sql: string) {
 }
 
 .tab-content {
-  padding: 1.5rem;
+  padding: 1rem;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .data-toolbar {
@@ -1375,9 +1468,82 @@ function handleExecuteSqlFromTool(sql: string) {
 }
 
 .pagination-nav {
-  display: flex;
-  justify-content: center;
   margin-top: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pagination-container .pagination-info {
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.page-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page-jump {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page-jump .form-control {
+  text-align: center;
+}
+
+.page-item.disabled .page-link {
+  color: #94a3b8;
+  pointer-events: none;
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+.page-item.active .page-link {
+  background-color: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+.page-link {
+  color: #475569;
+  border: 1px solid #d1d5db;
+  transition: all 0.2s ease;
+}
+
+.page-link:hover {
+  background-color: #f1f5f9;
+  border-color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+  .pagination-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  
+  .page-size-selector,
+  .page-jump {
+    justify-content: center;
+  }
+  
+  .pagination {
+    justify-content: center;
+  }
 }
 
 .structure-table, .indexes-table, .relations-table {
@@ -1540,5 +1706,36 @@ function handleExecuteSqlFromTool(sql: string) {
   top: 0;
   z-index: 10;
   background: #495057;
+}
+
+/* 新的布局样式 */
+.tab-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.data-content,
+.structure-content,
+.indexes-content,
+.relations-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.data-content.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.structure-table,
+.indexes-table,
+.relations-table {
+  overflow-x: auto;
 }
 </style>

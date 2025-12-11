@@ -176,7 +176,6 @@
           @open-sql-query="handleOpenSqlQuery"
           @export-schema="handleExportSchema"
           @view-logs="handleViewLogs"
-          @create-database="handleCreateDatabase"
         />
 
         <!-- 数据库详情组件 -->
@@ -202,7 +201,7 @@
           :table-data="tableData"
           :table-structure="tableStructure"
           :loading="isGlobalLoading"
-          :total="tableData.length"
+          :total="totalRecords"
           :sql-result="sqlResult"
           :sql-executing="sqlExecuting"
           @refresh-data="refreshTableData"
@@ -285,6 +284,7 @@ const tableColumns = ref<any[]>([]);
 const tableDataSearch = ref('');
 const currentPage = ref(1);
 const pageSize = ref(50);
+const totalRecords = ref(0);
 
 // SQL执行结果
 const sqlResult = ref<any>(null);
@@ -461,14 +461,64 @@ function selectTable(connection: ConnectionEntity, database: string, table: Tabl
   loadTableStructure(connection, database, table.name);
 }
 
-async function loadTableData(connection: ConnectionEntity, database: string, tableName: string) {
+async function loadTableData(connection: ConnectionEntity, database: string, tableName: string, page: number = 1, pageSize: number = 50, searchQuery?: string) {
   try {
     isGlobalLoading.value = true;
     loadingMessage.value = `正在加载表 "${tableName}" 的数据...`;
-    const response = await databaseService.getTableData(connection.id, database, tableName);
     
+    // 构建WHERE条件用于搜索
+    let whereClause = '';
+    if (searchQuery && searchQuery.trim()) {
+      const searchTerm = searchQuery.trim();
+      
+      // 根据表结构动态构建搜索条件
+      if (tableStructure.value?.columns && tableStructure.value.columns.length > 0) {
+        const searchableColumns = tableStructure.value.columns.filter((col: any) => {
+          // 只搜索字符串类型和数字类型的列
+          const type = col.type?.toLowerCase() || '';
+          return type.includes('char') || type.includes('text') || type.includes('varchar') || 
+                 type.includes('int') || type.includes('decimal') || type.includes('float');
+        });
+        
+        if (searchableColumns.length > 0) {
+          const conditions = searchableColumns.map((col: any) => {
+            const columnName = col.name;
+            const type = col.type?.toLowerCase() || '';
+            
+            if (type.includes('int') || type.includes('decimal') || type.includes('float')) {
+              // 数字类型直接比较
+              return `${columnName} = '${searchTerm}'`;
+            } else {
+              // 字符串类型使用LIKE模糊匹配
+              return `${columnName} LIKE '%${searchTerm}%'`;
+            }
+          });
+          
+          whereClause = `WHERE (${conditions.join(' OR ')})`;
+        }
+      } else {
+        // 如果没有表结构信息，使用默认搜索条件
+        whereClause = `WHERE column1 LIKE '%${searchTerm}%' OR column2 LIKE '%${searchTerm}%'`;
+      }
+    }
+    
+    const response = await databaseService.getTableData(
+      connection.id, 
+      database, 
+      tableName, 
+      page, 
+      pageSize,
+      whereClause
+    );
+    
+    // 假设后端返回的数据格式为 { data: [], total: number }
     tableData.value = response?.data?.data || [];
-    currentPage.value = 1;
+    // 更新总记录数，假设后端返回total字段
+    totalRecords.value = parseInt(response?.data?.total) || 0;
+    
+    // 更新当前页码
+    currentPage.value = page;
+    
   } catch (error) {
     console.error('加载表数据失败:', error);
     
@@ -579,10 +629,12 @@ function refreshAll() {
   loadConnections();
 }
 
-async function refreshTableData() {
+async function refreshTableData(page: number = 1, pageSize: number = 50, searchQuery?: string) {
   if (selectedConnection.value && selectedDatabase.value && selectedTable.value) {
-    await loadTableData(selectedConnection.value, selectedDatabase.value, selectedTable.value.name);
-    showToast('', '表数据已刷新', 'success');
+    await loadTableData(selectedConnection.value, selectedDatabase.value, selectedTable.value.name, page, pageSize, searchQuery);
+    // if (!searchQuery) {
+    //   showToast('', '表数据已刷新', 'success');
+    // }
   }
 }
 
@@ -700,6 +752,7 @@ async function refreshTable(connection: ConnectionEntity, database: string, tabl
 
 // 新增的处理方法
 function handleRefreshDatabase() {
+  debugger
   if (selectedConnection.value && selectedDatabase.value) {
     refreshDatabase(selectedConnection.value, selectedDatabase.value);
   }

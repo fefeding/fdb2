@@ -117,6 +117,8 @@
     const dynamicErrorDetails = ref<any>(null);
     const dynamicStyle = computed(() => {        
         return {
+            width: 'max-content',
+            minWidth: '300px',
             ...(Object.keys(props.style).length ? props.style : {}),
             ...(dynamicOptions.value?.style || {}),
         };
