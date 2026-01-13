@@ -7,7 +7,7 @@
                         <i v-if="typeIcon" :class="typeIcon" class="me-2"></i>
                         {{dynamicTitle || props.title}}
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @click="cancel"></button>
                 </div>
                 <div class="modal-body" v-if="modalShow">
                     <slot v-if="$slots.default"></slot>
@@ -48,7 +48,7 @@
                 <Loading :isLoading="props.isLoading" :message="props.loadingMessage"></Loading>
             </div>
         </div>
-    <div class="modal-backdrop fade show" v-if="modalShow"></div>
+
     </div>
 </template>
 
@@ -266,7 +266,8 @@
 
         // 使用Bootstrap Modal的实例方法来监听事件，而不是DOM事件
         const m = new bootstrap.Modal(modalContainer.value, {
-            backdrop: false,
+            backdrop: 'static',
+            keyboard: false,
         });
 
         // 直接绑定到Bootstrap Modal实例

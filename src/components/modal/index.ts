@@ -47,6 +47,22 @@ export default {
     const modalApp = createApp(BootstrapModal);
     globalModalInstance = modalApp.mount(mount) as any;
     
+    // 添加事件监听，确保模态框完全隐藏后重置 isModalActive
+    if (globalModalInstance && globalModalInstance.$el) {
+      const modalElement = globalModalInstance.$el;
+      modalElement.addEventListener('hidden.bs.modal', () => {
+        isModalActive = false;
+        console.log('Modal hidden, isModalActive reset to false');
+        
+        // 处理待显示的modal
+        if (pendingModalOptions) {
+          const pending = pendingModalOptions;
+          pendingModalOptions = null;
+          showModal(pending);
+        }
+      });
+    }
+    
     // 全局注入
     app.config.globalProperties.$modal = modalInstance = {
       show: () => globalModalInstance.show(),
@@ -112,29 +128,15 @@ export const showModal = (options: ModalOptions) => {
       onConfirm: () => {
         options.onConfirm?.();
         globalModalInstance.hide();
-        isModalActive = false;
         nextTick(() => {
           resolve(true);
-          // 处理待显示的modal
-          if (pendingModalOptions) {
-            const pending = pendingModalOptions;
-            pendingModalOptions = null;
-            showModal(pending);
-          }
         });
       },
       onCancel: () => {
         options.onCancel?.();
         globalModalInstance.hide();
-        isModalActive = false;
         nextTick(() => {
           resolve(false);
-          // 处理待显示的modal
-          if (pendingModalOptions) {
-            const pending = pendingModalOptions;
-            pendingModalOptions = null;
-            showModal(pending);
-          }
         });
       }
     };
