@@ -17,6 +17,7 @@
               <div 
                 v-for="column in columns" 
                 :key="column.name" 
+                :data-type="column.type"
                 class="col-md-6"
               >
                 <label class="form-label">
@@ -29,24 +30,17 @@
                 <input 
                   v-if="column.isPrimary && column.isAutoIncrement && isEdit"
                   type="text" 
+                  data-type="primary"
                   class="form-control" 
                   :value="formData[column.name]"
                   disabled
                   readonly
                 >
-                <!-- 普通输入框 -->
-                <input 
-                  v-else-if="isTextInput(column.type)"
-                  type="text" 
-                  class="form-control" 
-                  v-model="formData[column.name]"
-                  :placeholder="'请输入' + column.name"
-                  :required="!column.nullable"
-                >
                 <!-- 数字输入框 -->
                 <input 
                   v-else-if="isNumberInput(column.type)"
                   type="number" 
+                  data-type="number"
                   class="form-control" 
                   v-model="formData[column.name]"
                   :placeholder="'请输入' + column.name"
@@ -58,6 +52,7 @@
                   v-else-if="isDateInput(column.type)"
                   type="datetime-local" 
                   class="form-control" 
+                  data-type="date"
                   v-model="formData[column.name]"
                   :required="!column.nullable"
                 >
@@ -65,6 +60,7 @@
                 <textarea 
                   v-else-if="isTextArea(column.type)"
                   class="form-control" 
+                  data-type="textarea"
                   v-model="formData[column.name]"
                   :placeholder="'请输入' + column.name"
                   :required="!column.nullable"
@@ -74,6 +70,7 @@
                 <select 
                   v-else-if="isEnumInput(column.type)"
                   class="form-select" 
+                  data-type="select"
                   v-model="formData[column.name]"
                   :required="!column.nullable"
                 >
@@ -86,15 +83,39 @@
                 <select 
                   v-else-if="isBooleanInput(column.type)"
                   class="form-select" 
+                  data-type="boolean"
                   v-model="formData[column.name]"
                 >
                   <option :value="true">是/True</option>
                   <option :value="false">否/False</option>
                 </select>
+                <!-- JSON类型 -->
+                <div v-else-if="isJsonInput(column.type, 'input') || isArrayInput(column.type)" class="json-editor">
+                  <textarea 
+                    class="form-control font-monospace" 
+                  data-type="json"
+                    v-model="jsonText[column.name]"
+                    :placeholder="'请输入' + column.name + '的JSON数据'"
+                    :required="!column.nullable"
+                    rows="6"
+                    @input="validateJson(column.name)"
+                  ></textarea>
+                  <div class="d-flex justify-content-between mt-1">
+                    <small class="text-muted">{{ jsonError[column.name] || 'JSON格式正确' }}</small>
+                    <button 
+                      type="button" 
+                      class="btn btn-sm btn-outline-primary" 
+                      @click="formatJson(column.name)"
+                    >
+                      格式化
+                    </button>
+                  </div>
+                </div>
                 <!-- 默认输入框 -->
                 <input 
                   v-else
                   type="text" 
+                  data-type="normal"
                   class="form-control" 
                   v-model="formData[column.name]"
                   :placeholder="'请输入' + column.name"
@@ -123,7 +144,9 @@
 import { ref, watch, computed, nextTick } from 'vue';
 import { DatabaseService } from '@/service/database';
 import { modal } from '@/utils/modal';
-import { isNumericType, isBooleanType, isDateTimeType, isTextType } from '@/utils/database-types';
+import { isNumericType, isBooleanType, isDateTimeType, isTextType, isJsonType, isArrayType } from '@/utils/database-types';
+import VueJsonPretty from 'vue-json-pretty';
+import 'vue-json-pretty/lib/styles.css';
 
 const databaseService = new DatabaseService();
 
@@ -146,6 +169,11 @@ const emit = defineEmits<{
 const formData = ref<any>({});
 const loading = ref(false);
 
+// JSON 文本数据
+const jsonText = ref<any>({});
+// JSON 验证错误
+const jsonError = ref<any>({});
+
 // 监听显示状态变化
 watch(() => props.visible, (visible) => {
   if (visible) {
@@ -156,12 +184,28 @@ watch(() => props.visible, (visible) => {
 // 初始化表单数据
 function initializeFormData() {
   formData.value = {};
+  jsonText.value = {};
+  jsonError.value = {};
   
   props.columns.forEach(column => {
     if (props.isEdit && props.data) {
       // 编辑模式：使用现有数据
       if(isDateInput(column.type)) {
         formData.value[column.name] = props.data[column.name] ? new Date(props.data[column.name]).toISOString().replace('.000Z', '') : null;
+      }
+      else if (isJsonInput(column.type) || isArrayInput(column.type)) {
+        // 对于 JSON 和数组类型，尝试解析为 JSON 对象
+        let value = props.data[column.name];
+        if (typeof value === 'string') {
+          try {
+            value = JSON.parse(value);
+          } catch (e) {
+            // 如果字符串不能解析为 JSON，直接使用字符串
+            value = props.data[column.name];
+          }
+        }
+        formData.value[column.name] = value;
+        jsonText.value[column.name] = JSON.stringify(value, null, 2);
       }
       else formData.value[column.name] = props.data[column.name];
     } else {
@@ -174,6 +218,9 @@ function initializeFormData() {
         formData.value[column.name] = null;
       } else if (isBooleanInput(column.type)) {
         formData.value[column.name] = false;
+      } else if (isJsonInput(column.type) || isArrayInput(column.type)) {
+        formData.value[column.name] = {};
+        jsonText.value[column.name] = '{}';
       } else {
         formData.value[column.name] = '';
       }
@@ -182,7 +229,7 @@ function initializeFormData() {
 }
 
 // 判断输入类型
-function isTextInput(type: string): boolean {
+function isTextInput(type: string): boolean {  
   return !isNumericType(type) && !isBooleanType(type) && !isDateTimeType(type) && !isEnumInput(type);
 }
 
@@ -210,6 +257,49 @@ function isBooleanInput(type: string): boolean {
   return isBooleanType(type);
 }
 
+function isJsonInput(type: string, inputtype?: string): boolean {
+  if(inputtype) {
+    console.log(inputtype, type);
+  }
+  return isJsonType(type);
+}
+
+function isArrayInput(type: string): boolean {
+  return isArrayType(type);
+}
+
+// JSON 验证
+function validateJson(columnName: string) {
+  try {
+    const value = jsonText.value[columnName];
+    if (value && value.trim()) {
+      const parsed = JSON.parse(value);
+      formData.value[columnName] = parsed;
+      jsonError.value[columnName] = '';
+    } else {
+      formData.value[columnName] = null;
+      jsonError.value[columnName] = '';
+    }
+  } catch (error) {
+    jsonError.value[columnName] = 'JSON格式错误: ' + (error as Error).message;
+  }
+}
+
+// JSON 格式化
+function formatJson(columnName: string) {
+  try {
+    const value = jsonText.value[columnName];
+    if (value && value.trim()) {
+      const parsed = JSON.parse(value);
+      jsonText.value[columnName] = JSON.stringify(parsed, null, 2);
+      formData.value[columnName] = parsed;
+      jsonError.value[columnName] = '';
+    }
+  } catch (error) {
+    jsonError.value[columnName] = 'JSON格式错误: ' + (error as Error).message;
+  }
+}
+
 // 获取枚举选项
 function getEnumOptions(type: string): string[] {
   const match = type?.match(/enum\((.*)\)/i);
@@ -230,6 +320,22 @@ function closeModal() {
 // 提交表单
 async function handleSubmit() {
   try {
+    // 验证所有 JSON 字段
+    let hasInvalidJson = false;
+    props.columns.forEach(column => {
+      if (isJsonInput(column.type) || isArrayInput(column.type)) {
+        validateJson(column.name);
+        if (jsonError.value[column.name]) {
+          hasInvalidJson = true;
+        }
+      }
+    });
+    
+    if (hasInvalidJson) {
+      modal.error('请修复 JSON 格式错误后再提交');
+      return;
+    }
+    
     loading.value = true;    
     let response;
     if (props.isEdit && props.data) {
@@ -337,5 +443,24 @@ function getPrimaryKeyWhere() {
 .text-muted {
   color: #6b7280;
   font-size: 0.875rem;
+}
+
+.json-editor textarea {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  resize: vertical;
+}
+
+.json-editor textarea:focus {
+  background-color: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.json-editor .text-muted {
+  font-size: 0.75rem;
 }
 </style>

@@ -95,7 +95,7 @@
             </div>
           </div>
           <div class="chart-content">
-            <canvas ref="performanceChart" width="800" height="300"></canvas>
+            <div ref="performanceChart" class="echart-container"></div>
           </div>
         </div>
 
@@ -104,7 +104,7 @@
             <h3>连接数变化</h3>
           </div>
           <div class="chart-content">
-            <canvas ref="connectionsChart" width="400" height="300"></canvas>
+            <div ref="connectionsChart" class="echart-container"></div>
           </div>
         </div>
       </div>
@@ -227,6 +227,7 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { ConnectionService } from '@/service/database';
 import type { ConnectionEntity } from '@/typings/database';
+import * as echarts from 'echarts';
 
 const connectionService = new ConnectionService();
 
@@ -249,10 +250,10 @@ const selectedTimeRange = ref('1h');
 const refreshTimer = ref<any>(null);
 
 // 图表相关
-const performanceChart = ref<HTMLCanvasElement>();
-const connectionsChart = ref<HTMLCanvasElement>();
-const performanceChartInstance = ref<any>(null);
-const connectionsChartInstance = ref<any>(null);
+const performanceChart = ref<HTMLDivElement>();
+const connectionsChart = ref<HTMLDivElement>();
+const performanceChartInstance = ref<echarts.ECharts | null>(null);
+const connectionsChartInstance = ref<echarts.ECharts | null>(null);
 
 const timeRanges = [
   { label: '1小时', value: '1h' },
@@ -368,67 +369,153 @@ function stopAutoRefresh() {
 
 function updateCharts() {
   nextTick(() => {
+    initCharts();
     updatePerformanceChart();
     updateConnectionsChart();
   });
 }
 
-function updatePerformanceChart() {
-  const canvas = performanceChart.value;
-  if (!canvas) return;
-  
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-  
-  // 清空画布
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  // 简单的折线图绘制
-  ctx.strokeStyle = '#667eea';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  
-  const points = [];
-  for (let i = 0; i < 24; i++) {
-    points.push({
-      x: (canvas.width / 23) * i,
-      y: canvas.height - (Math.random() * 200 + 50)
-    });
+function initCharts() {
+  if (performanceChart.value && !performanceChartInstance.value) {
+    performanceChartInstance.value = echarts.init(performanceChart.value);
   }
   
-  points.forEach((point, index) => {
-    if (index === 0) {
-      ctx.moveTo(point.x, point.y);
-    } else {
-      ctx.lineTo(point.x, point.y);
-    }
-  });
+  if (connectionsChart.value && !connectionsChartInstance.value) {
+    connectionsChartInstance.value = echarts.init(connectionsChart.value);
+  }
   
-  ctx.stroke();
+  // 监听窗口大小变化，自适应图表大小
+  window.addEventListener('resize', () => {
+    performanceChartInstance.value?.resize();
+    connectionsChartInstance.value?.resize();
+  });
+}
+
+function updatePerformanceChart() {
+  if (!performanceChartInstance.value) return;
+  
+  // 生成模拟数据
+  const hours = 24;
+  const data = [];
+  const categories = [];
+  
+  for (let i = 0; i < hours; i++) {
+    categories.push(`${i}时`);
+    data.push(Math.floor(Math.random() * 50) + 10);
+  }
+  
+  const option: echarts.EChartsOption = {
+    tooltip: {
+      trigger: 'axis',
+      formatter: '{b0}<br/>响应时间: {c0}ms'
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: categories,
+      axisLabel: {
+        fontSize: 12
+      }
+    },
+    yAxis: {
+      type: 'value',
+      name: '响应时间(ms)',
+      min: 0,
+      max: 60,
+      axisLabel: {
+        fontSize: 12
+      }
+    },
+    series: [
+      {
+        name: '响应时间',
+        type: 'line',
+        smooth: true,
+        data: data,
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(102, 126, 234, 0.5)' },
+            { offset: 1, color: 'rgba(102, 126, 234, 0.1)' }
+          ])
+        },
+        lineStyle: {
+          color: '#667eea',
+          width: 2
+        },
+        itemStyle: {
+          color: '#667eea'
+        }
+      }
+    ]
+  };
+  
+  performanceChartInstance.value.setOption(option);
 }
 
 function updateConnectionsChart() {
-  const canvas = connectionsChart.value;
-  if (!canvas) return;
+  if (!connectionsChartInstance.value) return;
   
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+  // 生成模拟数据
+  const hours = 12;
+  const data = [];
+  const categories = [];
   
-  // 清空画布
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let i = 0; i < hours; i++) {
+    categories.push(`${i * 2}时`);
+    data.push(Math.floor(Math.random() * 50) + 10);
+  }
   
-  // 简单的柱状图
-  const barWidth = canvas.width / 12;
-  const data = Array.from({ length: 12 }, () => Math.random() * 50 + 10);
+  const option: echarts.EChartsOption = {
+    tooltip: {
+      trigger: 'axis',
+      formatter: '{b0}<br/>连接数: {c0}'
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: categories,
+      axisLabel: {
+        fontSize: 12
+      }
+    },
+    yAxis: {
+      type: 'value',
+      name: '连接数',
+      min: 0,
+      max: 60,
+      axisLabel: {
+        fontSize: 12
+      }
+    },
+    series: [
+      {
+        name: '连接数',
+        type: 'bar',
+        data: data,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#10b981' },
+            { offset: 1, color: '#059669' }
+          ]),
+          borderRadius: [4, 4, 0, 0]
+        },
+        barWidth: '60%'
+      }
+    ]
+  };
   
-  ctx.fillStyle = '#10b981';
-  data.forEach((value, index) => {
-    const height = (value / 60) * canvas.height;
-    const x = barWidth * index + 10;
-    const y = canvas.height - height;
-    
-    ctx.fillRect(x, y, barWidth - 20, height);
-  });
+  connectionsChartInstance.value.setOption(option);
 }
 
 function clearSlowQueries() {
@@ -733,9 +820,9 @@ onUnmounted(() => {
   justify-content: center;
 }
 
-.chart-content canvas {
-  max-width: 100%;
-  max-height: 100%;
+.echart-container {
+  width: 100%;
+  height: 100%;
 }
 
 /* 慢查询部分 */

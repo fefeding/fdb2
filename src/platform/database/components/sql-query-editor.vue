@@ -412,8 +412,43 @@ function exportResults() {
 
 function formatCellValue(value: any): string {
   if (value === null || value === undefined) return '';
-  if (typeof value === 'object') return JSON.stringify(value);
-  return String(value);
+  
+  // 尝试检测并格式化 JSON 数据
+  let strValue = String(value);
+  if (typeof value === 'string') {
+    // 检查是否可能是 JSON 字符串
+    const trimmedValue = strValue.trim();
+    if ((trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) || 
+        (trimmedValue.startsWith('[') && trimmedValue.endsWith(']'))) {
+      try {
+        const parsed = JSON.parse(trimmedValue);
+        // 格式化 JSON 并限制长度
+        const formatted = JSON.stringify(parsed, null, 2);
+        if (formatted.length > 50) {
+          return formatted.substring(0, 50) + '...';
+        }
+        return formatted;
+      } catch (e) {
+        // 不是有效的 JSON，继续处理
+      }
+    }
+  } else if (typeof value === 'object') {
+    // 对于对象或数组类型，直接格式化
+    try {
+      const formatted = JSON.stringify(value, null, 2);
+      if (formatted.length > 50) {
+        return formatted.substring(0, 50) + '...';
+      }
+      return formatted;
+    } catch (e) {
+      // 格式化失败，继续处理
+    }
+  }
+  
+  // 对于普通字符串，限制显示长度
+  if (strValue.length > 50) return strValue.substring(0, 50) + '...';
+  
+  return strValue;
 }
 
 function getSqlModeLabel(): string {

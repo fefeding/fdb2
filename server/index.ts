@@ -499,6 +499,17 @@ function formatValue(value: any): string {
     return `'${value.toISOString().slice(0, 19).replace('T', ' ')}'`;
   }
   
+  // 数组或对象类型需要 JSON 序列化
+  if (typeof value === 'object' && value !== null) {
+    try {
+      const jsonStr = JSON.stringify(value);
+      return `'${jsonStr.replace(/'/g, "''")}'`;
+    } catch (e) {
+      // 序列化失败时，作为普通字符串处理
+      return `'${String(value).replace(/'/g, "''")}'`;
+    }
+  }
+  
   // 字符串类型需要加引号
   return `'${String(value).replace(/'/g, "''")}'`;
 }

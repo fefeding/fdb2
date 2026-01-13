@@ -14,7 +14,8 @@ export async function exportDataToExcel(
 
   // 如果没有提供headers，则使用第一行的键作为header
   if (Object.keys(headers).length === 0 && data.length > 0) {
-    data[0].forEach((value: any, key: string) => {
+    const firstRow = data[0];
+    Object.keys(firstRow).forEach(key => {
       headers[key] = key;
     });
   }

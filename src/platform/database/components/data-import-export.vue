@@ -411,6 +411,7 @@ import { ref, computed, onMounted } from 'vue';
 import { ConnectionService } from '@/service/database';
 import type { ConnectionEntity } from '@/typings/database';
 import { exportDataToCSV, exportDataToJSON, exportDataToExcel, exportDataToSQL } from '../utils/export';
+import { readExcel, decodeBook } from '@/utils/xlsx';
 
 const connectionService = new ConnectionService();
 
@@ -567,6 +568,190 @@ function getFileIcon(filename: string): string {
   }
 }
 
+// 文件解析方法
+async function parseCSVFile(file: File): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const lines = content.split('\n').filter(line => line.trim());
+        const delimiter = importConfig.value.delimiter;
+        const hasHeader = importConfig.value.hasHeader;
+        
+        const data: any[] = [];
+        let headers: string[] = [];
+        
+        if (hasHeader && lines.length > 0) {
+          headers = lines[0].split(delimiter).map(header => header.trim().replace(/^"|"$/g, ''));
+          lines.slice(1).forEach(line => {
+            const values = line.split(delimiter).map(value => value.trim().replace(/^"|"$/g, ''));
+            const row: any = {};
+            headers.forEach((header, index) => {
+              row[header] = values[index] || '';
+            });
+            data.push(row);
+          });
+        } else {
+          lines.forEach(line => {
+            const values = line.split(delimiter).map(value => value.trim().replace(/^"|"$/g, ''));
+            const row: any = {};
+            values.forEach((value, index) => {
+              row[`列${index + 1}`] = value;
+            });
+            data.push(row);
+          });
+        }
+        
+        resolve(data);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsText(file, importConfig.value.encoding);
+  });
+}
+
+async function parseExcelFile(file: File): Promise<any[]> {
+  try {
+    const book = await readExcel(file);
+    const decoded = decodeBook(book);
+    if (decoded.sheets.length > 0) {
+      // 提取第一个工作表的数据
+      const sheet = decoded.sheets[0];
+      const data: any[] = [];
+      const headers = Object.values(sheet.cols || {});
+      
+      sheet.data.forEach(row => {
+        const formattedRow: any = {};
+        Object.keys(row).forEach(key => {
+          const colIndex = parseInt(key.replace(/[^0-9]/g, ''));
+          formattedRow[headers[colIndex]] = row[key];
+        });
+        data.push(formattedRow);
+      });
+      
+      return data;
+    }
+    return [];
+  } catch (error) {
+    console.error('解析Excel文件失败:', error);
+    showToast('错误', `解析Excel文件失败: ${error instanceof Error ? error.message : '未知错误'}`, 'error');
+    return [];
+  }
+}
+
+async function parseJSONFile(file: File): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content);
+        resolve(Array.isArray(data) ? data : [data]);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsText(file, 'utf-8');
+  });
+}
+
+async function parseFile(file: File): Promise<any[]> {
+  const fileName = file.name.toLowerCase();
+  
+  try {
+    if (fileName.endsWith('.csv')) {
+      return await parseCSVFile(file);
+    } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+      return await parseExcelFile(file);
+    } else if (fileName.endsWith('.json')) {
+      return await parseJSONFile(file);
+    } else {
+      throw new Error('不支持的文件格式');
+    }
+  } catch (error) {
+    console.error('解析文件失败:', error);
+    showToast('错误', `解析文件失败: ${error instanceof Error ? error.message : '未知错误'}`, 'error');
+    return [];
+  }
+}
+
+// 开始导入
+async function startImport() {
+  if (selectedFiles.value.length === 0 || !importConfig.value.connectionId || !importConfig.value.tableName) {
+    showToast('错误', '请选择文件并配置导入选项', 'error');
+    return;
+  }
+  
+  try {
+    const file = selectedFiles.value[0];
+    const data = await parseFile(file);
+    
+    importProgress.value.total = data.length;
+    importProgress.value.current = 0;
+    importProgress.value.message = '正在准备导入...';
+    importProgress.value.status = 'processing';
+    importComplete.value = false;
+    importResult.value = { success: 0, failed: 0, errors: [] };
+    
+    // 模拟导入过程
+    for (let i = 0; i < data.length; i++) {
+      // 模拟插入延迟
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      importProgress.value.current = i + 1;
+      importProgress.value.message = `正在导入第 ${i + 1} 条记录...`;
+      
+      // 模拟成功/失败的概率
+      const isSuccess = Math.random() > 0.05; // 95%成功率
+      if (isSuccess) {
+        importResult.value.success++;
+      } else {
+        importResult.value.failed++;
+        importResult.value.errors.push(`第 ${i + 1} 条记录导入失败`);
+      }
+    }
+    
+    importProgress.value.status = 'completed';
+    importComplete.value = true;
+    importProgress.value.message = '导入完成';
+    
+    showToast('成功', `成功导入 ${importResult.value.success} 条记录，失败 ${importResult.value.failed} 条`, 'success');
+  } catch (error) {
+    importProgress.value.status = 'error';
+    importProgress.value.message = '导入失败';
+    showToast('错误', `导入失败: ${error instanceof Error ? error.message : '未知错误'}`, 'error');
+  }
+}
+
+// 加载预览数据
+async function loadPreviewData() {
+  if (selectedFiles.value.length === 0) return;
+  
+  try {
+    const file = selectedFiles.value[0];
+    const data = await parseFile(file);
+    
+    // 只显示前100行作为预览
+    const previewCount = 100;
+    previewData.value = data.slice(0, previewCount);
+    hasMoreData.value = data.length > previewCount;
+    
+    // 提取列名
+    if (previewData.value.length > 0) {
+      previewColumns.value = Object.keys(previewData.value[0]);
+    } else {
+      previewColumns.value = [];
+    }
+  } catch (error) {
+    console.error('加载预览数据失败:', error);
+    showToast('错误', `加载预览数据失败: ${error instanceof Error ? error.message : '未知错误'}`, 'error');
+  }
+}
+
 function formatFileSize(bytes: number): string {
   const sizes = ['B', 'KB', 'MB', 'GB'];
   if (bytes === 0) return '0 B';
@@ -587,49 +772,6 @@ function prevStep() {
   currentStep.value--;
 }
 
-async function loadPreviewData() {
-  // 模拟预览数据
-  previewColumns.value = ['id', 'name', 'email', 'age', 'city'];
-  previewData.value = [
-    { id: 1, name: '张三', email: 'zhangsan@example.com', age: 25, city: '北京' },
-    { id: 2, name: '李四', email: 'lisi@example.com', age: 30, city: '上海' },
-    { id: 3, name: '王五', email: 'wangwu@example.com', age: 28, city: '广州' },
-    { id: 4, name: '赵六', email: 'zhaoliu@example.com', age: 35, city: '深圳' },
-    { id: 5, name: '钱七', email: 'qianqi@example.com', age: 27, city: '杭州' }
-  ];
-  hasMoreData.value = true;
-}
-
-async function startImport() {
-  importProgress.value.total = selectedFiles.value.length * 1000; // 模拟数据量
-  importProgress.value.current = 0;
-  importProgress.value.message = '准备导入数据...';
-  
-  // 模拟导入过程
-  const interval = setInterval(() => {
-    importProgress.value.current += 50;
-    const progress = (importProgress.value.current / importProgress.value.total) * 100;
-    
-    if (progress < 30) {
-      importProgress.value.message = '解析文件格式...';
-    } else if (progress < 60) {
-      importProgress.value.message = '验证数据格式...';
-    } else if (progress < 90) {
-      importProgress.value.message = '插入数据到数据库...';
-    } else {
-      importProgress.value.message = '完成导入...';
-    }
-    
-    if (importProgress.value.current >= importProgress.value.total) {
-      clearInterval(interval);
-      importComplete.value = true;
-      importResult.value = {
-        success: 4500,
-        failed: 50
-      };
-    }
-  }, 50);
-}
 
 async function previewExport() {
   try {
@@ -676,7 +818,7 @@ async function startExport() {
       case 'json':
         await exportDataToJSON(mockData, filename + '.json');
         break;
-      case 'excel':
+      case 'xlsx':
         await exportDataToExcel(mockData, {}, filename + '.xlsx');
         break;
       case 'sql':
