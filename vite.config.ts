@@ -59,6 +59,46 @@ const config = defineConfig({
             }
         }),
         {
+            name: 'copy-server-files',
+            writeBundle: async () => {
+                const serverSrcDir = path.resolve(__dirname, './server');
+                const serverDistDir = path.resolve(__dirname, './dist/server');
+                
+                // 确保输出目录存在
+                if (!fs.existsSync(serverDistDir)) {
+                    fs.mkdirSync(serverDistDir, { recursive: true });
+                }
+                
+                // 复制 server 目录下的所有 .ts 文件
+                const copyRecursiveSync = (src: string, dest: string) => {
+                    const exists = fs.existsSync(src);
+                    const stats = exists && fs.statSync(src);
+                    const isDirectory = exists && stats.isDirectory();
+                    
+                    if (isDirectory) {
+                        if (!fs.existsSync(dest)) {
+                            fs.mkdirSync(dest);
+                        }
+                        
+                        fs.readdirSync(src).forEach(childItemName => {
+                            copyRecursiveSync(
+                                path.join(src, childItemName), 
+                                path.join(dest, childItemName)
+                            );
+                        });
+                    } else {
+                        // 只复制 .ts 文件
+                        if (src.endsWith('.ts') || src.endsWith('.js')) {
+                            fs.copyFileSync(src, dest);
+                        }
+                    }
+                };
+                
+                copyRecursiveSync(serverSrcDir, serverDistDir);
+                console.log('Server files copied to', serverDistDir);
+            }
+        },
+        {
             // 动态加载静态入口文件，用于路径拼接
             name: "inject-assets",
             transformIndexHtml(html, ctx: any) {
@@ -142,24 +182,15 @@ const config = defineConfig({
         //cssCodeSplit: false,
         modulePreload: false,
         target: 'esnext',    // 确保使用最新的 ES 特性
+        minify: false,       // 禁用代码压缩
         rollupOptions: {
             input: getViewInputs(viewDir),
             output: {
-                // { getModuleInfo }
-                manualChunks(id, mod) {
-                    const ms = [...id.matchAll(/\/node_modules\/([^\/]+)\//ig)];                    
-                    //console.log(id, ms, mod);
-                    if(ms && ms.length) {
-                        const m = ms[ms.length -1];
-                        if(m && m[1]) {
-                            if(m[1].includes('@vue') || m[1].includes('vue-') || m[1] == 'vue') return 'vue';
-                            if(m[1].includes('element-plus')) return 'element-plus';
-                            if(m[1].includes('lodash')) return 'lodash';
-                            if(m[1].includes('bootstrap')) return 'bootstrap';
-                            if(m[1].includes('echarts')) return 'echarts';
-                        }
-                    }
-                }
+                format: 'es',  // 保留原始 ES 模块格式（import/export）
+                entryFileNames: `assets/[name].[hash].js`,
+                chunkFileNames: `assets/[name].[hash].js`,
+                assetFileNames: `assets/[name].[hash].[ext]`,
+                manualChunks: false // 禁用代码分割，保持原始模块结构
             }
         },
     },
