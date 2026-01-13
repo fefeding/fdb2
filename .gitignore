@@ -17,6 +17,11 @@ coverage
 /cypress/videos/
 /cypress/screenshots/
 
+# NW.js
+nw-build/
+nw-cache/
+
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

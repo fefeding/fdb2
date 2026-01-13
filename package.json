@@ -3,6 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "main": "view/index.html",
+  "window": {
+    "title": "数据库管理工具",
+    "width": 1200,
+    "height": 800,
+    "min_width": 800,
+    "min_height": 600,
+    "resizable": true,
+    "show_in_taskbar": true,
+    "frame": true
+  },
   "scripts": {
     "dev": "vite",
     "build": "npm run build-only",
@@ -10,7 +21,9 @@
     "test:unit": "vitest",
     "build-only": "vite build",
     "type-check": "vue-tsc --noEmit --composite false",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "nw:dev": "node nw-dev.js",
+    "nw:build": "node nw-build.js"
   },
   "dependencies": {
     "@fefeding/common": "^1.0.58",
@@ -54,6 +67,7 @@
     "autoprefixer": "^10.4.22",
     "dotenv": "^17.2.3",
     "jsdom": "^26.1.0",
+    "nw-builder": "^4.17.0",
     "postcss": "^8.5.6",
     "sass": "^1.94.2",
     "tailwindcss": "^3.4.18",
