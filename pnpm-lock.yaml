@@ -108,6 +108,9 @@ importers:
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
+      nw:
+        specifier: ^0.107.0
+        version: 0.107.0
       nw-builder:
         specifier: ^4.17.0
         version: 4.17.0
@@ -2365,6 +2368,10 @@ packages:
 
   nw-builder@4.17.0:
     resolution: {integrity: sha512-wTvWcA+eKOEwYFkmE7vdJGNkaDPICxy2iZ0AfBBSKgx6QT+ockzMRLMmP2yV1NC7A/1FDguOWfmhOCDpdduzAQ==}
+    hasBin: true
+
+  nw@0.107.0:
+    resolution: {integrity: sha512-s4eH/lxjlQf2qATIMExsaL4xm6j4JtFXArqu/2gl9b2Z41mgbxXiAQesKV+IW60X0cnk8mJUQ/S1qjC6lrqfYQ==}
     hasBin: true
 
   nwsapi@2.2.22:
@@ -5664,6 +5671,16 @@ snapshots:
       - bare-abort-controller
       - debug
       - react-native-b4a
+
+  nw@0.107.0:
+    dependencies:
+      axios: 1.13.2
+      commander: 14.0.2
+      semver: 7.7.3
+      tar: 7.5.2
+      yauzl-promise: 4.0.0
+    transitivePeerDependencies:
+      - debug
 
   nwsapi@2.2.22: {}
 

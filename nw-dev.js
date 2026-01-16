@@ -21,6 +21,7 @@ viteProcess.stdout.on('data', (data) => {
   // 当 Vite 服务器启动成功后，启动 NW.js
   if (data.includes('ready')) {
     setTimeout(() => {
+      console.log('starting NW.js...', 'npx nw . --url=http://localhost:9300');
       const nwProcess = exec('npx nw . --url=http://localhost:9300', (error, stdout, stderr) => {
         if (error) {
           console.error(`启动 NW.js 时出错: ${error}`);
