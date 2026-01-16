@@ -9,19 +9,9 @@ import CopyPlugin from 'vite-plugin-files-copy';
 import ViteNunjucksPlugin from '@fefeding/vite-nunjucks-plugin';
 import * as path from 'path';
 import * as fs from 'fs';
-import * as dotenv from 'dotenv';
 
 import * as server from './server/index';
 
-const envPath = path.join(__dirname, '../.env');
-if(fs.existsSync(envPath)) {
-    const env = dotenv.config({
-        path: envPath,
-        encoding: 'utf-8'
-    });
-    console.log(env);
-}
-console.log('.env', envPath, process.env);
 
 const urlPrefix = process.env.PREFIX ? `/${process.env.PREFIX}` : '';
 console.log(urlPrefix);
@@ -32,9 +22,19 @@ const defaultInitState = {
     "title": process.env.TITLE
 };
 
+const nunjucksPlugin = ViteNunjucksPlugin({
+    variables: {
+        prefix: '', // 构建时，去掉这种prefix前缀，vite会处理依赖关系
+        viteTarget: '',// 构建之后的不加base
+        __DEFAULTINITIAL_STATE__: JSON.stringify(defaultInitState),
+    }
+});
+
 const viewDir = path.resolve(__dirname, './view');
 // https://vitejs.dev/config/
 const config = defineConfig({
+    //root: __dirname,
+    
     plugins: [
         vue() as PluginOption, 
         vueJsx() as PluginOption,
@@ -51,13 +51,7 @@ const config = defineConfig({
                 },
             ]
         }),
-        ViteNunjucksPlugin({
-            variables: {
-                prefix: '', // 构建时，去掉这种prefix前缀，vite会处理依赖关系
-                viteTarget: '',// 构建之后的不加base
-                __DEFAULTINITIAL_STATE__: JSON.stringify(defaultInitState),
-            }
-        }),
+        nunjucksPlugin,
         {
             name: 'copy-server-files',
             writeBundle: async () => {
@@ -152,6 +146,47 @@ const config = defineConfig({
             },
         },
         {
+            name: 'vite-plugin-spa-fallback-with-nunjucks',
+            configureServer(server) {
+                return () => {
+                    server.middlewares.use(async (req: http.IncomingMessage, res: http.ServerResponse, next: Connect.NextFunction) => {
+                        const requestUrl = req.url || '';
+                        console.log('SPA Fallback Middleware:', requestUrl);
+                        // 1. 忽略 API 路由
+                        if (requestUrl.startsWith('/api/')) {
+                            return next();
+                        }
+
+                        // 2. 忽略静态资源请求 (必须让 Vite 自己处理，否则 CSS/JS 404)
+                        // 简单的扩展名检测，或者让 Vite 处理 404 也可以，但显式检测更高效
+                        if (requestUrl !== '/index.html' && /\.[a-zA-Z0-9]{1,4}$/.test(requestUrl) || requestUrl.includes('@vite/client')) {
+                            return next();
+                        }
+
+                        // 3. 回退逻辑：渲染 view/index.html
+                        // 关键：使用 server.transformRequest 确保经过 Nunjucks 和 Vite 处理
+                        try {
+                            const indexPath = path.resolve(viewDir, requestUrl.replace('/', ''));
+                            console.log('Resolved indexPath:', indexPath);
+                            if (!fs.existsSync(indexPath)) {
+                                return next(); // 文件不存在，交给 Vite 报 404
+                            }
+
+                            let html = fs.readFileSync(indexPath, 'utf-8');
+                            html = await nunjucksPlugin.transformIndexHtml(html, { path: indexPath });
+                            res.statusCode = 200;
+                            res.setHeader('Content-Type', 'text/html');
+                            res.end(html);
+                        } catch (e: any) {
+                            console.error("SPA Fallback Transform Error:", e.message);
+                            // 如果转换失败（比如语法错误），交给 Vite 处理
+                            return next(e);
+                        }
+                    });
+                };
+            },
+        },
+        {
             name: 'server-api',
             configureServer(server) {
                 server.middlewares.use((req: Connect.IncomingMessage, res: http.ServerResponse, next: Connect.NextFunction) => {
@@ -180,17 +215,25 @@ const config = defineConfig({
         manifest: true, // 关键！生成 manifest.json
         // 禁用 CSS 代码分割（避免生成额外的 <link>）
         //cssCodeSplit: false,
-        modulePreload: false,
-        target: 'esnext',    // 确保使用最新的 ES 特性
-        minify: false,       // 禁用代码压缩
+        modulePreload: true,
         rollupOptions: {
             input: getViewInputs(viewDir),
             output: {
-                format: 'es',  // 保留原始 ES 模块格式（import/export）
-                entryFileNames: `assets/[name].[hash].js`,
-                chunkFileNames: `assets/[name].[hash].js`,
-                assetFileNames: `assets/[name].[hash].[ext]`,
-                manualChunks: false // 禁用代码分割，保持原始模块结构
+                // { getModuleInfo }
+                manualChunks(id, mod) {
+                    const ms = [...id.matchAll(/\/node_modules\/([^\/]+)\//ig)];                    
+                    //console.log(id, ms, mod);
+                    if(ms && ms.length) {
+                        const m = ms[ms.length -1];
+                        if(m && m[1]) {
+                            if(m[1].includes('@vue') || m[1].includes('vue-') || m[1] == 'vue') return 'vue';
+                            if(m[1].includes('element-plus')) return 'element-plus';
+                            if(m[1].includes('lodash')) return 'lodash';
+                            if(m[1].includes('bootstrap')) return 'bootstrap';
+                            if(m[1].includes('echarts')) return 'echarts';
+                        }
+                    }
+                }
             }
         },
     },

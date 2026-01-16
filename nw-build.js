@@ -1,7 +1,7 @@
 import nwbuild from 'nw-builder';
 import { resolve, join } from 'path';
 import { fileURLToPath } from 'url';
-import { copyFileSync, existsSync } from 'fs';
+import { copyFileSync, existsSync, rmSync, readdirSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = resolve(__filename, '..');
@@ -25,11 +25,31 @@ async function build() {
       throw new Error('未找到 package.json 文件');
     }
 
-    console.log('3. 配置 NW.js 构建参数...');
+    console.log('3. 安装 npm 依赖到 dist 目录...');
+    // 使用绝对路径执行 npm install 命令
+    const distPath = resolve(__dirname, 'dist');
+    console.log('Dist 路径:', distPath);
+    
+    // 执行 npm install 命令
+    execSync('npm install --only=production', { 
+      stdio: 'inherit', 
+      cwd: distPath 
+    });
+    
+    // 检查 node_modules 目录是否创建成功
+    const nodeModulesPath = join(distPath, 'node_modules');
+    if (existsSync(nodeModulesPath)) {
+      console.log('npm 依赖安装成功');
+      console.log('node_modules 目录大小:', readdirSync(nodeModulesPath).length, '个包');
+    } else {
+      throw new Error('npm install 失败，node_modules 目录未创建');
+    }
+
+    console.log('4. 配置 NW.js 构建参数...');
     
     await nwbuild({
       mode: 'build',
-      srcDir: resolve(__dirname, 'dist'), // 指向构建后的 Vue 应用
+      srcDir: distPath, // 指向构建后的 Vue 应用
       version: '0.78.1', // 稳定的 NW.js 版本
       flavor: 'normal', // 标准版本，包含 Node.js
       platform: 'win', // 目标平台
@@ -45,8 +65,17 @@ async function build() {
       }
     });
 
-    console.log('4. 打包完成！');
+    console.log('5. 打包完成！');
     console.log(`应用已生成在: ${resolve(__dirname, 'nw-build')}`);
+    
+    // 验证打包后的应用程序是否包含 node_modules 目录
+    const packagedNodeModulesPath = join(__dirname, 'nw-build', 'package.nw', 'node_modules');
+    if (existsSync(packagedNodeModulesPath)) {
+      console.log('✅ 应用程序已包含 node_modules 目录');
+      console.log('✅ 依赖包数量:', readdirSync(packagedNodeModulesPath).length, '个');
+    } else {
+      console.warn('⚠️  应用程序不包含 node_modules 目录');
+    }
 
   } catch (error) {
     console.error('构建过程中出错:', error);
