@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "main": "clinet/view/index.html",
+  "main": "view/index.html",
   "window": {
     "title": "数据库管理工具",
     "width": 1200,
@@ -13,7 +13,7 @@
     "resizable": true,
     "show_in_taskbar": true,
     "frame": true,
-    "icon": "client/public/favicon.ico"
+    "icon": "public/favicon.ico"
   },
   "scripts": {
     "dev": "vite",

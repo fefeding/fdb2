@@ -92,59 +92,59 @@ const config = defineConfig({
                 console.log('Server files copied to', serverDistDir);
             }
         },
-        {
-            // 动态加载静态入口文件，用于路径拼接
-            name: "inject-assets",
-            transformIndexHtml(html, ctx: any) {
-                if (ctx.chunk?.fileName && html.includes('__vitejs_load_entry(')) {
-                    // 移除所有 <script type="module"> 标签（包括 Vite 注入的入口脚本）
-                    html = html.replace(
-                        /<script\s*type="module"\s*[^\>]*\s*src="([^"]+)"\s*>\s*<\/script>/g, (match, src) => {
-                                if(!src || /^(http(s)?:)?\/\//i.test(src)) return match;
-                                console.log('replace script', src, urlPrefix);
+        // {
+        //     // 动态加载静态入口文件，用于路径拼接
+        //     name: "inject-assets",
+        //     transformIndexHtml(html, ctx: any) {
+        //         if (ctx.chunk?.fileName && html.includes('__vitejs_load_entry(')) {
+        //             // 移除所有 <script type="module"> 标签（包括 Vite 注入的入口脚本）
+        //             html = html.replace(
+        //                 /<script\s*type="module"\s*[^\>]*\s*src="([^"]+)"\s*>\s*<\/script>/g, (match, src) => {
+        //                         if(!src || /^(http(s)?:)?\/\//i.test(src)) return match;
+        //                         console.log('replace script', src, urlPrefix);
 
-                                if(src.startsWith(urlPrefix)) src = src.replace(urlPrefix, '');
-                                return "<script>" +
-                                ` window.__vitejs_load_entry && window.__vitejs_load_entry('${src}', 'script');` +
-                                "</script>";
-                        }
-                    );
-                    // 移除所有 <link rel="modulepreload"> 标签（预加载脚本）
-                    html = html.replace(/<link\s*rel="modulepreload"\s*[^\>]*\s*href="([^"]+)"\s*\/?>/g, (match, href) => {
-                            if(!href || /^(http(s)?:)?\/\//i.test(href)) return match;
-                            console.log('replace modulepreload', href, urlPrefix);
+        //                         if(src.startsWith(urlPrefix)) src = src.replace(urlPrefix, '');
+        //                         return "<script>" +
+        //                         ` window.__vitejs_load_entry && window.__vitejs_load_entry('${src}', 'script');` +
+        //                         "</script>";
+        //                 }
+        //             );
+        //             // 移除所有 <link rel="modulepreload"> 标签（预加载脚本）
+        //             html = html.replace(/<link\s*rel="modulepreload"\s*[^\>]*\s*href="([^"]+)"\s*\/?>/g, (match, href) => {
+        //                     if(!href || /^(http(s)?:)?\/\//i.test(href)) return match;
+        //                     console.log('replace modulepreload', href, urlPrefix);
 
-                            if(href.startsWith(urlPrefix)) href = href.replace(urlPrefix, '');
-                            return "<script>" +
-                            ` window.__vitejs_load_entry && window.__vitejs_load_entry('${href}', 'modulepreload');` +
-                            "</script>";
-                        }
-                    );
-                    // 移除所有 <link rel="stylesheet"> 标签（如果不需要 Vite 处理的 CSS）
-                    html = html.replace(/<link\s*rel="stylesheet"\s*[^\>]*\s*href="([^"]+)"\s*\/?>/g, (match, href) => {
-                            if(!href || /^(http(s)?:)?\/\//i.test(href)) return match;
-                            console.log('replace stylesheet', href, urlPrefix);
+        //                     if(href.startsWith(urlPrefix)) href = href.replace(urlPrefix, '');
+        //                     return "<script>" +
+        //                     ` window.__vitejs_load_entry && window.__vitejs_load_entry('${href}', 'modulepreload');` +
+        //                     "</script>";
+        //                 }
+        //             );
+        //             // 移除所有 <link rel="stylesheet"> 标签（如果不需要 Vite 处理的 CSS）
+        //             html = html.replace(/<link\s*rel="stylesheet"\s*[^\>]*\s*href="([^"]+)"\s*\/?>/g, (match, href) => {
+        //                     if(!href || /^(http(s)?:)?\/\//i.test(href)) return match;
+        //                     console.log('replace stylesheet', href, urlPrefix);
 
-                            if(href.startsWith(urlPrefix)) href = href.replace(urlPrefix, '');
-                            return "<script>" +
-                            ` window.__vitejs_load_entry && window.__vitejs_load_entry('${href}', 'stylesheet');` +
-                            "</script>";
-                        }
-                    );
-                    html = html.replace(/<link\s*rel="icon"\s*[^\>]*\s*href="([^"]+)"\s*\/?>/g, (match, href) => {
-                            if(!href || /^(http(s)?:)?\/\//i.test(href)) return match;
-                            console.log('replace icon', href, urlPrefix);
+        //                     if(href.startsWith(urlPrefix)) href = href.replace(urlPrefix, '');
+        //                     return "<script>" +
+        //                     ` window.__vitejs_load_entry && window.__vitejs_load_entry('${href}', 'stylesheet');` +
+        //                     "</script>";
+        //                 }
+        //             );
+        //             html = html.replace(/<link\s*rel="icon"\s*[^\>]*\s*href="([^"]+)"\s*\/?>/g, (match, href) => {
+        //                     if(!href || /^(http(s)?:)?\/\//i.test(href)) return match;
+        //                     console.log('replace icon', href, urlPrefix);
                             
-                            if(href.startsWith(urlPrefix)) href = href.replace(urlPrefix, '');
-                            return "<script>" +
-                            ` window.__vitejs_load_entry && window.__vitejs_load_entry('${href}', 'icon');` +
-                            "</script>";
-                        }
-                    );
-                }
-                return html;
-            },
-        },
+        //                     if(href.startsWith(urlPrefix)) href = href.replace(urlPrefix, '');
+        //                     return "<script>" +
+        //                     ` window.__vitejs_load_entry && window.__vitejs_load_entry('${href}', 'icon');` +
+        //                     "</script>";
+        //                 }
+        //             );
+        //         }
+        //         return html;
+        //     },
+        // },
         {
             name: 'vite-plugin-spa-fallback-with-nunjucks',
             configureServer(server) {

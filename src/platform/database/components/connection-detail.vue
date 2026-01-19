@@ -258,7 +258,7 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue';
 import type { ConnectionEntity } from '@/typings/database';
-import { DatabaseService } from '@/service/database';
+import { DatabaseService, ConnectionService } from '@/service/database';
 import { modal } from '@/utils/modal';
 
 const props = defineProps<{
@@ -299,6 +299,7 @@ const newDatabase = ref({
 });
 
 const databaseService = new DatabaseService();
+const connectionService = new ConnectionService();
 
 
 // 生命周期
@@ -438,7 +439,7 @@ async function createDatabase() {
       Object.entries(newDatabase.value.options).filter(([_, value]) => value !== '')
     );
     
-    await databaseService.createDatabase(props.connection.id, newDatabase.value.name, options);
+    await connectionService.createDatabase(props.connection.id, newDatabase.value.name, options);
     
     modal.success('数据库创建成功');
     showCreateDatabase.value = false;
