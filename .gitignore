@@ -31,3 +31,4 @@ nw-cache/
 *.sln
 *.sw?
 server.pid
+data/error.sql

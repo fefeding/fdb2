@@ -126,8 +126,8 @@
       </div>
     </div>
 
-    <!-- 备份恢复模态框 -->
-    <div class="modal fade" :class="{ show: restoreModalVisible }" :style="{ display: restoreModalVisible ? 'block' : 'none' }">
+    <!-- 数据恢复模态框 -->
+    <div class="modal fade" :class="{ show: restoreModalVisible }" :style="{ display: restoreModalVisible ? 'block' : 'none', zIndex: 1055 }">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -135,16 +135,16 @@
             <button type="button" class="btn-close" @click="closeRestoreModal"></button>
           </div>
           <div class="modal-body">
+            <p>请选择要恢复的备份文件：</p>
             <div class="mb-3">
-              <label class="form-label">选择备份文件</label>
-              <input type="file" class="form-control" accept=".sql,.bak,.backup" @change="handleFileSelect">
+              <input type="file" class="form-control" @change="handleFileChange" accept=".sql,.bak">
             </div>
-            <div class="mb-3">
-              <label class="form-label">恢复选项</label>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" v-model="restoreOptions.dropExisting">
-                <label class="form-check-label">删除现有表</label>
-              </div>
+            <div v-if="selectedFile" class="alert alert-info">
+              已选择文件：{{ selectedFile.name }}
+            </div>
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" v-model="restoreOptions.dropExisting" id="dropExisting">
+              <label class="form-check-label" for="dropExisting">删除现有表</label>
             </div>
           </div>
           <div class="modal-footer">
@@ -157,10 +157,9 @@
         </div>
       </div>
     </div>
-    <div v-if="restoreModalVisible" class="modal-backdrop fade show" @click="closeRestoreModal"></div>
 
     <!-- 健康检查结果模态框 -->
-    <div class="modal fade" :class="{ show: healthModalVisible }" :style="{ display: healthModalVisible ? 'block' : 'none' }">
+    <div class="modal fade" :class="{ show: healthModalVisible }" :style="{ display: healthModalVisible ? 'block' : 'none', zIndex: 1055 }">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -181,7 +180,7 @@
                                  'bi bi-x-circle-fill text-danger'"></i>
                     {{ check.name }}
                   </div>
-                  <div class="health-message">{{ check.message }}</div>
+                  <div class="health-message text-wrap">{{ check.message }}</div>
                 </div>
               </div>
             </div>
@@ -192,7 +191,6 @@
         </div>
       </div>
     </div>
-    <div v-if="healthModalVisible" class="modal-backdrop fade show" @click="closeHealthModal"></div>
   </div>
 </template>
 

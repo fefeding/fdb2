@@ -9,12 +9,12 @@
                     </h5>
                     <button type="button" class="btn-close" aria-label="Close" @click="cancel"></button>
                 </div>
-                <div class="modal-body" v-if="modalShow">
+                <div class="modal-body text-wrap" v-if="modalShow">
                     <slot v-if="$slots.default"></slot>
                     <div v-else>
                         <div class="d-flex align-items-center mb-3">
                             <i v-if="typeIcon" :class="typeIcon" class="me-3 fs-1"></i>
-                            <div class="flex-grow-1">{{dynamicContent}}</div>
+                            <div class="flex-grow-1 text-wrap">{{dynamicContent}}</div>
                         </div>
                         <div v-if="shouldShowDetails()" class="error-details-toggle mt-2">
                             <button class="btn btn-sm btn-outline-secondary" @click="toggleDetails">
@@ -101,7 +101,7 @@
         },
         teleport: {
             type: [Boolean, String],
-            default: false // true表示传送到body，也可传具体选择器如"#app"
+            default: true // true表示传送到body，也可传具体选择器如"#app"
         },
     });
 
@@ -115,10 +115,33 @@
     const dynamicShowCancel = ref(false);
     const detailsExpanded = ref(false);
     const dynamicErrorDetails = ref<any>(null);
+    // 响应式最大宽度计算
+    const isMobile = ref(false);
+    
+    // 检测屏幕宽度
+    const checkScreenSize = () => {
+        isMobile.value = window.innerWidth < 768; // 768px是Bootstrap的md断点
+    };
+    
+    // 初始化检测
+    checkScreenSize();
+    
+    // 监听窗口大小变化
+    window.addEventListener('resize', checkScreenSize);
+    
+    // 组件卸载时移除事件监听
+    onUnmounted(() => {
+        window.removeEventListener('resize', checkScreenSize);
+    });
+    
     const dynamicStyle = computed(() => {        
         return {
-            width: 'max-content',
+            maxWidth: isMobile.value ? '100vw' : '80vw',
+            width: 'auto', // 移除固定宽度，使用自动宽度
             minWidth: '300px',
+            wordWrap: 'break-word',
+            overflowWrap: 'break-word',
+            zIndex: 1060, // 设置一个比backdrop(1055)更高的z-index
             ...(Object.keys(props.style).length ? props.style : {}),
             ...(dynamicOptions.value?.style || {}),
         };
@@ -289,6 +312,20 @@
         modalShow.value = true;
         isShowing.value = true;
         isHiding.value = false;
+        
+        // 延迟一下，确保backdrop已经被添加到DOM中
+        setTimeout(() => {
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop && modalContainer.value) {
+                // 将backdrop移动到与模态框相同的容器中
+                const parentContainer = modalContainer.value.parentElement;
+                if (parentContainer) {
+                    parentContainer.appendChild(backdrop);
+                }
+                // 设置backdrop的z-index为1050，比模态框的z-index(1060)低
+                backdrop.style.zIndex = '1050';
+            }
+        }, 100);
     }
     
     function ModalHide(){
@@ -307,9 +344,6 @@
         }
         
         console.log(`Attempting to show modal ${modalId}`);
-        
-        // 强制重置状态
-        resetModalState();
         
         const modalInstance = getModal();
         if (modalInstance) {

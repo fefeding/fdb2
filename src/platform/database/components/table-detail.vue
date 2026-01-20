@@ -460,12 +460,13 @@
               </div>
             </div>
             <div class="sql-editor">
-              <textarea 
-                class="form-control" 
-                rows="10" 
+              <VAceEditor 
+                v-model:value="sqlQuery" 
+                lang="sql" 
+                theme="chrome" 
+                :options="editorOptions"
                 placeholder="输入SQL查询语句..."
-                v-model="sqlQuery"
-              ></textarea>
+              ></VAceEditor>
             </div>
             
             <!-- SQL执行结果显示 -->
@@ -584,7 +585,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import { DatabaseService } from '@/service/database';
 import DataEditor from './data-editor.vue';
@@ -593,6 +594,12 @@ import TableEditor from './table-editor.vue';
 import { exportDataToCSV, exportDataToJSON, exportDataToExcel, formatFileName } from '../utils/export';
 import { modal } from '@/utils/modal';
 import { isNumericType, isBooleanType } from '@/utils/database-types';
+import { VAceEditor } from 'vue3-ace-editor';
+import 'ace-builds/src-noconflict/mode-sql';
+import 'ace-builds/src-noconflict/theme-chrome';
+import 'ace-builds/src-noconflict/ext-language_tools';
+import 'ace-builds/src-noconflict/ext-searchbox';
+import 'ace-builds/src-noconflict/keybinding-vscode';
 
 // Props
 const props = defineProps<{
@@ -639,6 +646,21 @@ const pageSize = ref(50);
 const sqlQuery = ref('');
 const jumpToPage = ref(1);
 const searchTimeout = ref<NodeJS.Timeout | null>(null);
+
+// SQL编辑器配置
+const editorOptions = ref({
+  enableBasicAutocompletion: true,
+  enableLiveAutocompletion: true,
+  enableSnippets: true,
+  fontSize: 14,
+  tabSize: 2,
+  wrap: true,
+  showPrintMargin: false,
+  showGutter: true,
+  highlightActiveLine: true,
+  autoScrollEditorIntoView: true,
+  scrollPastEnd: 0.5
+});
 
 // 数据编辑相关
 const showDataEditor = ref(false);
@@ -1600,15 +1622,18 @@ function handleExecuteSqlFromTool(sql: string) {
 .sql-editor {
   padding: 1rem;
   flex: 1;
+  height: 400px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.sql-editor textarea {
+.sql-editor .ace_editor {
   height: 100%;
+  width: 100%;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.875rem;
   line-height: 1.5;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
 }
 
 .table-striped tbody tr:nth-of-type(odd) {
