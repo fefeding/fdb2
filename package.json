@@ -1,5 +1,5 @@
 {
-  "name": "database-tool-web",
+  "name": "jdb",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -16,12 +16,15 @@
     "icon": "public/favicon.ico"
   },
   "scripts": {
+    "start": "pm2 start server.js --name jdb-server --disable-logs",
+    "restart": "pm2 restart jdb-server --disable-logs",
+    "stop": "pm2 stop jdb-server",
     "dev": "vite",
     "build": "npm run build-only",
     "preview": "vite preview",
     "test:unit": "vitest",
     "build-only": "vite build && npm run build-server",
-    "build-server": "tsc -p tsconfig.server.json",
+    "build-server": "tsc -p tsconfig.server.json && node rename-server-output.cjs",
     "type-check": "vue-tsc --noEmit --composite false",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "nw:dev": "node nw-dev.js",
@@ -34,9 +37,11 @@
     "@fefeding/utils": "^1.0.39",
     "axios": "^1.13.2",
     "dayjs": "^1.11.19",
+    "express": "^5.2.1",
     "lodash-es": "^4.17.21",
     "mysql2": "^3.15.3",
     "pg": "^8.16.3",
+    "pm2": "^6.0.14",
     "reflect-metadata": "^0.2.2",
     "sqlite3": "^5.1.7",
     "typeorm": "^0.3.27",
@@ -81,6 +86,9 @@
     "vue-router": "^4.6.3",
     "vue-tsc": "^3.1.5",
     "vuex": "^4.1.0"
+  },
+  "bin": {
+    "jdb": "bin/jdb.js"
   },
   "pkg": {
     "scripts": [

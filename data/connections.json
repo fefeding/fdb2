@@ -40,5 +40,19 @@
     "enabled": true,
     "createdAt": "2025-12-03T08:33:14.598Z",
     "updatedAt": "2025-12-03T08:33:14.598Z"
+  },
+  {
+    "id": "mipr23xidu6hzvy2yd1",
+    "name": "10.235.64.7",
+    "type": "mysql",
+    "host": "10.235.64.7",
+    "port": 3306,
+    "database": "",
+    "username": "jv_admin_query",
+    "password": "Jinteng_123",
+    "options": {},
+    "enabled": true,
+    "createdAt": "2025-12-03T08:33:14.598Z",
+    "updatedAt": "2025-12-03T08:33:14.598Z"
   }
 ]

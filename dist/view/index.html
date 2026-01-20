@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <base href="" />
+    <script type="text/template" id="__INITIAL_STATE__">
+    {{ data | dump | safe }}
+</script>
+<script type="text/template" id="__DEFAULTINITIAL_STATE__">
+  {"config":{"prefix":"","apiUrl":""},"sso":{"baseUrl":"","appId":2}}
+</script>
+<script>
+  function __get_templateJson(id) {
+    try { 
+        var tag = document.getElementById(id);
+        var obj = JSON.parse(tag.innerHTML);
+        return obj;
+    }
+    catch (e) {    
+      return null;
+    }
+  }
+  var __INITIAL_STATE__ = __get_templateJson('__INITIAL_STATE__');
+  if(!__INITIAL_STATE__) __INITIAL_STATE__ = __get_templateJson('__DEFAULTINITIAL_STATE__');
+  // 动态加载入口
+  function __vitejs_load_entry(url, type) {        
+        if(!url) return;
+        if(url.indexOf('/') !== 0) url = '/' + url;
+        var prefix = (window.__INITIAL_STATE__ && window.__INITIAL_STATE__.config && window.__INITIAL_STATE__.config.prefix) || '';
+        if(prefix && url.indexOf(prefix) !== 0) {
+          url = prefix + url;
+        }   
+        var nodeObj; 
+        switch(type) {
+          case 'script': {
+            // 检查是否已加载过
+            var existing = document.querySelector(`script[src="${url}"]`);   
+            if(existing) return; 
+            nodeObj = document.createElement('script');
+            nodeObj.src = url;
+            nodeObj.type = 'module';
+            break;
+          }
+          case 'stylesheet': 
+          case 'modulepreload':
+          case 'icon':  {
+            // 检查是否已加载过
+            var existing = document.querySelector(`link[href="${url}"]`);   
+            if(existing) return; 
+            nodeObj = document.createElement('link');
+            nodeObj.href = url;
+            nodeObj.rel = type;
+            break;
+          }
+        }  
+        if(!nodeObj) return;     
+        nodeObj.crossOrigin = 'crossorigin';
+        document.head.appendChild(nodeObj);
+      }
+</script>   
+    <link rel="icon" href="/public/favicon.png" />    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数据库管理</title>
+    <meta name="description" content="{{description}}">
+    <script>
+      window.addEventListener('vite:preloadError', function (event) {
+        console.error(event);
+      });
+    </script> 
+    <script type="module" crossorigin src="../public/index-Die5Mwun.js"></script>
+    <link rel="modulepreload" crossorigin href="../public/vue-C6-2BPF_.js">
+    <link rel="modulepreload" crossorigin href="../public/bootstrap-Bqj8QN9l.js">
+    <link rel="stylesheet" crossorigin href="../public/vue-Bwl0qRnw.css">
+    <link rel="stylesheet" crossorigin href="../public/bootstrap-CBuL1CjK.css">
+    <link rel="stylesheet" crossorigin href="../public/index-7M_6SGjo.css">
+  </head>
+  <body>
+    <div id="app" class="min-vh-100"></div>
+  </body>
+</html>

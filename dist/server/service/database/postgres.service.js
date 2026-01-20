@@ -1,0 +1,282 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PostgreSQLService = void 0;
+const base_service_1 = require("./base.service");
+/**
+ * PostgreSQL数据库服务实现
+ */
+class PostgreSQLService extends base_service_1.BaseDatabaseService {
+    getDatabaseType() {
+        return 'postgres';
+    }
+    /**
+     * 获取PostgreSQL数据库列表
+     */
+    async getDatabases(dataSource) {
+        const result = await dataSource.query(`
+      SELECT datname as name 
+      FROM pg_database 
+      WHERE datistemplate = false
+    `);
+        return result.map((row) => row.name);
+    }
+    /**
+     * 获取PostgreSQL表列表
+     */
+    async getTables(dataSource, database) {
+        const result = await dataSource.query(`
+      SELECT 
+        t.table_name as name,
+        'BASE TABLE' as type,
+        (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = t.table_name) as rowCount,
+        0 as dataSize,
+        0 as indexSize,
+        '' as collation,
+        obj_description(c.oid) as comment
+      FROM information_schema.tables t
+      LEFT JOIN pg_class c ON c.relname = t.table_name
+      WHERE t.table_schema NOT IN ('information_schema', 'pg_catalog')
+        AND t.table_type = 'BASE TABLE'
+    `);
+        return result.map((row) => ({
+            name: row.name,
+            type: row.type,
+            rowCount: row.rowcount || 0,
+            dataSize: row.datasize || 0,
+            indexSize: row.indexsize || 0,
+            collation: row.collation,
+            comment: row.comment
+        }));
+    }
+    /**
+     * 获取PostgreSQL列信息
+     */
+    async getColumns(dataSource, database, table) {
+        // 使用兼容的SQL查询，移除可能不兼容的精度字段
+        const result = await dataSource.query(`
+      SELECT 
+        column_name as name,
+        data_type as type,
+        is_nullable as nullable,
+        column_default as defaultValue,
+        character_maximum_length as length
+      FROM information_schema.columns 
+      WHERE table_name = $1
+    `, [table]);
+        // 获取主键信息
+        const primaryKeys = await this.getPrimaryKeys(dataSource, table);
+        // 从data_type中解析精度信息
+        return result.map((row) => {
+            const dataType = row.type || '';
+            let precision = undefined;
+            let scale = undefined;
+            // 解析DECIMAL(M,D)或NUMERIC(M,D)类型的精度
+            const decimalMatch = dataType.match(/(DECIMAL|NUMERIC)\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+            if (decimalMatch) {
+                precision = parseInt(decimalMatch[2]);
+                scale = parseInt(decimalMatch[3]);
+            }
+            return {
+                name: row.name,
+                type: row.type,
+                nullable: row.nullable === 'YES',
+                defaultValue: row.defaultValue,
+                isPrimary: primaryKeys.includes(row.name),
+                isAutoIncrement: row.defaultValue?.includes('nextval') || false,
+                length: row.length,
+                precision: precision,
+                scale: scale
+            };
+        });
+    }
+    /**
+     * 获取PostgreSQL索引信息
+     */
+    async getIndexes(dataSource, database, table) {
+        const result = await dataSource.query(`
+      SELECT 
+        indexname as name,
+        indexdef as definition
+      FROM pg_indexes 
+      WHERE tablename = $1
+    `, [table]);
+        return result.map((row) => ({
+            name: row.name,
+            type: 'INDEX',
+            columns: [], // 需要解析definition
+            unique: row.definition.toLowerCase().includes('unique')
+        }));
+    }
+    /**
+     * 获取PostgreSQL外键信息
+     */
+    async getForeignKeys(dataSource, database, table) {
+        const result = await dataSource.query(`
+      SELECT 
+        tc.constraint_name as name,
+        kcu.column_name as column,
+        ccu.table_name as referencedTable,
+        ccu.column_name as referencedColumn,
+        rc.delete_rule as onDelete
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kcu
+        ON tc.constraint_name = kcu.constraint_name
+      JOIN information_schema.constraint_column_usage ccu
+        ON ccu.constraint_name = tc.constraint_name
+      JOIN information_schema.referential_constraints rc
+        ON tc.constraint_name = rc.constraint_name
+      WHERE tc.constraint_type = 'FOREIGN KEY' 
+        AND tc.table_name = $1
+    `, [table]);
+        return result.map((row) => ({
+            name: row.name,
+            column: row.column,
+            referencedTable: row.referencedtable,
+            referencedColumn: row.referencedcolumn,
+            onDelete: row.ondelete,
+            onUpdate: 'NO ACTION'
+        }));
+    }
+    /**
+     * 获取PostgreSQL数据库大小
+     */
+    async getDatabaseSize(dataSource, database) {
+        const result = await dataSource.query(`
+      SELECT pg_database_size($1) as size
+    `, [database]);
+        return result[0]?.size || 0;
+    }
+    /**
+     * 获取主键信息
+     */
+    async getPrimaryKeys(dataSource, table) {
+        const result = await dataSource.query(`
+      SELECT column_name 
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kcu
+        ON tc.constraint_name = kcu.constraint_name
+      WHERE tc.constraint_type = 'PRIMARY KEY' 
+        AND tc.table_name = $1
+    `, [table]);
+        return result.map((row) => row.column_name);
+    }
+    /**
+     * PostgreSQL使用双引号标识符
+     */
+    quoteIdentifier(identifier) {
+        return `"${identifier}"`;
+    }
+    /**
+     * 获取PostgreSQL视图列表
+     */
+    async getViews(dataSource, database) {
+        const result = await dataSource.query(`
+      SELECT 
+        table_name as name,
+        COALESCE(obj_description(c.oid), '') as comment,
+        table_schema as schemaName
+      FROM information_schema.views v
+      LEFT JOIN pg_class c ON c.relname = v.table_name
+      WHERE v.table_schema NOT IN ('information_schema', 'pg_catalog')
+      ORDER BY v.table_name
+    `);
+        return result.map((row) => ({
+            name: row.name,
+            comment: row.comment || '',
+            schemaName: row.schemaname
+        }));
+    }
+    /**
+     * 获取PostgreSQL视图定义
+     */
+    async getViewDefinition(dataSource, database, viewName) {
+        const result = await dataSource.query(`
+      SELECT view_definition as definition
+      FROM information_schema.views 
+      WHERE table_name = $1
+        AND table_schema NOT IN ('information_schema', 'pg_catalog')
+    `, [viewName]);
+        return result[0]?.definition || '';
+    }
+    /**
+     * 获取PostgreSQL存储过程列表
+     */
+    async getProcedures(dataSource, database) {
+        const result = await dataSource.query(`
+      SELECT 
+        routine_name as name,
+        COALESCE(routine_comment, '') as comment,
+        routine_type as type,
+        COALESCE(data_type, '') as returnType,
+        external_language as language
+      FROM information_schema.routines 
+      WHERE routine_schema NOT IN ('information_schema', 'pg_catalog')
+      ORDER BY routine_name
+    `);
+        return result.map((row) => ({
+            name: row.name,
+            comment: row.comment || '',
+            type: row.type,
+            returnType: row.returntype || '',
+            language: row.language || 'SQL'
+        }));
+    }
+    /**
+     * 获取PostgreSQL存储过程定义
+     */
+    async getProcedureDefinition(dataSource, database, procedureName) {
+        const result = await dataSource.query(`
+      SELECT routine_definition as definition
+      FROM information_schema.routines 
+      WHERE routine_name = $1
+        AND routine_schema NOT IN ('information_schema', 'pg_catalog')
+    `, [procedureName]);
+        return result[0]?.definition || '';
+    }
+    /**
+     * 创建PostgreSQL数据库
+     */
+    async createDatabase(dataSource, databaseName, options) {
+        let sql = `CREATE DATABASE ${this.quoteIdentifier(databaseName)}`;
+        if (options) {
+            const clauses = [];
+            if (options.owner) {
+                clauses.push(`OWNER ${options.owner}`);
+            }
+            if (options.template) {
+                clauses.push(`TEMPLATE ${options.template}`);
+            }
+            if (options.encoding) {
+                clauses.push(`ENCODING '${options.encoding}'`);
+            }
+            if (options.lcCollate) {
+                clauses.push(`LC_COLLATE '${options.lcCollate}'`);
+            }
+            if (options.lcCtype) {
+                clauses.push(`LC_CTYPE '${options.lcCtype}'`);
+            }
+            if (options.tablespace) {
+                clauses.push(`TABLESPACE ${options.tablespace}`);
+            }
+            if (options.allowConnections !== undefined) {
+                clauses.push(`ALLOW_CONNECTIONS ${options.allowConnections}`);
+            }
+            if (options.connectionLimit !== undefined) {
+                clauses.push(`CONNECTION LIMIT ${options.connectionLimit}`);
+            }
+            if (clauses.length > 0) {
+                sql += ' ' + clauses.join(' ');
+            }
+        }
+        await dataSource.query(sql);
+    }
+    /**
+     * 删除PostgreSQL数据库
+     */
+    async dropDatabase(dataSource, databaseName) {
+        const sql = `DROP DATABASE ${this.quoteIdentifier(databaseName)}`;
+        await dataSource.query(sql);
+    }
+}
+exports.PostgreSQLService = PostgreSQLService;
+//# sourceMappingURL=postgres.service.js.map
