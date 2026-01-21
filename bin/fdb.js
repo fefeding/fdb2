@@ -34,7 +34,7 @@ switch (command) {
 
 // 启动项目
 function startProject() {
-  console.log('Starting JDB project...');
+  console.log('Starting FDB project...');
   
   // 命令和参数
   let cmd, args;
@@ -69,7 +69,7 @@ function startProject() {
 
 // 停止项目
 function stopProject() {
-  console.log('Stopping JDB project...');
+  console.log('Stopping FDB project...');
   
   // 命令和参数
   let cmd, args;
@@ -104,7 +104,7 @@ function stopProject() {
 
 // 重启项目
 function restartProject() {
-  console.log('Restarting JDB project...');
+  console.log('Restarting FDB project...');
   
   // 命令和参数
   let cmd, args;
@@ -139,11 +139,11 @@ function restartProject() {
 
 // 显示帮助信息
 function showHelp() {
-  console.log('JDB Database Tool');
+  console.log('FDB Database Tool');
   console.log('');
   console.log('Usage:');
-  console.log('  jdb start    Start the project');
-  console.log('  jdb stop     Stop the project');
-  console.log('  jdb restart  Restart the project');
+  console.log('  fdb start    Start the project');
+  console.log('  fdb stop     Stop the project');
+  console.log('  fdb restart  Restart the project');
   console.log('');
 }

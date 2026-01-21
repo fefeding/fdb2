@@ -1,5 +1,5 @@
 {
-  "name": "jdb",
+  "name": "fdb",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -16,9 +16,9 @@
     "icon": "public/favicon.ico"
   },
   "scripts": {
-    "start": "pm2 start server.js --name jdb-server --disable-logs",
-    "restart": "pm2 restart jdb-server --disable-logs",
-    "stop": "pm2 stop jdb-server",
+    "start": "pm2 start server.js --name fdb-server --disable-logs",
+    "restart": "pm2 restart fdb-server --disable-logs",
+    "stop": "pm2 stop fdb-server",
     "dev": "vite",
     "build": "npm run build-only",
     "preview": "vite preview",
@@ -90,7 +90,7 @@
     "vuex": "^4.1.0"
   },
   "bin": {
-    "jdb": "bin/jdb.js"
+    "fdb": "bin/fdb.js"
   },
   "pkg": {
     "scripts": [

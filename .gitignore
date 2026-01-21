@@ -32,3 +32,4 @@ nw-cache/
 *.sw?
 server.pid
 data/error.sql
+data/connections.json
