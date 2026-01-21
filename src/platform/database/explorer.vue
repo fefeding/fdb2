@@ -870,10 +870,10 @@ async function handleExecuteSql(sql: string) {
           success: true,
           data: [],
           columns: [],
-          affectedRows: result.affectedRows || 0,
-          insertId: result.insertId || null
+          affectedRows: result.data.affectedRows || 0,
+          insertId: result.data.insertId || null
         };
-        showToast('', `执行成功，影响行数: ${result.affectedRows || 0}`, 'success');
+        showToast('', `执行成功，影响行数: ${result.data.affectedRows || 0}`, 'success');
       }
     } else {
       sqlResult.value = {

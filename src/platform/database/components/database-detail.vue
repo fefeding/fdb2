@@ -87,6 +87,15 @@
             <i class="bi bi-code-slash"></i> 函数
           </button>
         </li>
+        <li class="nav-item">
+          <button 
+            class="nav-link" 
+            :class="{ active: activeTab === 'sql' }"
+            @click="activeTab = 'sql'"
+          >
+            <i class="bi bi-terminal"></i> 执行SQL
+          </button>
+        </li>
       </ul>
 
       <div class="tab-content">
@@ -253,6 +262,17 @@
             <p>函数功能开发中...</p>
           </div>
         </div>
+
+        <!-- SQL执行标签页 -->
+        <div v-show="activeTab === 'sql'" class="tab-panel">
+          <div class="sql-executor-section">
+            <SqlExecutor 
+              :connection="connection"
+              :database="database"
+              :height="600"
+            />
+          </div>
+        </div>
       </div>
     </div>
 
@@ -376,6 +396,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import TableEditor from './table-editor.vue';
+import SqlExecutor from './sql-executor.vue';
 import { modal } from '@/utils/modal';
 import { DatabaseService } from '@/service/database';
 
@@ -415,6 +436,8 @@ const editingProcedure = ref<any>(null);
 // 表编辑器相关
 const showTableEditor = ref(false);
 const editingTableName = ref('');
+
+
 
 // 计算属性
 const tables = computed(() => {
@@ -734,14 +757,23 @@ async function handleTableChange(result: any) {
         stack: error.stack
       });
     }
-}
+  }
 </script>
 
 <style scoped>
 .database-detail {
+  width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.sql-executor-section {
+  margin: 15px 0;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
 }
 
 .database-header {

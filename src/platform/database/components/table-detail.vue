@@ -416,13 +416,10 @@
                     <td><code>{{ fk.column }}</code></td>
                     <td><code>{{ fk.referencedTable }}</code></td>
                     <td><code>{{ fk.referencedColumn }}</code></td>
-                    <td><span class="badge bg-warning">{{ fk.onDelete }}</span></td>
-                    <td><span class="badge bg-info">{{ fk.onUpdate }}</span></td>
+                    <td>{{ fk.onDelete || '-' }}</td>
+                    <td>{{ fk.onUpdate || '-' }}</td>
                     <td>
                       <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary btn-sm" @click="editForeignKey(fk)">
-                          <i class="bi bi-pencil"></i>
-                        </button>
                         <button class="btn btn-outline-danger btn-sm" @click="deleteForeignKey(fk)">
                           <i class="bi bi-trash"></i>
                         </button>
@@ -438,112 +435,11 @@
         <!-- SQL标签页 -->
         <div v-show="activeTab === 'sql'" class="tab-panel">
           <div class="sql-section">
-            <div class="sql-toolbar">
-              <div class="toolbar-left">
-                <button class="btn btn-primary btn-sm" @click="executeSql">
-                  <i class="bi bi-play-fill"></i> 执行SQL
-                </button>
-                <button class="btn btn-outline-secondary btn-sm" @click="formatSql">
-                  <i class="bi bi-braces"></i> 格式化
-                </button>
-              </div>
-              <div class="toolbar-right">
-                <button class="btn btn-outline-primary btn-sm" @click="generateSelectSql">
-                  <i class="bi bi-file-text"></i> 生成SELECT
-                </button>
-                <button class="btn btn-outline-success btn-sm" @click="generateInsertSql">
-                  <i class="bi bi-plus-circle"></i> 生成INSERT
-                </button>
-                <button class="btn btn-outline-info btn-sm" @click="generateUpdateSql">
-                  <i class="bi bi-pencil-square"></i> 生成UPDATE
-                </button>
-              </div>
-            </div>
-            <div class="sql-editor">
-              <VAceEditor 
-                v-model:value="sqlQuery" 
-                lang="sql" 
-                theme="chrome" 
-                :options="editorOptions"
-                placeholder="输入SQL查询语句..."
-              ></VAceEditor>
-            </div>
-            
-            <!-- SQL执行结果显示 -->
-            <div v-if="props.sqlResult || props.sqlExecuting" class="sql-result">
-              <div class="result-header">
-                <h6 class="result-title">
-                  <div v-if="props.sqlExecuting" class="sql-loading">
-                    <div class="spinner-border spinner-border-sm me-2"></div>
-                    执行中...
-                  </div>
-                  <template v-else-if="props.sqlResult">
-                    <i class="bi bi-check-circle-fill text-success" v-if="props.sqlResult.success"></i>
-                    <i class="bi bi-x-circle-fill text-danger" v-else></i>
-                    执行结果
-                  </template>
-                </h6>
-                <div class="result-stats" v-if="props.sqlResult && props.sqlResult.success">
-                  <span class="badge bg-primary">影响行数: {{ props.sqlResult.affectedRows }}</span>
-                  <span class="badge bg-success ms-2" v-if="props.sqlResult.insertId">插入ID: {{ props.sqlResult.insertId }}</span>
-                </div>
-              </div>
-              
-              <!-- 执行中的loading状态 -->
-              <div v-if="props.sqlExecuting" class="sql-loading-state">
-                <div class="d-flex align-items-center justify-content-center py-4">
-                  <div class="spinner-border text-primary me-3"></div>
-                  <div>
-                    <div class="fw-bold">正在执行SQL...</div>
-                    <div class="text-muted small">请稍候，复杂查询可能需要较长时间</div>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- 查询结果表格 -->
-              <div v-else-if="props.sqlResult && props.sqlResult.success && props.sqlResult.data.length > 0" class="result-table">
-                <div class="result-info">
-                  查询到 {{ props.sqlResult.data.length }} 条记录
-                  <div class="result-actions ms-auto">
-                    <button class="btn btn-sm btn-outline-primary me-2" @click="exportSqlResult('csv')">
-                      <i class="bi bi-file-earmark-spreadsheet"></i> 导出CSV
-                    </button>
-                    <button class="btn btn-sm btn-outline-secondary" @click="exportSqlResult('json')">
-                      <i class="bi bi-file-earmark-code"></i> 导出JSON
-                    </button>
-                  </div>
-                </div>
-                <div class="table-responsive result-table-container">
-                  <table class="table table-sm table-striped">
-                    <thead class="table-dark sticky-top">
-                      <tr>
-                        <th v-for="column in props.sqlResult.columns" :key="column">
-                          {{ column }}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="(row, index) in props.sqlResult.data" :key="index">
-                        <td v-for="column in props.sqlResult.columns" :key="column">
-                          {{ formatCellValue(row[column]) }}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              
-              <!-- 错误结果显示 -->
-              <div v-else-if="props.sqlResult && !props.sqlResult.success" class="sql-error">
-                <div class="alert alert-danger">
-                  <h6 class="alert-heading">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    SQL执行失败
-                  </h6>
-                  <p class="mb-0">{{ props.sqlResult.error }}</p>
-                </div>
-              </div>
-            </div>
+            <SqlExecutor 
+              :connection="connection"
+              :database="database"
+              :height="600"
+            />
           </div>
         </div>
 
@@ -591,15 +487,11 @@ import { DatabaseService } from '@/service/database';
 import DataEditor from './data-editor.vue';
 import DbTools from './db-tools.vue';
 import TableEditor from './table-editor.vue';
+import SqlExecutor from './sql-executor.vue';
 import { exportDataToCSV, exportDataToJSON, exportDataToExcel, formatFileName } from '../utils/export';
 import { modal } from '@/utils/modal';
 import { isNumericType, isBooleanType } from '@/utils/database-types';
-import { VAceEditor } from 'vue3-ace-editor';
-import 'ace-builds/src-noconflict/mode-sql';
-import 'ace-builds/src-noconflict/theme-chrome';
-import 'ace-builds/src-noconflict/ext-language_tools';
-import 'ace-builds/src-noconflict/ext-searchbox';
-import 'ace-builds/src-noconflict/keybinding-vscode';
+
 
 // Props
 const props = defineProps<{
@@ -646,21 +538,6 @@ const pageSize = ref(50);
 const sqlQuery = ref('');
 const jumpToPage = ref(1);
 const searchTimeout = ref<NodeJS.Timeout | null>(null);
-
-// SQL编辑器配置
-const editorOptions = ref({
-  enableBasicAutocompletion: true,
-  enableLiveAutocompletion: true,
-  enableSnippets: true,
-  fontSize: 14,
-  tabSize: 2,
-  wrap: true,
-  showPrintMargin: false,
-  showGutter: true,
-  highlightActiveLine: true,
-  autoScrollEditorIntoView: true,
-  scrollPastEnd: 0.5
-});
 
 // 数据编辑相关
 const showDataEditor = ref(false);
@@ -846,189 +723,98 @@ async function performInsert(data: any) {
         values.push(formatValueForSQL(data[column.name], column.type));
       }
     });
-    
-    const sql = `INSERT INTO \`${props.table?.name}\` (${columns.join(', ')}) VALUES (${values.join(', ')})`;
-    
-    // 发送执行SQL请求
-    const result = await databaseService.executeQuery(
-      props.connection?.id || '',
-      sql,
-      props.database
-    );
-    
-    if (result.ret === 0) {
-      emit('refresh-data');
-      closeDataEditor();
-      await modal.success('数据插入成功');
-    } else {
-      await modal.error('数据插入失败');
+
+    if (columns.length === 0) {
+      await modal.error('没有可插入的字段');
+      return;
     }
+
+    const sql = `INSERT INTO ${props.table?.name} (${columns.join(', ')}) VALUES (${values.join(', ')})`;
+    
+    // 执行SQL
+    emit('execute-sql', sql);
   } catch (error) {
     console.error('插入数据失败:', error);
-    modal.error(error.msg || error.message || '插入失败', {
-      operation: 'INSERT',
-      table: props.table?.name,
-      stack: error.stack
-    });
+    modal.error('插入数据失败: ' + (error as any).message);
   }
 }
 
-function exportTable() {
-  exportTableData('csv');
-}
-
-function exportTableData(format: 'csv' | 'json' | 'excel') {
-  if (!props.tableData || props.tableData.length === 0) {
-    console.warn('没有数据可导出');
-    return;
-  }
-
-  // 生成表头映射
-  const headers: Record<string, string> = {};
-  tableColumns.value.forEach((col: any) => {
-    headers[col.name] = col.comment || col.name;
-  });
-
-  const filename = formatFileName(props.table?.name || 'data', format);
-
-  switch (format) {
-    case 'csv':
-      exportDataToCSV(props.tableData, headers, filename);
-      break;
-    case 'json':
-      exportDataToJSON(props.tableData, filename);
-      break;
-    case 'excel':
-      exportDataToExcel(props.tableData, headers, filename);
-      break;
-  }
-}
-
-function exportToCSV() {
-  const headers = tableColumns.value.map((col: any) => col.name).join(',');
-  const rows = props.tableData.map(row => {
-    return tableColumns.value.map((col: any) => {
-      const value = row[col.name];
-      if (value === null || value === undefined) {
-        return '';
-      }
-      // 处理CSV特殊字符
-      let strValue = String(value);
-      if (strValue.includes(',') || strValue.includes('"') || strValue.includes('\n')) {
-        strValue = `"${strValue.replace(/"/g, '""')}"`;
-      }
-      return strValue;
-    }).join(',');
-  }).join('\n');
-  
-  const csv = `${headers}\n${rows}`;
-  downloadFile(csv, `${props.table?.name}_data.csv`, 'text/csv;charset=utf-8');
-}
-
-function exportToJSON() {
-  const jsonData = props.tableData.map(row => {
-    const filteredRow: any = {};
-    tableColumns.value.forEach((col: any) => {
-      filteredRow[col.name] = row[col.name];
-    });
-    return filteredRow;
-  });
-  
-  const json = JSON.stringify(jsonData, null, 2);
-  downloadFile(json, `${props.table?.name}_data.json`, 'application/json;charset=utf-8');
-}
-
-function exportToExcel() {
-  // 简单的Excel导出实现（使用HTML表格格式）
-  const headers = tableColumns.value.map((col: any) => `<th>${col.name}</th>`).join('');
-  const rows = props.tableData.map(row => {
-    const cells = tableColumns.value.map((col: any) => {
-      const value = row[col.name];
-      return `<td>${value !== null && value !== undefined ? value : ''}</td>`;
-    }).join('');
-    return `<tr>${cells}</tr>`;
-  }).join('');
-  
-  const html = `
-    <table border="1">
-      <thead><tr>${headers}</tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
-  
-  const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${props.table?.name}_data.xls`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
-
-async function truncateTable() {
-  const result = await modal.confirm(`确定要清空表 "${props.table?.name}" 吗？此操作将删除所有数据且不可恢复。`);
-  if (result) {
-    try {
-      const response = await databaseService.truncateTable(
-        props.connection?.id || '',
-        props.database,
-        props.table?.name || ''
-      );
-      
-      if (response.ret === 0 && response.data?.success) {
-        await modal.success('表清空成功');
-        emit('refresh-data');
-      } else {
-        await modal.error('表清空失败');
-      }
-    } catch (error) {
-      console.error('清空表失败:', error);
-      modal.error(error.message || '清空表失败', {
-        operation: 'TRUNCATE_TABLE',
-        table: props.table?.name,
-        stack: error.stack
-      });
-    }
-  }
-}
-
-async function dropTable() {
-  const result = await modal.confirm(`确定要删除表 "${props.table?.name}" 吗？此操作将删除表结构和所有数据且不可恢复。`);
-  if (result) {
-    try {
-      const response = await databaseService.dropTable(
-        props.connection?.id || '',
-        props.database,
-        props.table?.name || ''
-      );
-      
-      if (response.ret === 0 && response.data?.success) {
-        await modal.success('表删除成功');
-        // 表删除后需要返回到数据库视图，这里通过事件通知父组件
-        emit('refresh-database');
-      } else {
-        await modal.error('表删除失败');
-      }
-    } catch (error) {
-      console.error('删除表失败:', error);
-      modal.error(error.msg || error.message || '删除表失败', {
-        operation: 'DROP_TABLE',
-        table: props.table?.name,
-        stack: error.stack
-      });
-    }
-  }
-}
-
-function editRow(row: any) {
+async function editRow(row: any) {
   editingRow.value = row;
   isEditMode.value = true;
   showDataEditor.value = true;
 }
 
-async function handleDataSubmit(result: any) {
+async function deleteRow(row: any) {
+  try {
+    const result = await modal.confirm('确定要删除这条记录吗？', {
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+      type: 'danger'
+    });
+
+    if (result) {
+      emit('delete-row', row);
+    }
+  } catch (error) {
+    console.error('删除行失败:', error);
+  }
+}
+
+async function truncateTable() {
+  try {
+    const result = await modal.confirm('确定要清空表中的所有数据吗？此操作不可恢复！', {
+      confirmButtonText: '确定清空',
+      cancelButtonText: '取消',
+      type: 'danger'
+    });
+
+    if (result) {
+      emit('truncate-table');
+    }
+  } catch (error) {
+    console.error('清空表失败:', error);
+  }
+}
+
+async function dropTable() {
+  try {
+    const result = await modal.confirm('确定要删除此表吗？此操作不可恢复！', {
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+      type: 'danger'
+    });
+
+    if (result) {
+      try {
+        const response = await databaseService.dropTable(
+          props.connection?.id || '',
+          props.database,
+          props.table?.name || ''
+        );
+        
+        if (response.ret === 0 && response.data?.success) {
+          await modal.success('表删除成功');
+          // 表删除后需要返回到数据库视图，这里通过事件通知父组件
+          emit('refresh-database');
+        } else {
+          await modal.error('表删除失败');
+        }
+      } catch (error) {
+        console.error('删除表失败:', error);
+        modal.error(error.msg || error.message || '删除表失败', {
+          operation: 'DROP_TABLE',
+          table: props.table?.name,
+          stack: error.stack
+        });
+      }
+    }
+  } catch (error) {
+    console.error('删除表失败:', error);
+  }
+}
+
+function handleDataSubmit(result: any) {
   try {
     
     if (result.ret === 0) {
@@ -1036,7 +822,7 @@ async function handleDataSubmit(result: any) {
       emit('refresh-data');
       closeDataEditor();
     } else {
-      await modal.error('操作失败');
+      modal.error('操作失败');
     }
   } catch (error) {
     console.error('处理数据提交失败:', error);
@@ -1094,340 +880,180 @@ async function handleTableStructureChange(result: any) {
   }
 }
 
-async function updateRow(originalRow: any, newData: any) {
-  try {
-    // 构建UPDATE语句
-    const setClauses = [];
-    const whereClauses = [];
-    
-    safeTableColumns.value.forEach((column: any) => {
-      if (column.isPrimary && column.isAutoIncrement) {
-        // 自增主键作为WHERE条件
-        whereClauses.push(`${column.name} = ${formatValueForSQL(originalRow[column.name], column.type)}`);
-      } else if (newData[column.name] !== originalRow[column.name]) {
-        // 需要更新的字段
-        setClauses.push(`${column.name} = ${formatValueForSQL(newData[column.name], column.type)}`);
-      }
-    });
-    
-    if (setClauses.length === 0) {
-      return; // 没有数据需要更新
+// 其他方法
+function editColumn(column: any) {
+  // 打开列编辑器
+  tableEditorMode.value = 'edit';
+  showTableEditor.value = true;
+}
+
+function deleteColumn(column: any) {
+  // 删除列
+  modal.confirm(`确定要删除列 ${column.name} 吗？`, {
+    confirmButtonText: '删除',
+    cancelButtonText: '取消',
+    type: 'danger'
+  }).then(result => {
+    if (result) {
+      // 这里可以调用API删除列
+      emit('refresh-structure');
     }
-    
-    const sql = `UPDATE \`${props.table?.name}\` SET ${setClauses.join(', ')} WHERE ${whereClauses.join(' AND ')}`;
-    
-    // 发送执行SQL请求
-    const result = await databaseService.executeQuery(
-      props.connection?.id || '',
-      sql,
-      props.database
-    );
-    
-    if (result.ret === 0) {
-      emit('refresh-data');
-      await modal.success('数据更新成功');
-    } else {
-      await modal.error('数据更新失败');
-    }
-  } catch (error) {
-    console.error('更新数据失败:', error);
-    
-    modal.error(error.msg || error.message || '数据更新失败', {
-      operation: 'UPDATE',
-      table: props.table?.name,
-      //sql: sql,
-      stack: error.stack
-    });
-  }
-}
-
-function formatValueForSQL(value: any, columnType: string): string {
-  if (value === null || value === undefined || value === '') {
-    return 'NULL';
-  }
-  
-  if (isNumberInput(columnType) || isBooleanInput(columnType)) {
-    return String(value);
-  }
-  
-  // 字符串类型需要加引号
-  return `'${String(value).replace(/'/g, "''")}'`;
-}
-
-function isNumberInput(type: string): boolean {
-  return isNumericType(type);
-}
-
-function isBooleanInput(type: string): boolean {
-  return isBooleanType(type);
-}
-
-async function deleteRow(row: any) {
-  const result = await modal.confirm(`确定要删除这条记录吗？`);
-  if (result) {
-    emit('delete-row', row);
-  }
-}
-
-async function editColumn(column: any) {
-  try {
-    // 构建ALTER TABLE语句来修改列
-    const sql = `ALTER TABLE \`${props.table?.name}\` MODIFY COLUMN \`${column.name}\` ${column.type} ${column.nullable ? 'NULL' : 'NOT NULL'} ${column.defaultValue ? `DEFAULT ${column.defaultValue}` : ''} ${column.comment ? `COMMENT '${column.comment}'` : ''}`;
-    
-    const result = await databaseService.executeQuery(
-      props.connection?.id || '',
-      sql,
-      props.database
-    );
-    
-      if (result.ret === 0) {
-        emit('refresh-structure');
-        await modal.success('列修改成功');
-      } else {
-        await modal.error('列修改失败');
-      }
-    } catch (error) {
-      console.error('修改列失败:', error);
-      
-      modal.error(error.msg || error.message || '列修改失败', {
-        operation: 'MODIFY_COLUMN',
-        table: props.table?.name,
-        column: column.name,
-        //sql: sql,
-        stack: error.stack
-      });
-    }
-}
-
-async function deleteColumn(column: any) {
-  const result = await modal.confirm(`确定要删除列 "${column.name}" 吗？此操作不可恢复。`);
-  if (result) {
-    try {
-      // 构建ALTER TABLE语句来删除列
-      const sql = `ALTER TABLE \`${props.table?.name}\` DROP COLUMN \`${column.name}\``;
-      
-      const result = await databaseService.executeQuery(
-        props.connection?.id || '',
-        sql,
-        props.database
-      );
-      
-      if (result.ret === 0) {
-        emit('refresh-structure');
-        await modal.success('列删除成功');
-      } else {
-        await modal.error('列删除失败');
-      }
-    } catch (error) {
-      console.error('删除列失败:', error);
-      
-      modal.error(error.msg || error.message || '列删除失败', {
-        operation: 'DELETE_COLUMN',
-        table: props.table?.name,
-        column: column.name,
-        //sql: sql,
-        stack: error.stack
-      });
-    }
-  }
+  });
 }
 
 function editIndex(index: any) {
+  // 编辑索引
   console.log('编辑索引:', index);
 }
 
-async function deleteIndex(index: any) {
-  const result = await modal.confirm(`确定要删除索引 "${index.name}" 吗？`);
-  if (result) {
-    console.log('删除索引:', index);
+function deleteIndex(index: any) {
+  // 删除索引
+  modal.confirm(`确定要删除索引 ${index.name} 吗？`, {
+    confirmButtonText: '删除',
+    cancelButtonText: '取消',
+    type: 'danger'
+  }).then(result => {
+    if (result) {
+      // 这里可以调用API删除索引
+      emit('refresh-structure');
+    }
+  });
+}
+
+function deleteForeignKey(fk: any) {
+  // 删除外键
+  modal.confirm(`确定要删除外键 ${fk.name} 吗？`, {
+    confirmButtonText: '删除',
+    cancelButtonText: '取消',
+    type: 'danger'
+  }).then(result => {
+    if (result) {
+      // 这里可以调用API删除外键
+      emit('refresh-structure');
+    }
+  });
+}
+
+function formatValueForSQL(value: any, type: string): string {
+  if (value === null || value === undefined) {
+    return 'NULL';
   }
-}
 
-function editForeignKey(fk: any) {
-// 样式添加到组件的 style 部分
-  console.log('编辑外键:', fk);
-}
-
-async function deleteForeignKey(fk: any) {
-  const result = await modal.confirm(`确定要删除外键 "${fk.name}" 吗？`);
-  if (result) {
-    console.log('删除外键:', fk);
+  if (typeof value === 'string') {
+    // 转义单引号
+    const escaped = value.replace(/'/g, "''");
+    return `'${escaped}'`;
   }
-}
 
-function executeSql() {
-  if (!sqlQuery.value.trim()) return;
-  emit('execute-sql', sqlQuery.value);
-}
-
-function formatSql() {
-  // TODO: 实现SQL格式化
-  console.log('格式化SQL');
-}
-
-function generateSelectSql() {
-  sqlQuery.value = `SELECT * FROM \`${props.table?.name}\` LIMIT 100;`;
-}
-
-function generateInsertSql() {
-  const columns = tableColumns.value.map((col: any) => col.name).join(', ');
-  sqlQuery.value = `INSERT INTO \`${props.table?.name}\` (${columns}) VALUES (...);`;
-}
-
-function generateUpdateSql() {
-  sqlQuery.value = `UPDATE \`${props.table?.name}\` SET ... WHERE ...;`;
-}
-
-function exportSqlResult(format: 'csv' | 'json') {
-  if (!props.sqlResult || !props.sqlResult.data || props.sqlResult.data.length === 0) {
-    return;
+  if (typeof value === 'boolean') {
+    return value ? '1' : '0';
   }
-  
-  if (format === 'csv') {
-    const headers = (props.sqlResult?.columns || []).join(',');
-    const rows = (props.sqlResult?.data || []).map(row => 
-      (props.sqlResult?.columns || []).map(col => {
-        const value = row[col];
-        // 处理CSV特殊字符
-        if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
-          return `"${value.replace(/"/g, '""')}"`;
-        }
-        return value;
-      }).join(',')
-    ).join('\n');
-    
-    const csv = `${headers}\n${rows}`;
-    downloadFile(csv, 'sql_result.csv', 'text/csv;charset=utf-8');
-  } else if (format === 'json') {
-    const json = JSON.stringify(props.sqlResult.data, null, 2);
-    downloadFile(json, 'sql_result.json', 'application/json;charset=utf-8');
-  }
-}
 
-function downloadFile(content: string, filename: string, mimeType: string) {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  return String(value);
 }
 
 function handleExecuteSqlFromTool(sql: string) {
   emit('execute-sql', sql);
 }
+
+function exportTableData(format: 'csv' | 'json' | 'excel') {
+  emit('export-table');
+}
 </script>
 
 <style scoped>
 .table-detail {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
 }
 
 .table-header {
-  padding: 1rem;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border-bottom: 1px solid #e2e8f0;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  padding: 15px 20px;
 }
 
 .table-header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 2rem;
 }
 
 .table-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 15px;
 }
 
 .table-icon {
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.5rem;
+  font-size: 32px;
+  color: #495057;
 }
 
-.table-meta h4 {
-  margin: 0 0 0.5rem 0;
-  color: #1e293b;
+.table-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.table-name {
+  margin: 0;
+  font-size: 1.25rem;
   font-weight: 600;
 }
 
 .table-breadcrumb {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
   font-size: 0.875rem;
-}
-
-.connection, .database {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
-  padding: 0.25rem 0.5rem;
-  border-radius: 8px;
-  font-weight: 500;
-}
-
-.table {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0;
-  font-weight: 500;
-}
-
-.table-breadcrumb i {
-  color: #94a3b8;
-  font-size: 0.75rem;
+  color: #6c757d;
 }
 
 .table-stats {
   display: flex;
-  gap: 2rem;
+  gap: 20px;
 }
 
 .stat-item {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
 .stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #495057;
 }
 
 .stat-label {
-  font-size: 0.875rem;
-  color: #64748b;
-  font-weight: 500;
+  font-size: 0.75rem;
+  color: #6c757d;
 }
 
 .table-toolbar {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: white;
+  padding: 10px 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
 }
 
-.toolbar-left, .toolbar-right {
+.toolbar-left {
   display: flex;
-  gap: 0.5rem;
+  gap: 10px;
+  align-items: center;
+}
+
+.toolbar-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .table-tabs {
@@ -1435,68 +1061,69 @@ function handleExecuteSqlFromTool(sql: string) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  min-height: 0;
 }
 
 .nav-tabs {
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 0 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+  background-color: #f8f9fa;
 }
 
-.nav-link {
+.nav-tabs .nav-link {
+  color: #495057;
   border: none;
-  background: transparent;
-  color: #64748b;
-  padding: 1rem 1.5rem;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  padding: 10px 15px;
   font-weight: 500;
-  transition: all 0.2s ease;
-  position: relative;
 }
 
-.nav-link:hover {
-  color: #667eea;
-  background: rgba(102, 126, 234, 0.1);
+.nav-tabs .nav-link:hover {
+  background-color: #e9ecef;
+  border-bottom-color: #adb5bd;
 }
 
-.nav-link.active {
-  color: #667eea;
-  background: white;
-  border-bottom: 2px solid #667eea;
+.nav-tabs .nav-link.active {
+  background-color: #fff;
+  border-bottom-color: #0d6efd;
+  color: #0d6efd;
 }
 
 .tab-content {
-  padding: 1rem;
-  overflow-y: auto;
   flex: 1;
-  min-height: 0;
+  overflow: auto;
+  padding: 20px;
+  background-color: #fff;
+}
+
+.tab-panel {
+  height: 100%;
+}
+
+.data-content {
+  height: 100%;
   display: flex;
   flex-direction: column;
 }
 
-.data-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  background: #f8fafc;
-  border-radius: 8px;
+.data-content.loading {
+  opacity: 0.7;
+  pointer-events: none;
 }
 
-.pagination-info {
-  color: #64748b;
-  font-size: 0.875rem;
+.table-responsive {
+  flex: 1;
+  overflow: auto;
 }
 
 .column-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  position: relative;
 }
 
 .column-key {
-  color: #f59e0b;
+  position: absolute;
+  top: -5px;
+  right: -15px;
+  color: #0d6efd;
   font-size: 0.75rem;
 }
 
@@ -1507,293 +1134,111 @@ function handleExecuteSqlFromTool(sql: string) {
   white-space: nowrap;
 }
 
-.table-responsive {
-  border: 1px solid #e2e8f0;
-  border-radius: 0;
-}
-
-.loading-state, .empty-state {
+.loading-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 200px;
-  color: #64748b;
-  text-align: center;
+  height: 300px;
+  gap: 15px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  gap: 15px;
+  color: #6c757d;
+}
+
+.empty-state i {
+  font-size: 48px;
+  opacity: 0.5;
 }
 
 .pagination-nav {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #f8fafc;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  margin-top: 20px;
+  border-top: 1px solid #dee2e6;
+  padding-top: 15px;
 }
 
 .pagination-container {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 10px;
 }
 
-.pagination-container .pagination-info {
-  color: #64748b;
+.pagination-info {
   font-size: 0.875rem;
-  font-weight: 500;
+  color: #6c757d;
 }
 
 .page-size-selector {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 5px;
 }
 
 .page-jump {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 5px;
 }
 
-.page-jump .form-control {
-  text-align: center;
-}
-
-.page-item.disabled .page-link {
-  color: #94a3b8;
-  pointer-events: none;
-  background-color: #f1f5f9;
-  border-color: #e2e8f0;
-}
-
-.page-item.active .page-link {
-  background-color: #667eea;
-  border-color: #667eea;
-  color: white;
-}
-
-.page-link {
-  color: #475569;
-  border: 1px solid #d1d5db;
-  transition: all 0.2s ease;
-}
-
-.page-link:hover {
-  background-color: #f1f5f9;
-  border-color: #9ca3af;
-}
-
-@media (max-width: 768px) {
-  .pagination-container {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
-  }
-  
-  .page-size-selector,
-  .page-jump {
-    justify-content: center;
-  }
-  
-  .pagination {
-    justify-content: center;
-  }
+.structure-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
 }
 
 .structure-table, .indexes-table, .relations-table {
-  overflow-x: auto;
+  overflow: auto;
+}
+
+.structure-table table, .indexes-table table, .relations-table table {
+  width: 100%;
 }
 
 .sql-section {
   height: 100%;
-  display: flex;
-  flex-direction: column;
 }
 
-.sql-toolbar {
-  padding: 1rem;
-  border-bottom: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.sql-editor {
-  padding: 1rem;
-  flex: 1;
-  height: 400px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.sql-editor .ace_editor {
-  height: 100%;
-  width: 100%;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 0.875rem;
-  line-height: 1.5;
-}
-
-.table-striped tbody tr:nth-of-type(odd) {
-  background-color: rgba(248, 250, 252, 0.5);
-}
-
-.table-hover tbody tr:hover {
-  background-color: rgba(102, 126, 234, 0.05);
-}
-
-/* SQL执行结果样式 */
-.sql-result {
-  margin-top: 1rem;
-  border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.result-header {
-  background: #f8f9fa;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e1e5e9;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.result-title {
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.result-stats {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.result-info {
-  padding: 0.5rem 1rem;
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: 0 0 8px 8px;
-}
-
-.result-table {
-  background: white;
-}
-
-.result-table .table {
-  margin-bottom: 0;
-  font-size: 0.875rem;
-}
-
-.result-table .table th {
-  background: #495057;
-  color: white;
-  font-weight: 600;
-  border-top: none;
-  font-size: 0.75rem;
-  padding: 0.5rem 0.75rem;
-}
-
-.result-table .table td {
-  padding: 0.5rem 0.75rem;
-  vertical-align: middle;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* SQL执行状态样式 */
-.sql-loading {
-  color: #007bff;
-  display: flex;
-  align-items: center;
-}
-
-.sql-loading-state {
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 0 0 8px 8px;
-}
-
-.sql-error {
-  margin-top: 1rem;
-}
-
-.sql-error .alert {
-  margin: 0;
-  border-radius: 0 0 8px 8px;
-}
-
-.result-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 1rem;
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: 0 0 8px 8px;
-}
-
-.result-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.result-table-container {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.result-table-container .table {
-  margin-bottom: 0;
-}
-
-.result-table-container .sticky-top {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: #495057;
-}
-
-/* 新的布局样式 */
-.tab-panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-}
-
-.data-content,
-.structure-content,
-.indexes-content,
-.relations-content {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.data-content.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.structure-table,
-.indexes-table,
-.relations-table {
-  overflow-x: auto;
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .table-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .table-stats {
+    width: 100%;
+    justify-content: space-around;
+  }
+  
+  .table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .toolbar-left, .toolbar-right {
+    justify-content: center;
+  }
+  
+  .pagination-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .pagination {
+    width: 100%;
+    justify-content: center;
+  }
 }
 </style>

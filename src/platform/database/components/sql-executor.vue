@@ -1,0 +1,498 @@
+<template>
+  <div class="sql-executor">
+    <div class="sql-toolbar">
+      <div class="toolbar-left">
+        <button class="btn btn-primary btn-sm" @click="executeSql" :disabled="loading">
+          <i class="bi bi-play-fill"></i> 执行SQL
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" @click="formatSql">
+          <i class="bi bi-braces"></i> 格式化
+        </button>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-outline-primary btn-sm" @click="clearSql">
+          <i class="bi bi-trash"></i> 清空
+        </button>
+      </div>
+    </div>
+    
+    <div class="sql-container" ref="containerRef" :style="{ height: height + 'px' }">
+      <!-- SQL编辑器 -->
+      <div class="sql-editor" :style="{ height: editorHeight + 'px' }">
+        <VAceEditor 
+          v-model:value="sqlQuery" 
+          lang="sql" 
+          theme="chrome" 
+          :options="editorOptions"
+          placeholder="输入SQL查询语句..."
+        ></VAceEditor>
+      </div>
+      
+      <!-- 可拖动分隔栏 -->
+      <div 
+        class="resizer" 
+        @mousedown="startResize"
+        :class="{ 'resizing': isResizing }"
+      ></div>
+      
+      <!-- SQL执行结果显示 -->
+      <div class="sql-result" :style="{ height: resultHeight + 'px' }">
+        <div v-if="loading || sqlResult" class="result-content">
+          <div class="result-header">
+            <h6 class="result-title">
+              <div v-if="loading" class="sql-loading">
+                <div class="spinner-border spinner-border-sm me-2"></div>
+                执行中...
+              </div>
+              <template v-else-if="sqlResult">
+                <i class="bi bi-check-circle-fill text-success" v-if="sqlResult.success"></i>
+                <i class="bi bi-x-circle-fill text-danger" v-else></i>
+                执行结果
+              </template>
+            </h6>
+            <div class="result-stats" v-if="sqlResult && sqlResult.success">
+              <span class="badge bg-primary">影响行数: {{ sqlResult.affectedRows }}</span>
+              <span class="badge bg-success ms-2" v-if="sqlResult.insertId">插入ID: {{ sqlResult.insertId }}</span>
+            </div>
+          </div>
+          
+          <!-- 执行中的loading状态 -->
+          <div v-if="loading" class="sql-loading-state">
+            <div class="d-flex align-items-center justify-content-center py-4">
+              <div class="spinner-border text-primary me-3"></div>
+              <div>
+                <div class="fw-bold">正在执行SQL...</div>
+                <div class="text-muted small">请稍候，复杂查询可能需要较长时间</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 查询结果表格 -->
+          <div v-else-if="sqlResult && sqlResult.success && sqlResult.data.length > 0" class="result-table">
+            <div class="result-info">
+              查询到 {{ sqlResult.data.length }} 条记录
+              <div class="result-actions ms-auto">
+                <button class="btn btn-sm btn-outline-primary me-2" @click="exportResult('csv')">
+                  <i class="bi bi-file-earmark-spreadsheet"></i> 导出CSV
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" @click="exportResult('json')">
+                  <i class="bi bi-file-earmark-code"></i> 导出JSON
+                </button>
+              </div>
+            </div>
+            <div class="table-responsive result-table-container">
+              <table class="table table-sm table-striped">
+                <thead class="table-dark sticky-top">
+                  <tr>
+                    <th v-for="column in sqlResult.columns" :key="column">
+                      {{ column }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(row, index) in sqlResult.data" :key="index">
+                    <td v-for="column in sqlResult.columns" :key="column">
+                      {{ formatCellValue(row[column]) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- 空结果显示 -->
+          <div v-else-if="sqlResult && sqlResult.success && sqlResult.data.length === 0" class="sql-empty-result">
+            <div class="alert alert-info">
+              <h6 class="alert-heading">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                执行成功
+              </h6>
+              <p class="mb-0">查询无结果</p>
+            </div>
+          </div>
+          
+          <!-- 错误结果显示 -->
+          <div v-else-if="sqlResult && !sqlResult.success" class="sql-error">
+            <div class="alert alert-danger">
+              <h6 class="alert-heading">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                SQL执行失败
+              </h6>
+              <p class="mb-0">{{ sqlResult.error }}</p>
+            </div>
+          </div>
+        </div>
+        <div v-else class="result-empty">
+          <i class="bi bi-database"></i>
+          <p>执行SQL以查看结果</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { ref, computed, onMounted, watch } from 'vue';
+import { VAceEditor } from 'vue3-ace-editor';
+import * as ace from 'ace-builds';
+import 'ace-builds/src-noconflict/mode-sql';
+import 'ace-builds/src-noconflict/theme-chrome';
+import 'ace-builds/src-noconflict/ext-language_tools';
+import 'ace-builds/src-noconflict/ext-searchbox';
+import 'ace-builds/src-noconflict/keybinding-vscode';
+import { DatabaseService } from '@/service/database';
+import { modal } from '@/utils/modal';
+import { exportDataToCSV, exportDataToJSON, formatFileName } from '../utils/export';
+
+// 设置Ace编辑器的basePath
+ace.config.set('basePath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.40.0/src-noconflict/');
+
+// Props
+const props = defineProps<{
+  connection: any;
+  database: string;
+  height?: number;
+}>();
+
+const databaseService = new DatabaseService();
+
+// 响应式数据
+const sqlQuery = ref('');
+const loading = ref(false);
+const sqlResult = ref<any>(null);
+const containerRef = ref<HTMLElement | null>(null);
+const isResizing = ref(false);
+const height = ref(props.height || 500);
+const editorHeight = ref(250);
+const resultHeight = computed(() => height.value - editorHeight.value - 8);
+
+// 编辑器配置
+const editorOptions = ref({
+  enableBasicAutocompletion: true,
+  enableLiveAutocompletion: true,
+  enableSnippets: true,
+  fontSize: 14,
+  tabSize: 2,
+  wrap: true,
+  showPrintMargin: false,
+  showGutter: true,
+  highlightActiveLine: true,
+  autoScrollEditorIntoView: true,
+  scrollPastEnd: 0.5
+});
+
+// 方法
+function startResize(event: MouseEvent) {
+  isResizing.value = true;
+  const startY = event.clientY;
+  const startHeight = editorHeight.value;
+  
+  function onMouseMove(e: MouseEvent) {
+    if (!isResizing.value) return;
+    const deltaY = e.clientY - startY;
+    const newHeight = startHeight + deltaY;
+    if (newHeight > 100 && newHeight < height.value - 100) {
+      editorHeight.value = newHeight;
+    }
+  }
+  
+  function onMouseUp() {
+    isResizing.value = false;
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+  
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+}
+
+async function executeSql() {
+  if (!sqlQuery.value.trim()) {
+    modal.warning('请输入SQL语句');
+    return;
+  }
+  
+  if (!props.connection) {
+    modal.error('请先选择数据库连接');
+    return;
+  }
+  
+  loading.value = true;
+  sqlResult.value = null;
+  
+  try {
+    const result = await databaseService.executeQuery(
+      props.connection.id,
+      sqlQuery.value,
+      props.database
+    );
+    
+    sqlResult.value = {
+      success: result.ret === 0,
+      data: result.data || [],
+      columns: result.columns || [],
+      affectedRows: result.affectedRows,
+      insertId: result.insertId,
+      error: result.msg
+    };
+  } catch (error: any) {
+    sqlResult.value = {
+      success: false,
+      error: error.message || '执行SQL时发生未知错误'
+    };
+  } finally {
+    loading.value = false;
+  }
+}
+
+function formatSql() {
+  // 简单的SQL格式化
+  let formatted = sqlQuery.value
+    .replace(/\bSELECT\b/gi, '\nSELECT ')
+    .replace(/\bFROM\b/gi, '\nFROM ')
+    .replace(/\bWHERE\b/gi, '\nWHERE ')
+    .replace(/\bJOIN\b/gi, '\nJOIN ')
+    .replace(/\bAND\b/gi, '\n  AND ')
+    .replace(/\bOR\b/gi, '\n  OR ')
+    .replace(/\bGROUP BY\b/gi, '\nGROUP BY ')
+    .replace(/\bORDER BY\b/gi, '\nORDER BY ');
+  
+  sqlQuery.value = formatted.trim();
+}
+
+function clearSql() {
+  sqlQuery.value = '';
+  sqlResult.value = null;
+}
+
+function formatCellValue(value: any): string {
+  if (value === null || value === undefined) return 'NULL';
+  
+  // 尝试检测并格式化 JSON 数据
+  let strValue = String(value);
+  if (typeof value === 'string') {
+    const trimmedValue = strValue.trim();
+    if ((trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) || 
+        (trimmedValue.startsWith('[') && trimmedValue.endsWith(']'))) {
+      try {
+        const parsed = JSON.parse(trimmedValue);
+        const formatted = JSON.stringify(parsed, null, 2);
+        if (formatted.length > 50) {
+          return formatted.substring(0, 50) + '...';
+        }
+        return formatted;
+      } catch (e) {
+        // 不是有效的 JSON，继续处理
+      }
+    }
+  } else if (typeof value === 'object') {
+    try {
+      const formatted = JSON.stringify(value, null, 2);
+      if (formatted.length > 50) {
+        return formatted.substring(0, 50) + '...';
+      }
+      return formatted;
+    } catch (e) {
+      // 格式化失败，继续处理
+    }
+  }
+  
+  // 对于普通字符串，限制显示长度
+  if (strValue.length > 50) return strValue.substring(0, 50) + '...';
+  
+  return strValue;
+}
+
+function exportResult(format: 'csv' | 'json') {
+  if (!sqlResult.value || !sqlResult.value.success || !sqlResult.value.data.length) {
+    return;
+  }
+  
+  const filename = formatFileName('sql_result', format);
+  
+  switch (format) {
+    case 'csv':
+      exportDataToCSV(sqlResult.value.data, sqlResult.value.columns, filename);
+      break;
+    case 'json':
+      exportDataToJSON(sqlResult.value.data, filename);
+      break;
+  }
+}
+
+// 生命周期
+onMounted(() => {
+  // 初始化高度
+  if (containerRef.value) {
+    height.value = containerRef.value.clientHeight || 500;
+    editorHeight.value = height.value / 2;
+  }
+});
+</script>
+
+<style scoped>
+.sql-executor {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.sql-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.toolbar-left,
+.toolbar-right {
+  display: flex;
+  gap: 8px;
+}
+
+.sql-container {
+  position: relative;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.sql-editor {
+  position: relative;
+  overflow: auto;
+}
+
+.resizer {
+  height: 8px;
+  background-color: #e9ecef;
+  cursor: ns-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resizer:hover {
+  background-color: #dee2e6;
+}
+
+.resizer::before {
+  content: '';
+  width: 40px;
+  height: 2px;
+  background-color: #adb5bd;
+  border-radius: 1px;
+}
+
+.resizer.resizing {
+  background-color: #dee2e6;
+}
+
+.resizer.resizing::before {
+  background-color: #6c757d;
+}
+
+.sql-result {
+  position: relative;
+  overflow: auto;
+  border-top: 1px solid #dee2e6;
+}
+
+.result-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.result-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sql-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.result-stats {
+  display: flex;
+  gap: 8px;
+}
+
+.result-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.result-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.result-table-container {
+  flex: 1;
+  overflow: auto;
+}
+
+.sql-loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  flex: 1;
+}
+
+.sql-empty-result,
+.sql-error {
+  padding: 12px;
+  flex: 1;
+}
+
+.result-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #6c757d;
+  gap: 10px;
+}
+
+.result-empty i {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .sql-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .toolbar-left,
+  .toolbar-right {
+    justify-content: center;
+  }
+}
+</style>
