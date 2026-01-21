@@ -19,13 +19,7 @@
     <div class="sql-container" ref="containerRef" :style="{ height: height + 'px' }">
       <!-- SQL编辑器 -->
       <div class="sql-editor" :style="{ height: editorHeight + 'px' }">
-        <VAceEditor 
-          v-model:value="sqlQuery" 
-          lang="sql" 
-          theme="chrome" 
-          :options="editorOptions"
-          placeholder="输入SQL查询语句..."
-        ></VAceEditor>
+        <div ref="editorRef" class="codemirror-editor"></div>
       </div>
       
       <!-- 可拖动分隔栏 -->
@@ -133,19 +127,17 @@
 
 <script lang="ts" setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { VAceEditor } from 'vue3-ace-editor';
-import * as ace from 'ace-builds';
-import 'ace-builds/src-noconflict/mode-sql';
-import 'ace-builds/src-noconflict/theme-chrome';
-import 'ace-builds/src-noconflict/ext-language_tools';
-import 'ace-builds/src-noconflict/ext-searchbox';
-import 'ace-builds/src-noconflict/keybinding-vscode';
+// 导入CodeMirror相关模块
+import { EditorState } from '@codemirror/state';
+import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightActiveLine, drawSelection, placeholder } from '@codemirror/view';
+import { defaultKeymap } from '@codemirror/commands';
+import { sql } from '@codemirror/lang-sql';
+import { oneDark } from '@codemirror/theme-one-dark';
+
+// 导入其他依赖
 import { DatabaseService } from '@/service/database';
 import { modal } from '@/utils/modal';
 import { exportDataToCSV, exportDataToJSON, formatFileName } from '../utils/export';
-
-// 设置Ace编辑器的basePath
-ace.config.set('basePath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.40.0/src-noconflict/');
 
 // Props
 const props = defineProps<{
@@ -161,25 +153,12 @@ const sqlQuery = ref('');
 const loading = ref(false);
 const sqlResult = ref<any>(null);
 const containerRef = ref<HTMLElement | null>(null);
+const editorRef = ref<HTMLElement | null>(null);
+const editor = ref<EditorView | null>(null);
 const isResizing = ref(false);
 const height = ref(props.height || 500);
 const editorHeight = ref(250);
 const resultHeight = computed(() => height.value - editorHeight.value - 8);
-
-// 编辑器配置
-const editorOptions = ref({
-  enableBasicAutocompletion: true,
-  enableLiveAutocompletion: true,
-  enableSnippets: true,
-  fontSize: 14,
-  tabSize: 2,
-  wrap: true,
-  showPrintMargin: false,
-  showGutter: true,
-  highlightActiveLine: true,
-  autoScrollEditorIntoView: true,
-  scrollPastEnd: 0.5
-});
 
 // 方法
 function startResize(event: MouseEvent) {
@@ -193,6 +172,8 @@ function startResize(event: MouseEvent) {
     const newHeight = startHeight + deltaY;
     if (newHeight > 100 && newHeight < height.value - 100) {
       editorHeight.value = newHeight;
+      // 调整编辑器大小
+      // CodeMirror 6 会自动处理大小变化
     }
   }
   
@@ -258,11 +239,31 @@ function formatSql() {
     .replace(/\bORDER BY\b/gi, '\nORDER BY ');
   
   sqlQuery.value = formatted.trim();
+  // 更新编辑器内容
+  if (editor.value) {
+    editor.value.dispatch({
+      changes: {
+        from: 0,
+        to: editor.value.state.doc.length,
+        insert: sqlQuery.value
+      }
+    });
+  }
 }
 
 function clearSql() {
   sqlQuery.value = '';
   sqlResult.value = null;
+  // 清空编辑器内容
+  if (editor.value) {
+    editor.value.dispatch({
+      changes: {
+        from: 0,
+        to: editor.value.state.doc.length,
+        insert: ''
+      }
+    });
+  }
 }
 
 function formatCellValue(value: any): string {
@@ -320,12 +321,81 @@ function exportResult(format: 'csv' | 'json') {
   }
 }
 
+// 初始化CodeMirror编辑器
+function initEditor() {
+  if (!editorRef.value) return;
+  
+  // 创建编辑器状态
+  const state = EditorState.create({
+    doc: sqlQuery.value,
+    extensions: [
+      lineNumbers(),
+      highlightActiveLineGutter(),
+      highlightActiveLine(),
+      drawSelection(),
+      placeholder('输入SQL查询语句...'),
+      sql(),
+      oneDark,
+      keymap.of(defaultKeymap),
+      EditorView.updateListener.of(update => {
+        if (update.docChanged) {
+          sqlQuery.value = update.state.doc.toString();
+        }
+      }),
+      EditorView.lineWrapping,
+      EditorView.theme({
+        '&': {
+          height: '100%',
+          fontSize: '14px',
+          fontFamily: 'Monaco, Menlo, Consolas, "Courier New", monospace'
+        },
+        '.cm-content': {
+          padding: '10px',
+          minHeight: '100%'
+        },
+        '.cm-gutters': {
+          backgroundColor: '#282c34',
+          color: '#abb2bf',
+          border: 'none'
+        },
+        '.cm-activeLineGutter': {
+          backgroundColor: '#282c34'
+        },
+        '.cm-activeLine': {
+          backgroundColor: 'rgba(255, 255, 255, 0.1)'
+        }
+      })
+    ]
+  });
+  
+  // 创建编辑器视图
+  editor.value = new EditorView({
+    state,
+    parent: editorRef.value
+  });
+}
+
 // 生命周期
 onMounted(() => {
   // 初始化高度
   if (containerRef.value) {
     height.value = containerRef.value.clientHeight || 500;
     editorHeight.value = height.value / 2;
+  }
+  
+  // 初始化编辑器
+  initEditor();
+});
+
+// 监听编辑器高度变化
+watch(editorHeight, () => {
+  // 调整编辑器大小
+  // CodeMirror 6 会自动处理大小变化，但我们可以通过触发更新来确保
+  if (editor.value) {
+    // 触发编辑器视图更新
+    editor.value.dispatch({
+      effects: []
+    });
   }
 });
 </script>
@@ -362,6 +432,11 @@ onMounted(() => {
 .sql-editor {
   position: relative;
   overflow: auto;
+}
+
+.codemirror-editor {
+  height: 100%;
+  width: 100%;
 }
 
 .resizer {

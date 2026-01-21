@@ -53,6 +53,30 @@ export declare abstract class BaseDatabaseService {
      */
     executeQuery(dataSource: DataSource, sql: string): Promise<any>;
     /**
+     * 批量执行SQL查询（支持多条语句）
+     */
+    executeBatchQuery(dataSource: DataSource, sqlStatements: string[], options?: {
+        batchSize?: number;
+        useTransaction?: boolean;
+        continueOnError?: boolean;
+    }): Promise<{
+        success: number;
+        failed: number;
+        errors: any[];
+    }>;
+    /**
+     * 执行文件中的SQL（支持大文件）
+     */
+    executeSqlFile(dataSource: DataSource, filePath: string, options?: {
+        batchSize?: number;
+        useTransaction?: boolean;
+        continueOnError?: boolean;
+    }): Promise<{
+        success: number;
+        failed: number;
+        errors: any[];
+    }>;
+    /**
      * 通用方法：测试连接
      */
     testConnection(dataSource: DataSource): Promise<boolean>;

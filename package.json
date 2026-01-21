@@ -33,10 +33,16 @@
     "build:server:pkg": "ncc build server/index.ts -o dist/server/pkg"
   },
   "dependencies": {
+    "@codemirror/commands": "^6.10.1",
+    "@codemirror/lang-sql": "^6.10.0",
+    "@codemirror/language": "^6.12.1",
+    "@codemirror/state": "^6.5.4",
+    "@codemirror/theme-one-dark": "^6.1.3",
+    "@codemirror/view": "^6.39.11",
     "@fefeding/common": "^1.0.58",
     "@fefeding/utils": "^1.0.39",
-    "ace-builds": "^1.43.5",
     "axios": "^1.13.2",
+    "codemirror": "^6.0.2",
     "dayjs": "^1.11.19",
     "express": "^5.2.1",
     "lodash-es": "^4.17.21",
@@ -46,7 +52,6 @@
     "reflect-metadata": "^0.2.2",
     "sqlite3": "^5.1.7",
     "typeorm": "^0.3.27",
-    "vue3-ace-editor": "^2.2.4",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

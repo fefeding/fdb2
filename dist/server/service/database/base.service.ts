@@ -129,8 +129,106 @@ export abstract class BaseDatabaseService {
    * 通用方法：执行SQL查询
    */
   async executeQuery(dataSource: DataSource, sql: string): Promise<any> {
+    try {
       const result = await dataSource.query(sql);
       return result;
+    } catch (error) {
+      console.error('SQL执行失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 批量执行SQL查询（支持多条语句）
+   */
+  async executeBatchQuery(
+    dataSource: DataSource, 
+    sqlStatements: string[], 
+    options?: {
+      batchSize?: number;  // 每批执行的语句数量
+      useTransaction?: boolean;  // 是否使用事务
+      continueOnError?: boolean;  // 错误时是否继续执行
+    }
+  ): Promise<{ success: number; failed: number; errors: any[] }> {
+    const {
+      batchSize = 100,
+      useTransaction = true,
+      continueOnError = false
+    } = options || {};
+
+    let success = 0;
+    let failed = 0;
+    const errors: any[] = [];
+
+    // 分批处理SQL语句
+    for (let i = 0; i < sqlStatements.length; i += batchSize) {
+      const batch = sqlStatements.slice(i, i + batchSize);
+      
+      try {
+        if (useTransaction) {
+          // 使用事务执行批次
+          await dataSource.transaction(async (manager) => {
+            for (const statement of batch) {
+              try {
+                await manager.query(statement);
+                success++;
+              } catch (error) {
+                failed++;
+                errors.push({ statement, error: error.message });
+                if (!continueOnError) {
+                  throw error;
+                }
+              }
+            }
+          });
+        } else {
+          // 非事务执行批次
+          for (const statement of batch) {
+            try {
+              await dataSource.query(statement);
+              success++;
+            } catch (error) {
+              failed++;
+              errors.push({ statement, error: error.message });
+              if (!continueOnError) {
+                throw error;
+              }
+            }
+          }
+        }
+      } catch (batchError) {
+        console.error(`批次执行失败 (${i}-${i + batchSize}):`, batchError);
+        if (!continueOnError) {
+          throw new Error(`批次执行失败: ${batchError.message}`);
+        }
+      }
+    }
+
+    return { success, failed, errors };
+  }
+
+  /**
+   * 执行文件中的SQL（支持大文件）
+   */
+  async executeSqlFile(
+    dataSource: DataSource, 
+    filePath: string, 
+    options?: {
+      batchSize?: number;
+      useTransaction?: boolean;
+      continueOnError?: boolean;
+    }
+  ): Promise<{ success: number; failed: number; errors: any[] }> {
+    const fs = require('fs');
+    const sqlContent = fs.readFileSync(filePath, 'utf8');
+    
+    // 分割SQL语句
+    const sqlStatements = sqlContent
+      .split(';')
+      .map(statement => statement.trim())
+      .filter(statement => statement.length > 0);
+    
+    return this.executeBatchQuery(dataSource, sqlStatements, options);
   }
 
   /**
