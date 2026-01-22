@@ -61,8 +61,8 @@
             </div>
           </div>
           
-          <!-- 查询结果表格 -->
-          <div v-else-if="sqlResult && sqlResult.success && sqlResult.data.length > 0" class="result-table">
+          <!-- 查询结果表格（数组类型） -->
+          <div v-else-if="sqlResult && sqlResult.success && Array.isArray(sqlResult.data) && sqlResult.data.length > 0" class="result-table">
             <div class="result-info">
               查询到 {{ sqlResult.data.length }} 条记录
               <div class="result-actions ms-auto">
@@ -94,14 +94,42 @@
             </div>
           </div>
           
+          <!-- 查询结果对象（对象类型） -->
+          <div v-else-if="sqlResult && sqlResult.success && typeof sqlResult.data === 'object' && sqlResult.data !== null && !Array.isArray(sqlResult.data)" class="result-object">
+            <div class="result-info">
+              执行结果
+              <div class="result-actions ms-auto">
+                <button class="btn btn-sm btn-outline-secondary" @click="exportResult('json')">
+                  <i class="bi bi-file-earmark-code"></i> 导出JSON
+                </button>
+              </div>
+            </div>
+            <div class="object-container">
+              <table class="table table-sm table-striped">
+                <thead class="table-dark">
+                  <tr>
+                    <th>属性</th>
+                    <th>值</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(value, key) in sqlResult.data" :key="key">
+                    <td class="font-weight-medium">{{ key }}</td>
+                    <td>{{ formatCellValue(value) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
           <!-- 空结果显示 -->
-          <div v-else-if="sqlResult && sqlResult.success && sqlResult.data.length === 0" class="sql-empty-result">
+          <div v-else-if="sqlResult && sqlResult.success && (sqlResult.data === null || sqlResult.data === undefined || (Array.isArray(sqlResult.data) && sqlResult.data.length === 0))" class="sql-empty-result">
             <div class="alert alert-info">
               <h6 class="alert-heading">
                 <i class="bi bi-info-circle-fill me-2"></i>
                 执行成功
               </h6>
-              <p class="mb-0">查询无结果</p>
+              <p class="mb-0">{{ sqlResult.data === null || sqlResult.data === undefined ? '无返回结果' : '查询无结果' }}</p>
             </div>
           </div>
           
@@ -208,13 +236,17 @@ async function executeSql() {
       props.database
     );
     
+    // 判断执行是否成功：ret === 0 表示成功，否则表示失败
+    // 即使 ret 不为 0 但有 msg，也认为是失败
+    const isSuccess = result.ret === 0;
+    
     sqlResult.value = {
-      success: result.ret === 0,
-      data: result.data || [],
-      columns: result.columns || [],
+      success: isSuccess,
+      data: isSuccess ? (result.data || []) : null,
+      columns: isSuccess ? (result.columns || []) : null,
       affectedRows: result.affectedRows,
       insertId: result.insertId,
-      error: result.msg
+      error: !isSuccess ? result.msg : null
     };
   } catch (error: any) {
     sqlResult.value = {
@@ -526,6 +558,32 @@ watch(editorHeight, () => {
 .result-table-container {
   flex: 1;
   overflow: auto;
+}
+
+/* 对象结果样式 */
+.result-object {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.object-container {
+  flex: 1;
+  overflow: auto;
+}
+
+.object-container table {
+  width: 100%;
+}
+
+.object-container th:first-child {
+  width: 20%;
+  min-width: 100px;
+}
+
+.object-container td:first-child {
+  font-weight: 500;
+  background-color: #f8f9fa;
 }
 
 .sql-loading-state {

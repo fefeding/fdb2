@@ -240,6 +240,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, computed, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { ConnectionService, DatabaseService } from '@/service/database';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import ConnectionEditor from '@/components/connection-editor/index.vue';
@@ -250,6 +251,7 @@ import DatabaseDetail from './components/database-detail.vue';
 import TableDetail from './components/table-detail.vue';
 import { modal } from '@/utils/modal';
 
+const route = useRoute();
 const connectionService = new ConnectionService();
 const databaseService = new DatabaseService();
 
@@ -316,8 +318,53 @@ const totalPages = computed(() => {
 
 // 生命周期
 onMounted(() => {
-  loadConnections();
+  loadConnections().then(() => {
+    // 加载连接后处理 URL query 参数
+    handleRouteQuery();
+  });
 });
+
+// 处理 URL query 参数
+function handleRouteQuery() {
+  const connectionId = route.query.connectionId as string;
+  const database = route.query.database as string;
+  
+  if (connectionId) {
+    // 查找对应的连接
+    const connection = connections.value.find(conn => conn.id === connectionId);
+    if (connection) {
+      // 选择连接
+      selectConnection(connection);
+      
+      // 展开连接节点并加载数据库
+      if (!expandedConnections.value.has(connectionId)) {
+        expandedConnections.value.add(connectionId);
+        loadDatabasesForConnection(connection);
+      }
+      
+      // 如果提供了数据库参数，选择数据库
+      if (database) {
+        setTimeout(() => {
+          selectDatabase(connection, database);
+          
+          // 展开数据库节点
+          const dbKey = `${connectionId}-${database}`;
+          if (!expandedDatabases.value.has(dbKey)) {
+            expandedDatabases.value.add(dbKey);
+            loadDatabaseInfo(connection, database);
+            loadTablesForDatabase(connection, database);
+          }
+        }, 100);
+      }
+    }
+  }
+}
+
+// 监听 route.query 变化
+watch(() => route.query, () => {
+  // 当 query 参数变化时，重新处理
+  handleRouteQuery();
+}, { deep: true });
 
 // 方法
 async function loadConnections() {

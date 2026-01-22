@@ -20,8 +20,11 @@
         </div>
       </div>
       <div class="connection-actions">
+        <button class="btn btn-sm btn-outline-info" @click="toggleDetails" title="查看/隐藏详细信息">
+          <i class="bi" :class="isDetailsExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i> 详情
+        </button>
         <button class="btn btn-sm btn-outline-primary" @click="testConnection">
-          <i class="bi bi-wifi"></i> 测试连接
+          <i class="bi bi-wifi"></i>
         </button>
         <button class="btn btn-sm btn-outline-secondary" @click="editConnection">
           <i class="bi bi-pencil"></i> 编辑
@@ -30,100 +33,64 @@
     </div>
 
     <!-- 连接详情卡片 -->
-    <div class="connection-cards">
-      <!-- 基本信息 -->
+    <div v-if="isDetailsExpanded" class="connection-details-panel">
       <div class="detail-card">
-        <div class="card-header">
-          <h6 class="card-title">
-            <i class="bi bi-info-circle"></i>
-            基本信息
-          </h6>
-        </div>
         <div class="card-body">
-          <div class="info-grid">
-            <div class="info-item">
-              <label class="info-label">主机地址</label>
-              <div class="info-value">{{ connection?.host }}</div>
-            </div>
-            <div class="info-item">
-              <label class="info-label">端口</label>
-              <div class="info-value">{{ connection?.port }}</div>
-            </div>
-            <div class="info-item">
-              <label class="info-label">用户名</label>
-              <div class="info-value">{{ connection?.username }}</div>
-            </div>
-            <div class="info-item">
-              <label class="info-label">数据库类型</label>
-              <div class="info-value">
-                <span class="db-type-badge" :class="getDbLogoClass(connection?.type)">
-                  {{ getDbTypeLabel(connection?.type) }}
-                </span>
+          <div class="row">
+            <!-- 基本信息 -->
+            <div class="col-md-6">
+              <h6 class="section-title">
+                <i class="bi bi-info-circle"></i>
+                基本信息
+              </h6>
+              <div class="info-grid">
+                <div class="info-item">
+                  <label class="info-label">主机地址</label>
+                  <div class="info-value">{{ connection?.host }}</div>
+                </div>
+                <div class="info-item">
+                  <label class="info-label">端口</label>
+                  <div class="info-value">{{ connection?.port }}</div>
+                </div>
+                <div class="info-item">
+                  <label class="info-label">用户名</label>
+                  <div class="info-value">{{ connection?.username }}</div>
+                </div>
+                <div class="info-item">
+                  <label class="info-label">数据库类型</label>
+                  <div class="info-value">
+                    <span class="db-type-badge" :class="getDbLogoClass(connection?.type)">
+                      {{ getDbTypeLabel(connection?.type) }}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 连接统计 -->
-      <div class="detail-card">
-        <div class="card-header">
-          <h6 class="card-title">
-            <i class="bi bi-bar-chart"></i>
-            连接统计
-          </h6>
-        </div>
-        <div class="card-body">
-          <div class="stats-grid">
-            <div class="stat-item">
-              <div class="stat-value">{{ connectionStats.databaseCount || 0 }}</div>
-              <div class="stat-label">数据库数量</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ connectionStats.tableCount || 0 }}</div>
-              <div class="stat-label">表总数</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ formatFileSize(connectionStats.totalSize || 0) }}</div>
-              <div class="stat-label">总大小</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ connectionStats.lastConnected || '从未' }}</div>
-              <div class="stat-label">最后连接</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 高级配置 -->
-      <div class="detail-card">
-        <div class="card-header">
-          <h6 class="card-title">
-            <i class="bi bi-gear"></i>
-            高级配置
-          </h6>
-        </div>
-        <div class="card-body">
-          <div class="info-grid">
-            <div class="info-item" v-if="connection?.options?.charset">
-              <label class="info-label">字符集</label>
-              <div class="info-value">{{ connection.options.charset }}</div>
-            </div>
-            <div class="info-item" v-if="connection?.options?.timeout">
-              <label class="info-label">连接超时</label>
-              <div class="info-value">{{ connection.options.timeout }}ms</div>
-            </div>
-            <div class="info-item" v-if="connection?.options?.ssl">
-              <label class="info-label">SSL连接</label>
-              <div class="info-value">
-                <span class="badge" :class="connection.options.ssl ? 'bg-success' : 'bg-secondary'">
-                  {{ connection.options.ssl ? '启用' : '禁用' }}
-                </span>
+            
+            <!-- 连接统计 -->
+            <div class="col-md-6">
+              <h6 class="section-title">
+                <i class="bi bi-bar-chart"></i>
+                连接统计
+              </h6>
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <div class="stat-value">{{ connectionStats.databaseCount || 0 }}</div>
+                  <div class="stat-label">数据库数量</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ connectionStats.tableCount || 0 }}</div>
+                  <div class="stat-label">表总数</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ formatFileSize(connectionStats.totalSize || 0) }}</div>
+                  <div class="stat-label">总大小</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ connectionStats.lastConnected || '从未' }}</div>
+                  <div class="stat-label">最后连接</div>
+                </div>
               </div>
-            </div>
-            <div class="info-item" v-if="connection?.options?.poolSize">
-              <label class="info-label">连接池大小</label>
-              <div class="info-value">{{ connection.options.poolSize }}</div>
             </div>
           </div>
         </div>
@@ -145,18 +112,18 @@
           </div>
           <div class="action-text">创建数据库</div>
         </button>
-        <button class="action-btn" @click="refreshAll">
+        <!-- <button class="action-btn" @click="refreshAll">
           <div class="action-icon">
             <i class="bi bi-arrow-clockwise"></i>
           </div>
           <div class="action-text">刷新所有数据库</div>
-        </button>
-        <button class="action-btn" @click="openSqlQuery">
+        </button> -->
+        <!-- <button class="action-btn" @click="activeTab = 'sql'">
           <div class="action-icon">
             <i class="bi bi-terminal"></i>
           </div>
           <div class="action-text">SQL查询</div>
-        </button>
+        </button> -->
         <button class="action-btn" @click="exportSchema">
           <div class="action-icon">
             <i class="bi bi-download"></i>
@@ -169,6 +136,120 @@
           </div>
           <div class="action-text">查看日志</div>
         </button>
+      </div>
+    </div>
+
+    <!-- 标签页 -->
+    <div class="connection-tabs">
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <button 
+            class="nav-link" 
+            :class="{ active: activeTab === 'databases' }"
+            @click="activeTab = 'databases'"
+          >
+            <i class="bi bi-database-fill"></i> 数据库列表
+            <span class="badge bg-primary ms-1">{{ databases.length }}</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button 
+            class="nav-link" 
+            :class="{ active: activeTab === 'sql' }"
+            @click="activeTab = 'sql'"
+          >
+            <i class="bi bi-terminal"></i> SQL查询
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content">
+        <!-- 数据库列表标签页 -->
+        <div v-show="activeTab === 'databases'" class="tab-panel">
+          <div class="databases-section">
+            <div class="section-header">
+              <div class="section-actions">
+                <div class="search-box">
+                  <input 
+                    type="text" 
+                    class="form-control form-control-sm" 
+                    v-model="searchKeyword" 
+                    placeholder="搜索数据库..."
+                    style="width: 200px;"
+                  >
+                </div>
+                <button class="btn btn-sm btn-outline-primary ms-2" @click="loadDatabases" :disabled="loadingDatabases">
+                  <span v-if="loadingDatabases" class="spinner-border spinner-border-sm me-1"></span>
+                  <i class="bi bi-arrow-clockwise"></i> 刷新
+                </button>
+              </div>
+            </div>
+            
+            <div class="databases-list">
+              <div v-if="loadingDatabases" class="loading-state">
+                <div class="spinner-border text-primary"></div>
+                <span>加载数据库列表...</span>
+              </div>
+              <div v-else-if="filteredDatabases.length === 0" class="empty-state">
+                <i class="bi bi-database"></i>
+                <p>{{ searchKeyword ? '没有找到匹配的数据库' : '暂无数据库' }}</p>
+                <button class="btn btn-sm btn-primary" @click="showCreateDatabaseModal">
+                  <i class="bi bi-plus"></i> 创建数据库
+                </button>
+              </div>
+              <div v-else class="databases-grid">
+                <div 
+                  v-for="database in filteredDatabases" 
+                  :key="database.name" 
+                  class="database-card"
+                  @click="openDatabase(database)"
+                >
+                  <div class="database-card-header">
+                    <div class="database-icon">
+                      <i class="bi bi-database"></i>
+                    </div>
+                    <div class="database-actions">
+                      <button class="btn btn-sm btn-outline-secondary" @click.stop="activeTab = 'sql'">
+                        <i class="bi bi-terminal"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="database-card-body">
+                    <h6 class="database-name">{{ database.name }}</h6>
+                    <div class="database-info">
+                      <span class="info-item" v-if="database.size">
+                        <i class="bi bi-hdd"></i> {{ formatFileSize(database.size) }}
+                      </span>
+                      <span class="info-item" v-if="database.tableCount">
+                        <i class="bi bi-table"></i> {{ database.tableCount }} 表
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SQL查询标签页 -->
+        <div v-show="activeTab === 'sql'" class="tab-panel">
+          <div class="sql-section">
+            <div class="sql-header">
+              <h6 class="sql-title">
+                <i class="bi bi-terminal"></i>
+                SQL查询
+              </h6>
+              <div class="sql-db-info" v-if="props.connection">
+                <span class="badge bg-info">{{ props.connection.name }}</span>
+              </div>
+            </div>
+            <SqlExecutor 
+              :connection="props.connection"
+              :database="''"
+              :height="600"
+            />
+          </div>
+        </div>
       </div>
     </div>
 
@@ -256,10 +337,14 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import type { ConnectionEntity } from '@/typings/database';
-import { DatabaseService, ConnectionService } from '@/service/database';
+import { useConnectionStore } from '@/stores/connection';
+import SqlExecutor from './sql-executor.vue';
 import { modal } from '@/utils/modal';
+
+const router = useRouter();
 
 const props = defineProps<{
   connection: ConnectionEntity | null;
@@ -273,7 +358,11 @@ const emit = defineEmits<{
   'export-schema': [connection: ConnectionEntity];
   'view-logs': [connection: ConnectionEntity];
   'create-database': [];
+  'open-database': [connection: ConnectionEntity, database: string];
 }>();
+
+// 初始化连接 store
+const connectionStore = useConnectionStore();
 
 // 连接统计信息
 const connectionStats = ref({
@@ -283,9 +372,19 @@ const connectionStats = ref({
   lastConnected: null as string | null
 });
 
+// 搜索关键字
+const searchKeyword = ref('');
+
+// 折叠状态
+const isDetailsExpanded = ref(false);
+
+// 切换折叠状态
+function toggleDetails() {
+  isDetailsExpanded.value = !isDetailsExpanded.value;
+}
+
 // 创建数据库相关
 const showCreateDatabase = ref(false);
-const creatingDatabase = ref(false);
 const newDatabase = ref({
   name: '',
   options: {
@@ -298,82 +397,65 @@ const newDatabase = ref({
   }
 });
 
-const databaseService = new DatabaseService();
-const connectionService = new ConnectionService();
+// 标签页状态
+const activeTab = ref('databases');
 
+// 监听连接变化
+watch(() => props.connection, (newConnection) => {
+  connectionStore.setCurrentConnection(newConnection);
+  if (newConnection) {
+    loadConnectionStats();
+  }
+}, { immediate: true });
 
 // 生命周期
 onMounted(() => {
-  loadConnectionStats();
+  if (props.connection) {
+    loadConnectionStats();
+  }
 });
+
+// 数据库列表（从 store 获取）
+const databases = computed(() => connectionStore.databases);
+const loadingDatabases = computed(() => connectionStore.loading.databases);
 
 // 方法
 function loadConnectionStats() {
   // 模拟加载连接统计信息
   connectionStats.value = {
-    databaseCount: 8,
-    tableCount: 156,
+    databaseCount: connectionStore.databaseCount,
+    tableCount: connectionStore.tableCount,
     totalSize: 1024 * 1024 * 512, // 512MB
     lastConnected: '2小时前'
   };
 }
 
-function getDbLogoClass(type?: string): string {
-  const classMap: Record<string, string> = {
-    mysql: 'db-mysql',
-    postgres: 'db-postgres',
-    sqlite: 'db-sqlite',
-    mssql: 'db-mssql',
-    oracle: 'db-oracle'
-  };
-  return classMap[type || ''] || 'db-default';
+function loadDatabases() {
+  if (props.connection) {
+    connectionStore.loadDatabases(props.connection);
+  }
 }
 
-function getDbLogoText(type?: string): string {
-  const textMap: Record<string, string> = {
-    mysql: 'M',
-    postgres: 'P',
-    sqlite: 'S',
-    mssql: 'MS',
-    oracle: 'O'
-  };
-  return textMap[type || ''] || 'DB';
+const filteredDatabases = computed(() => {
+  if (!searchKeyword.value) {
+    return databases.value;
+  }
+  const keyword = searchKeyword.value.toLowerCase();
+  return databases.value.filter(db => 
+    db.name.toLowerCase().includes(keyword)
+  );
+});
+
+function openDatabase(database: any) {
+  if (props.connection) {
+    emit('open-database', props.connection, database.name);
+    router.push({
+      path: `/database/explorer`,
+      query: { connectionId: props.connection.id, database: database.name }
+    });
+  }
 }
 
-function getDbTypeLabel(type?: string): string {
-  const labelMap: Record<string, string> = {
-    mysql: 'MySQL',
-    postgres: 'PostgreSQL',
-    sqlite: 'SQLite',
-    mssql: 'SQL Server',
-    oracle: 'Oracle'
-  };
-  return labelMap[type || ''] || type || '';
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-function formatTime(timestamp: Date): string {
-  const now = new Date();
-  const diff = now.getTime() - timestamp.getTime();
-  const minutes = Math.floor(diff / (1000 * 60));
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-  if (minutes < 1) return '刚刚';
-  if (minutes < 60) return `${minutes}分钟前`;
-  if (hours < 24) return `${hours}小时前`;
-  return `${days}天前`;
-}
-
-
-// 操作方法
 function testConnection() {
   if (props.connection) {
     emit('test-connection', props.connection);
@@ -392,12 +474,6 @@ function refreshAll() {
   }
 }
 
-function openSqlQuery() {
-  if (props.connection) {
-    emit('open-sql-query', props.connection);
-  }
-}
-
 function exportSchema() {
   if (props.connection) {
     emit('export-schema', props.connection);
@@ -411,375 +487,587 @@ function viewLogs() {
 }
 
 function showCreateDatabaseModal() {
-  newDatabase.value = {
-    name: '',
-    options: {
-      charset: '',
-      collation: '',
-      owner: '',
-      template: '',
-      encoding: '',
-      tablespace: ''
-    }
-  };
+  emit('create-database');
   showCreateDatabase.value = true;
 }
 
-async function createDatabase() {
-  if (!props.connection || !newDatabase.value.name.trim()) {
-    modal.error('请输入数据库名称');
+function createDatabase() {
+  if (!newDatabase.value.name) {
+    modal.warning('请输入数据库名称');
     return;
   }
-
-  try {
-    creatingDatabase.value = true;
-    
-    // 过滤掉空的选项
-    const options = Object.fromEntries(
-      Object.entries(newDatabase.value.options).filter(([_, value]) => value !== '')
-    );
-    
-    await connectionService.createDatabase(props.connection.id, newDatabase.value.name, options);
-    
+  
+  if (props.connection) {
+    // 这里应该调用创建数据库的API
     modal.success('数据库创建成功');
     showCreateDatabase.value = false;
-    
-    // 触发刷新
-    emit('create-database');
-    emit('refresh-all', props.connection);
-  } catch (error: any) {
-    console.error('创建数据库失败:', error);
-    modal.error(error.message || '创建数据库失败');
-  } finally {
-    creatingDatabase.value = false;
+    // 重置表单
+    newDatabase.value = {
+      name: '',
+      options: {
+        charset: '',
+        collation: '',
+        owner: '',
+        template: '',
+        encoding: '',
+        tablespace: ''
+      }
+    };
+    // 刷新数据库列表
+    loadDatabases();
   }
+}
+
+// 格式化文件大小
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// 获取数据库类型标签
+function getDbTypeLabel(type?: string): string {
+  const typeMap: Record<string, string> = {
+    mysql: 'MySQL',
+    postgres: 'PostgreSQL',
+    mssql: 'SQL Server',
+    sqlite: 'SQLite',
+    oracle: 'Oracle'
+  };
+  return typeMap[type || ''] || 'Unknown';
+}
+
+// 获取数据库Logo类名
+function getDbLogoClass(type?: string): string {
+  return `db-${type || ''}`;
+}
+
+// 获取数据库Logo文本
+function getDbLogoText(type?: string): string {
+  const textMap: Record<string, string> = {
+    mysql: 'MY',
+    postgres: 'PG',
+    mssql: 'MS',
+    sqlite: 'SQ',
+    oracle: 'OR'
+  };
+  return textMap[type || ''] || 'DB';
 }
 </script>
 
 <style scoped>
 .connection-detail {
-  height: 100%;
-  overflow-y: auto;
-  padding: 1.5rem;
+  padding: 20px;
 }
 
-/* 连接头部 */
 .connection-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
 }
 
 .connection-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 16px;
 }
 
 .connection-avatar {
-  flex-shrink: 0;
-}
-
-.db-logo {
   width: 60px;
   height: 60px;
-  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: 700;
-  font-size: 1.25rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  background-color: #e9ecef;
 }
 
-.connection-meta h4 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1e293b;
+.db-logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: #6c757d;
+}
+
+.db-mysql {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.db-postgres {
+  background-color: #336791;
+  color: white;
+}
+
+.db-mssql {
+  background-color: #0078d4;
+  color: white;
+}
+
+.db-sqlite {
+  background-color: #003B57;
+  color: white;
+}
+
+.db-oracle {
+  background-color: #F80000;
+  color: white;
+}
+
+.connection-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.connection-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
 }
 
 .connection-type-info {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 12px;
 }
 
 .db-type {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background-color: #e9ecef;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .connection-status {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.status-online {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-}
-
-.status-offline {
-  background: rgba(107, 114, 128, 0.1);
-  color: #6b7280;
+  gap: 6px;
+  font-size: 14px;
 }
 
 .status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: currentColor;
-  animation: pulse 2s ease-in-out infinite;
+  background-color: #6c757d;
+}
+
+.status-online .status-dot {
+  background-color: #28a745;
+}
+
+.status-offline .status-dot {
+  background-color: #dc3545;
 }
 
 .connection-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
-/* 详情卡片 */
-.connection-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+.connection-details-panel {
+  margin-bottom: 30px;
+  animation: fadeIn 0.3s ease;
+}
+
+.section-title {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #343a40;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .detail-card {
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .card-header {
-  padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-bottom: 1px solid #e2e8f0;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
 }
 
 .card-title {
   margin: 0;
-  font-size: 1rem;
+  font-size: 16px;
   font-weight: 600;
-  color: #1e293b;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .card-body {
-  padding: 1.5rem;
+  padding: 16px;
 }
 
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin-bottom: 10px;
 }
 
 .info-item {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 4px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.info-item:hover {
+  background-color: #e9ecef;
+  transform: translateY(-1px);
 }
 
 .info-label {
-  font-size: 0.875rem;
-  color: #64748b;
+  font-size: 12px;
   font-weight: 500;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .info-value {
-  font-size: 0.95rem;
-  color: #1e293b;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
+  color: #343a40;
 }
 
 .db-type-badge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 16px;
 }
 
 .stat-item {
   text-align: center;
-  padding: 1rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-radius: 8px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+  background-color: #e9ecef;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 0.25rem;
+  font-size: 20px;
+  font-weight: 600;
+  color: #343a40;
 }
 
 .stat-label {
-  font-size: 0.875rem;
-  color: #64748b;
-  font-weight: 500;
+  font-size: 12px;
+  color: #6c757d;
+  margin-top: 4px;
 }
 
-.badge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: white;
-}
-
-.bg-success {
-  background: #10b981;
-}
-
-.bg-secondary {
-  background: #6b7280;
-}
-
-/* 快速操作 */
 .quick-actions {
-  margin-bottom: 2rem;
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
 }
 
 .actions-header {
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
 }
 
 .actions-title {
   margin: 0;
-  font-size: 1rem;
+  font-size: 16px;
   font-weight: 600;
-  color: #1e293b;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .actions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
 }
 
 .action-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1.5rem;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  gap: 8px;
+  padding: 16px;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .action-btn:hover {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-color: #667eea;
+  background-color: #e9ecef;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .action-icon {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.25rem;
+  font-size: 24px;
+  color: #6c757d;
 }
 
 .action-text {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1e293b;
+  font-size: 14px;
+  font-weight: 500;
+  color: #343a40;
+}
+
+.connection-tabs {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.nav-tabs {
+  border-bottom: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+}
+
+.nav-link {
+  border: none;
+  border-radius: 0;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  background-color: #e9ecef;
+}
+
+.nav-link.active {
+  background-color: white;
+  border-bottom: 2px solid #0d6efd;
+}
+
+.tab-panel {
+  padding: 20px;
+}
+
+.databases-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.databases-list {
+  min-height: 300px;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
   text-align: center;
 }
 
+.empty-state i {
+  font-size: 48px;
+  color: #ced4da;
+}
 
-/* 数据库类型颜色 */
-.db-mysql { background: linear-gradient(135deg, #00758f 0%, #005a70 100%); }
-.db-postgres { background: linear-gradient(135deg, #336791 0%, #2a5278 100%); }
-.db-sqlite { background: linear-gradient(135deg, #003b57 0%, #002d42 100%); }
-.db-mssql { background: linear-gradient(135deg, #cc2927 0%, #a62220 100%); }
-.db-oracle { background: linear-gradient(135deg, #f80000 0%, #d40000 100%); }
-.db-default { background: linear-gradient(135deg, #64748b 0%, #475569 100%); }
+.empty-state p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 16px;
+}
 
-/* 动画 */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+.databases-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.database-card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.database-card:hover {
+  border-color: #0d6efd;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.database-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.database-icon {
+  font-size: 20px;
+  color: #6c757d;
+}
+
+.database-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.database-card-body {
+  padding: 16px;
+}
+
+.database-name {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #343a40;
+}
+
+.database-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.sql-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sql-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sql-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sql-db-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* 响应式设计 */
-@media (max-width: 1024px) {
-  .connection-cards {
-    grid-template-columns: 1fr;
-  }
-  
-  .actions-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media (max-width: 768px) {
-  .connection-detail {
-    padding: 1rem;
-  }
-  
   .connection-header {
     flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-  
-  .connection-info {
-    flex-direction: column;
-    text-align: center;
+    align-items: flex-start;
+    gap: 16px;
   }
   
   .connection-actions {
-    justify-content: center;
+    align-self: flex-end;
   }
   
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .actions-grid {
+  .connection-cards {
     grid-template-columns: 1fr;
   }
   
   .info-grid {
     grid-template-columns: 1fr;
   }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .databases-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .nav-link {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
 }
 </style>
+

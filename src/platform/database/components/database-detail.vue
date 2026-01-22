@@ -101,55 +101,66 @@
       <div class="tab-content">
         <!-- 数据表标签页 -->
         <div v-show="activeTab === 'tables'" class="tab-panel">
-          <div class="table-grid">
-            <div 
-              v-for="table in tables"
-              :key="table.name"
-              class="table-card"
-              @click="selectTable(table)"
-            >
-              <div class="card-header">
-                <div class="table-icon">
-                  <i class="bi bi-table"></i>
-                </div>
-                <div class="table-info">
-                  <div class="table-name">{{ table.name }}</div>
-                  <div class="table-engine">{{ table.engine || '-' }}</div>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="table-stats">
-                  <div class="stat">
-                    <span class="stat-label">行数</span>
-                    <span class="stat-value">{{ formatNumber(table.rowCount || 0) }}</span>
+          <!-- 加载状态 -->
+          <div v-if="loading" class="loading-state">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">加载中...</span>
+            </div>
+            <p>加载数据表中...</p>
+          </div>
+          
+          <!-- 表格列表 -->
+          <div v-else>
+            <div class="table-grid">
+              <div 
+                v-for="table in tables"
+                :key="table.name"
+                class="table-card"
+                @click="selectTable(table)"
+              >
+                <div class="card-header">
+                  <div class="table-icon">
+                    <i class="bi bi-table"></i>
                   </div>
-                  <div class="stat">
-                    <span class="stat-label">大小</span>
-                    <span class="stat-value">{{ formatSize(table.dataSize || 0) }}</span>
+                  <div class="table-info">
+                    <div class="table-name">{{ table.name }}</div>
+                    <div class="table-engine">{{ table.engine || '-' }}</div>
                   </div>
                 </div>
-                <div class="table-comment" v-if="table.comment">
-                  {{ table.comment }}
-                </div>
-                <div class="table-actions">
-                  <button class="btn btn-sm btn-outline-primary" @click.stop="editTable(table)">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <!-- <button class="btn btn-sm btn-outline-danger" @click.stop="deleteTable(table)">
-                    <i class="bi bi-trash"></i>
-                  </button> -->
+                <div class="card-body">
+                  <div class="table-stats">
+                    <div class="stat">
+                      <span class="stat-label">行数</span>
+                      <span class="stat-value">{{ formatNumber(table.rowCount || 0) }}</span>
+                    </div>
+                    <div class="stat">
+                      <span class="stat-label">大小</span>
+                      <span class="stat-value">{{ formatSize(table.dataSize || 0) }}</span>
+                    </div>
+                  </div>
+                  <div class="table-comment" v-if="table.comment">
+                    {{ table.comment }}
+                  </div>
+                  <div class="table-actions">
+                    <button class="btn btn-sm btn-outline-primary" @click.stop="editTable(table)">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <!-- <button class="btn btn-sm btn-outline-danger" @click.stop="deleteTable(table)">
+                      <i class="bi bi-trash"></i>
+                    </button> -->
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- 空状态 -->
-          <div v-if="!tables || tables.length === 0" class="empty-state">
-            <i class="bi bi-inbox"></i>
-            <p>暂无数据表</p>
-            <button class="btn btn-primary" @click="createNewTable">
-              <i class="bi bi-plus"></i> 创建表
-            </button>
+            <!-- 空状态 -->
+            <div v-if="!tables || tables.length === 0" class="empty-state">
+              <i class="bi bi-inbox"></i>
+              <p>暂无数据表</p>
+              <button class="btn btn-primary" @click="createNewTable">
+                <i class="bi bi-plus"></i> 创建表
+              </button>
+            </div>
           </div>
         </div>
 
@@ -774,6 +785,26 @@ async function handleTableChange(result: any) {
   background-color: #f8f9fa;
   border-radius: 4px;
   border: 1px solid #dee2e6;
+}
+
+/* 加载状态样式 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  color: #6c757d;
+}
+
+.loading-state .spinner-border {
+  margin-bottom: 15px;
+  color: #0d6efd;
+}
+
+.loading-state p {
+  margin: 0;
+  font-size: 14px;
 }
 
 .database-header {
