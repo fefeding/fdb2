@@ -342,6 +342,87 @@ class OracleService extends base_service_1.BaseDatabaseService {
         const sql = `DROP DATABASE ${this.quoteIdentifier(databaseName)}`;
         await dataSource.query(sql);
     }
+    /**
+     * 导出数据库架构
+     */
+    async exportSchema(dataSource, databaseName) {
+        // 获取所有表
+        const tables = await this.getTables(dataSource, databaseName);
+        let schemaSql = `-- 数据库架构导出 - ${databaseName}\n`;
+        schemaSql += `-- 导出时间: ${new Date().toISOString()}\n\n`;
+        // 为每个表生成CREATE TABLE语句
+        for (const table of tables) {
+            // 获取表结构
+            const columns = await this.getColumns(dataSource, databaseName, table.name);
+            const indexes = await this.getIndexes(dataSource, databaseName, table.name);
+            const foreignKeys = await this.getForeignKeys(dataSource, databaseName, table.name);
+            // 生成CREATE TABLE语句
+            schemaSql += `-- 表结构: ${table.name}\n`;
+            schemaSql += `CREATE TABLE IF NOT EXISTS ${this.quoteIdentifier(table.name)} (\n`;
+            // 添加列定义
+            const columnDefinitions = columns.map(column => {
+                let definition = `  ${this.quoteIdentifier(column.name)} ${column.type}`;
+                if (column.notNull)
+                    definition += ' NOT NULL';
+                if (column.defaultValue !== undefined) {
+                    definition += ` DEFAULT ${column.defaultValue === null ? 'NULL' : `'${column.defaultValue}'`}`;
+                }
+                if (column.autoIncrement)
+                    definition += ' GENERATED ALWAYS AS IDENTITY';
+                return definition;
+            });
+            // 添加主键
+            const primaryKeyColumns = columns.filter(column => column.isPrimary);
+            if (primaryKeyColumns.length > 0) {
+                const primaryKeyNames = primaryKeyColumns.map(column => this.quoteIdentifier(column.name)).join(', ');
+                columnDefinitions.push(`  PRIMARY KEY (${primaryKeyNames})`);
+            }
+            schemaSql += columnDefinitions.join(',\n');
+            schemaSql += '\n);\n\n';
+            // 添加索引
+            for (const index of indexes) {
+                if (index.isPrimary)
+                    continue; // 主键已经在表定义中添加
+                schemaSql += `-- 索引: ${index.name} on ${table.name}\n`;
+                schemaSql += `CREATE ${index.isUnique ? 'UNIQUE ' : ''}INDEX ${this.quoteIdentifier(index.name)} ON ${this.quoteIdentifier(table.name)} (${index.columns.map(col => this.quoteIdentifier(col)).join(', ')});\n`;
+            }
+            if (indexes.length > 0)
+                schemaSql += '\n';
+            // 添加外键
+            for (const foreignKey of foreignKeys) {
+                schemaSql += `-- 外键: ${foreignKey.name} on ${table.name}\n`;
+                schemaSql += `ALTER TABLE ${this.quoteIdentifier(table.name)} ADD CONSTRAINT ${this.quoteIdentifier(foreignKey.name)} FOREIGN KEY (${foreignKey.columns.map(col => this.quoteIdentifier(col)).join(', ')}) REFERENCES ${this.quoteIdentifier(foreignKey.referencedTable)} (${foreignKey.referencedColumns.map(col => this.quoteIdentifier(col)).join(', ')})${foreignKey.onDelete ? ` ON DELETE ${foreignKey.onDelete}` : ''}${foreignKey.onUpdate ? ` ON UPDATE ${foreignKey.onUpdate}` : ''};\n`;
+            }
+            if (foreignKeys.length > 0)
+                schemaSql += '\n';
+        }
+        return schemaSql;
+    }
+    /**
+     * 查看数据库日志
+     */
+    async viewLogs(dataSource, database, limit = 100) {
+        // Oracle查看日志
+        try {
+            // 尝试查看Oracle警告日志
+            const logs = await dataSource.query(`
+        SELECT * FROM v$diag_info WHERE name LIKE '%Log%'
+      `);
+            return logs;
+        }
+        catch (error) {
+            try {
+                // 尝试查看Oracle系统事件
+                const logs = await dataSource.query(`
+          SELECT * FROM v$event_name WHERE name LIKE '%log%' LIMIT ${limit}
+        `);
+                return logs;
+            }
+            catch (e) {
+                return [{ message: '无法获取Oracle日志，请确保具有适当的权限' }];
+            }
+        }
+    }
 }
 exports.OracleService = OracleService;
 //# sourceMappingURL=oracle.service.js.map

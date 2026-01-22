@@ -279,7 +279,6 @@
             <SqlExecutor 
               :connection="connection"
               :database="database"
-              :height="600"
             />
           </div>
         </div>
@@ -543,10 +542,7 @@ function editTable(table: TableEntity) {
 //   }
 // }
 
-function handleExecuteSQL(sql: string) {
-  // 这里应该发送SQL到后端执行
-  emit('execute-sql', sql);
-}
+
 
 function createNewTable() {
   editingTableName.value = '';
@@ -794,6 +790,8 @@ function handleExecuteSQL(sql: string) {
   background-color: #f8f9fa;
   border-radius: 4px;
   border: 1px solid #dee2e6;
+  flex: 1;
+  display: flex;
 }
 
 /* 加载状态样式 */
@@ -903,6 +901,8 @@ function handleExecuteSQL(sql: string) {
 .database-tabs {
   flex: 1;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .nav-tabs {
@@ -935,6 +935,15 @@ function handleExecuteSQL(sql: string) {
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-panel {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .table-grid {

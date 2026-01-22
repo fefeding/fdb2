@@ -429,7 +429,6 @@
             <SqlExecutor 
               :connection="connection"
               :database="database"
-              :height="600"
             />
           </div>
         </div>

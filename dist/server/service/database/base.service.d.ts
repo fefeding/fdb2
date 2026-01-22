@@ -109,6 +109,14 @@ export declare abstract class BaseDatabaseService {
      */
     getProcedureDefinition(dataSource: DataSource, database: string, procedureName: string): Promise<string>;
     /**
+     * 导出数据库架构 - 子类实现
+     */
+    abstract exportSchema(dataSource: DataSource, database: string): Promise<string>;
+    /**
+     * 查看数据库日志 - 子类实现（如果支持）
+     */
+    abstract viewLogs(dataSource: DataSource, database?: string, limit?: number): Promise<any[]>;
+    /**
      * 创建数据库 - 子类实现（如果支持）
      */
     createDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<void>;
@@ -116,5 +124,13 @@ export declare abstract class BaseDatabaseService {
      * 删除数据库 - 子类实现（如果支持）
      */
     dropDatabase(dataSource: DataSource, databaseName: string): Promise<void>;
+    /**
+     * 备份数据库 - 子类实现（如果支持）
+     */
+    backupDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<string>;
+    /**
+     * 恢复数据库 - 子类实现（如果支持）
+     */
+    restoreDatabase(dataSource: DataSource, databaseName: string, filePath: string, options?: any): Promise<void>;
 }
 //# sourceMappingURL=base.service.d.ts.map

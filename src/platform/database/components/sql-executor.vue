@@ -16,9 +16,9 @@
       </div>
     </div>
     
-    <div class="sql-container" ref="containerRef" :style="{ height: height + 'px' }">
+    <div class="sql-container" ref="containerRef">
       <!-- SQL编辑器 -->
-      <div class="sql-editor" :style="{ height: editorHeight + 'px' }">
+      <div class="sql-editor">
         <div ref="editorRef" class="codemirror-editor"></div>
       </div>
       
@@ -30,8 +30,8 @@
       ></div>
       
       <!-- SQL执行结果显示 -->
-      <div class="sql-result" :style="{ height: resultHeight + 'px' }">
-        <div v-if="loading || sqlResult" class="result-content">
+      <div class="sql-result">
+        <div class="result-content">
           <div class="result-header">
             <h6 class="result-title">
               <div v-if="loading" class="sql-loading">
@@ -43,10 +43,17 @@
                 <i class="bi bi-x-circle-fill text-danger" v-else></i>
                 执行结果
               </template>
+              <template v-else>
+                执行结果
+              </template>
             </h6>
-            <div class="result-stats" v-if="sqlResult && sqlResult.success">
-              <span class="badge bg-primary">影响行数: {{ sqlResult.affectedRows }}</span>
-              <span class="badge bg-success ms-2" v-if="sqlResult.insertId">插入ID: {{ sqlResult.insertId }}</span>
+            <div class="result-actions" v-if="sqlResult && !loading">
+              <button class="btn btn-sm btn-outline-secondary me-2" @click="formatJsonResult">
+                <i class="bi bi-braces"></i> 格式化
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" @click="exportResult('json')">
+                <i class="bi bi-file-earmark-code"></i> 导出JSON
+              </button>
             </div>
           </div>
           
@@ -61,92 +68,10 @@
             </div>
           </div>
           
-          <!-- 查询结果表格（数组类型） -->
-          <div v-else-if="sqlResult && sqlResult.success && Array.isArray(sqlResult.data) && sqlResult.data.length > 0" class="result-table">
-            <div class="result-info">
-              查询到 {{ sqlResult.data.length }} 条记录
-              <div class="result-actions ms-auto">
-                <button class="btn btn-sm btn-outline-primary me-2" @click="exportResult('csv')">
-                  <i class="bi bi-file-earmark-spreadsheet"></i> 导出CSV
-                </button>
-                <button class="btn btn-sm btn-outline-secondary" @click="exportResult('json')">
-                  <i class="bi bi-file-earmark-code"></i> 导出JSON
-                </button>
-              </div>
-            </div>
-            <div class="table-responsive result-table-container">
-              <table class="table table-sm table-striped">
-                <thead class="table-dark sticky-top">
-                  <tr>
-                    <th v-for="column in sqlResult.columns" :key="column">
-                      {{ column }}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(row, index) in sqlResult.data" :key="index">
-                    <td v-for="column in sqlResult.columns" :key="column">
-                      {{ formatCellValue(row[column]) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          <!-- JSON结果显示 -->
+          <div class="json-result">
+            <div ref="resultEditorRef" class="codemirror-editor"></div>
           </div>
-          
-          <!-- 查询结果对象（对象类型） -->
-          <div v-else-if="sqlResult && sqlResult.success && typeof sqlResult.data === 'object' && sqlResult.data !== null && !Array.isArray(sqlResult.data)" class="result-object">
-            <div class="result-info">
-              执行结果
-              <div class="result-actions ms-auto">
-                <button class="btn btn-sm btn-outline-secondary" @click="exportResult('json')">
-                  <i class="bi bi-file-earmark-code"></i> 导出JSON
-                </button>
-              </div>
-            </div>
-            <div class="object-container">
-              <table class="table table-sm table-striped">
-                <thead class="table-dark">
-                  <tr>
-                    <th>属性</th>
-                    <th>值</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(value, key) in sqlResult.data" :key="key">
-                    <td class="font-weight-medium">{{ key }}</td>
-                    <td>{{ formatCellValue(value) }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          
-          <!-- 空结果显示 -->
-          <div v-else-if="sqlResult && sqlResult.success && (sqlResult.data === null || sqlResult.data === undefined || (Array.isArray(sqlResult.data) && sqlResult.data.length === 0))" class="sql-empty-result">
-            <div class="alert alert-info">
-              <h6 class="alert-heading">
-                <i class="bi bi-info-circle-fill me-2"></i>
-                执行成功
-              </h6>
-              <p class="mb-0">{{ sqlResult.data === null || sqlResult.data === undefined ? '无返回结果' : '查询无结果' }}</p>
-            </div>
-          </div>
-          
-          <!-- 错误结果显示 -->
-          <div v-else-if="sqlResult && !sqlResult.success" class="sql-error">
-            <div class="alert alert-danger">
-              <h6 class="alert-heading">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                SQL执行失败
-              </h6>
-              <p class="mb-0">{{ sqlResult.error }}</p>
-            </div>
-          </div>
-        </div>
-        <div v-else class="result-empty">
-          <i class="bi bi-database"></i>
-          <p>执行SQL以查看结果</p>
         </div>
       </div>
     </div>
@@ -160,7 +85,9 @@ import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightActiveLine, drawSelection, placeholder } from '@codemirror/view';
 import { defaultKeymap } from '@codemirror/commands';
 import { sql } from '@codemirror/lang-sql';
+import { json } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark';
+import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 
 // 导入其他依赖
 import { DatabaseService } from '@/service/database';
@@ -182,26 +109,35 @@ const loading = ref(false);
 const sqlResult = ref<any>(null);
 const containerRef = ref<HTMLElement | null>(null);
 const editorRef = ref<HTMLElement | null>(null);
+const resultEditorRef = ref<HTMLElement | null>(null);
 const editor = ref<EditorView | null>(null);
+const resultEditor = ref<EditorView | null>(null);
 const isResizing = ref(false);
-const height = ref(props.height || 500);
-const editorHeight = ref(250);
+const height = ref(props.height || 0);
+const editorHeight = ref(0);
 const resultHeight = computed(() => height.value - editorHeight.value - 8);
 
 // 方法
 function startResize(event: MouseEvent) {
   isResizing.value = true;
   const startY = event.clientY;
-  const startHeight = editorHeight.value;
+  const container = containerRef.value;
+  if (!container) return;
+  
+  const containerHeight = container.clientHeight;
+  const startEditorHeight = container.querySelector('.sql-editor')?.clientHeight || 0;
   
   function onMouseMove(e: MouseEvent) {
-    if (!isResizing.value) return;
+    if (!isResizing.value || !container) return;
     const deltaY = e.clientY - startY;
-    const newHeight = startHeight + deltaY;
-    if (newHeight > 100 && newHeight < height.value - 100) {
-      editorHeight.value = newHeight;
-      // 调整编辑器大小
-      // CodeMirror 6 会自动处理大小变化
+    const newEditorHeight = startEditorHeight + deltaY;
+    const newEditorRatio = newEditorHeight / containerHeight;
+    
+    if (newEditorRatio > 0.2 && newEditorRatio < 0.8) {
+      const sqlEditor = container.querySelector('.sql-editor');
+      if (sqlEditor) {
+        sqlEditor.style.flex = `0 0 ${newEditorRatio * 100}%`;
+      }
     }
   }
   
@@ -236,18 +172,24 @@ async function executeSql() {
       props.database
     );
     
-    // 判断执行是否成功：ret === 0 表示成功，否则表示失败
-    // 即使 ret 不为 0 但有 msg，也认为是失败
-    const isSuccess = result.ret === 0;
-    
-    sqlResult.value = {
-      success: isSuccess,
-      data: isSuccess ? (result.data || []) : null,
-      columns: isSuccess ? (result.columns || []) : null,
-      affectedRows: result.affectedRows,
-      insertId: result.insertId,
-      error: !isSuccess ? result.msg : null
-    };
+    if (typeof result.data === 'object' && result.data !== null) {
+      // 判断执行是否成功：ret === 0 表示成功，否则表示失败
+      const isSuccess = result.ret === 0;
+      
+      sqlResult.value = {
+        success: isSuccess,
+        data: isSuccess ? (result.data || []) : null,        
+        error: !isSuccess ? result.msg : null
+      };
+    } 
+    // 处理其他情况
+    else {
+      sqlResult.value = {
+        success: true,
+        data: result,
+        error: null
+      };
+    }
   } catch (error: any) {
     sqlResult.value = {
       success: false,
@@ -255,6 +197,10 @@ async function executeSql() {
     };
   } finally {
     loading.value = false;
+    // 更新结果编辑器内容
+    if (!loading.value && sqlResult.value) {
+      updateResultEditor();
+    }
   }
 }
 
@@ -336,24 +282,28 @@ function formatCellValue(value: any): string {
   return strValue;
 }
 
-function exportResult(format: 'csv' | 'json') {
-  if (!sqlResult.value || !sqlResult.value.success || !sqlResult.value.data.length) {
+function exportResult(format: 'json') {
+  if (!sqlResult.value) {
     return;
   }
   
   const filename = formatFileName('sql_result', format);
   
-  switch (format) {
-    case 'csv':
-      exportDataToCSV(sqlResult.value.data, sqlResult.value.columns, filename);
-      break;
-    case 'json':
-      exportDataToJSON(sqlResult.value.data, filename);
-      break;
+  // 准备要导出的JSON数据
+  let jsonData;
+  if (sqlResult.value.success) {
+    jsonData = sqlResult.value.data;
+  } else {
+    jsonData = {
+      error: sqlResult.value.error
+    };
   }
+  
+  // 导出JSON数据
+  exportDataToJSON(jsonData, filename);
 }
 
-// 初始化CodeMirror编辑器
+// 初始化SQL编辑器
 function initEditor() {
   if (!editorRef.value) return;
   
@@ -407,27 +357,159 @@ function initEditor() {
   });
 }
 
-// 生命周期
-onMounted(() => {
-  // 初始化高度
-  if (containerRef.value) {
-    height.value = containerRef.value.clientHeight || 500;
-    editorHeight.value = height.value / 2;
+// 初始化结果编辑器
+function initResultEditor() {
+  if (!resultEditorRef.value) return;
+  
+  // 创建编辑器状态
+  const state = EditorState.create({
+    doc: '',
+    extensions: [
+      lineNumbers(),
+      highlightActiveLineGutter(),
+      highlightActiveLine(),
+      drawSelection(),
+      placeholder('执行SQL以查看结果...'),
+      json(),
+      syntaxHighlighting(defaultHighlightStyle),
+      keymap.of(defaultKeymap),
+      EditorView.lineWrapping,
+      // 设置只读
+      EditorState.readOnly.of(true),
+      EditorView.theme({
+        '&': {
+          height: '100%',
+          fontSize: '14px',
+          fontFamily: 'Monaco, Menlo, Consolas, "Courier New", monospace',
+          backgroundColor: '#f8f9fa',
+          color: '#212529'
+        },
+        '.cm-content': {
+          padding: '10px',
+          minHeight: '100%',
+          backgroundColor: '#ffffff',
+          color: '#212529',
+          border: '1px solid #dee2e6'
+        },
+        '.cm-gutters': {
+          backgroundColor: '#f8f9fa',
+          color: '#6c757d',
+          border: '1px solid #dee2e6',
+          borderRight: 'none'
+        },
+        '.cm-activeLineGutter': {
+          backgroundColor: '#e9ecef'
+        },
+        '.cm-activeLine': {
+          backgroundColor: '#e9ecef'
+        },
+        '.cm-selectionBackground': {
+          backgroundColor: '#cce7ff'
+        },
+        '.cm-line': {
+          color: '#212529'
+        }
+      })
+    ]
+  });
+  
+  // 创建编辑器视图
+  resultEditor.value = new EditorView({
+    state,
+    parent: resultEditorRef.value
+  });
+}
+
+// 更新结果编辑器内容
+function updateResultEditor() {
+  if (!resultEditor.value || !sqlResult.value) return;
+  
+  // 准备要显示的JSON数据
+  let jsonData;
+  if (sqlResult.value.success) {
+    jsonData = sqlResult.value.data || sqlResult.value; 
+  } else {
+    jsonData = {
+      error: sqlResult.value.error
+    };
   }
   
+  // 格式化JSON字符串
+  try {
+    const jsonString = JSON.stringify(jsonData, null, 2);
+    
+    // 更新编辑器内容
+    resultEditor.value.dispatch({
+      changes: {
+        from: 0,
+        to: resultEditor.value.state.doc.length,
+        insert: jsonString
+      }
+    });
+  } catch (error) {
+    // 如果JSON.stringify失败，直接显示原始数据
+    resultEditor.value.dispatch({
+      changes: {
+        from: 0,
+        to: resultEditor.value.state.doc.length,
+        insert: String(jsonData)
+      }
+    });
+  }
+}
+
+// 格式化JSON结果
+function formatJsonResult() {
+  if (!resultEditor.value || !sqlResult.value) return;
+  
+  // 准备要显示的JSON数据
+  let jsonData;
+  if (sqlResult.value.success) {
+    jsonData = sqlResult.value.data || sqlResult.value;
+  } else {
+    jsonData = {
+      error: sqlResult.value.error
+    };
+  }
+  
+  // 格式化JSON字符串
+  try {
+    const jsonString = JSON.stringify(jsonData, null, 2);
+    
+    // 更新编辑器内容
+    resultEditor.value.dispatch({
+      changes: {
+        from: 0,
+        to: resultEditor.value.state.doc.length,
+        insert: jsonString
+      }
+    });
+  } catch (error) {
+    // 如果JSON.stringify失败，显示错误信息
+    resultEditor.value.dispatch({
+      changes: {
+        from: 0,
+        to: resultEditor.value.state.doc.length,
+        insert: '无法格式化结果: ' + String(error)
+      }
+    });
+  }
+}
+
+// 生命周期
+onMounted(() => {
   // 初始化编辑器
   initEditor();
+  initResultEditor();
 });
 
-// 监听编辑器高度变化
-watch(editorHeight, () => {
-  // 调整编辑器大小
-  // CodeMirror 6 会自动处理大小变化，但我们可以通过触发更新来确保
-  if (editor.value) {
-    // 触发编辑器视图更新
-    editor.value.dispatch({
-      effects: []
-    });
+
+
+// 监听 sqlResult 变化，更新结果编辑器内容
+watch(sqlResult, () => {
+  // 当 sqlResult 变化且 resultEditor 已初始化时，更新结果编辑器内容
+  if (sqlResult.value && resultEditor.value) {
+    updateResultEditor();
   }
 });
 </script>
@@ -435,6 +517,7 @@ watch(editorHeight, () => {
 <style scoped>
 .sql-executor {
   width: 100%;
+  height: 100%;
   margin-bottom: 20px;
 }
 
@@ -459,11 +542,23 @@ watch(editorHeight, () => {
   border: 1px solid #dee2e6;
   border-radius: 4px;
   overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .sql-editor {
   position: relative;
   overflow: auto;
+  flex: 0 1 300px;
+  min-height: 200px;
+}
+
+.sql-result {
+  position: relative;
+  overflow: auto;
+  border-top: 1px solid #dee2e6;
+  flex: 1;
 }
 
 .codemirror-editor {
@@ -613,6 +708,16 @@ watch(editorHeight, () => {
 .result-empty i {
   font-size: 48px;
   opacity: 0.5;
+}
+
+.json-result {
+  flex: 1;
+  overflow: hidden;
+}
+
+.json-result .codemirror-editor {
+  height: 100%;
+  width: 100%;
 }
 
 /* 响应式设计 */

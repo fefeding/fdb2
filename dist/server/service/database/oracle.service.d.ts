@@ -66,5 +66,13 @@ export declare class OracleService extends BaseDatabaseService {
      * 删除Oracle数据库
      */
     dropDatabase(dataSource: DataSource, databaseName: string): Promise<void>;
+    /**
+     * 导出数据库架构
+     */
+    exportSchema(dataSource: DataSource, databaseName: string): Promise<string>;
+    /**
+     * 查看数据库日志
+     */
+    viewLogs(dataSource: DataSource, database?: string, limit?: number): Promise<any[]>;
 }
 //# sourceMappingURL=oracle.service.d.ts.map

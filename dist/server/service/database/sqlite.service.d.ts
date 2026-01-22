@@ -55,5 +55,13 @@ export declare class SQLiteService extends BaseDatabaseService {
      * 删除SQLite数据库
      */
     dropDatabase(dataSource: DataSource, databaseName: string): Promise<void>;
+    /**
+     * 导出数据库架构
+     */
+    exportSchema(dataSource: DataSource, databaseName: string): Promise<string>;
+    /**
+     * 查看数据库日志
+     */
+    viewLogs(dataSource: DataSource, database?: string, limit?: number): Promise<any[]>;
 }
 //# sourceMappingURL=sqlite.service.d.ts.map

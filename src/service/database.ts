@@ -286,7 +286,7 @@ export class DatabaseService {
     database: string,
     options?: any
   ) {
-    return request(`/api/database/backup/${connectionId}/${database}`, options);
+    return request('/api/database/backup', { id: connectionId, databaseName: database, options });
   }
 
   /**
@@ -294,9 +294,11 @@ export class DatabaseService {
    */
   async restoreDatabase(
     connectionId: string,
-    data: any
+    database: string,
+    filePath: string,
+    options?: any
   ) {
-    return request('/api/database/restore', data);
+    return request('/api/database/restore', { id: connectionId, databaseName: database, filePath, options });
   }
 
   /**
@@ -306,7 +308,7 @@ export class DatabaseService {
     connectionId: string,
     database: string
   ) {
-    return request(`/api/database/getStats/${connectionId}/${database}`);
+    return request('/api/database/getStats', { id: connectionId, databaseName: database });
   }
 
   /**
@@ -316,7 +318,27 @@ export class DatabaseService {
     connectionId: string,
     database: string
   ) {
-    return request(`/api/database/optimize/${connectionId}/${database}`);
+    return request('/api/database/optimize', { id: connectionId, databaseName: database });
+  }
+
+  /**
+   * 分析表
+   */
+  async analyzeTables(
+    connectionId: string,
+    database: string
+  ) {
+    return request('/api/database/analyze', { id: connectionId, databaseName: database });
+  }
+
+  /**
+   * 修复表
+   */
+  async repairTables(
+    connectionId: string,
+    database: string
+  ) {
+    return request('/api/database/repair', { id: connectionId, databaseName: database });
   }
 
   /**

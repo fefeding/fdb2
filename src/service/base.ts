@@ -28,7 +28,12 @@ export async function request<T = any>(url: string, data?: any, option?: AxiosRe
     const res = await requestServer(url, data, option);
     
     // 处理服务器直接返回的数据（如数组）
-    if (!res || typeof res !== 'object' || res instanceof Array) {
+    if (!res || res instanceof Array) {
+        return res as T;
+    }
+    
+    // 确保res是对象类型
+    if (typeof res !== 'object') {
         return res as T;
     }
     
@@ -43,14 +48,7 @@ export async function request<T = any>(url: string, data?: any, option?: AxiosRe
     // 处理新的响应格式 {ret:0,msg:'',data:any}
     const responseData = res.data;
     
-    // 检查ret字段，非0表示异常
-    if(responseData.ret !== undefined && responseData.ret !== 0) {
-        throw {
-            ret: responseData.ret,
-            msg: responseData.msg || '请求失败',
-        };
-    }
-    
+        
     // 特殊处理登录态失效的情况
     if(responseData.ret === 50001) {
         console.error('登陆态失效，请重新登陆后再试');

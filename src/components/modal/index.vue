@@ -136,7 +136,7 @@
     
     const dynamicStyle = computed(() => {        
         return {
-            maxWidth: isMobile.value ? '100vw' : '80vw',
+            maxWidth: isMobile.value ? '100vw' : '80vw!important',
             width: 'auto', // 移除固定宽度，使用自动宽度
             minWidth: '300px',
             wordWrap: 'break-word',

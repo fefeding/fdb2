@@ -225,9 +225,8 @@ const restoreOptions = ref({
 // 数据备份
 async function backupDatabase() {
   try {
-    const sql = `BACKUP DATABASE \`${props.database}\` TO DISK = '${props.database}_${new Date().toISOString().slice(0,10)}.bak' WITH INIT, STATS`;
-    emit('execute-sql', sql);
-    await modal.info('备份任务已启动');
+    await databaseService.backupDatabase(props.connection?.id || '', props.database);
+    await modal.success('数据库备份成功');
   } catch (error) {
     console.error('备份失败:', error);
     
@@ -272,11 +271,7 @@ function showConnectionsList() {
 // 数据库优化
 async function optimizeDatabase() {
   try {
-    const tables = await fetchTableList();
-    for (const table of tables) {
-      const sql = `OPTIMIZE TABLE \`${table}\``;
-      emit('execute-sql', sql);
-    }
+    await databaseService.optimizeDatabase(props.connection?.id || '', props.database);
     await modal.success('数据库优化完成');
   } catch (error) {
     console.error('优化失败:', error);
@@ -292,11 +287,7 @@ async function optimizeDatabase() {
 
 async function analyzeTables() {
   try {
-    const tables = await fetchTableList();
-    for (const table of tables) {
-      const sql = `ANALYZE TABLE \`${table}\``;
-      emit('execute-sql', sql);
-    }
+    await databaseService.analyzeTables(props.connection?.id || '', props.database);
     await modal.success('表分析完成');
   } catch (error) {
     console.error('分析失败:', error);
@@ -312,11 +303,7 @@ async function analyzeTables() {
 
 async function repairTables() {
   try {
-    const tables = await fetchTableList();
-    for (const table of tables) {
-      const sql = `REPAIR TABLE \`${table}\``;
-      emit('execute-sql', sql);
-    }
+    await databaseService.repairTables(props.connection?.id || '', props.database);
     await modal.success('表修复完成');
   } catch (error) {
     console.error('修复失败:', error);
@@ -430,19 +417,18 @@ async function performRestore() {
   
   try {
     restoring.value = true;
-    const formData = new FormData();
-    formData.append('file', selectedFile.value);
-    formData.append('connectionId', props.connection?.id || '');
-    formData.append('dropExisting', restoreOptions.value.dropExisting.toString());
+    // 这里简化处理，实际项目中可能需要先上传文件
+    const filePath = selectedFile.value.name;
     
-    const response = await databaseService.restoreDatabase(formData);
+    await databaseService.restoreDatabase(
+      props.connection?.id || '',
+      props.database,
+      filePath,
+      { dropExisting: restoreOptions.value.dropExisting }
+    );
     
-    if (response) {
-      await modal.success('数据库恢复成功');
-      closeRestoreModal();
-    } else {
-      await modal.error('数据库恢复失败');
-    }
+    await modal.success('数据库恢复成功');
+    closeRestoreModal();
   } catch (error) {
     console.error('恢复失败:', error);
     

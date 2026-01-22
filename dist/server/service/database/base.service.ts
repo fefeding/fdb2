@@ -300,6 +300,16 @@ export abstract class BaseDatabaseService {
   }
 
   /**
+   * 导出数据库架构 - 子类实现
+   */
+  abstract exportSchema(dataSource: DataSource, database: string): Promise<string>;
+
+  /**
+   * 查看数据库日志 - 子类实现（如果支持）
+   */
+  abstract viewLogs(dataSource: DataSource, database?: string, limit?: number): Promise<any[]>;
+
+  /**
    * 创建数据库 - 子类实现（如果支持）
    */
   async createDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<void> {
@@ -313,5 +323,21 @@ export abstract class BaseDatabaseService {
   async dropDatabase(dataSource: DataSource, databaseName: string): Promise<void> {
     // 默认实现，子类可以重写
     throw new Error(`数据库类型 ${this.getDatabaseType()} 不支持删除数据库`);
+  }
+
+  /**
+   * 备份数据库 - 子类实现（如果支持）
+   */
+  async backupDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<string> {
+    // 默认实现，子类可以重写
+    throw new Error(`数据库类型 ${this.getDatabaseType()} 不支持备份数据库`);
+  }
+
+  /**
+   * 恢复数据库 - 子类实现（如果支持）
+   */
+  async restoreDatabase(dataSource: DataSource, databaseName: string, filePath: string, options?: any): Promise<void> {
+    // 默认实现，子类可以重写
+    throw new Error(`数据库类型 ${this.getDatabaseType()} 不支持恢复数据库`);
   }
 }

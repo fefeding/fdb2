@@ -21,18 +21,11 @@ export type ConnectionState = {
   error: string | null;
 };
 
-const storage = window.sessionStorage;
 const connectionStoreKey = 'connection-state';
 
 // 初始状态
 function getDefaultState(): ConnectionState {
-  try {
-    const locStr = storage.getItem(connectionStoreKey);
-    return locStr ? JSON.parse(locStr) : getInitialState();
-  } catch (e) {
-    console.error('Failed to read localStorage:', e);
-    return getInitialState();
-  }
+  return getInitialState();
 }
 
 // 获取初始状态
@@ -106,9 +99,16 @@ export const useConnectionStore = defineStore('connection', {
         this.loading.databases = true;
         this.error = null;
         
-        const result = await databaseService.getDatabases(this.currentConnection.id);
+        const connectionId = this.currentConnection.id;
+        if (!connectionId) {
+          this.error = '连接ID不存在';
+          modal.error(this.error);
+          return;
+        }
+        const result = await databaseService.getDatabases(connectionId);
         
-        if (result.ret === 0) {
+        // 处理不同格式的返回数据
+        if (result && typeof result === 'object' && 'ret' in result && result.ret === 0) {
           // 处理服务器返回的数据 - 转换字符串数组为对象数组
           const dbList = result.data || [];
           this.databases = dbList.map((db: string) => ({
@@ -117,8 +117,16 @@ export const useConnectionStore = defineStore('connection', {
             tableCount: 0,
             tables: []
           }));
+        } else if (Array.isArray(result)) {
+          // 如果直接返回数组
+          this.databases = result.map((db: string) => ({
+            name: db,
+            size: 0,
+            tableCount: 0,
+            tables: []
+          }));
         } else {
-          this.error = result.msg || '获取数据库列表失败';
+          this.error = (result && typeof result === 'object' && 'msg' in result && typeof result.msg === 'string') ? result.msg : '获取数据库列表失败';
           modal.error(this.error);
         }
       } catch (error: any) {
@@ -253,12 +261,6 @@ export const useConnectionStore = defineStore('connection', {
     // 重置状态
     resetState() {
       Object.assign(this.$state, getInitialState());
-    },
-  },
-  
-  // 持久化存储配置
-  persist: {
-    key: connectionStoreKey,
-    storage: storage,
-  },
+    }
+  }
 });

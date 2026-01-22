@@ -231,7 +231,7 @@ export class PostgreSQLService extends BaseDatabaseService {
     const result = await dataSource.query(`
       SELECT 
         routine_name as name,
-        COALESCE(routine_comment, '') as comment,
+        '' as comment,
         routine_type as type,
         COALESCE(data_type, '') as returnType,
         external_language as language

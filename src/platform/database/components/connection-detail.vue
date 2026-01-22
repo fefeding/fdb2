@@ -234,7 +234,6 @@
             <SqlExecutor 
               :connection="props.connection"
               :database="''"
-              :height="600"
             />
           </div>
         </div>
@@ -405,7 +404,7 @@ onMounted(() => {
 
 // 数据库列表（从 store 获取）
 const databases = computed(() => connectionStore.databases);
-const loadingDatabases = computed(() => connectionStore.loading.databases);
+const loadingDatabases = computed(() => connectionStore.isLoadingDatabases);
 
 // 方法
 function loadConnectionStats() {
@@ -419,9 +418,7 @@ function loadConnectionStats() {
 }
 
 function loadDatabases() {
-  if (props.connection) {
-    connectionStore.loadDatabases(props.connection);
-  }
+  connectionStore.loadDatabases();
 }
 
 const filteredDatabases = computed(() => {
@@ -555,6 +552,10 @@ function getDbLogoText(type?: string): string {
 <style scoped>
 .connection-detail {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 20px;
 }
 
 .connection-header {
@@ -855,6 +856,9 @@ function getDbLogoText(type?: string): string {
   border: 1px solid #dee2e6;
   border-radius: 8px;
   overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .nav-tabs {
@@ -880,14 +884,27 @@ function getDbLogoText(type?: string): string {
   border-bottom: 2px solid #0d6efd;
 }
 
+.tab-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .tab-panel {
   padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .databases-section {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  flex: 1;
+  overflow: hidden;
 }
 
 .section-header {
@@ -904,6 +921,9 @@ function getDbLogoText(type?: string): string {
 
 .databases-list {
   min-height: 300px;
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 8px;
 }
 
 .loading-state {
@@ -988,6 +1008,8 @@ function getDbLogoText(type?: string): string {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  flex: 1;
+  overflow: hidden;
 }
 
 .sql-header {

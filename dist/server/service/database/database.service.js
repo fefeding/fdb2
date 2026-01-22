@@ -242,6 +242,114 @@ class DatabaseService {
         return databaseService.dropDatabase(dataSource, databaseName);
     }
     /**
+     * 导出数据库架构
+     */
+    async exportSchema(connectionId, databaseName) {
+        const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+        const databaseService = this.getDatabaseService(dataSource.options.type);
+        return databaseService.exportSchema(dataSource, databaseName);
+    }
+    /**
+     * 查看数据库日志
+     */
+    async viewLogs(connectionId, databaseName, limit = 100) {
+        const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+        const databaseService = this.getDatabaseService(dataSource.options.type);
+        return databaseService.viewLogs(dataSource, databaseName, limit);
+    }
+    /**
+     * 备份数据库
+     */
+    async backupDatabase(connectionId, databaseName, options) {
+        const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+        const databaseService = this.getDatabaseService(dataSource.options.type);
+        return databaseService.backupDatabase(dataSource, databaseName, options);
+    }
+    /**
+     * 恢复数据库
+     */
+    async restoreDatabase(connectionId, databaseName, filePath, options) {
+        const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+        const databaseService = this.getDatabaseService(dataSource.options.type);
+        return databaseService.restoreDatabase(dataSource, databaseName, filePath, options);
+    }
+    /**
+     * 获取数据库统计信息
+     */
+    async getDatabaseStats(connectionId, databaseName) {
+        const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+        const databaseService = this.getDatabaseService(dataSource.options.type);
+        const tables = await databaseService.getTables(dataSource, databaseName);
+        const tableCount = tables.length;
+        const size = await databaseService.getDatabaseSize(dataSource, databaseName);
+        return {
+            tableCount,
+            size,
+            tables: tables.map(table => ({
+                name: table.name,
+                rowCount: table.rowCount || 0,
+                size: table.size || 0
+            }))
+        };
+    }
+    /**
+     * 优化数据库
+     */
+    async optimizeDatabase(connectionId, databaseName) {
+        const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+        const databaseService = this.getDatabaseService(dataSource.options.type);
+        const tables = await databaseService.getTables(dataSource, databaseName);
+        const results = [];
+        for (const table of tables) {
+            try {
+                const result = await dataSource.query(`OPTIMIZE TABLE \`${table.name}\``);
+                results.push({ table: table.name, success: true, result });
+            }
+            catch (error) {
+                results.push({ table: table.name, success: false, error: error.message });
+            }
+        }
+        return { results };
+    }
+    /**
+     * 分析表
+     */
+    async analyzeTables(connectionId, databaseName) {
+        const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+        const databaseService = this.getDatabaseService(dataSource.options.type);
+        const tables = await databaseService.getTables(dataSource, databaseName);
+        const results = [];
+        for (const table of tables) {
+            try {
+                const result = await dataSource.query(`ANALYZE TABLE \`${table.name}\``);
+                results.push({ table: table.name, success: true, result });
+            }
+            catch (error) {
+                results.push({ table: table.name, success: false, error: error.message });
+            }
+        }
+        return { results };
+    }
+    /**
+     * 修复表
+     */
+    async repairTables(connectionId, databaseName) {
+        const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+        const databaseService = this.getDatabaseService(dataSource.options.type);
+        const tables = await databaseService.getTables(dataSource, databaseName);
+        const results = [];
+        for (const table of tables) {
+            try {
+                const result = await dataSource.query(`REPAIR TABLE \`${table.name}\``);
+                results.push({ table: table.name, success: true, result });
+            }
+            catch (error) {
+                results.push({ table: table.name, success: false, error: error.message });
+            }
+        }
+        return { results };
+    }
+    /**
      * 获取数据库类型特定的配置
      */
     getDatabaseTypeSpecificConfig(type) {

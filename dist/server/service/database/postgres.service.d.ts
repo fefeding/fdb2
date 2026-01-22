@@ -62,5 +62,13 @@ export declare class PostgreSQLService extends BaseDatabaseService {
      * 删除PostgreSQL数据库
      */
     dropDatabase(dataSource: DataSource, databaseName: string): Promise<void>;
+    /**
+     * 导出数据库架构
+     */
+    exportSchema(dataSource: DataSource, databaseName: string): Promise<string>;
+    /**
+     * 查看数据库日志
+     */
+    viewLogs(dataSource: DataSource, database?: string, limit?: number): Promise<any[]>;
 }
 //# sourceMappingURL=postgres.service.d.ts.map

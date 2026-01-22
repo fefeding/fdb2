@@ -166,4 +166,74 @@ export class SQLiteService extends BaseDatabaseService {
     // SQLite中删除数据库需要删除文件
     throw new Error('SQLite数据库删除需要手动删除数据库文件');
   }
+
+  /**
+   * 导出数据库架构
+   */
+  async exportSchema(dataSource: DataSource, databaseName: string): Promise<string> {
+    // 获取所有表
+    const tables = await this.getTables(dataSource, databaseName);
+    let schemaSql = `-- 数据库架构导出 - ${databaseName}\n`;
+    schemaSql += `-- 导出时间: ${new Date().toISOString()}\n\n`;
+
+    // 为每个表生成CREATE TABLE语句
+    for (const table of tables) {
+      // 获取表结构
+      const columns = await this.getColumns(dataSource, databaseName, table.name);
+      const indexes = await this.getIndexes(dataSource, databaseName, table.name);
+      const foreignKeys = await this.getForeignKeys(dataSource, databaseName, table.name);
+
+      // 生成CREATE TABLE语句
+      schemaSql += `-- 表结构: ${table.name}\n`;
+      schemaSql += `CREATE TABLE IF NOT EXISTS ${this.quoteIdentifier(table.name)} (\n`;
+
+      // 添加列定义
+      const columnDefinitions = columns.map(column => {
+        let definition = `  ${this.quoteIdentifier(column.name)} ${column.type}`;
+        if (column.notNull) definition += ' NOT NULL';
+        if (column.defaultValue !== undefined) {
+          definition += ` DEFAULT ${column.defaultValue === null ? 'NULL' : `'${column.defaultValue}'`}`;
+        }
+        if (column.isPrimary && column.autoIncrement) definition += ' PRIMARY KEY AUTOINCREMENT';
+        else if (column.isPrimary) definition += ' PRIMARY KEY';
+        return definition;
+      });
+
+      schemaSql += columnDefinitions.join(',\n');
+      schemaSql += '\n);\n\n';
+
+      // 添加索引
+      for (const index of indexes) {
+        if (index.isPrimary) continue; // 主键已经在表定义中添加
+        schemaSql += `-- 索引: ${index.name} on ${table.name}\n`;
+        schemaSql += `CREATE ${index.isUnique ? 'UNIQUE ' : ''}INDEX IF NOT EXISTS ${this.quoteIdentifier(index.name)} ON ${this.quoteIdentifier(table.name)} (${index.columns.map(col => this.quoteIdentifier(col)).join(', ')});\n`;
+      }
+
+      if (indexes.length > 0) schemaSql += '\n';
+
+      // 添加外键
+      for (const foreignKey of foreignKeys) {
+        schemaSql += `-- 外键: ${foreignKey.name} on ${table.name}\n`;
+        schemaSql += `ALTER TABLE ${this.quoteIdentifier(table.name)} ADD CONSTRAINT ${this.quoteIdentifier(foreignKey.name)} FOREIGN KEY (${foreignKey.columns.map(col => this.quoteIdentifier(col)).join(', ')}) REFERENCES ${this.quoteIdentifier(foreignKey.referencedTable)} (${foreignKey.referencedColumns.map(col => this.quoteIdentifier(col)).join(', ')})${foreignKey.onDelete ? ` ON DELETE ${foreignKey.onDelete}` : ''}${foreignKey.onUpdate ? ` ON UPDATE ${foreignKey.onUpdate}` : ''};\n`;
+      }
+
+      if (foreignKeys.length > 0) schemaSql += '\n';
+    }
+
+    return schemaSql;
+  }
+
+  /**
+   * 查看数据库日志
+   */
+  async viewLogs(dataSource: DataSource, database?: string, limit: number = 100): Promise<any[]> {
+    // SQLite查看日志
+    try {
+      // 尝试查看SQLite配置
+      const logs = await dataSource.query(`PRAGMA compile_options;`);
+      return logs;
+    } catch (error) {
+      return [{ message: 'SQLite数据库日志功能有限，请检查数据库文件状态' }];
+    }
+  }
 }

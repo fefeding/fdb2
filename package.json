@@ -34,6 +34,8 @@
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.1",
+    "@codemirror/fold": "^0.19.4",
+    "@codemirror/lang-json": "^6.0.2",
     "@codemirror/lang-sql": "^6.10.0",
     "@codemirror/language": "^6.12.1",
     "@codemirror/state": "^6.5.4",

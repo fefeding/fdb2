@@ -799,7 +799,6 @@ async function refreshTable(connection: ConnectionEntity, database: string, tabl
 
 // 新增的处理方法
 function handleRefreshDatabase() {
-  debugger
   if (selectedConnection.value && selectedDatabase.value) {
     refreshDatabase(selectedConnection.value, selectedDatabase.value);
   }
@@ -1400,12 +1399,22 @@ function showToast(title: string, message: string, type: string = 'success') {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  height: 100%;
+}
+
+/* 详情组件容器 */
+.explorer-main > * {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .content-tabs {
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .nav-tabs {
@@ -1438,6 +1447,7 @@ function showToast(title: string, message: string, type: string = 'success') {
   flex: 1;
   overflow-y: auto;
   padding: 1.5rem;
+  height: calc(100% - 60px); /* 减去导航栏高度 */
 }
 
 /* 概览样式 */

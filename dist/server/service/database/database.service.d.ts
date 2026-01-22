@@ -172,6 +172,38 @@ export declare class DatabaseService {
      */
     dropDatabase(connectionId: string, databaseName: string): Promise<void>;
     /**
+     * 导出数据库架构
+     */
+    exportSchema(connectionId: string, databaseName: string): Promise<string>;
+    /**
+     * 查看数据库日志
+     */
+    viewLogs(connectionId: string, databaseName?: string, limit?: number): Promise<any[]>;
+    /**
+     * 备份数据库
+     */
+    backupDatabase(connectionId: string, databaseName: string, options?: any): Promise<string>;
+    /**
+     * 恢复数据库
+     */
+    restoreDatabase(connectionId: string, databaseName: string, filePath: string, options?: any): Promise<void>;
+    /**
+     * 获取数据库统计信息
+     */
+    getDatabaseStats(connectionId: string, databaseName: string): Promise<any>;
+    /**
+     * 优化数据库
+     */
+    optimizeDatabase(connectionId: string, databaseName: string): Promise<any>;
+    /**
+     * 分析表
+     */
+    analyzeTables(connectionId: string, databaseName: string): Promise<any>;
+    /**
+     * 修复表
+     */
+    repairTables(connectionId: string, databaseName: string): Promise<any>;
+    /**
      * 获取数据库类型特定的配置
      */
     getDatabaseTypeSpecificConfig(type: string): {

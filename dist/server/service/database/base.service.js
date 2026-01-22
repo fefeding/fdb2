@@ -217,6 +217,20 @@ class BaseDatabaseService {
         // 默认实现，子类可以重写
         throw new Error(`数据库类型 ${this.getDatabaseType()} 不支持删除数据库`);
     }
+    /**
+     * 备份数据库 - 子类实现（如果支持）
+     */
+    async backupDatabase(dataSource, databaseName, options) {
+        // 默认实现，子类可以重写
+        throw new Error(`数据库类型 ${this.getDatabaseType()} 不支持备份数据库`);
+    }
+    /**
+     * 恢复数据库 - 子类实现（如果支持）
+     */
+    async restoreDatabase(dataSource, databaseName, filePath, options) {
+        // 默认实现，子类可以重写
+        throw new Error(`数据库类型 ${this.getDatabaseType()} 不支持恢复数据库`);
+    }
 }
 exports.BaseDatabaseService = BaseDatabaseService;
 //# sourceMappingURL=base.service.js.map

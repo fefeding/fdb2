@@ -58,5 +58,13 @@ export declare class MySQLService extends BaseDatabaseService {
      * 删除MySQL数据库
      */
     dropDatabase(dataSource: DataSource, databaseName: string): Promise<void>;
+    /**
+     * 导出数据库架构
+     */
+    exportSchema(dataSource: DataSource, databaseName: string): Promise<string>;
+    /**
+     * 查看数据库日志
+     */
+    viewLogs(dataSource: DataSource, database?: string, limit?: number): Promise<any[]>;
 }
 //# sourceMappingURL=mysql.service.d.ts.map

@@ -148,6 +148,54 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
     return { success: true, logs };
   }
 
+  // /api/database/backup
+  if (pathname === '/api/database/backup') {
+    const { id, databaseName, options } = body;
+    if (!id || !databaseName) throw Error('Missing parameters: id, databaseName');
+    const result = await databaseService.backupDatabase(id, databaseName, options);
+    return { success: true, result };
+  }
+
+  // /api/database/restore
+  if (pathname === '/api/database/restore') {
+    const { id, databaseName, filePath, options } = body;
+    if (!id || !databaseName || !filePath) throw Error('Missing parameters: id, databaseName, filePath');
+    await databaseService.restoreDatabase(id, databaseName, filePath, options);
+    return { success: true };
+  }
+
+  // /api/database/getStats
+  if (pathname === '/api/database/getStats') {
+    const { id, databaseName } = body;
+    if (!id || !databaseName) throw Error('Missing parameters: id, databaseName');
+    const stats = await databaseService.getDatabaseStats(id, databaseName);
+    return { success: true, stats };
+  }
+
+  // /api/database/optimize
+  if (pathname === '/api/database/optimize') {
+    const { id, databaseName } = body;
+    if (!id || !databaseName) throw Error('Missing parameters: id, databaseName');
+    const results = await databaseService.optimizeDatabase(id, databaseName);
+    return { success: true, results };
+  }
+
+  // /api/database/analyze
+  if (pathname === '/api/database/analyze') {
+    const { id, databaseName } = body;
+    if (!id || !databaseName) throw Error('Missing parameters: id, databaseName');
+    const results = await databaseService.analyzeTables(id, databaseName);
+    return { success: true, results };
+  }
+
+  // /api/database/repair
+  if (pathname === '/api/database/repair') {
+    const { id, databaseName } = body;
+    if (!id || !databaseName) throw Error('Missing parameters: id, databaseName');
+    const results = await databaseService.repairTables(id, databaseName);
+    return { success: true, results };
+  }
+
   // /api/database/exportTableData
   if (pathname === '/api/database/exportTableData') {
     const { id, database, table, format = 'json', where } = body;
