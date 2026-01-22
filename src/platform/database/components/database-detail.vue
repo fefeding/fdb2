@@ -76,6 +76,15 @@
             <i class="bi bi-terminal"></i> 执行SQL
           </button>
         </li>
+        <li class="nav-item">
+          <button 
+            class="nav-link" 
+            :class="{ active: activeTab === 'tools' }"
+            @click="activeTab = 'tools'"
+          >
+            <i class="bi bi-tools"></i> 工具
+          </button>
+        </li>
       </ul>
 
       <div class="tab-content">
@@ -274,6 +283,11 @@
             />
           </div>
         </div>
+
+        <!-- 工具标签页 -->
+        <div v-show="activeTab === 'tools'" class="tab-panel">
+          <DbTools :connection="connection" :database="database" @execute-sql="handleExecuteSQL" />
+        </div>
       </div>
     </div>
 
@@ -398,6 +412,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import TableEditor from './table-editor.vue';
 import SqlExecutor from './sql-executor.vue';
+import DbTools from './db-tools.vue';
 import { modal } from '@/utils/modal';
 import { DatabaseService } from '@/service/database';
 
@@ -759,6 +774,10 @@ async function handleTableChange(result: any) {
       });
     }
   }
+
+function handleExecuteSQL(sql: string) {
+  emit('execute-sql', sql);
+}
 </script>
 
 <style scoped>

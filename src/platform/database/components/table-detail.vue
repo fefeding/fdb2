@@ -127,15 +127,6 @@
             <i class="bi bi-code-slash"></i> SQL
           </button>
         </li>
-        <li class="nav-item">
-          <button 
-            class="nav-link" 
-            :class="{ active: activeTab === 'tools' }"
-            @click="activeTab = 'tools'"
-          >
-            <i class="bi bi-tools"></i> 工具
-          </button>
-        </li>
       </ul>
 
       <div class="tab-content">
@@ -442,15 +433,6 @@
             />
           </div>
         </div>
-
-        <!-- 工具标签页 -->
-        <div v-show="activeTab === 'tools'" class="tab-panel">
-          <DbTools 
-            :connection="connection"
-            :database="database"
-            @execute-sql="handleExecuteSqlFromTool"
-          />
-        </div>
       </div>
     </div>
       
@@ -485,7 +467,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import { DatabaseService } from '@/service/database';
 import DataEditor from './data-editor.vue';
-import DbTools from './db-tools.vue';
+
 import TableEditor from './table-editor.vue';
 import SqlExecutor from './sql-executor.vue';
 import { exportDataToCSV, exportDataToJSON, exportDataToExcel, formatFileName } from '../utils/export';
@@ -952,9 +934,7 @@ function formatValueForSQL(value: any, type: string): string {
   return String(value);
 }
 
-function handleExecuteSqlFromTool(sql: string) {
-  emit('execute-sql', sql);
-}
+
 
 function exportTableData(format: 'csv' | 'json' | 'excel') {
   emit('export-table');
