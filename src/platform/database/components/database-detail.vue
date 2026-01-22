@@ -28,26 +28,6 @@
       </div>
     </div>
 
-    <!-- 操作工具栏 -->
-    <div class="database-toolbar">
-      <div class="toolbar-left">
-        <button class="btn btn-primary btn-sm" @click="createNewTable">
-          <i class="bi bi-plus-lg"></i> 创建表
-        </button>
-        <button class="btn btn-success btn-sm" @click="showCreateViewModal">
-          <i class="bi bi-eye-lg"></i> 创建视图
-        </button>
-        <button class="btn btn-info btn-sm" @click="showCreateProcedureModal">
-          <i class="bi bi-gear-lg"></i> 存储过程
-        </button>
-      </div>
-      <div class="toolbar-right">
-        <button class="btn btn-outline-secondary btn-sm" @click="handleRefreshDatabase">
-          <i class="bi bi-arrow-clockwise"></i> 刷新
-        </button>
-      </div>
-    </div>
-
     <!-- 标签页 -->
     <div class="database-tabs">
       <ul class="nav nav-tabs">
@@ -78,7 +58,7 @@
             <i class="bi bi-gear"></i> 存储过程
           </button>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <button 
             class="nav-link" 
             :class="{ active: activeTab === 'functions' }"
@@ -86,7 +66,7 @@
           >
             <i class="bi bi-code-slash"></i> 函数
           </button>
-        </li>
+        </li> -->
         <li class="nav-item">
           <button 
             class="nav-link" 
@@ -101,6 +81,16 @@
       <div class="tab-content">
         <!-- 数据表标签页 -->
         <div v-show="activeTab === 'tables'" class="tab-panel">
+          <!-- 操作栏 -->
+          <div class="tables-actions mb-3">
+            <button class="btn btn-primary btn-sm" @click="createNewTable">
+              <i class="bi bi-plus-lg"></i> 创建表
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" @click="handleRefreshDatabase">
+              <i class="bi bi-arrow-clockwise"></i> 刷新
+            </button>
+          </div>
+          
           <!-- 加载状态 -->
           <div v-if="loading" class="loading-state">
             <div class="spinner-border" role="status">
@@ -889,19 +879,7 @@ async function handleTableChange(result: any) {
   font-weight: 500;
 }
 
-.database-toolbar {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: white;
-}
 
-.toolbar-left, .toolbar-right {
-  display: flex;
-  gap: 0.5rem;
-}
 
 .database-tabs {
   flex: 1;
@@ -1111,7 +1089,7 @@ async function handleTableChange(result: any) {
   gap: 0.5rem;
 }
 
-.views-actions, .procedures-actions {
+.views-actions, .procedures-actions, .tables-actions {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1rem;

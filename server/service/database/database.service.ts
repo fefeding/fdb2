@@ -271,6 +271,24 @@ export class DatabaseService {
   }
 
   /**
+   * 导出数据库架构
+   */
+  async exportSchema(connectionId: string, databaseName: string): Promise<string> {
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+    const databaseService = this.getDatabaseService(dataSource.options.type as string);
+    return databaseService.exportSchema(dataSource, databaseName);
+  }
+
+  /**
+   * 查看数据库日志
+   */
+  async viewLogs(connectionId: string, databaseName?: string, limit: number = 100): Promise<any[]> {
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+    const databaseService = this.getDatabaseService(dataSource.options.type as string);
+    return databaseService.viewLogs(dataSource, databaseName, limit);
+  }
+
+  /**
    * 获取数据库类型特定的配置
    */
   getDatabaseTypeSpecificConfig(type: string) {

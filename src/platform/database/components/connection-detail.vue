@@ -197,33 +197,21 @@
                   <i class="bi bi-plus"></i> 创建数据库
                 </button>
               </div>
-              <div v-else class="databases-grid">
+              <div v-else class="databases-list-simple">
                 <div 
                   v-for="database in filteredDatabases" 
                   :key="database.name" 
-                  class="database-card"
+                  class="database-item"
                   @click="openDatabase(database)"
                 >
-                  <div class="database-card-header">
-                    <div class="database-icon">
-                      <i class="bi bi-database"></i>
-                    </div>
-                    <div class="database-actions">
-                      <button class="btn btn-sm btn-outline-secondary" @click.stop="activeTab = 'sql'">
-                        <i class="bi bi-terminal"></i>
-                      </button>
-                    </div>
+                  <div class="database-item-icon">
+                    <i class="bi bi-database"></i>
                   </div>
-                  <div class="database-card-body">
-                    <h6 class="database-name">{{ database.name }}</h6>
-                    <div class="database-info">
-                      <span class="info-item" v-if="database.size">
-                        <i class="bi bi-hdd"></i> {{ formatFileSize(database.size) }}
-                      </span>
-                      <span class="info-item" v-if="database.tableCount">
-                        <i class="bi bi-table"></i> {{ database.tableCount }} 表
-                      </span>
-                    </div>
+                  <div class="database-item-name">{{ database.name }}</div>
+                  <div class="database-item-actions">
+                    <button class="btn btn-sm btn-outline-secondary" @click.stop="activeTab = 'sql'">
+                      <i class="bi bi-terminal"></i>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -525,6 +513,13 @@ function formatFileSize(bytes: number): string {
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// 格式化日期时间
+function formatDate(dateString: string): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleString();
 }
 
 // 获取数据库类型标签
@@ -941,68 +936,52 @@ function getDbLogoText(type?: string): string {
   font-size: 16px;
 }
 
-.databases-grid {
+.databases-list-simple {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
 }
 
-.database-card {
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.database-card:hover {
-  border-color: #0d6efd;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.database-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
-}
-
-.database-icon {
-  font-size: 20px;
-  color: #6c757d;
-}
-
-.database-actions {
-  display: flex;
-  gap: 4px;
-}
-
-.database-card-body {
-  padding: 16px;
-}
-
-.database-name {
-  margin: 0 0 12px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #343a40;
-}
-
-.database-info {
+.database-item {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
+  padding: 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  min-height: 100px;
 }
 
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
+.database-item:hover {
+  border-color: #0d6efd;
+  background-color: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.database-item-icon {
+  font-size: 32px;
   color: #6c757d;
+}
+
+.database-item-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #343a40;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.database-item-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: auto;
 }
 
 .sql-section {
@@ -1060,8 +1039,22 @@ function getDbLogoText(type?: string): string {
     grid-template-columns: repeat(2, 1fr);
   }
   
-  .databases-grid {
-    grid-template-columns: 1fr;
+  .databases-list-simple {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  
+  .database-item {
+    padding: 12px;
+    min-height: 80px;
+  }
+  
+  .database-item-icon {
+    font-size: 24px;
+  }
+  
+  .database-item-name {
+    font-size: 12px;
   }
   
   .nav-link {

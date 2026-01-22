@@ -132,6 +132,22 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
     return { success: true };
   }
 
+  // /api/database/exportSchema
+  if (pathname === '/api/database/exportSchema') {
+    const { id, databaseName } = body;
+    if (!id || !databaseName) throw Error('Missing parameters: id, databaseName');
+    const schema = await databaseService.exportSchema(id, databaseName);
+    return { success: true, schema };
+  }
+
+  // /api/database/viewLogs
+  if (pathname === '/api/database/viewLogs') {
+    const { id, databaseName, limit = 100 } = body;
+    if (!id) throw Error('Missing parameter: id');
+    const logs = await databaseService.viewLogs(id, databaseName, limit);
+    return { success: true, logs };
+  }
+
   // /api/database/exportTableData
   if (pathname === '/api/database/exportTableData') {
     const { id, database, table, format = 'json', where } = body;

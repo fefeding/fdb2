@@ -27,6 +27,11 @@ export async function requestServer(url: string, data?: any, option?: AxiosReque
 export async function request<T = any>(url: string, data?: any, option?: AxiosRequestConfig) {    
     const res = await requestServer(url, data, option);
     
+    // 处理服务器直接返回的数据（如数组）
+    if (!res || typeof res !== 'object' || res instanceof Array) {
+        return res as T;
+    }
+    
     // 检查HTTP状态码
     if(res.status !== 200) {
         throw {
