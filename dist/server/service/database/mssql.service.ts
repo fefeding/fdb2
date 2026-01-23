@@ -1,4 +1,6 @@
 import { DataSource } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 import { BaseDatabaseService } from './base.service';
 import { 
   TableEntity, 
@@ -408,6 +410,55 @@ export class SQLServerService extends BaseDatabaseService {
       } catch (e) {
         return [{ message: '无法获取SQL Server日志，请确保具有适当的权限' }];
       }
+    }
+  }
+
+  /**
+   * 备份数据库
+   */
+  async backupDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<string> {
+    // SQL Server备份数据库
+    try {
+      // 使用BACKUP DATABASE命令备份
+      const backupPath = options?.path || path.join(__dirname, '..', '..', 'backups');
+      
+      // 确保备份目录存在
+      if (!fs.existsSync(backupPath)) {
+        fs.mkdirSync(backupPath, { recursive: true });
+      }
+      
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const backupFile = path.join(backupPath, `${databaseName}_${timestamp}.bak`);
+      
+      // 执行备份命令
+      const backupSql = `BACKUP DATABASE ${this.quoteIdentifier(databaseName)} TO DISK = '${backupFile}' WITH INIT`;
+      await dataSource.query(backupSql);
+      
+      return `备份成功：${backupFile}`;
+    } catch (error) {
+      console.error('SQL Server备份失败:', error);
+      throw new Error(`备份失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 恢复数据库
+   */
+  async restoreDatabase(dataSource: DataSource, databaseName: string, filePath: string, options?: any): Promise<void> {
+    // SQL Server恢复数据库
+    try {
+      // 断开所有连接
+      await dataSource.query(`ALTER DATABASE ${this.quoteIdentifier(databaseName)} SET SINGLE_USER WITH ROLLBACK IMMEDIATE`);
+      
+      // 执行恢复命令
+      const restoreSql = `RESTORE DATABASE ${this.quoteIdentifier(databaseName)} FROM DISK = '${filePath}' WITH REPLACE`;
+      await dataSource.query(restoreSql);
+      
+      // 恢复多用户模式
+      await dataSource.query(`ALTER DATABASE ${this.quoteIdentifier(databaseName)} SET MULTI_USER`);
+    } catch (error) {
+      console.error('SQL Server恢复失败:', error);
+      throw new Error(`恢复失败: ${error.message}`);
     }
   }
 }

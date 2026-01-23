@@ -132,5 +132,9 @@ export declare abstract class BaseDatabaseService {
      * 恢复数据库 - 子类实现（如果支持）
      */
     restoreDatabase(dataSource: DataSource, databaseName: string, filePath: string, options?: any): Promise<void>;
+    /**
+     * 导出表数据到 SQL 文件 - 子类实现
+     */
+    abstract exportTableDataToSQL(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string>;
 }
 //# sourceMappingURL=base.service.d.ts.map

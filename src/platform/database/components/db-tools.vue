@@ -225,8 +225,14 @@ const restoreOptions = ref({
 // 数据备份
 async function backupDatabase() {
   try {
-    await databaseService.backupDatabase(props.connection?.id || '', props.database);
-    await modal.success('数据库备份成功');
+    const res = await databaseService.backupDatabase(props.connection?.id || '', props.database);
+    if(res.ret === 0) await modal.success('数据库备份成功');
+    else {
+      modal.error(res.msg || '备份失败', {
+        operation: 'BACKUP',
+        database: props.database,
+      });
+    }
   } catch (error) {
     console.error('备份失败:', error);
     

@@ -1,4 +1,6 @@
 import { DataSource } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 import { BaseDatabaseService } from './base.service';
 import { 
   TableEntity, 
@@ -234,6 +236,148 @@ export class SQLiteService extends BaseDatabaseService {
       return logs;
     } catch (error) {
       return [{ message: 'SQLite数据库日志功能有限，请检查数据库文件状态' }];
+    }
+  }
+
+  /**
+   * 备份数据库
+   */
+  async backupDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<string> {
+    // SQLite备份数据库
+    try {
+      // SQLite备份就是复制数据库文件
+      const backupPath = options?.path || path.join(__dirname, '..', '..', 'backups');
+      
+      // 确保备份目录存在
+      if (!fs.existsSync(backupPath)) {
+        fs.mkdirSync(backupPath, { recursive: true });
+      }
+      
+      // 获取SQLite数据库文件路径
+      const connectionOptions = dataSource.options as any;
+      const dbPath = connectionOptions.database;
+      
+      if (!dbPath) {
+        throw new Error('SQLite数据库文件路径未找到');
+      }
+      
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const backupFile = path.join(backupPath, `${databaseName}_${timestamp}.db`);
+      
+      // 复制数据库文件
+      fs.copyFileSync(dbPath, backupFile);
+      
+      return `备份成功：${backupFile}`;
+    } catch (error) {
+      console.error('SQLite备份失败:', error);
+      throw new Error(`备份失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 恢复数据库
+   */
+  async restoreDatabase(dataSource: DataSource, databaseName: string, filePath: string, options?: any): Promise<void> {
+    // SQLite恢复数据库
+    try {
+      // SQLite恢复就是复制备份文件到数据库文件路径
+      const connectionOptions = dataSource.options as any;
+      const dbPath = connectionOptions.database;
+      
+      if (!dbPath) {
+        throw new Error('SQLite数据库文件路径未找到');
+      }
+      
+      // 复制备份文件到数据库路径
+      fs.copyFileSync(filePath, dbPath);
+    } catch (error) {
+      console.error('SQLite恢复失败:', error);
+      throw new Error(`恢复失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 导出表数据到 SQL 文件
+   */
+  async exportTableDataToSQL(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string> {
+    try {
+      // 创建导出目录
+      const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+      if (!fs.existsSync(exportPath)) {
+        fs.mkdirSync(exportPath, { recursive: true });
+      }
+      
+      // 生成文件名
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const exportFile = path.join(exportPath, `${tableName}_data_${timestamp}.sql`);
+      
+      // 获取表结构
+      const columns = await this.getColumns(dataSource, databaseName, tableName);
+      const columnNames = columns.map(column => column.name);
+      
+      // 生成文件头部
+      const header = `-- 表数据导出 - ${tableName}\n` +
+                    `-- 导出时间: ${new Date().toISOString()}\n\n`;
+      fs.writeFileSync(exportFile, header, 'utf8');
+      
+      // 分批处理数据，避免一次性加载大量数据到内存
+      const batchSize = options?.batchSize || 10000; // 每批处理10000行
+      let offset = 0;
+      let hasMoreData = true;
+      
+      while (hasMoreData) {
+        // 分批查询数据（SQLite 使用 LIMIT OFFSET 语法）
+        const query = `SELECT * FROM ${this.quoteIdentifier(tableName)} LIMIT ${batchSize} OFFSET ${offset}`;
+        const data = await dataSource.query(query);
+        
+        if (data.length === 0) {
+          hasMoreData = false;
+          break;
+        }
+        
+        // 生成当前批次的 INSERT 语句
+        let batchSql = '';
+        data.forEach((row: any) => {
+          const values = columnNames.map(column => {
+            const value = row[column];
+            if (value === null || value === undefined) {
+              return 'NULL';
+            } else if (typeof value === 'string') {
+              return `'${value.replace(/'/g, "''")}'`;
+            } else if (typeof value === 'boolean') {
+              return value ? '1' : '0';
+            } else if (value instanceof Date) {
+              return `'${value.toISOString().slice(0, 19).replace('T', ' ')}'`;
+            } else if (typeof value === 'object') {
+              // 处理JSON类型和其他对象类型
+              try {
+                const stringValue = JSON.stringify(value);
+                return `'${stringValue.replace(/'/g, "''")}'`;
+              } catch {
+                return `'${String(value).replace(/'/g, "''")}'`;
+              }
+            } else {
+              return String(value);
+            }
+          });
+          
+          batchSql += `INSERT INTO ${this.quoteIdentifier(tableName)} (${columnNames.map(col => this.quoteIdentifier(col)).join(', ')}) VALUES (${values.join(', ')});\n`;
+        });
+        
+        // 追加写入文件
+        fs.appendFileSync(exportFile, batchSql, 'utf8');
+        
+        // 增加偏移量
+        offset += batchSize;
+        
+        // 打印进度信息
+        console.log(`SQLite导出表数据进度: ${tableName} - 已处理 ${offset} 行`);
+      }
+      
+      return exportFile;
+    } catch (error) {
+      console.error('SQLite导出表数据失败:', error);
+      throw new Error(`导出表数据失败: ${error.message}`);
     }
   }
 }

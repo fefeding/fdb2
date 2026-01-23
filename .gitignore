@@ -33,3 +33,5 @@ nw-cache/
 server.pid
 data/error.sql
 data/connections.json
+server/backups
+server/exports

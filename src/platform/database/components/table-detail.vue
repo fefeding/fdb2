@@ -56,15 +56,22 @@
             <i class="bi bi-download"></i> 导出
           </button>
           <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#" @click="exportTableData('csv')">
+            <li><button class="dropdown-item" @click="exportTableData('csv')">
               <i class="bi bi-file-earmark-spreadsheet me-2"></i>导出 CSV
-            </a></li>
-            <li><a class="dropdown-item" href="#" @click="exportTableData('json')">
+            </button></li>
+            <li><button class="dropdown-item" @click="exportTableData('json')">
               <i class="bi bi-file-earmark-code me-2"></i>导出 JSON
-            </a></li>
-            <li><a class="dropdown-item" href="#" @click="exportTableData('excel')">
+            </button></li>
+            <li><button class="dropdown-item" @click="exportTableData('excel')">
               <i class="bi bi-file-earmark-excel me-2"></i>导出 Excel
-            </a></li>
+            </button></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><button class="dropdown-item" @click="exportTableStructure()">
+              <i class="bi bi-file-earmark-text me-2"></i>导出表结构
+            </button></li>
+            <li><button class="dropdown-item" @click="exportTableDataSQL()">
+              <i class="bi bi-file-earmark-code me-2"></i>导出表数据(SQL)
+            </button></li>
           </ul>
         </div>
       </div>
@@ -935,8 +942,154 @@ function formatValueForSQL(value: any, type: string): string {
 
 
 
-function exportTableData(format: 'csv' | 'json' | 'excel') {
-  emit('export-table');
+async function exportTableData(format: 'csv' | 'json' | 'excel') {
+  try {
+    if (!props.connection || !props.database || !props.table?.name) {
+      await modal.warning('缺少必要的连接信息');
+      return;
+    }
+    
+    // 调用后端API导出表数据
+    let response;
+    switch (format) {
+      case 'csv':
+        response = await databaseService.exportTableDataToCSV(
+          props.connection.id,
+          props.database,
+          props.table.name
+        );
+        break;
+      case 'json':
+        response = await databaseService.exportTableDataToJSON(
+          props.connection.id,
+          props.database,
+          props.table.name
+        );
+        break;
+      case 'excel':
+        response = await databaseService.exportTableDataToExcel(
+          props.connection.id,
+          props.database,
+          props.table.name
+        );
+        break;
+      default:
+        throw new Error('不支持的导出格式');
+    }
+    
+    if (response.ret === 0) {
+      await modal.success(`表数据导出成功，文件路径：${response.data}`);
+    } else {
+      await modal.error('导出表数据失败: ' + response.msg);
+    }
+  } catch (error) {
+    console.error('导出表数据失败:', error);
+    modal.error('导出表数据失败: ' + (error as any).message);
+  }
+}
+
+async function exportTableStructure() {
+  try {
+    // 构建CREATE TABLE语句
+    let createTableSQL = `CREATE TABLE ${props.table?.name} (
+`;
+    
+    const columns = [];
+    safeTableColumns.value.forEach((column: any, index: number) => {
+      let columnDef = `  ${column.name} ${column.type}`;
+      
+      if (!column.nullable) {
+        columnDef += ' NOT NULL';
+      }
+      
+      if (column.defaultValue !== undefined && column.defaultValue !== null) {
+        if (typeof column.defaultValue === 'string') {
+          columnDef += ` DEFAULT '${column.defaultValue.replace(/'/g, "''")}'`;
+        } else {
+          columnDef += ` DEFAULT ${column.defaultValue}`;
+        }
+      }
+      
+      if (column.isPrimary) {
+        columnDef += ' PRIMARY KEY';
+      }
+      
+      if (column.isAutoIncrement) {
+        columnDef += ' AUTO_INCREMENT';
+      }
+      
+      if (column.comment) {
+        columnDef += ` COMMENT '${column.comment.replace(/'/g, "''")}'`;
+      }
+      
+      columns.push(columnDef);
+    });
+    
+    createTableSQL += columns.join(',\n');
+    createTableSQL += '\n);\n';
+    
+    // 添加索引
+    if (props.tableStructure?.indexes) {
+      props.tableStructure.indexes.forEach((index: any) => {
+        if (!index.isPrimary) {
+          createTableSQL += `CREATE ${index.unique ? 'UNIQUE ' : ''}INDEX ${index.name} ON ${props.table?.name} (${index.columns.join(', ')})\n`;
+        }
+      });
+    }
+    
+    // 添加外键
+    if (props.tableStructure?.foreignKeys) {
+      props.tableStructure.foreignKeys.forEach((fk: any) => {
+        createTableSQL += `ALTER TABLE ${props.table?.name} ADD CONSTRAINT ${fk.name} FOREIGN KEY (${fk.column}) REFERENCES ${fk.referencedTable} (${fk.referencedColumn})${fk.onDelete ? ` ON DELETE ${fk.onDelete}` : ''}${fk.onUpdate ? ` ON UPDATE ${fk.onUpdate}` : ''}\n`;
+      });
+    }
+    
+    // 下载SQL文件
+    downloadSQLFile(createTableSQL, `${props.table?.name}_structure.sql`);
+  } catch (error) {
+    console.error('导出表结构失败:', error);
+    modal.error('导出表结构失败: ' + (error as any).message);
+  }
+}
+
+async function exportTableDataSQL() {
+  try {
+    if (!props.connection || !props.database || !props.table?.name) {
+      await modal.warning('缺少必要的连接信息');
+      return;
+    }
+    
+    // 调用后端API导出表数据
+    const response = await databaseService.exportTableDataToSQL(
+      props.connection.id,
+      props.database,
+      props.table.name
+    );
+    
+    if (response.ret === 0) {
+      await modal.success(`表数据导出成功，文件路径：${response.data}`);
+    } else {
+      await modal.error('导出表数据失败: ' + response.msg);
+    }
+  } catch (error) {
+    console.error('导出表数据失败:', error);
+    modal.error('导出表数据失败: ' + (error as any).message);
+  }
+}
+
+function downloadSQLFile(content: string, filename: string) {
+  const blob = new Blob([content], { type: 'text/sql;charset=utf-8;' });
+  const link = document.createElement('a');
+  
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 }
 </script>
 

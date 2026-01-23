@@ -1,4 +1,7 @@
 import { DataSource } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
+import { execSync } from 'child_process';
 import { BaseDatabaseService } from './base.service';
 import { 
   TableEntity, 
@@ -14,6 +17,153 @@ export class MySQLService extends BaseDatabaseService {
 
   getDatabaseType(): string {
     return 'mysql';
+  }
+
+  /**
+   * 导出表数据到 CSV 文件
+   */
+  async exportTableDataToCSV(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string> {
+    try {
+      const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+      if (!fs.existsSync(exportPath)) {
+        fs.mkdirSync(exportPath, { recursive: true });
+      }
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const exportFile = path.join(exportPath, `${tableName}_data_${timestamp}.csv`);
+      
+      const columns = await this.getColumns(dataSource, databaseName, tableName);
+      const columnNames = columns.map(column => column.name);
+      
+      // 写入 CSV 头部
+      const header = columnNames.join(',') + '\n';
+      fs.writeFileSync(exportFile, '\ufeff' + header, 'utf8');
+      
+      // 分批处理数据
+      const batchSize = options?.batchSize || 10000;
+      let offset = 0;
+      let hasMoreData = true;
+      
+      while (hasMoreData) {
+        const query = `SELECT * FROM ${this.quoteIdentifier(tableName)} LIMIT ${batchSize} OFFSET ${offset}`;
+        const data = await dataSource.query(query);
+        
+        if (data.length === 0) {
+          hasMoreData = false;
+          break;
+        }
+        
+        // 生成当前批次的 CSV 行
+        let batchContent = '';
+        data.forEach((row: any) => {
+          const values = columnNames.map(column => {
+            const value = row[column];
+            if (value === null || value === undefined) return '';
+            if (typeof value === 'string') {
+              const stringValue = String(value);
+              if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+                return `"${stringValue.replace(/"/g, '""')}"`;
+              }
+              return stringValue;
+            }
+            if (typeof value === 'object') {
+              try {
+                const stringValue = JSON.stringify(value);
+                if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+                  return `"${stringValue.replace(/"/g, '""')}"`;
+                }
+                return stringValue;
+              } catch {
+                return `"${String(value).replace(/"/g, '""')}"`;
+              }
+            }
+            return String(value);
+          });
+          batchContent += values.join(',') + '\n';
+        });
+        
+        fs.appendFileSync(exportFile, batchContent, 'utf8');
+        offset += batchSize;
+        console.log(`MySQL导出CSV进度: ${tableName} - 已处理 ${offset} 行`);
+      }
+      
+      return exportFile;
+    } catch (error) {
+      console.error('MySQL导出CSV失败:', error);
+      throw new Error(`导出CSV失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 导出表数据到 JSON 文件
+   */
+  async exportTableDataToJSON(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string> {
+    try {
+      const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+      if (!fs.existsSync(exportPath)) {
+        fs.mkdirSync(exportPath, { recursive: true });
+      }
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const exportFile = path.join(exportPath, `${tableName}_data_${timestamp}.json`);
+      
+      const columns = await this.getColumns(dataSource, databaseName, tableName);
+      const columnNames = columns.map(column => column.name);
+      
+      // 分批处理数据，生成 JSON 数组
+      const batchSize = options?.batchSize || 10000;
+      let offset = 0;
+      let hasMoreData = true;
+      let isFirstBatch = true;
+      
+      // 写入 JSON 开始
+      fs.writeFileSync(exportFile, '[', 'utf8');
+      
+      while (hasMoreData) {
+        const query = `SELECT * FROM ${this.quoteIdentifier(tableName)} LIMIT ${batchSize} OFFSET ${offset}`;
+        const data = await dataSource.query(query);
+        
+        if (data.length === 0) {
+          hasMoreData = false;
+          break;
+        }
+        
+        // 生成当前批次的 JSON 数据
+        let batchContent = '';
+        data.forEach((row: any, index: number) => {
+          if (!isFirstBatch || index > 0) {
+            batchContent += ',';
+          }
+          batchContent += JSON.stringify(row);
+        });
+        
+        fs.appendFileSync(exportFile, batchContent, 'utf8');
+        isFirstBatch = false;
+        offset += batchSize;
+        console.log(`MySQL导出JSON进度: ${tableName} - 已处理 ${offset} 行`);
+      }
+      
+      // 写入 JSON 结束
+      fs.appendFileSync(exportFile, ']', 'utf8');
+      
+      return exportFile;
+    } catch (error) {
+      console.error('MySQL导出JSON失败:', error);
+      throw new Error(`导出JSON失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 导出表数据到 Excel 文件
+   */
+  async exportTableDataToExcel(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string> {
+    try {
+      // 由于 Excel 文件需要特殊处理，这里先导出为 CSV，然后在前端转换为 Excel
+      // 或者使用专门的库生成 Excel 文件
+      // 这里暂时实现为导出为 CSV，后续可以根据需要优化
+      return this.exportTableDataToCSV(dataSource, databaseName, tableName, options);
+    } catch (error) {
+      console.error('MySQL导出Excel失败:', error);
+      throw new Error(`导出Excel失败: ${error.message}`);
+    }
   }
 
   /**
@@ -388,6 +538,160 @@ export class MySQLService extends BaseDatabaseService {
       } catch (e) {
         return [{ message: '无法获取MySQL日志，请确保具有适当的权限' }];
       }
+    }
+  }
+
+  /**
+   * 备份数据库
+   */
+  async backupDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<string> {
+    // MySQL备份数据库
+    try {
+      // 使用mysqldump命令备份
+      const backupPath = options?.path || path.join(__dirname, '..', '..', 'backups');
+      
+      // 确保备份目录存在
+      if (!fs.existsSync(backupPath)) {
+        fs.mkdirSync(backupPath, { recursive: true });
+      }
+      
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const backupFile = path.join(backupPath, `${databaseName}_${timestamp}.sql`);
+      
+      // 执行备份命令
+      const connectionOptions = dataSource.options as any;
+      const host = connectionOptions.host || 'localhost';
+      const port = connectionOptions.port || 3306;
+      const user = connectionOptions.username;
+      const password = connectionOptions.password;
+      
+      // 构建mysqldump命令
+      let command = `mysqldump -h ${host} -P ${port} -u ${user}`;
+      if (password) {
+        command += ` -p${password}`;
+      }
+      command += ` ${databaseName} > ${backupFile}`;
+      
+      // 执行命令
+      execSync(command);
+      
+      return `备份成功：${backupFile}`;
+    } catch (error) {
+      console.error('MySQL备份失败:', error);
+      throw new Error(`备份失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 恢复数据库
+   */
+  async restoreDatabase(dataSource: DataSource, databaseName: string, filePath: string, options?: any): Promise<void> {
+    // MySQL恢复数据库
+    try {
+      // 执行恢复命令
+      const connectionOptions = dataSource.options as any;
+      const host = connectionOptions.host || 'localhost';
+      const port = connectionOptions.port || 3306;
+      const user = connectionOptions.username;
+      const password = connectionOptions.password;
+      
+      // 构建mysql命令
+      let command = `mysql -h ${host} -P ${port} -u ${user}`;
+      if (password) {
+        command += ` -p${password}`;
+      }
+      command += ` ${databaseName} < ${filePath}`;
+      
+      // 执行命令
+      execSync(command);
+    } catch (error) {
+      console.error('MySQL恢复失败:', error);
+      throw new Error(`恢复失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 导出表数据到 SQL 文件
+   */
+  async exportTableDataToSQL(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string> {
+    try {
+      // 创建导出目录
+      const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+      if (!fs.existsSync(exportPath)) {
+        fs.mkdirSync(exportPath, { recursive: true });
+      }
+      
+      // 生成文件名
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const exportFile = path.join(exportPath, `${tableName}_data_${timestamp}.sql`);
+      
+      // 获取表结构
+      const columns = await this.getColumns(dataSource, databaseName, tableName);
+      const columnNames = columns.map(column => column.name);
+      
+      // 生成文件头部
+      const header = `-- 表数据导出 - ${tableName}\n` +
+                    `-- 导出时间: ${new Date().toISOString()}\n\n`;
+      fs.writeFileSync(exportFile, header, 'utf8');
+      
+      // 分批处理数据，避免一次性加载大量数据到内存
+      const batchSize = options?.batchSize || 10000; // 每批处理10000行
+      let offset = 0;
+      let hasMoreData = true;
+      
+      while (hasMoreData) {
+        // 分批查询数据
+        const query = `SELECT * FROM ${this.quoteIdentifier(tableName)} LIMIT ${batchSize} OFFSET ${offset}`;
+        const data = await dataSource.query(query);
+        
+        if (data.length === 0) {
+          hasMoreData = false;
+          break;
+        }
+        
+        // 生成当前批次的 INSERT 语句
+        let batchSql = '';
+        data.forEach((row: any) => {
+          const values = columnNames.map(column => {
+            const value = row[column];
+            if (value === null || value === undefined) {
+              return 'NULL';
+            } else if (typeof value === 'string') {
+              return `'${value.replace(/'/g, "''")}'`;
+            } else if (typeof value === 'boolean') {
+              return value ? '1' : '0';
+            } else if (value instanceof Date) {
+              return `'${value.toISOString().slice(0, 19).replace('T', ' ')}'`;
+            } else if (typeof value === 'object') {
+              // 处理JSON类型和其他对象类型
+              try {
+                const stringValue = JSON.stringify(value);
+                return `'${stringValue.replace(/'/g, "''")}'`;
+              } catch {
+                return `'${String(value).replace(/'/g, "''")}'`;
+              }
+            } else {
+              return String(value);
+            }
+          });
+          
+          batchSql += `INSERT INTO ${this.quoteIdentifier(tableName)} (${columnNames.map(col => this.quoteIdentifier(col)).join(', ')}) VALUES (${values.join(', ')});\n`;
+        });
+        
+        // 追加写入文件
+        fs.appendFileSync(exportFile, batchSql, 'utf8');
+        
+        // 增加偏移量
+        offset += batchSize;
+        
+        // 打印进度信息
+        console.log(`MySQL导出表数据进度: ${tableName} - 已处理 ${offset} 行`);
+      }
+      
+      return exportFile;
+    } catch (error) {
+      console.error('MySQL导出表数据失败:', error);
+      throw new Error(`导出表数据失败: ${error.message}`);
     }
   }
 }

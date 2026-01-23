@@ -1,14 +1,25 @@
 import { ConnectionService } from '../connection.service';
 import { BaseDatabaseService } from './base.service';
-import { MySQLService } from './mysql.service';
-import { PostgreSQLService } from './postgres.service';
-import { SQLiteService } from './sqlite.service';
-import { OracleService } from './oracle.service';
-import { SQLServerService } from './mssql.service';
 import { 
   DatabaseEntity, 
   TableEntity 
 } from '../../model/database.entity';
+
+// 动态导入数据库服务类，避免在浏览器环境中加载 Node.js 特有模块
+let MySQLService: any;
+let PostgreSQLService: any;
+let SQLiteService: any;
+let OracleService: any;
+let SQLServerService: any;
+
+// 只在 Node.js 环境中加载
+if (typeof window === 'undefined') {
+  MySQLService = require('./mysql.service').MySQLService;
+  PostgreSQLService = require('./postgres.service').PostgreSQLService;
+  SQLiteService = require('./sqlite.service').SQLiteService;
+  OracleService = require('./oracle.service').OracleService;
+  SQLServerService = require('./mssql.service').SQLServerService;
+}
 
 /**
  * 数据库服务管理类
@@ -17,25 +28,34 @@ import {
 export class DatabaseService {
 
   public connectionService: ConnectionService;
-  private mysqlService: MySQLService;
-  private postgreSQLService: PostgreSQLService;
-  private sqliteService: SQLiteService;
-  private oracleService: OracleService;
-  private sqlServerService: SQLServerService;
+  private mysqlService: any;
+  private postgreSQLService: any;
+  private sqliteService: any;
+  private oracleService: any;
+  private sqlServerService: any;
 
   constructor() {
     this.connectionService = new ConnectionService();
-    this.mysqlService = new MySQLService();
-    this.postgreSQLService = new PostgreSQLService();
-    this.sqliteService = new SQLiteService();
-    this.oracleService = new OracleService();
-    this.sqlServerService = new SQLServerService();
+    
+    // 只在 Node.js 环境中实例化数据库服务类
+    if (typeof window === 'undefined') {
+      this.mysqlService = new MySQLService();
+      this.postgreSQLService = new PostgreSQLService();
+      this.sqliteService = new SQLiteService();
+      this.oracleService = new OracleService();
+      this.sqlServerService = new SQLServerService();
+    }
   }
 
   /**
    * 获取数据库服务实例
    */
   public getDatabaseService(type: string): BaseDatabaseService {
+    // 检查是否在 Node.js 环境中
+    if (typeof window !== 'undefined') {
+      throw new Error('数据库服务只能在服务器端使用');
+    }
+    
     switch (type.toLowerCase()) {
       case 'mysql':
         return this.mysqlService;

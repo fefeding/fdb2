@@ -1,4 +1,7 @@
 import { DataSource } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
+import { execSync } from 'child_process';
 import { BaseDatabaseService } from './base.service';
 import { 
   TableEntity, 
@@ -399,6 +402,151 @@ export class PostgreSQLService extends BaseDatabaseService {
       } catch (e) {
         return [{ message: '无法获取PostgreSQL日志，请确保具有适当的权限' }];
       }
+    }
+  }
+
+  /**
+   * 备份数据库
+   */
+  async backupDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<string> {
+    // PostgreSQL备份数据库
+    try {
+      // 使用pg_dump命令备份
+      const backupPath = options?.path || path.join(__dirname, '..', '..', 'backups');
+      
+      // 确保备份目录存在
+      if (!fs.existsSync(backupPath)) {
+        fs.mkdirSync(backupPath, { recursive: true });
+      }
+      
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const backupFile = path.join(backupPath, `${databaseName}_${timestamp}.sql`);
+      
+      // 执行备份命令
+      const connectionOptions = dataSource.options as any;
+      const host = connectionOptions.host || 'localhost';
+      const port = connectionOptions.port || 5432;
+      const user = connectionOptions.username;
+      const password = connectionOptions.password;
+      
+      // 构建pg_dump命令
+      let command = `pg_dump -h ${host} -p ${port} -U ${user} -d ${databaseName} > ${backupFile}`;
+      
+      // 执行命令
+      execSync(command, { env: { ...process.env, PGPASSWORD: password } });
+      
+      return `备份成功：${backupFile}`;
+    } catch (error) {
+      console.error('PostgreSQL备份失败:', error);
+      throw new Error(`备份失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 恢复数据库
+   */
+  async restoreDatabase(dataSource: DataSource, databaseName: string, filePath: string, options?: any): Promise<void> {
+    // PostgreSQL恢复数据库
+    try {
+      // 执行恢复命令
+      const connectionOptions = dataSource.options as any;
+      const host = connectionOptions.host || 'localhost';
+      const port = connectionOptions.port || 5432;
+      const user = connectionOptions.username;
+      const password = connectionOptions.password;
+      
+      // 构建psql命令
+      let command = `psql -h ${host} -p ${port} -U ${user} -d ${databaseName} -f ${filePath}`;
+      
+      // 执行命令
+      execSync(command, { env: { ...process.env, PGPASSWORD: password } });
+    } catch (error) {
+      console.error('PostgreSQL恢复失败:', error);
+      throw new Error(`恢复失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 导出表数据到 SQL 文件
+   */
+  async exportTableDataToSQL(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string> {
+    try {
+      // 创建导出目录
+      const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+      if (!fs.existsSync(exportPath)) {
+        fs.mkdirSync(exportPath, { recursive: true });
+      }
+      
+      // 生成文件名
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const exportFile = path.join(exportPath, `${tableName}_data_${timestamp}.sql`);
+      
+      // 获取表结构
+      const columns = await this.getColumns(dataSource, databaseName, tableName);
+      const columnNames = columns.map(column => column.name);
+      
+      // 生成文件头部
+      const header = `-- 表数据导出 - ${tableName}\n` +
+                    `-- 导出时间: ${new Date().toISOString()}\n\n`;
+      fs.writeFileSync(exportFile, header, 'utf8');
+      
+      // 分批处理数据，避免一次性加载大量数据到内存
+      const batchSize = options?.batchSize || 10000; // 每批处理10000行
+      let offset = 0;
+      let hasMoreData = true;
+      
+      while (hasMoreData) {
+        // 分批查询数据
+        const query = `SELECT * FROM ${this.quoteIdentifier(tableName)} LIMIT ${batchSize} OFFSET ${offset}`;
+        const data = await dataSource.query(query);
+        
+        if (data.length === 0) {
+          hasMoreData = false;
+          break;
+        }
+        
+        // 生成当前批次的 INSERT 语句
+        let batchSql = '';
+        data.forEach((row: any) => {
+          const values = columnNames.map(column => {
+            const value = row[column];
+            if (value === null || value === undefined) {
+              return 'NULL';
+            } else if (typeof value === 'string') {
+              return `'${value.replace(/'/g, "''")}'`;
+            } else if (typeof value === 'boolean') {
+              return value ? 'TRUE' : 'FALSE';
+            } else if (value instanceof Date) {
+              return `'${value.toISOString().slice(0, 19).replace('T', ' ')}'`;
+            } else if (typeof value === 'object' && value !== null) {
+              // 处理JSON类型
+              try {
+                return `'${JSON.stringify(value).replace(/'/g, "''")}'`;
+              } catch {
+                return `'${String(value).replace(/'/g, "''")}'`;
+              }
+            } else {
+              return String(value);
+            }
+          });
+          
+          batchSql += `INSERT INTO ${this.quoteIdentifier(tableName)} (${columnNames.map(col => this.quoteIdentifier(col)).join(', ')}) VALUES (${values.join(', ')});\n`;
+        });
+        
+        // 追加写入文件
+        fs.appendFileSync(exportFile, batchSql, 'utf8');
+        
+        // 增加偏移量
+        offset += batchSize;
+        
+        // 打印进度信息
+        console.log(`PostgreSQL导出表数据进度: ${tableName} - 已处理 ${offset} 行`);
+      }
+      
+      return exportFile;
+    } catch (error) {
+      console.error('PostgreSQL导出表数据失败:', error);
+      throw new Error(`导出表数据失败: ${error.message}`);
     }
   }
 }

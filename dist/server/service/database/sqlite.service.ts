@@ -1,4 +1,6 @@
 import { DataSource } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 import { BaseDatabaseService } from './base.service';
 import { 
   TableEntity, 
@@ -234,6 +236,63 @@ export class SQLiteService extends BaseDatabaseService {
       return logs;
     } catch (error) {
       return [{ message: 'SQLite数据库日志功能有限，请检查数据库文件状态' }];
+    }
+  }
+
+  /**
+   * 备份数据库
+   */
+  async backupDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<string> {
+    // SQLite备份数据库
+    try {
+      // SQLite备份就是复制数据库文件
+      const backupPath = options?.path || path.join(__dirname, '..', '..', 'backups');
+      
+      // 确保备份目录存在
+      if (!fs.existsSync(backupPath)) {
+        fs.mkdirSync(backupPath, { recursive: true });
+      }
+      
+      // 获取SQLite数据库文件路径
+      const connectionOptions = dataSource.options as any;
+      const dbPath = connectionOptions.database;
+      
+      if (!dbPath) {
+        throw new Error('SQLite数据库文件路径未找到');
+      }
+      
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const backupFile = path.join(backupPath, `${databaseName}_${timestamp}.db`);
+      
+      // 复制数据库文件
+      fs.copyFileSync(dbPath, backupFile);
+      
+      return `备份成功：${backupFile}`;
+    } catch (error) {
+      console.error('SQLite备份失败:', error);
+      throw new Error(`备份失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 恢复数据库
+   */
+  async restoreDatabase(dataSource: DataSource, databaseName: string, filePath: string, options?: any): Promise<void> {
+    // SQLite恢复数据库
+    try {
+      // SQLite恢复就是复制备份文件到数据库文件路径
+      const connectionOptions = dataSource.options as any;
+      const dbPath = connectionOptions.database;
+      
+      if (!dbPath) {
+        throw new Error('SQLite数据库文件路径未找到');
+      }
+      
+      // 复制备份文件到数据库路径
+      fs.copyFileSync(filePath, dbPath);
+    } catch (error) {
+      console.error('SQLite恢复失败:', error);
+      throw new Error(`恢复失败: ${error.message}`);
     }
   }
 }

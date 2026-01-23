@@ -1,4 +1,7 @@
 import { DataSource } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
+import { execSync } from 'child_process';
 import { BaseDatabaseService } from './base.service';
 import { 
   TableEntity, 
@@ -399,6 +402,67 @@ export class PostgreSQLService extends BaseDatabaseService {
       } catch (e) {
         return [{ message: '无法获取PostgreSQL日志，请确保具有适当的权限' }];
       }
+    }
+  }
+
+  /**
+   * 备份数据库
+   */
+  async backupDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<string> {
+    // PostgreSQL备份数据库
+    try {
+      // 使用pg_dump命令备份
+      const backupPath = options?.path || path.join(__dirname, '..', '..', 'backups');
+      
+      // 确保备份目录存在
+      if (!fs.existsSync(backupPath)) {
+        fs.mkdirSync(backupPath, { recursive: true });
+      }
+      
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const backupFile = path.join(backupPath, `${databaseName}_${timestamp}.sql`);
+      
+      // 执行备份命令
+      const connectionOptions = dataSource.options as any;
+      const host = connectionOptions.host || 'localhost';
+      const port = connectionOptions.port || 5432;
+      const user = connectionOptions.username;
+      const password = connectionOptions.password;
+      
+      // 构建pg_dump命令
+      let command = `pg_dump -h ${host} -p ${port} -U ${user} -d ${databaseName} > ${backupFile}`;
+      
+      // 执行命令
+      execSync(command, { env: { ...process.env, PGPASSWORD: password } });
+      
+      return `备份成功：${backupFile}`;
+    } catch (error) {
+      console.error('PostgreSQL备份失败:', error);
+      throw new Error(`备份失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 恢复数据库
+   */
+  async restoreDatabase(dataSource: DataSource, databaseName: string, filePath: string, options?: any): Promise<void> {
+    // PostgreSQL恢复数据库
+    try {
+      // 执行恢复命令
+      const connectionOptions = dataSource.options as any;
+      const host = connectionOptions.host || 'localhost';
+      const port = connectionOptions.port || 5432;
+      const user = connectionOptions.username;
+      const password = connectionOptions.password;
+      
+      // 构建psql命令
+      let command = `psql -h ${host} -p ${port} -U ${user} -d ${databaseName} -f ${filePath}`;
+      
+      // 执行命令
+      execSync(command, { env: { ...process.env, PGPASSWORD: password } });
+    } catch (error) {
+      console.error('PostgreSQL恢复失败:', error);
+      throw new Error(`恢复失败: ${error.message}`);
     }
   }
 }

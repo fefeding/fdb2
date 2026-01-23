@@ -74,5 +74,17 @@ export declare class OracleService extends BaseDatabaseService {
      * 查看数据库日志
      */
     viewLogs(dataSource: DataSource, database?: string, limit?: number): Promise<any[]>;
+    /**
+     * 备份数据库
+     */
+    backupDatabase(dataSource: DataSource, databaseName: string, options?: any): Promise<string>;
+    /**
+     * 恢复数据库
+     */
+    restoreDatabase(dataSource: DataSource, databaseName: string, filePath: string, options?: any): Promise<void>;
+    /**
+     * 导出表数据到 SQL 文件
+     */
+    exportTableDataToSQL(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string>;
 }
 //# sourceMappingURL=oracle.service.d.ts.map

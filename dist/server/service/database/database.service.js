@@ -2,11 +2,20 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DatabaseService = void 0;
 const connection_service_1 = require("../connection.service");
-const mysql_service_1 = require("./mysql.service");
-const postgres_service_1 = require("./postgres.service");
-const sqlite_service_1 = require("./sqlite.service");
-const oracle_service_1 = require("./oracle.service");
-const mssql_service_1 = require("./mssql.service");
+// 动态导入数据库服务类，避免在浏览器环境中加载 Node.js 特有模块
+let MySQLService;
+let PostgreSQLService;
+let SQLiteService;
+let OracleService;
+let SQLServerService;
+// 只在 Node.js 环境中加载
+if (typeof window === 'undefined') {
+    MySQLService = require('./mysql.service').MySQLService;
+    PostgreSQLService = require('./postgres.service').PostgreSQLService;
+    SQLiteService = require('./sqlite.service').SQLiteService;
+    OracleService = require('./oracle.service').OracleService;
+    SQLServerService = require('./mssql.service').SQLServerService;
+}
 /**
  * 数据库服务管理类
  * 负责根据数据库类型选择相应的服务实现
@@ -20,16 +29,23 @@ class DatabaseService {
     sqlServerService;
     constructor() {
         this.connectionService = new connection_service_1.ConnectionService();
-        this.mysqlService = new mysql_service_1.MySQLService();
-        this.postgreSQLService = new postgres_service_1.PostgreSQLService();
-        this.sqliteService = new sqlite_service_1.SQLiteService();
-        this.oracleService = new oracle_service_1.OracleService();
-        this.sqlServerService = new mssql_service_1.SQLServerService();
+        // 只在 Node.js 环境中实例化数据库服务类
+        if (typeof window === 'undefined') {
+            this.mysqlService = new MySQLService();
+            this.postgreSQLService = new PostgreSQLService();
+            this.sqliteService = new SQLiteService();
+            this.oracleService = new OracleService();
+            this.sqlServerService = new SQLServerService();
+        }
     }
     /**
      * 获取数据库服务实例
      */
     getDatabaseService(type) {
+        // 检查是否在 Node.js 环境中
+        if (typeof window !== 'undefined') {
+            throw new Error('数据库服务只能在服务器端使用');
+        }
         switch (type.toLowerCase()) {
             case 'mysql':
                 return this.mysqlService;
@@ -348,6 +364,14 @@ class DatabaseService {
             }
         }
         return { results };
+    }
+    /**
+     * 导出表数据到 SQL 文件
+     */
+    async exportTableDataToSQL(connectionId, databaseName, tableName, options) {
+        const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+        const databaseService = this.getDatabaseService(dataSource.options.type);
+        return databaseService.exportTableDataToSQL(dataSource, databaseName, tableName, options);
     }
     /**
      * 获取数据库类型特定的配置

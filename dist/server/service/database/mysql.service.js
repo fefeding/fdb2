@@ -1,6 +1,42 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MySQLService = void 0;
+const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
+const child_process_1 = require("child_process");
 const base_service_1 = require("./base.service");
 /**
  * MySQL数据库服务实现
@@ -348,6 +384,119 @@ class MySQLService extends base_service_1.BaseDatabaseService {
             catch (e) {
                 return [{ message: '无法获取MySQL日志，请确保具有适当的权限' }];
             }
+        }
+    }
+    /**
+     * 备份数据库
+     */
+    async backupDatabase(dataSource, databaseName, options) {
+        // MySQL备份数据库
+        try {
+            // 使用mysqldump命令备份
+            const backupPath = options?.path || path.join(__dirname, '..', '..', 'backups');
+            // 确保备份目录存在
+            if (!fs.existsSync(backupPath)) {
+                fs.mkdirSync(backupPath, { recursive: true });
+            }
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const backupFile = path.join(backupPath, `${databaseName}_${timestamp}.sql`);
+            // 执行备份命令
+            const connectionOptions = dataSource.options;
+            const host = connectionOptions.host || 'localhost';
+            const port = connectionOptions.port || 3306;
+            const user = connectionOptions.username;
+            const password = connectionOptions.password;
+            // 构建mysqldump命令
+            let command = `mysqldump -h ${host} -P ${port} -u ${user}`;
+            if (password) {
+                command += ` -p${password}`;
+            }
+            command += ` ${databaseName} > ${backupFile}`;
+            // 执行命令
+            (0, child_process_1.execSync)(command);
+            return `备份成功：${backupFile}`;
+        }
+        catch (error) {
+            console.error('MySQL备份失败:', error);
+            throw new Error(`备份失败: ${error.message}`);
+        }
+    }
+    /**
+     * 恢复数据库
+     */
+    async restoreDatabase(dataSource, databaseName, filePath, options) {
+        // MySQL恢复数据库
+        try {
+            // 执行恢复命令
+            const connectionOptions = dataSource.options;
+            const host = connectionOptions.host || 'localhost';
+            const port = connectionOptions.port || 3306;
+            const user = connectionOptions.username;
+            const password = connectionOptions.password;
+            // 构建mysql命令
+            let command = `mysql -h ${host} -P ${port} -u ${user}`;
+            if (password) {
+                command += ` -p${password}`;
+            }
+            command += ` ${databaseName} < ${filePath}`;
+            // 执行命令
+            (0, child_process_1.execSync)(command);
+        }
+        catch (error) {
+            console.error('MySQL恢复失败:', error);
+            throw new Error(`恢复失败: ${error.message}`);
+        }
+    }
+    /**
+     * 导出表数据到 SQL 文件
+     */
+    async exportTableDataToSQL(dataSource, databaseName, tableName, options) {
+        try {
+            // 创建导出目录
+            const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+            if (!fs.existsSync(exportPath)) {
+                fs.mkdirSync(exportPath, { recursive: true });
+            }
+            // 生成文件名
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const exportFile = path.join(exportPath, `${tableName}_data_${timestamp}.sql`);
+            // 获取表结构
+            const columns = await this.getColumns(dataSource, databaseName, tableName);
+            const columnNames = columns.map(column => column.name);
+            // 获取所有数据
+            const query = `SELECT * FROM ${this.quoteIdentifier(tableName)}`;
+            const data = await dataSource.query(query);
+            // 生成 INSERT 语句
+            let sqlContent = `-- 表数据导出 - ${tableName}\n`;
+            sqlContent += `-- 导出时间: ${new Date().toISOString()}\n\n`;
+            data.forEach((row) => {
+                const values = columnNames.map(column => {
+                    const value = row[column];
+                    if (value === null || value === undefined) {
+                        return 'NULL';
+                    }
+                    else if (typeof value === 'string') {
+                        return `'${value.replace(/'/g, "''")}'`;
+                    }
+                    else if (typeof value === 'boolean') {
+                        return value ? '1' : '0';
+                    }
+                    else if (value instanceof Date) {
+                        return `'${value.toISOString().slice(0, 19).replace('T', ' ')}'`;
+                    }
+                    else {
+                        return String(value);
+                    }
+                });
+                sqlContent += `INSERT INTO ${this.quoteIdentifier(tableName)} (${columnNames.map(col => this.quoteIdentifier(col)).join(', ')}) VALUES (${values.join(', ')});\n`;
+            });
+            // 写入文件
+            fs.writeFileSync(exportFile, sqlContent, 'utf8');
+            return exportFile;
+        }
+        catch (error) {
+            console.error('MySQL导出表数据失败:', error);
+            throw new Error(`导出表数据失败: ${error.message}`);
         }
     }
 }

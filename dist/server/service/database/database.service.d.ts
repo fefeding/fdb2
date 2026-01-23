@@ -204,6 +204,10 @@ export declare class DatabaseService {
      */
     repairTables(connectionId: string, databaseName: string): Promise<any>;
     /**
+     * 导出表数据到 SQL 文件
+     */
+    exportTableDataToSQL(connectionId: string, databaseName: string, tableName: string, options?: any): Promise<string>;
+    /**
      * 获取数据库类型特定的配置
      */
     getDatabaseTypeSpecificConfig(type: string): {

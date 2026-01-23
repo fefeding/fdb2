@@ -517,8 +517,10 @@ watch(sqlResult, () => {
 <style scoped>
 .sql-executor {
   width: 100%;
-  height: 100%;
-  margin-bottom: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .sql-toolbar {
@@ -542,7 +544,7 @@ watch(sqlResult, () => {
   border: 1px solid #dee2e6;
   border-radius: 4px;
   overflow: hidden;
-  height: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
 }

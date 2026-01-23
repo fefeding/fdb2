@@ -34,7 +34,7 @@ export class ModalHelper {
   /**
    * 错误提示
    */
-  error(content: string | Error, title?: string): Promise<boolean> {
+  error(content: string | Error, detail?: any): Promise<boolean> {
     const modal = this.getModal();
     
     // 处理错误对象
@@ -42,18 +42,18 @@ export class ModalHelper {
     if (content instanceof Error) {
       errorMessage = content.message;
       console.error('Error details:', {
-        name: content.name,
-        message: content.message,
-        stack: content.stack
+        name: content.name || detail.name,
+        message: content.message || detail.message,
+        stack: content.stack || detail.stack,
       });
     } else {
       errorMessage = String(content);
     }
     
     if (modal?.error) {
-      return modal.error(errorMessage, title);
+      return modal.error(errorMessage, detail);
     }
-    return showAlert(errorMessage, 'error', title) || Promise.resolve(true);
+    return showAlert(errorMessage, 'error', detail) || Promise.resolve(true);
   }
 
 

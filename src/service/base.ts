@@ -14,10 +14,8 @@ export function getRequestUrl(api: string) {
 }
 
 export async function requestServer(url: string, data?: any, option?: AxiosRequestConfig) {
-    if(!isBrowser) {
-        const serverRoute = await import('../../server/index');
-        return await serverRoute.handleDatabaseRoutes(url, data);
-    }
+    // 只在浏览器环境中使用 HTTP 请求
+    // 服务器端代码将在服务器启动时直接导入，而不是通过这里的动态导入
     url = getRequestUrl(url);
     const res = await requestHelper.request(url, data, option);
     return res;

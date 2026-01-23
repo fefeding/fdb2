@@ -168,6 +168,74 @@ export class DatabaseService {
   }
 
   /**
+   * 导出表数据到SQL文件
+   */
+  async exportTableDataToSQL(
+    connectionId: string,
+    databaseName: string,
+    tableName: string,
+    options?: any
+  ) {
+    return request('/api/database/exportTableDataToSQL', {
+      id: connectionId,
+      database: databaseName,
+      table: tableName,
+      options
+    });
+  }
+
+  /**
+   * 导出表数据到CSV文件
+   */
+  async exportTableDataToCSV(
+    connectionId: string,
+    databaseName: string,
+    tableName: string,
+    options?: any
+  ) {
+    return request('/api/database/exportTableDataToCSV', {
+      id: connectionId,
+      database: databaseName,
+      table: tableName,
+      options
+    });
+  }
+
+  /**
+   * 导出表数据到JSON文件
+   */
+  async exportTableDataToJSON(
+    connectionId: string,
+    databaseName: string,
+    tableName: string,
+    options?: any
+  ) {
+    return request('/api/database/exportTableDataToJSON', {
+      id: connectionId,
+      database: databaseName,
+      table: tableName,
+      options
+    });
+  }
+
+  /**
+   * 导出表数据到Excel文件
+   */
+  async exportTableDataToExcel(
+    connectionId: string,
+    databaseName: string,
+    tableName: string,
+    options?: any
+  ) {
+    return request('/api/database/exportTableDataToExcel', {
+      id: connectionId,
+      database: databaseName,
+      table: tableName,
+      options
+    });
+  }
+
+  /**
    * 保存表结构（新建表）
    */
   async saveTableStructure(
