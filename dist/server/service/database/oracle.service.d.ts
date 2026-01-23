@@ -86,5 +86,17 @@ export declare class OracleService extends BaseDatabaseService {
      * 导出表数据到 SQL 文件
      */
     exportTableDataToSQL(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string>;
+    /**
+     * 导出表数据到 CSV 文件
+     */
+    exportTableDataToCSV(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string>;
+    /**
+     * 导出表数据到 JSON 文件
+     */
+    exportTableDataToJSON(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string>;
+    /**
+     * 导出表数据到 Excel 文件
+     */
+    exportTableDataToExcel(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string>;
 }
 //# sourceMappingURL=oracle.service.d.ts.map

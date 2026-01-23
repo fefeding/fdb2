@@ -208,6 +208,18 @@ export declare class DatabaseService {
      */
     exportTableDataToSQL(connectionId: string, databaseName: string, tableName: string, options?: any): Promise<string>;
     /**
+     * 导出表数据到 CSV 文件
+     */
+    exportTableDataToCSV(connectionId: string, databaseName: string, tableName: string, options?: any): Promise<string>;
+    /**
+     * 导出表数据到 JSON 文件
+     */
+    exportTableDataToJSON(connectionId: string, databaseName: string, tableName: string, options?: any): Promise<string>;
+    /**
+     * 导出表数据到 Excel 文件
+     */
+    exportTableDataToExcel(connectionId: string, databaseName: string, tableName: string, options?: any): Promise<string>;
+    /**
      * 获取数据库类型特定的配置
      */
     getDatabaseTypeSpecificConfig(type: string): {

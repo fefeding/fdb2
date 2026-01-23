@@ -343,7 +343,7 @@ export class DatabaseService {
       tables: tables.map(table => ({
         name: table.name,
         rowCount: table.rowCount || 0,
-        size: table.size || 0
+        size: table.dataSize || 0
       }))
     };
   }
@@ -412,6 +412,42 @@ export class DatabaseService {
     }
     
     return { results };
+  }
+
+  /**
+   * 导出表数据到 SQL 文件
+   */
+  async exportTableDataToSQL(connectionId: string, databaseName: string, tableName: string, options?: any): Promise<string> {
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+    const databaseService = this.getDatabaseService(dataSource.options.type as string);
+    return databaseService.exportTableDataToSQL(dataSource, databaseName, tableName, options);
+  }
+
+  /**
+   * 导出表数据到 CSV 文件
+   */
+  async exportTableDataToCSV(connectionId: string, databaseName: string, tableName: string, options?: any): Promise<string> {
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+    const databaseService = this.getDatabaseService(dataSource.options.type as string);
+    return databaseService.exportTableDataToCSV(dataSource, databaseName, tableName, options);
+  }
+
+  /**
+   * 导出表数据到 JSON 文件
+   */
+  async exportTableDataToJSON(connectionId: string, databaseName: string, tableName: string, options?: any): Promise<string> {
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+    const databaseService = this.getDatabaseService(dataSource.options.type as string);
+    return databaseService.exportTableDataToJSON(dataSource, databaseName, tableName, options);
+  }
+
+  /**
+   * 导出表数据到 Excel 文件
+   */
+  async exportTableDataToExcel(connectionId: string, databaseName: string, tableName: string, options?: any): Promise<string> {
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+    const databaseService = this.getDatabaseService(dataSource.options.type as string);
+    return databaseService.exportTableDataToExcel(dataSource, databaseName, tableName, options);
   }
 
   /**

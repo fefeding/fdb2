@@ -343,7 +343,7 @@ export class DatabaseService {
       tables: tables.map(table => ({
         name: table.name,
         rowCount: table.rowCount || 0,
-        size: table.size || 0
+        size: table.dataSize || 0
       }))
     };
   }

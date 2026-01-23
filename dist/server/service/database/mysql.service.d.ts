@@ -7,6 +7,18 @@ import { TableEntity, ColumnEntity, IndexEntity, ForeignKeyEntity } from '../../
 export declare class MySQLService extends BaseDatabaseService {
     getDatabaseType(): string;
     /**
+     * 导出表数据到 CSV 文件
+     */
+    exportTableDataToCSV(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string>;
+    /**
+     * 导出表数据到 JSON 文件
+     */
+    exportTableDataToJSON(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string>;
+    /**
+     * 导出表数据到 Excel 文件
+     */
+    exportTableDataToExcel(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string>;
+    /**
      * 获取MySQL数据库列表
      */
     getDatabases(dataSource: DataSource): Promise<string[]>;

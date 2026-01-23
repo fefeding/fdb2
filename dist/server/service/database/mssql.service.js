@@ -351,12 +351,12 @@ class SQLServerService extends base_service_1.BaseDatabaseService {
             // 添加列定义
             const columnDefinitions = columns.map(column => {
                 let definition = `  ${this.quoteIdentifier(column.name)} ${column.type}`;
-                if (column.notNull)
+                if (!column.nullable)
                     definition += ' NOT NULL';
                 if (column.defaultValue !== undefined) {
                     definition += ` DEFAULT ${column.defaultValue === null ? 'NULL' : `'${column.defaultValue}'`}`;
                 }
-                if (column.autoIncrement)
+                if (column.isAutoIncrement)
                     definition += ' IDENTITY(1,1)';
                 return definition;
             });
@@ -370,17 +370,17 @@ class SQLServerService extends base_service_1.BaseDatabaseService {
             schemaSql += '\n);\n\n';
             // 添加索引
             for (const index of indexes) {
-                if (index.isPrimary)
+                if (index.type === 'PRIMARY')
                     continue; // 主键已经在表定义中添加
                 schemaSql += `-- 索引: ${index.name} on ${table.name}\n`;
-                schemaSql += `CREATE ${index.isUnique ? 'UNIQUE ' : ''}INDEX ${this.quoteIdentifier(index.name)} ON ${this.quoteIdentifier(table.name)} (${index.columns.map(col => this.quoteIdentifier(col)).join(', ')});\n`;
+                schemaSql += `CREATE ${index.unique ? 'UNIQUE ' : ''}INDEX ${this.quoteIdentifier(index.name)} ON ${this.quoteIdentifier(table.name)} (${index.columns.map(col => this.quoteIdentifier(col)).join(', ')});\n`;
             }
             if (indexes.length > 0)
                 schemaSql += '\n';
             // 添加外键
             for (const foreignKey of foreignKeys) {
                 schemaSql += `-- 外键: ${foreignKey.name} on ${table.name}\n`;
-                schemaSql += `ALTER TABLE ${this.quoteIdentifier(table.name)} ADD CONSTRAINT ${this.quoteIdentifier(foreignKey.name)} FOREIGN KEY (${foreignKey.columns.map(col => this.quoteIdentifier(col)).join(', ')}) REFERENCES ${this.quoteIdentifier(foreignKey.referencedTable)} (${foreignKey.referencedColumns.map(col => this.quoteIdentifier(col)).join(', ')})${foreignKey.onDelete ? ` ON DELETE ${foreignKey.onDelete}` : ''}${foreignKey.onUpdate ? ` ON UPDATE ${foreignKey.onUpdate}` : ''};\n`;
+                schemaSql += `ALTER TABLE ${this.quoteIdentifier(table.name)} ADD CONSTRAINT ${this.quoteIdentifier(foreignKey.name)} FOREIGN KEY (${this.quoteIdentifier(foreignKey.column)}) REFERENCES ${this.quoteIdentifier(foreignKey.referencedTable)} (${this.quoteIdentifier(foreignKey.referencedColumn)})${foreignKey.onDelete ? ` ON DELETE ${foreignKey.onDelete}` : ''}${foreignKey.onUpdate ? ` ON UPDATE ${foreignKey.onUpdate}` : ''};\n`;
             }
             if (foreignKeys.length > 0)
                 schemaSql += '\n';
@@ -463,53 +463,217 @@ class SQLServerService extends base_service_1.BaseDatabaseService {
             const exportFile = path.join(exportPath, `${tableName}_data_${timestamp}.sql`);
             const columns = await this.getColumns(dataSource, databaseName, tableName);
             const columnNames = columns.map(column => column.name);
-            const query = `SELECT * FROM ${this.quoteIdentifier(databaseName)}.${this.quoteIdentifier(tableName)}`;
-            const data = await dataSource.query(query);
-            let sqlContent = `-- 表数据导出 - ${tableName}\n-- 导出时间: ${new Date().toISOString()}\n\n`;
-            data.forEach((row) => {
-                const values = columnNames.map(column => {
-                    const value = row[column];
-                    if (value === null || value === undefined)
-                        return 'NULL';
-                    if (typeof value === 'string') {
-                        // 处理字符串，转义单引号
-                        return `'${value.replace(/'/g, "''")}'`;
-                    }
-                    if (typeof value === 'boolean') {
-                        // SQL Server 使用 BIT 类型，1 表示 true，0 表示 false
-                        return value ? '1' : '0';
-                    }
-                    if (value instanceof Date) {
-                        // 格式化日期为 SQL Server 兼容格式
-                        const year = value.getFullYear();
-                        const month = String(value.getMonth() + 1).padStart(2, '0');
-                        const day = String(value.getDate()).padStart(2, '0');
-                        const hours = String(value.getHours()).padStart(2, '0');
-                        const minutes = String(value.getMinutes()).padStart(2, '0');
-                        const seconds = String(value.getSeconds()).padStart(2, '0');
-                        return `'${year}-${month}-${day} ${hours}:${minutes}:${seconds}'`;
-                    }
-                    if (typeof value === 'object') {
-                        // 处理对象类型
-                        try {
-                            const stringValue = JSON.stringify(value);
-                            return `'${stringValue.replace(/'/g, "''")}'`;
+            // 生成文件头部
+            const header = `-- 表数据导出 - ${tableName}\n` +
+                `-- 导出时间: ${new Date().toISOString()}\n\n`;
+            fs.writeFileSync(exportFile, header, 'utf8');
+            // 分批处理数据，避免一次性加载大量数据到内存
+            const batchSize = options?.batchSize || 10000; // 每批处理10000行
+            let offset = 0;
+            let hasMoreData = true;
+            while (hasMoreData) {
+                // 分批查询数据（SQL Server 使用 OFFSET FETCH 语法）
+                const query = `SELECT * FROM ${this.quoteIdentifier(databaseName)}.${this.quoteIdentifier(tableName)} ORDER BY (SELECT NULL) OFFSET ${offset} ROWS FETCH NEXT ${batchSize} ROWS ONLY`;
+                const data = await dataSource.query(query);
+                if (data.length === 0) {
+                    hasMoreData = false;
+                    break;
+                }
+                // 生成当前批次的 INSERT 语句
+                let batchSql = '';
+                data.forEach((row) => {
+                    const values = columnNames.map(column => {
+                        const value = row[column];
+                        if (value === null || value === undefined)
+                            return 'NULL';
+                        if (typeof value === 'string') {
+                            // 处理字符串，转义单引号
+                            return `'${value.replace(/'/g, "''")}'`;
                         }
-                        catch {
-                            return `'${String(value).replace(/'/g, "''")}'`;
+                        if (typeof value === 'boolean') {
+                            // SQL Server 使用 BIT 类型，1 表示 true，0 表示 false
+                            return value ? '1' : '0';
                         }
-                    }
-                    // 其他类型直接转换为字符串
-                    return String(value);
+                        if (value instanceof Date) {
+                            // 格式化日期为 SQL Server 兼容格式
+                            const year = value.getFullYear();
+                            const month = String(value.getMonth() + 1).padStart(2, '0');
+                            const day = String(value.getDate()).padStart(2, '0');
+                            const hours = String(value.getHours()).padStart(2, '0');
+                            const minutes = String(value.getMinutes()).padStart(2, '0');
+                            const seconds = String(value.getSeconds()).padStart(2, '0');
+                            return `'${year}-${month}-${day} ${hours}:${minutes}:${seconds}'`;
+                        }
+                        if (typeof value === 'object') {
+                            // 处理对象类型
+                            try {
+                                const stringValue = JSON.stringify(value);
+                                return `'${stringValue.replace(/'/g, "''")}'`;
+                            }
+                            catch {
+                                return `'${String(value).replace(/'/g, "''")}'`;
+                            }
+                        }
+                        // 其他类型直接转换为字符串
+                        return String(value);
+                    });
+                    batchSql += `INSERT INTO ${this.quoteIdentifier(databaseName)}.${this.quoteIdentifier(tableName)} (${columnNames.map(col => this.quoteIdentifier(col)).join(', ')}) VALUES (${values.join(', ')});\n`;
                 });
-                sqlContent += `INSERT INTO ${this.quoteIdentifier(databaseName)}.${this.quoteIdentifier(tableName)} (${columnNames.map(col => this.quoteIdentifier(col)).join(', ')}) VALUES (${values.join(', ')});\n`;
-            });
-            fs.writeFileSync(exportFile, sqlContent, 'utf8');
+                // 追加写入文件
+                fs.appendFileSync(exportFile, batchSql, 'utf8');
+                // 增加偏移量
+                offset += batchSize;
+                // 打印进度信息
+                console.log(`SQL Server导出表数据进度: ${tableName} - 已处理 ${offset} 行`);
+            }
             return exportFile;
         }
         catch (error) {
             console.error('SQL Server导出表数据失败:', error);
             throw new Error(`导出表数据失败: ${error.message}`);
+        }
+    }
+    /**
+     * 导出表数据到 CSV 文件
+     */
+    async exportTableDataToCSV(dataSource, databaseName, tableName, options) {
+        try {
+            const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+            if (!fs.existsSync(exportPath))
+                fs.mkdirSync(exportPath, { recursive: true });
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const exportFile = path.join(exportPath, `${tableName}_data_${timestamp}.csv`);
+            const columns = await this.getColumns(dataSource, databaseName, tableName);
+            const columnNames = columns.map(column => column.name);
+            // 写入 CSV 头部（包含 UTF-8 BOM）
+            const bom = Buffer.from([0xEF, 0xBB, 0xBF]);
+            fs.writeFileSync(exportFile, bom);
+            fs.appendFileSync(exportFile, columnNames.map(name => `"${name}"`).join(',') + '\n', 'utf8');
+            // 分批处理数据，避免一次性加载大量数据到内存
+            const batchSize = options?.batchSize || 10000; // 每批处理10000行
+            let offset = 0;
+            let hasMoreData = true;
+            while (hasMoreData) {
+                // 分批查询数据（SQL Server 使用 OFFSET FETCH 语法）
+                const query = `SELECT * FROM ${this.quoteIdentifier(databaseName)}.${this.quoteIdentifier(tableName)} ORDER BY (SELECT NULL) OFFSET ${offset} ROWS FETCH NEXT ${batchSize} ROWS ONLY`;
+                const data = await dataSource.query(query);
+                if (data.length === 0) {
+                    hasMoreData = false;
+                    break;
+                }
+                // 生成当前批次的 CSV 行
+                let batchCsv = '';
+                data.forEach((row) => {
+                    const values = columnNames.map(column => {
+                        const value = row[column];
+                        if (value === null || value === undefined) {
+                            return '';
+                        }
+                        else if (typeof value === 'string') {
+                            // 转义双引号并包裹在双引号中
+                            return `"${value.replace(/"/g, '""')}"`;
+                        }
+                        else if (value instanceof Date) {
+                            // 格式化日期为 SQL Server 兼容格式
+                            const year = value.getFullYear();
+                            const month = String(value.getMonth() + 1).padStart(2, '0');
+                            const day = String(value.getDate()).padStart(2, '0');
+                            const hours = String(value.getHours()).padStart(2, '0');
+                            const minutes = String(value.getMinutes()).padStart(2, '0');
+                            const seconds = String(value.getSeconds()).padStart(2, '0');
+                            return `"${year}-${month}-${day} ${hours}:${minutes}:${seconds}"`;
+                        }
+                        else if (typeof value === 'object' && value !== null) {
+                            // 处理对象类型
+                            try {
+                                return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
+                            }
+                            catch {
+                                return `"${String(value).replace(/"/g, '""')}"`;
+                            }
+                        }
+                        else {
+                            return String(value);
+                        }
+                    });
+                    batchCsv += values.join(',') + '\n';
+                });
+                // 追加写入文件
+                fs.appendFileSync(exportFile, batchCsv, 'utf8');
+                // 增加偏移量
+                offset += batchSize;
+                // 打印进度信息
+                console.log(`SQL Server导出表数据到CSV进度: ${tableName} - 已处理 ${offset} 行`);
+            }
+            return exportFile;
+        }
+        catch (error) {
+            console.error('SQL Server导出表数据到CSV失败:', error);
+            throw new Error(`导出表数据到CSV失败: ${error.message}`);
+        }
+    }
+    /**
+     * 导出表数据到 JSON 文件
+     */
+    async exportTableDataToJSON(dataSource, databaseName, tableName, options) {
+        try {
+            const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+            if (!fs.existsSync(exportPath))
+                fs.mkdirSync(exportPath, { recursive: true });
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const exportFile = path.join(exportPath, `${tableName}_data_${timestamp}.json`);
+            // 写入 JSON 头部
+            fs.writeFileSync(exportFile, '[\n', 'utf8');
+            // 分批处理数据，避免一次性加载大量数据到内存
+            const batchSize = options?.batchSize || 10000; // 每批处理10000行
+            let offset = 0;
+            let hasMoreData = true;
+            let isFirstBatch = true;
+            while (hasMoreData) {
+                // 分批查询数据（SQL Server 使用 OFFSET FETCH 语法）
+                const query = `SELECT * FROM ${this.quoteIdentifier(databaseName)}.${this.quoteIdentifier(tableName)} ORDER BY (SELECT NULL) OFFSET ${offset} ROWS FETCH NEXT ${batchSize} ROWS ONLY`;
+                const data = await dataSource.query(query);
+                if (data.length === 0) {
+                    hasMoreData = false;
+                    break;
+                }
+                // 生成当前批次的 JSON 数据
+                let batchJson = '';
+                data.forEach((row, index) => {
+                    if (!isFirstBatch || index > 0) {
+                        batchJson += ',\n';
+                    }
+                    batchJson += JSON.stringify(row);
+                });
+                // 追加写入文件
+                fs.appendFileSync(exportFile, batchJson, 'utf8');
+                // 增加偏移量
+                offset += batchSize;
+                isFirstBatch = false;
+                // 打印进度信息
+                console.log(`SQL Server导出表数据到JSON进度: ${tableName} - 已处理 ${offset} 行`);
+            }
+            // 写入 JSON 尾部
+            fs.appendFileSync(exportFile, '\n]', 'utf8');
+            return exportFile;
+        }
+        catch (error) {
+            console.error('SQL Server导出表数据到JSON失败:', error);
+            throw new Error(`导出表数据到JSON失败: ${error.message}`);
+        }
+    }
+    /**
+     * 导出表数据到 Excel 文件
+     */
+    async exportTableDataToExcel(dataSource, databaseName, tableName, options) {
+        try {
+            // 由于 Excel 文件格式复杂，这里我们先导出为 CSV，然后可以考虑使用库来转换
+            // 或者直接调用其他服务来处理 Excel 导出
+            return this.exportTableDataToCSV(dataSource, databaseName, tableName, options);
+        }
+        catch (error) {
+            console.error('SQL Server导出表数据到Excel失败:', error);
+            throw new Error(`导出表数据到Excel失败: ${error.message}`);
         }
     }
 }

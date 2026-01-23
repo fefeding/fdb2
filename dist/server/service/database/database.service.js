@@ -304,7 +304,7 @@ class DatabaseService {
             tables: tables.map(table => ({
                 name: table.name,
                 rowCount: table.rowCount || 0,
-                size: table.size || 0
+                size: table.dataSize || 0
             }))
         };
     }
@@ -372,6 +372,30 @@ class DatabaseService {
         const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
         const databaseService = this.getDatabaseService(dataSource.options.type);
         return databaseService.exportTableDataToSQL(dataSource, databaseName, tableName, options);
+    }
+    /**
+     * 导出表数据到 CSV 文件
+     */
+    async exportTableDataToCSV(connectionId, databaseName, tableName, options) {
+        const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+        const databaseService = this.getDatabaseService(dataSource.options.type);
+        return databaseService.exportTableDataToCSV(dataSource, databaseName, tableName, options);
+    }
+    /**
+     * 导出表数据到 JSON 文件
+     */
+    async exportTableDataToJSON(connectionId, databaseName, tableName, options) {
+        const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+        const databaseService = this.getDatabaseService(dataSource.options.type);
+        return databaseService.exportTableDataToJSON(dataSource, databaseName, tableName, options);
+    }
+    /**
+     * 导出表数据到 Excel 文件
+     */
+    async exportTableDataToExcel(connectionId, databaseName, tableName, options) {
+        const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+        const databaseService = this.getDatabaseService(dataSource.options.type);
+        return databaseService.exportTableDataToExcel(dataSource, databaseName, tableName, options);
     }
     /**
      * 获取数据库类型特定的配置

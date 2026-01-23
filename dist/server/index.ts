@@ -206,6 +206,46 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
     return result;
   }
 
+  // /api/database/exportTableDataToSQL
+  if (pathname === '/api/database/exportTableDataToSQL') {
+    const { id, database, table, options } = body;
+    if (!id || !database || !table) throw Error('Missing parameters: id, database, table');
+    
+    // 调用数据库服务导出表数据到SQL文件
+    const exportPath = await databaseService.exportTableDataToSQL(id, database, table, options);
+    return exportPath;
+  }
+
+  // /api/database/exportTableDataToCSV
+  if (pathname === '/api/database/exportTableDataToCSV') {
+    const { id, database, table, options } = body;
+    if (!id || !database || !table) throw Error('Missing parameters: id, database, table');
+    
+    // 调用数据库服务导出表数据到CSV文件
+    const exportPath = await databaseService.exportTableDataToCSV(id, database, table, options);
+    return exportPath;
+  }
+
+  // /api/database/exportTableDataToJSON
+  if (pathname === '/api/database/exportTableDataToJSON') {
+    const { id, database, table, options } = body;
+    if (!id || !database || !table) throw Error('Missing parameters: id, database, table');
+    
+    // 调用数据库服务导出表数据到JSON文件
+    const exportPath = await databaseService.exportTableDataToJSON(id, database, table, options);
+    return exportPath;
+  }
+
+  // /api/database/exportTableDataToExcel
+  if (pathname === '/api/database/exportTableDataToExcel') {
+    const { id, database, table, options } = body;
+    if (!id || !database || !table) throw Error('Missing parameters: id, database, table');
+    
+    // 调用数据库服务导出表数据到Excel文件
+    const exportPath = await databaseService.exportTableDataToExcel(id, database, table, options);
+    return exportPath;
+  }
+
   // /api/database/saveTableStructure
   if (pathname === '/api/database/saveTableStructure') {
     const { id, database, table, columns } = body;

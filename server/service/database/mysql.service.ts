@@ -482,11 +482,11 @@ export class MySQLService extends BaseDatabaseService {
       // 添加列定义
       const columnDefinitions = columns.map(column => {
         let definition = `  \`${column.name}\` ${column.type}`;
-        if (column.notNull) definition += ' NOT NULL';
+        if (!column.nullable) definition += ' NOT NULL';
         if (column.defaultValue !== undefined) {
           definition += ` DEFAULT ${column.defaultValue === null ? 'NULL' : `'${column.defaultValue}'`}`;
         }
-        if (column.autoIncrement) definition += ' AUTO_INCREMENT';
+        if (column.isAutoIncrement) definition += ' AUTO_INCREMENT';
         return definition;
       });
 
@@ -502,9 +502,9 @@ export class MySQLService extends BaseDatabaseService {
 
       // 添加索引
       for (const index of indexes) {
-        if (index.isPrimary) continue; // 主键已经在表定义中添加
+        if (index.type === 'PRIMARY') continue; // 主键已经在表定义中添加
         schemaSql += `-- 索引: ${index.name} on ${table.name}\n`;
-        schemaSql += `CREATE ${index.isUnique ? 'UNIQUE ' : ''}INDEX \`${index.name}\` ON \`${table.name}\` (${index.columns.map(col => `\`${col}\``).join(', ')});\n`;
+        schemaSql += `CREATE ${index.unique ? 'UNIQUE ' : ''}INDEX \`${index.name}\` ON \`${table.name}\` (${index.columns.map(col => `\`${col}\``).join(', ')})\n`;
       }
 
       if (indexes.length > 0) schemaSql += '\n';
@@ -512,7 +512,7 @@ export class MySQLService extends BaseDatabaseService {
       // 添加外键
       for (const foreignKey of foreignKeys) {
         schemaSql += `-- 外键: ${foreignKey.name} on ${table.name}\n`;
-        schemaSql += `ALTER TABLE \`${table.name}\` ADD CONSTRAINT \`${foreignKey.name}\` FOREIGN KEY (${foreignKey.columns.map(col => `\`${col}\``).join(', ')}) REFERENCES \`${foreignKey.referencedTable}\` (${foreignKey.referencedColumns.map(col => `\`${col}\``).join(', ')})${foreignKey.onDelete ? ` ON DELETE ${foreignKey.onDelete}` : ''}${foreignKey.onUpdate ? ` ON UPDATE ${foreignKey.onUpdate}` : ''};\n`;
+        schemaSql += `ALTER TABLE \`${table.name}\` ADD CONSTRAINT \`${foreignKey.name}\` FOREIGN KEY (\`${foreignKey.column}\`) REFERENCES \`${foreignKey.referencedTable}\` (\`${foreignKey.referencedColumn}\`)${foreignKey.onDelete ? ` ON DELETE ${foreignKey.onDelete}` : ''}${foreignKey.onUpdate ? ` ON UPDATE ${foreignKey.onUpdate}` : ''};\n`;
       }
 
       if (foreignKeys.length > 0) schemaSql += '\n';
