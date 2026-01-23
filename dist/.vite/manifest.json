@@ -34,7 +34,7 @@
     "src": "node_modules/.pnpm/bootstrap-icons@1.13.1/node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
   },
   "src/platform/database/explorer.vue": {
-    "file": "public/explorer-dsDne5fK.js",
+    "file": "public/explorer-D-GyI68D.js",
     "name": "explorer",
     "src": "src/platform/database/explorer.vue",
     "isDynamicEntry": true,
@@ -44,11 +44,11 @@
       "_bootstrap-Bqj8QN9l.js"
     ],
     "css": [
-      "public/explorer-CkulUnSY.css"
+      "public/explorer-0o4Nt58x.css"
     ]
   },
   "src/platform/database/layout.vue": {
-    "file": "public/layout-DbZCHlp3.js",
+    "file": "public/layout-BiYDXaHO.js",
     "name": "layout",
     "src": "src/platform/database/layout.vue",
     "isDynamicEntry": true,
@@ -62,7 +62,7 @@
     ]
   },
   "view/index.html": {
-    "file": "public/index-BCIsMiwo.js",
+    "file": "public/index-Cc3jSv0u.js",
     "name": "index",
     "src": "view/index.html",
     "isEntry": true,

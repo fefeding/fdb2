@@ -206,6 +206,7 @@
           :sql-executing="sqlExecuting"
           @refresh-data="refreshTableData"
           @refresh-database="handleRefreshDatabase"
+          @refresh-structure="handleRefreshStructure"
           @insert-data="handleInsertData"
           @export-table="handleExportTable"
           @truncate-table="handleTruncateTable"
@@ -682,6 +683,13 @@ async function refreshTableData(page: number = 1, pageSize: number = 50, searchQ
     // if (!searchQuery) {
     //   showToast('', '表数据已刷新', 'success');
     // }
+  }
+}
+
+async function handleRefreshStructure() {
+  if (selectedConnection.value && selectedDatabase.value && selectedTable.value) {
+    await loadTableStructure(selectedConnection.value, selectedDatabase.value, selectedTable.value.name);
+    showToast('', '表结构已刷新', 'success');
   }
 }
 
