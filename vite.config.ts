@@ -35,16 +35,6 @@ const viewDir = path.resolve(__dirname, './view');
 const config = defineConfig({
     //root: __dirname,
     
-    build: {
-        rollupOptions: {
-            external: [
-                // 排除服务器端代码
-                '../../server/index',
-                './server/index'
-            ]
-        }
-    },
-    
     plugins: [
         vue() as PluginOption, 
         vueJsx() as PluginOption,
@@ -227,6 +217,11 @@ const config = defineConfig({
         //cssCodeSplit: false,
         modulePreload: true,
         rollupOptions: {
+            external: [
+                // 排除服务器端代码
+                '../../server/index',
+                './server/index'
+            ],
             input: getViewInputs(viewDir),
             output: {
                 // { getModuleInfo }
