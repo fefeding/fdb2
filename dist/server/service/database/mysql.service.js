@@ -632,6 +632,7 @@ class MySQLService extends base_service_1.BaseDatabaseService {
                             // 处理JSON类型和其他对象类型
                             try {
                                 const stringValue = JSON.stringify(value);
+                                // 转义单引号
                                 return `'${stringValue.replace(/'/g, "''")}'`;
                             }
                             catch {

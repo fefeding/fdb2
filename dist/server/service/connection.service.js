@@ -260,6 +260,10 @@ class ConnectionService {
             database: connectionConfig.database,
             synchronize: false,
             logging: false,
+            // 关键配置：开启多语句执行
+            extra: {
+                multipleStatements: true
+            },
             ...connectionConfig.options
         };
         // 根据数据库类型调整配置

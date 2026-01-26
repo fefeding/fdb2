@@ -169,7 +169,7 @@ export class ConnectionService {
     }
 
     // 创建一个新的连接配置，使用指定的数据库
-    const updatedConnectionConfig: ConnectionEntity = {
+    const updatedConnectionConfig: ConnectionEntity = {      
       ...connectionConfig,
       database: database || connectionConfig.database
     };
@@ -249,6 +249,10 @@ export class ConnectionService {
       database: connectionConfig.database,
       synchronize: false,
       logging: false,
+      // 关键配置：开启多语句执行
+      extra: {
+        multipleStatements: true
+      },
       ...connectionConfig.options
     };
 
