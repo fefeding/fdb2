@@ -467,7 +467,7 @@ export class SQLServerService extends BaseDatabaseService {
    */
   async exportTableDataToSQL(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string> {
     try {
-      const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+      const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
       if (!fs.existsSync(exportPath)) fs.mkdirSync(exportPath, { recursive: true });
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const exportFile = path.join(exportPath, `${tableName}_data_${timestamp}.sql`);
@@ -557,7 +557,7 @@ export class SQLServerService extends BaseDatabaseService {
    */
   async exportTableDataToCSV(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string> {
     try {
-      const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+      const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
       if (!fs.existsSync(exportPath)) fs.mkdirSync(exportPath, { recursive: true });
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const exportFile = path.join(exportPath, `${tableName}_data_${timestamp}.csv`);
@@ -641,7 +641,7 @@ export class SQLServerService extends BaseDatabaseService {
    */
   async exportTableDataToJSON(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string> {
     try {
-      const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+      const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
       if (!fs.existsSync(exportPath)) fs.mkdirSync(exportPath, { recursive: true });
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const exportFile = path.join(exportPath, `${tableName}_data_${timestamp}.json`);

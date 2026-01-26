@@ -35,3 +35,4 @@ data/error.sql
 data/connections.json
 server/backups
 server/exports
+data/exports/

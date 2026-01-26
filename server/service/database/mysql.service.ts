@@ -24,7 +24,7 @@ export class MySQLService extends BaseDatabaseService {
    */
   async exportTableDataToCSV(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string> {
     try {
-      const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+      const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
       if (!fs.existsSync(exportPath)) {
         fs.mkdirSync(exportPath, { recursive: true });
       }
@@ -98,7 +98,7 @@ export class MySQLService extends BaseDatabaseService {
    */
   async exportTableDataToJSON(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string> {
     try {
-      const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+      const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
       if (!fs.existsSync(exportPath)) {
         fs.mkdirSync(exportPath, { recursive: true });
       }
@@ -638,7 +638,7 @@ export class MySQLService extends BaseDatabaseService {
   async exportTableDataToSQL(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string> {
     try {
       // 创建导出目录
-      const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+      const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
       if (!fs.existsSync(exportPath)) {
         fs.mkdirSync(exportPath, { recursive: true });
       }
