@@ -3,7 +3,7 @@ import * as requestHelper from '@/utils/request';
 import type { AxiosRequestConfig } from 'axios';
 import * as eventBus from '../base/eventBus';
 import config from '../base/config';
-import { isBrowser } from '@/base/detect';
+import { isNWjs } from '@/base/detect';
 
 
 
@@ -14,11 +14,73 @@ export function getRequestUrl(api: string) {
 }
 
 export async function requestServer(url: string, data?: any, option?: AxiosRequestConfig) {
-    // 只在浏览器环境中使用 HTTP 请求
-    // 服务器端代码将在服务器启动时直接导入，而不是通过这里的动态导入
-    url = getRequestUrl(url);
-    const res = await requestHelper.request(url, data, option);
-    return res;
+    // 检查是否在 nw.js 环境中运行
+    if (isNWjs()) {
+        // 在 nw.js 环境中，直接 require 后端服务代码并执行
+        try {
+            // 提取 API 路径，去掉前缀和协议等
+            const apiPath = url.replace(/^(http(s)?:)?\/\//, '').replace(/.*?\/api\//, '/api/');
+            
+            // 在 nw.js 环境中，使用 Node.js 的 require 方法加载服务端代码
+            // 服务端代码现在是 CommonJS 模块，使用 .cjs 扩展名
+            let server;
+            
+            // 尝试使用 Node.js 的 require 方法
+            try {
+                // 路径 1: 直接从项目根目录加载
+                server = require('../server/index.cjs');
+            } catch (e) {
+                try {
+                    // 路径 2: 使用 Node.js 的 path 模块获取正确路径
+                    const path = require('path');
+                    const fs = require('fs');
+                    const appPath = process.cwd();
+                    const serverFilePath = path.join(appPath, 'server', 'index.cjs');
+                    
+                    console.log('尝试加载服务端代码:', serverFilePath);
+                    
+                    if (fs.existsSync(serverFilePath)) {
+                        server = require(serverFilePath);
+                    } else {
+                        // 路径 3: 尝试相对路径
+                        server = require('./server/index.cjs');
+                    }
+                } catch (err) {
+                    console.error('所有路径尝试失败:', err);
+                    throw new Error('无法加载服务端代码');
+                }
+            }
+            
+            const res = await server.handleDatabaseRoutes(apiPath, data);
+            // 模拟 HTTP 响应格式
+            return {
+                status: 200,
+                statusText: 'OK',
+                data: {
+                    ret: 0,
+                    msg: 'success',
+                    data: res
+                }
+            };
+        } catch (error) {
+            console.error('NW.js 环境下执行后端代码失败:', error);
+            // 模拟错误响应
+            return {
+                status: 500,
+                statusText: 'Internal Server Error',
+                data: {
+                    ret: 500,
+                    // @ts-ignore
+                    msg: error.message || '执行失败'
+                }
+            };
+        }
+    } else {
+        // 在浏览器环境中使用 HTTP 请求
+        url = getRequestUrl(url);
+        const res = await requestHelper.request(url, data, option);
+        return res;
+    }
 }
 
 // 请求服务

@@ -449,7 +449,7 @@ class PostgreSQLService extends base_service_1.BaseDatabaseService {
     async exportTableDataToSQL(dataSource, databaseName, tableName, options) {
         try {
             // 创建导出目录
-            const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+            const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
             if (!fs.existsSync(exportPath)) {
                 fs.mkdirSync(exportPath, { recursive: true });
             }
@@ -527,7 +527,7 @@ class PostgreSQLService extends base_service_1.BaseDatabaseService {
     async exportTableDataToCSV(dataSource, databaseName, tableName, options) {
         try {
             // 创建导出目录
-            const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+            const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
             if (!fs.existsSync(exportPath)) {
                 fs.mkdirSync(exportPath, { recursive: true });
             }
@@ -603,7 +603,7 @@ class PostgreSQLService extends base_service_1.BaseDatabaseService {
     async exportTableDataToJSON(dataSource, databaseName, tableName, options) {
         try {
             // 创建导出目录
-            const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+            const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
             if (!fs.existsSync(exportPath)) {
                 fs.mkdirSync(exportPath, { recursive: true });
             }

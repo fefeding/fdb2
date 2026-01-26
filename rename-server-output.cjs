@@ -13,7 +13,7 @@ if (!fs.existsSync(dir)) {
 // 获取目录中的所有文件
 const files = fs.readdirSync(dir);
 
-// 重命名所有 .js 文件为 .cjs
+// 重命名所有 .js 文件为 .cjs，确保使用 CommonJS 模块格式
 files.forEach(file => {
   if (file.endsWith('.js') && !file.endsWith('.cjs')) {
     const oldPath = path.join(dir, file);

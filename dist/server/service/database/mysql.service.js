@@ -50,7 +50,7 @@ class MySQLService extends base_service_1.BaseDatabaseService {
      */
     async exportTableDataToCSV(dataSource, databaseName, tableName, options) {
         try {
-            const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+            const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
             if (!fs.existsSync(exportPath)) {
                 fs.mkdirSync(exportPath, { recursive: true });
             }
@@ -118,7 +118,7 @@ class MySQLService extends base_service_1.BaseDatabaseService {
      */
     async exportTableDataToJSON(dataSource, databaseName, tableName, options) {
         try {
-            const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+            const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
             if (!fs.existsSync(exportPath)) {
                 fs.mkdirSync(exportPath, { recursive: true });
             }
@@ -146,7 +146,32 @@ class MySQLService extends base_service_1.BaseDatabaseService {
                     if (!isFirstBatch || index > 0) {
                         batchContent += ',';
                     }
-                    batchContent += JSON.stringify(row);
+                    // 处理每个字段，避免对已经是JSON字符串的值进行双重序列化
+                    const processedRow = {};
+                    for (const key in row) {
+                        const value = row[key];
+                        if (typeof value === 'string') {
+                            // 检查是否是JSON字符串
+                            try {
+                                const parsed = JSON.parse(value);
+                                // 如果解析成功且是对象或数组，说明是JSON字符串，直接使用
+                                if (typeof parsed === 'object' && parsed !== null) {
+                                    processedRow[key] = parsed;
+                                }
+                                else {
+                                    processedRow[key] = value;
+                                }
+                            }
+                            catch {
+                                // 不是JSON字符串，直接使用
+                                processedRow[key] = value;
+                            }
+                        }
+                        else {
+                            processedRow[key] = value;
+                        }
+                    }
+                    batchContent += JSON.stringify(processedRow);
                 });
                 fs.appendFileSync(exportFile, batchContent, 'utf8');
                 isFirstBatch = false;
@@ -585,7 +610,7 @@ class MySQLService extends base_service_1.BaseDatabaseService {
     async exportTableDataToSQL(dataSource, databaseName, tableName, options) {
         try {
             // 创建导出目录
-            const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+            const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
             if (!fs.existsSync(exportPath)) {
                 fs.mkdirSync(exportPath, { recursive: true });
             }
@@ -629,11 +654,50 @@ class MySQLService extends base_service_1.BaseDatabaseService {
                             return `'${value.toISOString().slice(0, 19).replace('T', ' ')}'`;
                         }
                         else if (typeof value === 'object') {
-                            // 处理JSON类型和其他对象类型
                             try {
-                                const stringValue = JSON.stringify(value);
-                                // 转义单引号
-                                return `'${stringValue.replace(/'/g, "''")}'`;
+                                // 递归处理对象，确保所有嵌套的JSON字符串都被正确转义
+                                const processValue = (val) => {
+                                    if (val === null || val === undefined) {
+                                        return val;
+                                    }
+                                    else if (typeof val === 'string') {
+                                        // 检查是否是JSON字符串
+                                        try {
+                                            const parsed = JSON.parse(val);
+                                            // 如果是JSON字符串，递归处理
+                                            if (typeof parsed === 'object') {
+                                                return processValue(parsed);
+                                            }
+                                        }
+                                        catch {
+                                            // 不是JSON字符串，直接返回
+                                        }
+                                        return val;
+                                    }
+                                    else if (typeof val === 'object') {
+                                        if (Array.isArray(val)) {
+                                            return val.map(processValue);
+                                        }
+                                        else {
+                                            const processedObj = {};
+                                            for (const key in val) {
+                                                processedObj[key] = processValue(val[key]);
+                                            }
+                                            return processedObj;
+                                        }
+                                    }
+                                    else {
+                                        return val;
+                                    }
+                                };
+                                // 处理对象
+                                const processedValue = processValue(value);
+                                // 序列化处理后的对象
+                                let stringValue = JSON.stringify(processedValue);
+                                // 对JSON字符串中的单引号进行转义，确保在SQL中正确处理
+                                stringValue = stringValue.replace(/'/g, "''");
+                                // 返回用单引号包裹的字符串
+                                return `'${stringValue}'`;
                             }
                             catch {
                                 return `'${String(value).replace(/'/g, "''")}'`;

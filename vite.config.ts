@@ -213,6 +213,7 @@ const config = defineConfig({
         assetsDir: 'public',
         outDir: 'dist',
         manifest: true, // 关键！生成 manifest.json
+        minify: false, // 禁用代码压缩
         // 禁用 CSS 代码分割（避免生成额外的 <link>）
         //cssCodeSplit: false,
         modulePreload: true,

@@ -456,7 +456,7 @@ class SQLServerService extends base_service_1.BaseDatabaseService {
      */
     async exportTableDataToSQL(dataSource, databaseName, tableName, options) {
         try {
-            const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+            const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
             if (!fs.existsSync(exportPath))
                 fs.mkdirSync(exportPath, { recursive: true });
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -538,7 +538,7 @@ class SQLServerService extends base_service_1.BaseDatabaseService {
      */
     async exportTableDataToCSV(dataSource, databaseName, tableName, options) {
         try {
-            const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+            const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
             if (!fs.existsSync(exportPath))
                 fs.mkdirSync(exportPath, { recursive: true });
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -617,7 +617,7 @@ class SQLServerService extends base_service_1.BaseDatabaseService {
      */
     async exportTableDataToJSON(dataSource, databaseName, tableName, options) {
         try {
-            const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+            const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
             if (!fs.existsSync(exportPath))
                 fs.mkdirSync(exportPath, { recursive: true });
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');

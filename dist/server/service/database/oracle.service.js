@@ -533,7 +533,7 @@ ALTER DATABASE OPEN;
      */
     async exportTableDataToSQL(dataSource, databaseName, tableName, options) {
         try {
-            const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+            const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
             if (!fs.existsSync(exportPath))
                 fs.mkdirSync(exportPath, { recursive: true });
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -615,7 +615,7 @@ ALTER DATABASE OPEN;
      */
     async exportTableDataToCSV(dataSource, databaseName, tableName, options) {
         try {
-            const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+            const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
             if (!fs.existsSync(exportPath))
                 fs.mkdirSync(exportPath, { recursive: true });
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -694,7 +694,7 @@ ALTER DATABASE OPEN;
      */
     async exportTableDataToJSON(dataSource, databaseName, tableName, options) {
         try {
-            const exportPath = options?.path || path.join(__dirname, '..', '..', 'exports');
+            const exportPath = options?.path || path.join(__dirname, '..', '..', '..', 'data', 'exports');
             if (!fs.existsSync(exportPath))
                 fs.mkdirSync(exportPath, { recursive: true });
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
