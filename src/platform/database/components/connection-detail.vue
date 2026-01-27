@@ -12,9 +12,9 @@
           <h4 class="connection-name">{{ connection?.name }}</h4>
           <div class="connection-type-info">
             <span class="db-type">{{ getDbTypeLabel(connection?.type) }}</span>
-            <span class="connection-status" :class="connection?.enabled ? 'status-online' : 'status-offline'">
+            <span class="connection-status" :class="connectionStatusClass">
               <div class="status-dot"></div>
-              {{ connection?.enabled ? '已连接' : '未连接' }}
+              {{ connectionStatusText }}
             </span>
           </div>
         </div>
@@ -359,6 +359,9 @@ const connectionStats = ref({
   lastConnected: null as string | null
 });
 
+// 连接状态: 'unknown' | 'connected' | 'disconnected' | 'testing'
+const connectionStatus = ref<'unknown' | 'connected' | 'disconnected' | 'testing'>('unknown');
+
 // 搜索关键字
 const searchKeyword = ref('');
 
@@ -392,6 +395,10 @@ watch(() => props.connection, (newConnection) => {
   connectionStore.setCurrentConnection(newConnection);
   if (newConnection) {
     loadConnectionStats();
+    // 重置连接状态为未知
+    connectionStatus.value = 'unknown';
+    // 自动测试连接
+    testConnection();
   }
 }, { immediate: true });
 
@@ -405,6 +412,33 @@ onMounted(() => {
 // 数据库列表（从 store 获取）
 const databases = computed(() => connectionStore.databases);
 const loadingDatabases = computed(() => connectionStore.isLoadingDatabases);
+
+// 连接状态的显示类和文本
+const connectionStatusClass = computed(() => {
+  switch (connectionStatus.value) {
+    case 'connected':
+      return 'status-online';
+    case 'disconnected':
+      return 'status-offline';
+    case 'testing':
+      return 'status-testing';
+    default:
+      return 'status-offline';
+  }
+});
+
+const connectionStatusText = computed(() => {
+  switch (connectionStatus.value) {
+    case 'connected':
+      return '已连接';
+    case 'disconnected':
+      return '未连接';
+    case 'testing':
+      return '测试中...';
+    default:
+      return '未知';
+  }
+});
 
 // 方法
 function loadConnectionStats() {
@@ -441,9 +475,17 @@ function openDatabase(database: any) {
   }
 }
 
-function testConnection() {
-  if (props.connection) {
-    emit('test-connection', props.connection);
+async function testConnection() {
+  if (!props.connection) return;
+  
+  connectionStatus.value = 'testing';
+  
+  try {
+    const isConnected = await connectionStore.testConnection(props.connection);
+    connectionStatus.value = isConnected ? 'connected' : 'disconnected';
+  } catch (error) {
+    console.error('连接测试失败:', error);
+    connectionStatus.value = 'disconnected';
   }
 }
 
@@ -661,6 +703,20 @@ function getDbLogoText(type?: string): string {
 
 .status-offline .status-dot {
   background-color: #dc3545;
+}
+
+.status-testing .status-dot {
+  background-color: #ffc107;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .connection-actions {

@@ -389,7 +389,7 @@ function onTypeChange() {
 }
 
 // Toast 提示
-function showToast(title: string, message: string, type: string) {
+function showToast(title: string, message: string, type?: string) {
   toastRef.value?.show(title, message, type);
 }
 
@@ -398,7 +398,7 @@ async function loadDatabaseTypes() {
   try {
     const connectionService = new ConnectionService();
     const response = await connectionService.getDatabaseTypes();
-    databaseTypes.value = response || [];
+    databaseTypes.value = response?.data || [];
   } catch (error) {
     console.error('加载数据库类型失败:', error);
   }

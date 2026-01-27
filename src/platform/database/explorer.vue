@@ -65,6 +65,13 @@
                   >
                     <i class="bi bi-wifi"></i>
                   </button>
+                  <button 
+                    class="btn btn-sm btn-icon btn-icon-danger" 
+                    @click.stop="deleteConnection(connection)"
+                    title="删除连接"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
                 </div>
                 <div class="node-spinner" v-if="loadingConnections.has(connection.id)">
                   <div class="spinner-border spinner-border-sm"></div>
@@ -99,6 +106,13 @@
                         title="刷新数据库"
                       >
                         <i class="bi bi-arrow-clockwise"></i>
+                      </button>
+                      <button 
+                        class="btn btn-sm btn-icon btn-icon-danger" 
+                        @click.stop="deleteDatabase(connection, database)"
+                        title="删除数据库"
+                      >
+                        <i class="bi bi-trash"></i>
                       </button>
                     </div>
                     <div class="node-spinner" v-if="loadingDatabases.has(`${connection.id}-${database}`)">
@@ -795,6 +809,96 @@ async function refreshDatabase(connection: ConnectionEntity, database: string) {
   showToast('', `数据库 "${database}" 已刷新`, 'success');
 }
 
+async function deleteDatabase(connection: ConnectionEntity, database: string) {
+  const result = await modal.confirm(`确定要删除数据库 "${database}" 吗？此操作将删除数据库及其所有数据且不可恢复。`);
+  if (result) {
+    try {
+      isGlobalLoading.value = true;
+      loadingMessage.value = `正在删除数据库 "${database}"...`;
+      
+      // 执行删除数据库的SQL
+      const deleteSql = `DROP DATABASE \`${database}\``;
+      const result = await databaseService.executeQuery(connection.id, deleteSql);
+      
+      if (result.ret === 0) {
+        showToast('成功', `数据库 "${database}" 已删除`, 'success');
+        
+        // 清除缓存
+        const connectionId = connection.id || '';
+        const databases = databaseCache.value.get(connectionId) || [];
+        databaseCache.value.set(connectionId, databases.filter(db => db !== database));
+        
+        // 如果删除的是当前选中的数据库，清除选中状态
+        if (selectedDatabase.value === database) {
+          selectedDatabase.value = '';
+          selectedTable.value = null;
+        }
+        
+        // 清除相关的缓存
+        const dbKey = `${connection.id}-${database}`;
+        tableCache.value.delete(dbKey);
+        databaseInfoCache.value.delete(dbKey);
+      } else {
+        showToast('错误', `删除数据库失败: ${result.error}`, 'error');
+      }
+    } catch (error) {
+      console.error('删除数据库失败:', error);
+      
+      modal.error(error.msg || error.message || '删除数据库失败', {
+        operation: 'DELETE_DATABASE',
+        database: database,
+        stack: error.stack
+      });
+    } finally {
+      isGlobalLoading.value = false;
+    }
+  }
+}
+
+async function deleteConnection(connection: ConnectionEntity) {
+  const result = await modal.confirm(`确定要删除连接 "${connection.name}" 吗？此操作将删除该连接的配置但不会删除实际的数据库数据。`);
+  if (result) {
+    try {
+      isGlobalLoading.value = true;
+      loadingMessage.value = `正在删除连接 "${connection.name}"...`;
+      
+      // 删除连接
+      await connectionService.deleteConnection(connection.id || '');
+      
+      showToast('成功', `连接 "${connection.name}" 已删除`, 'success');
+      
+      // 从连接列表中移除
+      const index = connections.value.findIndex(conn => conn.id === connection.id);
+      if (index !== -1) {
+        connections.value.splice(index, 1);
+      }
+      
+      // 清除该连接的缓存
+      databaseCache.value.delete(connection.id);
+      tableCache.value.clear();
+      databaseInfoCache.value.clear();
+      expandedConnections.value.delete(connection.id);
+      
+      // 如果删除的是当前选中的连接，清除选中状态
+      if (selectedConnection.value?.id === connection.id) {
+        selectedConnection.value = null;
+        selectedDatabase.value = '';
+        selectedTable.value = null;
+      }
+    } catch (error) {
+      console.error('删除连接失败:', error);
+      
+      modal.error(error.msg || error.message || '删除连接失败', {
+        operation: 'DELETE_CONNECTION',
+        connectionId: connection.id,
+        stack: error.stack
+      });
+    } finally {
+      isGlobalLoading.value = false;
+    }
+  }
+}
+
 async function refreshTable(connection: ConnectionEntity, database: string, table: TableEntity) {
   // 重新加载表数据和结构
   if (selectedTable.value?.name === table.name) {
@@ -1234,6 +1338,14 @@ function showToast(title: string, message: string, type: string = 'success') {
 
 .tree-node.selected .btn-icon:hover i {
   color: #0969da;
+}
+
+.btn-icon-danger:hover {
+  background-color: #fee2e2;
+}
+
+.btn-icon-danger:hover i {
+  color: #dc2626;
 }
 
 .node-spinner {
