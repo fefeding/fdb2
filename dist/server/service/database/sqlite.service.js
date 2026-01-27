@@ -219,7 +219,7 @@ class SQLiteService extends base_service_1.BaseDatabaseService {
             schemaSql += '\n);\n\n';
             // 添加索引
             for (const index of indexes) {
-                if (index.type === 'PRIMARY' || index.name === 'PRIMARY')
+                if (index.type === 'PRIMARY' || index.name.toUpperCase() === 'PRIMARY')
                     continue; // 跳过主键索引
                 schemaSql += `-- 索引: ${index.name} on ${table.name}\n`;
                 schemaSql += `CREATE ${index.unique ? 'UNIQUE ' : ''}INDEX IF NOT EXISTS ${this.quoteIdentifier(index.name)} ON ${this.quoteIdentifier(table.name)} (${index.columns.map(col => this.quoteIdentifier(col)).join(', ')})\n`;

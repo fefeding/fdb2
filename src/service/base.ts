@@ -15,7 +15,7 @@ export function getRequestUrl(api: string) {
 
 export async function requestServer(url: string, data?: any, option?: AxiosRequestConfig) {
     // 检查是否在 nw.js 环境中运行
-    if (isNWjs()) {
+    if (isNWjs) {
         // 在 nw.js 环境中，直接 require 后端服务代码并执行
         try {
             // 提取 API 路径，去掉前缀和协议等

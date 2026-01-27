@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./layout-hKYJjJup.js","./vue-BjL5XjkG.js","./vue-CIUEyO5u.css","./bootstrap-IS5Me-CY.js","./bootstrap-CVQV2YQR.css","./layout-rJVpGJdd.css","./explorer-Cmgwe6W0.js","./explorer-C88R5OXZ.css"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./layout-DE-8vrcc.js","./vue-BjL5XjkG.js","./vue-CIUEyO5u.css","./bootstrap-IS5Me-CY.js","./bootstrap-CVQV2YQR.css","./layout-rJVpGJdd.css","./explorer-WSZCeTIA.js","./explorer-C88R5OXZ.css"])))=>i.map(i=>d[i]);
 import { c as createBlock, r as resolveComponent, o as openBlock, e as effectScope, a as ref, m as markRaw, b as reactive, i as isRef, d as isReactive, t as toRaw, g as getCurrentScope, f as onScopeDispose, w as watch, n as nextTick, h as toRefs, j as computed, k as inject, l as hasInjectionContext, p as createRouter, q as createWebHistory, u as useTitle, s as defineComponent, v as createElementBlock, F as Fragment, x as renderList, y as normalizeClass, z as createCommentVNode, A as createBaseVNode, B as toDisplayString, C as createApp, D as getCurrentInstance, E as onUnmounted, G as onMounted, H as createVNode, I as createTextVNode, J as renderSlot, K as normalizeStyle, L as withModifiers, M as resolveDynamicComponent } from "./vue-BjL5XjkG.js";
 import { M as Modal$1 } from "./bootstrap-IS5Me-CY.js";
 (function polyfill() {
@@ -3441,7 +3441,7 @@ function getRequestUrl(api2) {
   return `${apiUrl2.trim()}${config$1.prefix}${api2}`;
 }
 async function requestServer(url, data, option) {
-  if (isNWjs()) {
+  if (isNWjs) {
     try {
       const apiPath = url.replace(/^(http(s)?:)?\/\//, "").replace(/.*?\/api\//, "/api/");
       let server;
@@ -3735,7 +3735,7 @@ const __vitePreload = function preload(baseModule, deps, importerUrl) {
 const routes = [
   {
     path: "/database",
-    component: () => __vitePreload(() => import("./layout-hKYJjJup.js"), true ? __vite__mapDeps([0,1,2,3,4,5]) : void 0, import.meta.url),
+    component: () => __vitePreload(() => import("./layout-DE-8vrcc.js"), true ? __vite__mapDeps([0,1,2,3,4,5]) : void 0, import.meta.url),
     redirect: "/database/index",
     meta: {
       title: "数据库管理",
@@ -3746,7 +3746,7 @@ const routes = [
       {
         path: "index",
         name: "database-index",
-        component: () => __vitePreload(() => import("./explorer-Cmgwe6W0.js"), true ? __vite__mapDeps([6,1,2,3,4,7]) : void 0, import.meta.url),
+        component: () => __vitePreload(() => import("./explorer-WSZCeTIA.js"), true ? __vite__mapDeps([6,1,2,3,4,7]) : void 0, import.meta.url),
         meta: {
           title: "数据库管理首页",
           icon: "bi-house",
@@ -3756,7 +3756,7 @@ const routes = [
       {
         path: "explorer",
         name: "database-explorer",
-        component: () => __vitePreload(() => import("./explorer-Cmgwe6W0.js"), true ? __vite__mapDeps([6,1,2,3,4,7]) : void 0, import.meta.url),
+        component: () => __vitePreload(() => import("./explorer-WSZCeTIA.js"), true ? __vite__mapDeps([6,1,2,3,4,7]) : void 0, import.meta.url),
         meta: {
           title: "数据库浏览器",
           icon: "bi-diagram-3",

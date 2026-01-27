@@ -512,7 +512,7 @@ class MySQLService extends base_service_1.BaseDatabaseService {
             schemaSql += '\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\n\n';
             // 添加索引
             for (const index of indexes) {
-                if (index.type === 'PRIMARY' || index.name === 'PRIMARY')
+                if (index.type === 'PRIMARY' || index.name.toUpperCase() === 'PRIMARY')
                     continue; // 跳过主键索引
                 schemaSql += `-- 索引: ${index.name} on ${table.name}\n`;
                 schemaSql += `CREATE ${index.unique ? 'UNIQUE ' : ''}INDEX \`${index.name}\` ON \`${table.name}\` (${index.columns.map(col => `\`${col}\``).join(', ')})\n`;
