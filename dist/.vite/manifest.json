@@ -34,7 +34,7 @@
     "src": "node_modules/.pnpm/bootstrap-icons@1.13.1/node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
   },
   "src/platform/database/explorer.vue": {
-    "file": "public/explorer-DYwjYzWl.js",
+    "file": "public/explorer-Cmgwe6W0.js",
     "name": "explorer",
     "src": "src/platform/database/explorer.vue",
     "isDynamicEntry": true,
@@ -48,7 +48,7 @@
     ]
   },
   "src/platform/database/layout.vue": {
-    "file": "public/layout-V1jJrGtE.js",
+    "file": "public/layout-hKYJjJup.js",
     "name": "layout",
     "src": "src/platform/database/layout.vue",
     "isDynamicEntry": true,
@@ -62,7 +62,7 @@
     ]
   },
   "view/index.html": {
-    "file": "public/index-DcIGvTte.js",
+    "file": "public/index-DsWc6GFG.js",
     "name": "index",
     "src": "view/index.html",
     "isEntry": true,

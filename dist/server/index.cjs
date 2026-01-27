@@ -514,6 +514,12 @@ function formatDefaultValue(value, type) {
     if (isNumberType(type) || ['float', 'double', 'decimal'].includes(type)) {
         return value;
     }
+    // 特殊关键字处理
+    if (value.toString().toUpperCase() === 'CURRENT_TIMESTAMP' ||
+        value.toString().toUpperCase() === 'NOW()' ||
+        value.toString().toUpperCase() === 'CURRENT_DATE') {
+        return value.toString().toUpperCase();
+    }
     // 字符串类型需要加引号
     return `'${value.replace(/'/g, "''")}'`;
 }

@@ -194,7 +194,13 @@ export class SQLiteService extends BaseDatabaseService {
         let definition = `  ${this.quoteIdentifier(column.name)} ${column.type}`;
         if (!column.nullable) definition += ' NOT NULL';
         if (column.defaultValue !== undefined) {
-          definition += ` DEFAULT ${column.defaultValue === null ? 'NULL' : `'${column.defaultValue}'`}`;
+          // 特殊关键字处理
+          const upperDefault = column.defaultValue.toString().toUpperCase();
+          if (upperDefault === 'CURRENT_TIMESTAMP' || upperDefault === 'NOW()' || upperDefault === 'CURRENT_DATE') {
+            definition += ` DEFAULT ${upperDefault}`;
+          } else {
+            definition += ` DEFAULT ${column.defaultValue === null ? 'NULL' : `'${column.defaultValue}'`}`;
+          }
         }
         if (column.isPrimary && column.isAutoIncrement) definition += ' PRIMARY KEY AUTOINCREMENT';
         else if (column.isPrimary) definition += ' PRIMARY KEY';
@@ -206,7 +212,7 @@ export class SQLiteService extends BaseDatabaseService {
 
       // 添加索引
       for (const index of indexes) {
-        if (index.type === 'PRIMARY') continue; // 主键已经在表定义中添加
+        if (index.type === 'PRIMARY' || index.name === 'PRIMARY') continue; // 跳过主键索引
         schemaSql += `-- 索引: ${index.name} on ${table.name}\n`;
         schemaSql += `CREATE ${index.unique ? 'UNIQUE ' : ''}INDEX IF NOT EXISTS ${this.quoteIdentifier(index.name)} ON ${this.quoteIdentifier(table.name)} (${index.columns.map(col => this.quoteIdentifier(col)).join(', ')})\n`;
       }

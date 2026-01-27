@@ -506,7 +506,13 @@ export class MySQLService extends BaseDatabaseService {
         let definition = `  \`${column.name}\` ${column.type}`;
         if (!column.nullable) definition += ' NOT NULL';
         if (column.defaultValue !== undefined) {
-          definition += ` DEFAULT ${column.defaultValue === null ? 'NULL' : `'${column.defaultValue}'`}`;
+          // 特殊关键字处理
+          const upperDefault = column.defaultValue.toString().toUpperCase();
+          if (upperDefault === 'CURRENT_TIMESTAMP' || upperDefault === 'NOW()' || upperDefault === 'CURRENT_DATE') {
+            definition += ` DEFAULT ${upperDefault}`;
+          } else {
+            definition += ` DEFAULT ${column.defaultValue === null ? 'NULL' : `'${column.defaultValue}'`}`;
+          }
         }
         if (column.isAutoIncrement) definition += ' AUTO_INCREMENT';
         return definition;
@@ -524,7 +530,7 @@ export class MySQLService extends BaseDatabaseService {
 
       // 添加索引
       for (const index of indexes) {
-        if (index.type === 'PRIMARY') continue; // 主键已经在表定义中添加
+        if (index.type === 'PRIMARY' || index.name === 'PRIMARY') continue; // 跳过主键索引
         schemaSql += `-- 索引: ${index.name} on ${table.name}\n`;
         schemaSql += `CREATE ${index.unique ? 'UNIQUE ' : ''}INDEX \`${index.name}\` ON \`${table.name}\` (${index.columns.map(col => `\`${col}\``).join(', ')})\n`;
       }
