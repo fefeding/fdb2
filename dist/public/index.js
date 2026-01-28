@@ -3446,7 +3446,7 @@ async function requestServer(url, data, option) {
       const apiPath = url.replace(/^(http(s)?:)?\/\//, "").replace(/.*?\/api\//, "/api/");
       let server;
       try {
-        server = require("../server/index.cjs");
+        server = require("../server/index.js");
       } catch (e) {
         try {
           const path = require("path");

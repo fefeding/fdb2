@@ -28,14 +28,14 @@ export async function requestServer(url: string, data?: any, option?: AxiosReque
             // 尝试使用 Node.js 的 require 方法
             try {
                 // 路径 1: 直接从项目根目录加载
-                server = require('../server/index.cjs');
+                server = require('../server/index.js');
             } catch (e) {
                 try {
                     // 路径 2: 使用 Node.js 的 path 模块获取正确路径
                     const path = require('path');
                     const fs = require('fs');
                     const appPath = process.cwd();
-                    const serverFilePath = path.join(appPath, 'server', 'index.cjs');
+                    const serverFilePath = path.join(appPath, 'server', 'index.js');
                     
                     console.log('尝试加载服务端代码:', serverFilePath);
                     
@@ -43,7 +43,7 @@ export async function requestServer(url: string, data?: any, option?: AxiosReque
                         server = require(serverFilePath);
                     } else {
                         // 路径 3: 尝试相对路径
-                        server = require('./server/index.cjs');
+                        server = require('./server/index.js');
                     }
                 } catch (err) {
                     console.error('所有路径尝试失败:', err);

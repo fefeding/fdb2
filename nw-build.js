@@ -43,35 +43,47 @@ async function build() {
 
     console.log('4. 配置 NW.js 构建参数...');
     
-    nwbuilder.default({
-      mode: 'build',
-      srcDir: distPath, // 指向构建后的 Vue 应用
-      version: '0.78.1', // 稳定的 NW.js 版本
-      flavor: 'normal', // 标准版本，包含 Node.js
-      platform: 'win', // 目标平台
-      arch: 'x64', // 架构
-      outDir: resolve(__dirname, 'nw-build'), // 输出目录
-      cacheDir: resolve(__dirname, 'nw-cache'), // 缓存目录
-      zip: false, // 不创建 ZIP 文件
-      downloadUrl: 'https://dl.nwjs.io', // 下载源
-      logLevel: 'info',
-      glob: false, // 禁用 glob，直接查找 srcDir 下的 package.json
-      app: {
-        icon: resolve(__dirname, 'public', 'favicon.ico') // 添加应用图标配置
-      }
-    });
+    // 支持的平台配置
+    const platforms = ['win', 'osx', 'linux'];
+    
+    // 为每个平台单独构建
+    for (const platform of platforms) {
+      console.log(`\n正在构建 ${platform} 平台...`);
+      
+      await nwbuilder.default({
+        mode: 'build',
+        srcDir: distPath,
+        version: '0.78.1',
+        flavor: 'normal',
+        platform: platform,
+        arch: 'x64',
+        outDir: resolve(__dirname, 'nw-build'),
+        cacheDir: resolve(__dirname, 'nw-cache'),
+        zip: false,
+        downloadUrl: 'https://dl.nwjs.io',
+        logLevel: 'info',
+        glob: false,
+        app: {
+          icon: resolve(__dirname, 'public', 'favicon.ico')
+        }
+      });
+      
+      console.log(`✅ ${platform} 平台构建完成`);
+    }
 
-    console.log('5. 打包完成！');
+    console.log('\n5. 打包完成！');
     console.log(`应用已生成在: ${resolve(__dirname, 'nw-build')}`);
     
-    // 验证打包后的应用程序是否包含 node_modules 目录
-    const packagedNodeModulesPath = join(__dirname, 'nw-build', 'package.nw', 'node_modules');
-    if (existsSync(packagedNodeModulesPath)) {
-      console.log('✅ 应用程序已包含 node_modules 目录');
-      console.log('✅ 依赖包数量:', readdirSync(packagedNodeModulesPath).length, '个');
-    } else {
-      console.warn('⚠️  应用程序不包含 node_modules 目录');
-    }
+    // 验证打包后的应用程序
+    platforms.forEach(platform => {
+      const packagedNodeModulesPath = join(__dirname, 'nw-build', platform, 'x64', 'package.nw', 'node_modules');
+      if (existsSync(packagedNodeModulesPath)) {
+        console.log(`✅ ${platform} 应用程序已包含 node_modules 目录`);
+        console.log(`✅ ${platform} 依赖包数量:`, readdirSync(packagedNodeModulesPath).length, '个');
+      } else {
+        console.warn(`⚠️  ${platform} 应用程序不包含 node_modules 目录`);
+      }
+    });
 
   } catch (error) {
     console.error('构建过程中出错:', error);
