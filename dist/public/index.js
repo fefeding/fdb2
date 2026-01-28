@@ -1,6 +1,6 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./layout-DE-8vrcc.js","./vue-BjL5XjkG.js","./vue-CIUEyO5u.css","./bootstrap-IS5Me-CY.js","./bootstrap-CVQV2YQR.css","./layout-rJVpGJdd.css","./explorer-WSZCeTIA.js","./explorer-C88R5OXZ.css"])))=>i.map(i=>d[i]);
-import { c as createBlock, r as resolveComponent, o as openBlock, e as effectScope, a as ref, m as markRaw, b as reactive, i as isRef, d as isReactive, t as toRaw, g as getCurrentScope, f as onScopeDispose, w as watch, n as nextTick, h as toRefs, j as computed, k as inject, l as hasInjectionContext, p as createRouter, q as createWebHistory, u as useTitle, s as defineComponent, v as createElementBlock, F as Fragment, x as renderList, y as normalizeClass, z as createCommentVNode, A as createBaseVNode, B as toDisplayString, C as createApp, D as getCurrentInstance, E as onUnmounted, G as onMounted, H as createVNode, I as createTextVNode, J as renderSlot, K as normalizeStyle, L as withModifiers, M as resolveDynamicComponent } from "./vue-BjL5XjkG.js";
-import { M as Modal$1 } from "./bootstrap-IS5Me-CY.js";
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./layout.js","./vue.js","./vue.css","./bootstrap.js","./bootstrap.css","./layout.css","./explorer.js","./explorer.css"])))=>i.map(i=>d[i]);
+import { c as createBlock, r as resolveComponent, o as openBlock, e as effectScope, a as ref, m as markRaw, b as reactive, i as isRef, d as isReactive, t as toRaw, g as getCurrentScope, f as onScopeDispose, w as watch, n as nextTick, h as toRefs, j as computed, k as inject, l as hasInjectionContext, p as createRouter, q as createWebHistory, u as useTitle, s as defineComponent, v as createElementBlock, F as Fragment, x as renderList, y as normalizeClass, z as createCommentVNode, A as createBaseVNode, B as toDisplayString, C as createApp, D as getCurrentInstance, E as onUnmounted, G as onMounted, H as createVNode, I as createTextVNode, J as renderSlot, K as normalizeStyle, L as withModifiers, M as resolveDynamicComponent } from "./vue.js";
+import { M as Modal$1 } from "./bootstrap.js";
 (function polyfill() {
   const relList = document.createElement("link").relList;
   if (relList && relList.supports && relList.supports("modulepreload")) return;
@@ -3735,7 +3735,7 @@ const __vitePreload = function preload(baseModule, deps, importerUrl) {
 const routes = [
   {
     path: "/database",
-    component: () => __vitePreload(() => import("./layout-DE-8vrcc.js"), true ? __vite__mapDeps([0,1,2,3,4,5]) : void 0, import.meta.url),
+    component: () => __vitePreload(() => import("./layout.js"), true ? __vite__mapDeps([0,1,2,3,4,5]) : void 0, import.meta.url),
     redirect: "/database/index",
     meta: {
       title: "数据库管理",
@@ -3746,7 +3746,7 @@ const routes = [
       {
         path: "index",
         name: "database-index",
-        component: () => __vitePreload(() => import("./explorer-WSZCeTIA.js"), true ? __vite__mapDeps([6,1,2,3,4,7]) : void 0, import.meta.url),
+        component: () => __vitePreload(() => import("./explorer.js"), true ? __vite__mapDeps([6,1,2,3,4,7]) : void 0, import.meta.url),
         meta: {
           title: "数据库管理首页",
           icon: "bi-house",
@@ -3756,7 +3756,7 @@ const routes = [
       {
         path: "explorer",
         name: "database-explorer",
-        component: () => __vitePreload(() => import("./explorer-WSZCeTIA.js"), true ? __vite__mapDeps([6,1,2,3,4,7]) : void 0, import.meta.url),
+        component: () => __vitePreload(() => import("./explorer.js"), true ? __vite__mapDeps([6,1,2,3,4,7]) : void 0, import.meta.url),
         meta: {
           title: "数据库浏览器",
           icon: "bi-diagram-3",
@@ -11871,12 +11871,12 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
   setup(__props, { expose: __expose }) {
     const toasts = reactive([]);
     const addToast = (title, message, type2 = "success", duration = 3e3) => {
-      const toast = { title, message, type: type2, removed: false };
-      toasts.push(toast);
-      setTimeout(() => removeToast(toast), duration);
+      const toast2 = { title, message, type: type2, removed: false };
+      toasts.push(toast2);
+      setTimeout(() => removeToast(toast2), duration);
     };
-    const removeToast = (toast) => {
-      const index = toasts.indexOf(toast);
+    const removeToast = (toast2) => {
+      const index = toasts.indexOf(toast2);
       if (index < 0) return;
       toasts[index].removed = true;
       setTimeout(() => {
@@ -11886,21 +11886,21 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
     __expose({ addToast });
     return (_ctx, _cache) => {
       return openBlock(), createElementBlock("div", _hoisted_1$4, [
-        (openBlock(true), createElementBlock(Fragment, null, renderList(toasts, (toast, index) => {
+        (openBlock(true), createElementBlock(Fragment, null, renderList(toasts, (toast2, index) => {
           return openBlock(), createElementBlock("div", {
-            class: normalizeClass(`toast show bg-${toast.type === "error" ? "danger" : toast.type}-subtle ${toast.removed ? "fade-out" : ""}`),
+            class: normalizeClass(`toast show bg-${toast2.type === "error" ? "danger" : toast2.type}-subtle ${toast2.removed ? "fade-out" : ""}`),
             role: "alert",
             key: index
           }, [
-            toast.title ? (openBlock(), createElementBlock("div", _hoisted_2$4, [
-              createBaseVNode("strong", _hoisted_3$3, toDisplayString(toast.title), 1),
+            toast2.title ? (openBlock(), createElementBlock("div", _hoisted_2$4, [
+              createBaseVNode("strong", _hoisted_3$3, toDisplayString(toast2.title), 1),
               createBaseVNode("button", {
                 type: "button",
                 class: "btn-close",
                 onClick: ($event) => removeToast(index)
               }, null, 8, _hoisted_4$2)
             ])) : createCommentVNode("", true),
-            createBaseVNode("div", _hoisted_5$2, toDisplayString(toast.message), 1)
+            createBaseVNode("div", _hoisted_5$2, toDisplayString(toast2.message), 1)
           ], 2);
         }), 128))
       ]);
@@ -11908,7 +11908,7 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
   }
 });
 const Toast = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["__scopeId", "data-v-a1eb4510"]]);
-const toastPlugin = {
+const toast = {
   install(app2) {
     const toastMount = document.createElement("div");
     document.body.appendChild(toastMount);
@@ -11924,8 +11924,8 @@ const toastPlugin = {
   getToast() {
     const instance2 = getCurrentInstance();
     if (!instance2) return null;
-    const toast = instance2.appContext.config?.globalProperties?.$toast;
-    return toast;
+    const toast2 = instance2.appContext.config?.globalProperties?.$toast;
+    return toast2;
   }
 };
 const _hoisted_1$3 = {
@@ -12731,7 +12731,7 @@ const pinia = createPinia();
 pinia.use(src_default);
 app.use(router);
 app.use(pinia);
-app.use(toastPlugin);
+app.use(toast);
 app.use(modalPlugin);
 app.component("Modal", Modal);
 app.component("DataGrid", DataGrid);
@@ -12745,5 +12745,6 @@ export {
   defineStore as d,
   getModalInstance as g,
   request as r,
-  showAlert as s
+  showAlert as s,
+  toast as t
 };

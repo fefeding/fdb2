@@ -1,10 +1,6 @@
-import { exec } from 'child_process';
-import { createServer } from 'http';
-import { join, resolve } from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = resolve(__filename, '..');
+const { exec } = require('child_process');
+const { createServer } = require('http');
+const { join, resolve } = require('path');
 
 // 启动 Vite 开发服务器
 const viteProcess = exec('npm run dev', (error, stdout, stderr) => {

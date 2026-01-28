@@ -1,6 +1,6 @@
-import { s as defineComponent, v as createElementBlock, A as createBaseVNode, H as createVNode, r as resolveComponent, o as openBlock } from "./vue-BjL5XjkG.js";
-import { _ as _export_sfc } from "./index-BlOIvTaP.js";
-import "./bootstrap-IS5Me-CY.js";
+import { s as defineComponent, v as createElementBlock, A as createBaseVNode, H as createVNode, r as resolveComponent, o as openBlock } from "./vue.js";
+import { _ as _export_sfc } from "./index.js";
+import "./bootstrap.js";
 const _hoisted_1 = { class: "database-layout" };
 const _hoisted_2 = { class: "main-content-modern" };
 const _hoisted_3 = { class: "content-wrapper" };

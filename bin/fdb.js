@@ -1,13 +1,8 @@
 #!/usr/bin/env node
 
-import { exec, spawn, execSync, spawnSync } from 'child_process';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-
-// 获取当前文件的路径和目录
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const { exec, spawn, execSync, spawnSync } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 
 // 项目根目录
 const projectRoot = path.resolve(__dirname, '..');
@@ -15,6 +10,7 @@ const projectRoot = path.resolve(__dirname, '..');
 // 解析命令行参数
 const args = process.argv.slice(2);
 const command = args[0] || 'help';
+const commandArgs = args.slice(1); // 获取除了命令之外的所有参数
 
 // 处理不同的命令
 switch (command) {
@@ -43,14 +39,16 @@ function startProject() {
   if (process.platform === 'win32') {
     // Windows 系统
     cmd = 'cmd.exe';
-    args = ['/c', 'npm', 'start'];
+    args = ['/c', 'node', 'server.js', ...commandArgs];
   } else {
     // Linux/macOS 系统
-    cmd = 'npm';
-    args = ['start'];
+    cmd = 'node';
+    args = ['server.js', ...commandArgs];
   }
   
-  // 使用 npm start 命令启动服务器
+  console.log('Executing:', cmd, args);
+  
+  // 使用 node 命令启动服务器
   const result = spawnSync(cmd, args, {
     cwd: projectRoot,
     stdio: 'inherit'
@@ -71,34 +69,35 @@ function startProject() {
 function stopProject() {
   console.log('Stopping FDB project...');
   
-  // 命令和参数
-  let cmd, args;
+  // 读取 PID 文件
+  const pidFilePath = path.join(projectRoot, 'server.pid');
   
-  // 根据不同的操作系统选择不同的命令
-  if (process.platform === 'win32') {
-    // Windows 系统
-    cmd = 'cmd.exe';
-    args = ['/c', 'npm', 'stop'];
-  } else {
-    // Linux/macOS 系统
-    cmd = 'npm';
-    args = ['stop'];
+  if (!fs.existsSync(pidFilePath)) {
+    console.log('No server process found (PID file not exists)');
+    return;
   }
   
-  // 使用 npm stop 命令停止服务器
-  const result = spawnSync(cmd, args, {
-    cwd: projectRoot,
-    stdio: 'inherit'
-  });
-  
-  if (result.error) {
-    console.error('Failed to stop server:', result.error.message);
-    process.exit(1);
-  } else if (result.status === 0) {
+  try {
+    // 读取 PID
+    const pid = parseInt(fs.readFileSync(pidFilePath, 'utf8'));
+    console.log(`Stopping server process with PID: ${pid}`);
+    
+    // 发送终止信号
+    process.kill(pid);
+    
+    // 删除 PID 文件
+    fs.unlinkSync(pidFilePath);
     console.log('Server stopped successfully');
-  } else {
-    console.log('No server processes found or failed to stop server with code', result.status);
-    process.exit(0); // 即使没有找到进程，也认为操作成功
+  } catch (error) {
+    // 如果进程不存在（ESRCH 错误），也删除 PID 文件
+    if (error.code === 'ESRCH') {
+      console.log('Server process not found, cleaning up PID file');
+      if (fs.existsSync(pidFilePath)) {
+        fs.unlinkSync(pidFilePath);
+      }
+    } else {
+      console.error('Failed to stop server:', error.message);
+    }
   }
 }
 
@@ -106,35 +105,29 @@ function stopProject() {
 function restartProject() {
   console.log('Restarting FDB project...');
   
-  // 命令和参数
-  let cmd, args;
-  
-  // 根据不同的操作系统选择不同的命令
-  if (process.platform === 'win32') {
-    // Windows 系统
-    cmd = 'cmd.exe';
-    args = ['/c', 'npm', 'restart'];
-  } else {
-    // Linux/macOS 系统
-    cmd = 'npm';
-    args = ['restart'];
+  // 先停止当前运行的进程
+  try {
+    stopProject();
+  } catch (error) {
+    // 即使停止失败，也继续尝试启动新的进程
+    console.log('Continuing to start new server process...');
   }
   
-  // 使用 npm restart 命令重启服务器
-  const result = spawnSync(cmd, args, {
-    cwd: projectRoot,
-    stdio: 'inherit'
-  });
-  
-  if (result.error) {
-    console.error('Failed to restart server:', result.error.message);
-    process.exit(1);
-  } else if (result.status === 0) {
-    console.log('Server restarted successfully');
-  } else {
-    console.error('Failed to restart server with code', result.status);
-    process.exit(1);
+  // 等待一段时间，确保进程已经停止
+  // 使用同步的方式等待
+  console.log('Waiting for server process to stop...');
+  for (let i = 0; i < 10; i++) {
+    // 检查 PID 文件是否存在
+    const pidFilePath = path.join(projectRoot, 'server.pid');
+    if (!fs.existsSync(pidFilePath)) {
+      break;
+    }
+    // 等待 100 毫秒
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
   }
+  
+  // 启动新的进程
+  startProject();
 }
 
 // 显示帮助信息

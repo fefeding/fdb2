@@ -436,6 +436,7 @@ class SQLServerService extends base_service_1.BaseDatabaseService {
         }
         catch (error) {
             console.error('SQL Server备份失败:', error);
+            // @ts-ignore
             throw new Error(`备份失败: ${error.message}`);
         }
     }
@@ -455,6 +456,7 @@ class SQLServerService extends base_service_1.BaseDatabaseService {
         }
         catch (error) {
             console.error('SQL Server恢复失败:', error);
+            // @ts-ignore
             throw new Error(`恢复失败: ${error.message}`);
         }
     }
@@ -537,6 +539,7 @@ class SQLServerService extends base_service_1.BaseDatabaseService {
         }
         catch (error) {
             console.error('SQL Server导出表数据失败:', error);
+            // @ts-ignore
             throw new Error(`导出表数据失败: ${error.message}`);
         }
     }
@@ -616,6 +619,7 @@ class SQLServerService extends base_service_1.BaseDatabaseService {
         }
         catch (error) {
             console.error('SQL Server导出表数据到CSV失败:', error);
+            // @ts-ignore
             throw new Error(`导出表数据到CSV失败: ${error.message}`);
         }
     }
@@ -666,6 +670,7 @@ class SQLServerService extends base_service_1.BaseDatabaseService {
         }
         catch (error) {
             console.error('SQL Server导出表数据到JSON失败:', error);
+            // @ts-ignore
             throw new Error(`导出表数据到JSON失败: ${error.message}`);
         }
     }
@@ -680,6 +685,7 @@ class SQLServerService extends base_service_1.BaseDatabaseService {
         }
         catch (error) {
             console.error('SQL Server导出表数据到Excel失败:', error);
+            // @ts-ignore
             throw new Error(`导出表数据到Excel失败: ${error.message}`);
         }
     }

@@ -1,10 +1,6 @@
-import nwbuild from 'nw-builder';
-import { resolve, join } from 'path';
-import { fileURLToPath } from 'url';
-import { copyFileSync, existsSync, rmSync, readdirSync } from 'fs';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = resolve(__filename, '..');
+const nwbuilder = require('nw-builder');
+    const { resolve, join } = require('path');
+    const { copyFileSync, existsSync, rmSync, readdirSync } = require('fs');
 
 async function build() {
   try {
@@ -12,7 +8,7 @@ async function build() {
     
     // 首先构建 Vue 应用
     console.log('1. 构建 Vue 应用...');
-    const { execSync } = await import('child_process');
+    const { execSync } = require('child_process');
     execSync('npm run build', { stdio: 'inherit' });
 
     console.log('2. 复制 package.json 到 dist 目录...');
@@ -31,7 +27,7 @@ async function build() {
     console.log('Dist 路径:', distPath);
     
     // 执行 npm install 命令
-    execSync('npm install --only=production', { 
+    execSync('pnpm install --only=production', { 
       stdio: 'inherit', 
       cwd: distPath 
     });
@@ -47,7 +43,7 @@ async function build() {
 
     console.log('4. 配置 NW.js 构建参数...');
     
-    await nwbuild({
+    nwbuilder.default({
       mode: 'build',
       srcDir: distPath, // 指向构建后的 Vue 应用
       version: '0.78.1', // 稳定的 NW.js 版本

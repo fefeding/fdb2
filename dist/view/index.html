@@ -21,42 +21,7 @@
     }
   }
   var __INITIAL_STATE__ = __get_templateJson('__INITIAL_STATE__');
-  if(!__INITIAL_STATE__) __INITIAL_STATE__ = __get_templateJson('__DEFAULTINITIAL_STATE__');
-  // 动态加载入口
-  function __vitejs_load_entry(url, type) {        
-        if(!url) return;
-        if(url.indexOf('/') !== 0) url = '/' + url;
-        var prefix = (window.__INITIAL_STATE__ && window.__INITIAL_STATE__.config && window.__INITIAL_STATE__.config.prefix) || '';
-        if(prefix && url.indexOf(prefix) !== 0) {
-          url = prefix + url;
-        }   
-        var nodeObj; 
-        switch(type) {
-          case 'script': {
-            // 检查是否已加载过
-            var existing = document.querySelector(`script[src="${url}"]`);   
-            if(existing) return; 
-            nodeObj = document.createElement('script');
-            nodeObj.src = url;
-            nodeObj.type = 'module';
-            break;
-          }
-          case 'stylesheet': 
-          case 'modulepreload':
-          case 'icon':  {
-            // 检查是否已加载过
-            var existing = document.querySelector(`link[href="${url}"]`);   
-            if(existing) return; 
-            nodeObj = document.createElement('link');
-            nodeObj.href = url;
-            nodeObj.rel = type;
-            break;
-          }
-        }  
-        if(!nodeObj) return;     
-        nodeObj.crossOrigin = 'crossorigin';
-        document.head.appendChild(nodeObj);
-      }
+  if(!__INITIAL_STATE__) __INITIAL_STATE__ = __get_templateJson('__DEFAULTINITIAL_STATE__');        
 </script>   
     <link rel="icon" href="/public/favicon.png" />    
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -67,12 +32,12 @@
         console.error(event);
       });
     </script> 
-    <script type="module" crossorigin src="../public/index-BlOIvTaP.js"></script>
-    <link rel="modulepreload" crossorigin href="../public/vue-BjL5XjkG.js">
-    <link rel="modulepreload" crossorigin href="../public/bootstrap-IS5Me-CY.js">
-    <link rel="stylesheet" crossorigin href="../public/vue-CIUEyO5u.css">
-    <link rel="stylesheet" crossorigin href="../public/bootstrap-CVQV2YQR.css">
-    <link rel="stylesheet" crossorigin href="../public/index-T38Atbwf.css">
+    <script type="module" crossorigin src="/public/index.js"></script>
+    <link rel="modulepreload" crossorigin href="/public/vue.js">
+    <link rel="modulepreload" crossorigin href="/public/bootstrap.js">
+    <link rel="stylesheet" crossorigin href="/public/vue.css">
+    <link rel="stylesheet" crossorigin href="/public/bootstrap.css">
+    <link rel="stylesheet" crossorigin href="/public/index.css">
   </head>
   <body>
     <div id="app" class="min-vh-100"></div>

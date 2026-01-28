@@ -1,13 +1,8 @@
 #!/usr/bin/env node
 
-import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-
-// 处理 ES Module 中没有 __dirname 和 __filename 的问题
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
 
 // 日志文件路径 - 使用绝对路径
 const logFilePath = path.resolve(__dirname, 'server.log');
@@ -54,12 +49,7 @@ app.use((req, res, next) => {
 app.use('/api/', async (req, res, next) => {
   if (req.method === 'POST') {
     try {
-      // 使用动态导入，并确保将 CommonJS 模块转换为 ES 模块
-      const { createRequire } = await import('module');
-      const require = createRequire(import.meta.url);
-      
-      // 使用 require 加载 CommonJS 模块（.cjs 扩展名）
-      const serverModule = require('./dist/server/index.cjs');
+      const serverModule = require('./dist/server/index.js');
       const handleDatabaseRoutes = serverModule.handleDatabaseRoutes;
       
       // 调用 handleDatabaseRoutes 函数处理请求
@@ -83,8 +73,8 @@ app.use('/api/', async (req, res, next) => {
   }
 });
 
-// 配置静态文件目录
-app.use(express.static(staticDir));
+// 配置静态文件目录 - 只有 /public 请求指向 public 目录
+app.use('/public', express.static(path.join(staticDir, 'public')));
 
 // 所有未匹配的路由都指向 index.html
 app.use((req, res) => {
@@ -108,13 +98,14 @@ for (let i = 0; i < process.argv.length; i++) {
 // 启动服务器
 const PORT = portFromArgs || process.env.PORT || 9300;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`http://localhost:${PORT}`);
   
   // 将 PID 写入 PID 文件
   const pidFilePath = path.join(__dirname, 'server.pid');
   fs.writeFileSync(pidFilePath, process.pid.toString());
   console.log(`PID ${process.pid} written to ${pidFilePath}`);
+  
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`http://localhost:${PORT}`);
 });
 
 // 处理进程退出事件，关闭日志流

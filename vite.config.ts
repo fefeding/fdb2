@@ -33,23 +33,14 @@ const nunjucksPlugin = ViteNunjucksPlugin({
 const viewDir = path.resolve(__dirname, './view');
 // https://vitejs.dev/config/
 const config = defineConfig({
-    //root: __dirname,
+    publicDir: false,
     
     plugins: [
         vue() as PluginOption, 
         vueJsx() as PluginOption,
         // @ts-ignore
         CopyPlugin({
-            patterns: [
-                // {
-                //     from: viewDir + '/modules',
-                //     to: path.resolve(__dirname, './dist/view/modules')
-                // },
-                {
-                    from: './public',
-                    to: path.resolve(__dirname, './dist/public')
-                },
-            ]
+            patterns: []
         }),
         nunjucksPlugin,
         {
@@ -58,12 +49,10 @@ const config = defineConfig({
                 const serverSrcDir = path.resolve(__dirname, './server');
                 const serverDistDir = path.resolve(__dirname, './dist/server');
                 
-                // 确保输出目录存在
                 if (!fs.existsSync(serverDistDir)) {
                     fs.mkdirSync(serverDistDir, { recursive: true });
                 }
                 
-                // 复制 server 目录下的所有 .ts 文件
                 const copyRecursiveSync = (src: string, dest: string) => {
                     const exists = fs.existsSync(src);
                     const stats = exists && fs.statSync(src);
@@ -81,7 +70,6 @@ const config = defineConfig({
                             );
                         });
                     } else {
-                        // 只复制 .ts 文件
                         if (src.endsWith('.ts') || src.endsWith('.js')) {
                             fs.copyFileSync(src, dest);
                         }
@@ -90,6 +78,58 @@ const config = defineConfig({
                 
                 copyRecursiveSync(serverSrcDir, serverDistDir);
                 console.log('Server files copied to', serverDistDir);
+            }
+        },
+        {
+            name: 'fix-html-paths',
+            writeBundle: async () => {
+                const publicDir = path.resolve(__dirname, './dist/public');
+                const htmlFiles = ['index.html', 'view/index.html'];
+                
+                htmlFiles.forEach(htmlFile => {
+                    const htmlPath = path.join(publicDir, htmlFile);
+                    
+                    if (fs.existsSync(htmlPath)) {
+                        let html = fs.readFileSync(htmlPath, 'utf-8');
+                        
+                        html = html.replace(/\.\.\/([a-zA-Z0-9_-]+\.(js|css|woff|woff2|png|jpg|jpeg|gif|svg|ico))/g, '/public/$1');
+                        html = html.replace(/(src|href)="([a-zA-Z0-9_-]+\.(js|css))"/g, (match, attr, filename) => {
+                            if (!filename.startsWith('/') && !filename.startsWith('.')) {
+                                return `${attr}="/public/${filename}"`;
+                            }
+                            return match;
+                        });
+                        
+                        fs.writeFileSync(htmlPath, html);
+                        console.log(`Fixed paths in: ${htmlFile}`);
+                    }
+                });
+                
+                // 将 view/index.html 移动到 dist/view/ 目录
+                const viewHtmlPath = path.join(publicDir, 'view/index.html');
+                const destViewDir = path.resolve(__dirname, './dist/view');
+                const destViewHtmlPath = path.join(destViewDir, 'index.html');
+                
+                if (fs.existsSync(viewHtmlPath)) {
+                    if (!fs.existsSync(destViewDir)) {
+                        fs.mkdirSync(destViewDir, { recursive: true });
+                    }
+                    
+                    let html = fs.readFileSync(viewHtmlPath, 'utf-8');
+                    fs.writeFileSync(destViewHtmlPath, html);
+                    fs.unlinkSync(viewHtmlPath);
+                    
+                    // 删除空的 view 目录
+                    const viewDir = path.join(publicDir, 'view');
+                    if (fs.existsSync(viewDir)) {
+                        const files = fs.readdirSync(viewDir);
+                        if (files.length === 0) {
+                            fs.rmdirSync(viewDir);
+                        }
+                    }
+                    
+                    console.log(`Moved view/index.html to dist/view/index.html`);
+                }
             }
         },
         // {
@@ -210,25 +250,23 @@ const config = defineConfig({
         },
     },
     build: {
-        assetsDir: 'public',
-        outDir: 'dist',
-        manifest: true, // 关键！生成 manifest.json
-        minify: false, // 禁用代码压缩
-        // 禁用 CSS 代码分割（避免生成额外的 <link>）
-        //cssCodeSplit: false,
+        outDir: 'dist/public',
+        assetsInlineLimit: 4096,
+        manifest: true,
+        minify: false,
         modulePreload: true,
         rollupOptions: {
             external: [
-                // 排除服务器端代码
                 '../../server/index',
                 './server/index'
             ],
             input: getViewInputs(viewDir),
             output: {
-                // { getModuleInfo }
+                entryFileNames: '[name].js',
+                chunkFileNames: '[name].js',
+                assetFileNames: '[name].[ext]',
                 manualChunks(id, mod) {
                     const ms = [...id.matchAll(/\/node_modules\/([^\/]+)\//ig)];                    
-                    //console.log(id, ms, mod);
                     if(ms && ms.length) {
                         const m = ms[ms.length -1];
                         if(m && m[1]) {

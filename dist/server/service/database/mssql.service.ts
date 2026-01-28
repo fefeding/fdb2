@@ -275,7 +275,7 @@ export class SQLServerService extends BaseDatabaseService {
     let sql = `CREATE DATABASE ${this.quoteIdentifier(databaseName)}`;
     
     if (options) {
-      const clauses = [];
+      const clauses = [] as Array<string>;
       
       if (options.collation) {
         clauses.push(`COLLATE ${options.collation}`);
@@ -443,6 +443,7 @@ export class SQLServerService extends BaseDatabaseService {
       return `备份成功：${backupFile}`;
     } catch (error) {
       console.error('SQL Server备份失败:', error);
+      // @ts-ignore
       throw new Error(`备份失败: ${error.message}`);
     }
   }
@@ -464,6 +465,7 @@ export class SQLServerService extends BaseDatabaseService {
       await dataSource.query(`ALTER DATABASE ${this.quoteIdentifier(databaseName)} SET MULTI_USER`);
     } catch (error) {
       console.error('SQL Server恢复失败:', error);
+      // @ts-ignore
       throw new Error(`恢复失败: ${error.message}`);
     }
   }
@@ -554,6 +556,7 @@ export class SQLServerService extends BaseDatabaseService {
       return exportFile;
     } catch (error) {
       console.error('SQL Server导出表数据失败:', error);
+      // @ts-ignore
       throw new Error(`导出表数据失败: ${error.message}`);
     }
   }
@@ -638,6 +641,7 @@ export class SQLServerService extends BaseDatabaseService {
       return exportFile;
     } catch (error) {
       console.error('SQL Server导出表数据到CSV失败:', error);
+      // @ts-ignore
       throw new Error(`导出表数据到CSV失败: ${error.message}`);
     }
   }
@@ -697,6 +701,7 @@ export class SQLServerService extends BaseDatabaseService {
       return exportFile;
     } catch (error) {
       console.error('SQL Server导出表数据到JSON失败:', error);
+      // @ts-ignore
       throw new Error(`导出表数据到JSON失败: ${error.message}`);
     }
   }
@@ -711,6 +716,7 @@ export class SQLServerService extends BaseDatabaseService {
       return this.exportTableDataToCSV(dataSource, databaseName, tableName, options);
     } catch (error) {
       console.error('SQL Server导出表数据到Excel失败:', error);
+      // @ts-ignore
       throw new Error(`导出表数据到Excel失败: ${error.message}`);
     }
   }

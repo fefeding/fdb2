@@ -1,6 +1,6 @@
-import { s as defineComponent, a as ref, j as computed, w as watch, c as createBlock, N as withCtx, o as openBlock, A as createBaseVNode, L as withModifiers, v as createElementBlock, z as createCommentVNode, O as withDirectives, I as createTextVNode, P as vModelText, F as Fragment, x as renderList, B as toDisplayString, Q as vModelSelect, R as vModelCheckbox, G as onMounted, y as normalizeClass, S as vShow, H as createVNode, T as useRouter, K as normalizeStyle, n as nextTick, U as withKeys, V as useRoute } from "./vue-BjL5XjkG.js";
-import { r as request, M as Modal, _ as _export_sfc, g as getModalInstance, s as showAlert, a as showConfirm, d as defineStore, c as commonjsGlobal, T as Toast } from "./index-BlOIvTaP.js";
-import "./bootstrap-IS5Me-CY.js";
+import { s as defineComponent, a as ref, j as computed, w as watch, c as createBlock, N as withCtx, o as openBlock, A as createBaseVNode, L as withModifiers, v as createElementBlock, z as createCommentVNode, O as withDirectives, I as createTextVNode, P as vModelText, F as Fragment, x as renderList, B as toDisplayString, Q as vModelSelect, R as vModelCheckbox, G as onMounted, y as normalizeClass, S as vShow, H as createVNode, T as useRouter, K as normalizeStyle, n as nextTick, U as withKeys, V as useRoute } from "./vue.js";
+import { r as request, M as Modal, _ as _export_sfc, g as getModalInstance, s as showAlert, a as showConfirm, d as defineStore, t as toast, c as commonjsGlobal, T as Toast } from "./index.js";
+import "./bootstrap.js";
 class ConnectionService {
   /**
    * 获取所有数据库连接配置
@@ -550,7 +550,7 @@ const _sfc_main$8 = /* @__PURE__ */ defineComponent({
       try {
         const connectionService2 = new ConnectionService();
         const response = await connectionService2.getDatabaseTypes();
-        databaseTypes.value = response || [];
+        databaseTypes.value = response?.data || [];
       } catch (error) {
         console.error("加载数据库类型失败:", error);
       }
@@ -870,7 +870,7 @@ const _sfc_main$8 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const ConnectionEditor = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["__scopeId", "data-v-c5fd9032"]]);
+const ConnectionEditor = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["__scopeId", "data-v-01a4e6b5"]]);
 class ModalHelper {
   /**
    * 获取全局modal实例
@@ -1132,17 +1132,17 @@ const useConnectionStore = defineStore("connection", {
         this.error = null;
         const result = await connectionService.testConnection(connection);
         if (result.ret === 0) {
-          modal.success("连接测试成功");
+          toast.success("连接测试成功");
           return true;
         } else {
           this.error = result.msg || "连接测试失败";
-          modal.error(this.error);
+          toast.error(this.error);
           return false;
         }
       } catch (error) {
         this.error = error.message || "连接测试失败";
         console.error("连接测试失败:", error);
-        modal.error(this.error);
+        toast.error(this.error);
         return false;
       } finally {
         this.loading.executing = false;
@@ -44184,8 +44184,8 @@ const _hoisted_35$3 = { class: "nav nav-tabs" };
 const _hoisted_36$3 = { class: "nav-item" };
 const _hoisted_37$3 = { class: "badge bg-primary ms-1" };
 const _hoisted_38$3 = { class: "nav-item" };
-const _hoisted_39$2 = { class: "tab-content" };
-const _hoisted_40$2 = { class: "tab-panel" };
+const _hoisted_39$3 = { class: "tab-content" };
+const _hoisted_40$3 = { class: "tab-panel" };
 const _hoisted_41$2 = { class: "databases-section" };
 const _hoisted_42$2 = { class: "section-header" };
 const _hoisted_43$2 = { class: "section-actions" };
@@ -44262,6 +44262,7 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
       totalSize: 0,
       lastConnected: null
     });
+    const connectionStatus = ref("unknown");
     const searchKeyword = ref("");
     const isDetailsExpanded = ref(false);
     function toggleDetails() {
@@ -44284,6 +44285,8 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
       connectionStore.setCurrentConnection(newConnection);
       if (newConnection) {
         loadConnectionStats();
+        connectionStatus.value = "unknown";
+        testConnection();
       }
     }, { immediate: true });
     onMounted(() => {
@@ -44293,6 +44296,30 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
     });
     const databases = computed(() => connectionStore.databases);
     const loadingDatabases = computed(() => connectionStore.isLoadingDatabases);
+    const connectionStatusClass = computed(() => {
+      switch (connectionStatus.value) {
+        case "connected":
+          return "status-online";
+        case "disconnected":
+          return "status-offline";
+        case "testing":
+          return "status-testing";
+        default:
+          return "status-offline";
+      }
+    });
+    const connectionStatusText = computed(() => {
+      switch (connectionStatus.value) {
+        case "connected":
+          return "已连接";
+        case "disconnected":
+          return "未连接";
+        case "testing":
+          return "测试中...";
+        default:
+          return "未知";
+      }
+    });
     function loadConnectionStats() {
       connectionStats.value = {
         databaseCount: connectionStore.databaseCount,
@@ -44323,9 +44350,15 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
         });
       }
     }
-    function testConnection() {
-      if (props.connection) {
-        emit("test-connection", props.connection);
+    async function testConnection() {
+      if (!props.connection) return;
+      connectionStatus.value = "testing";
+      try {
+        const isConnected = await connectionStore.testConnection(props.connection);
+        connectionStatus.value = isConnected ? "connected" : "disconnected";
+      } catch (error) {
+        console.error("连接测试失败:", error);
+        connectionStatus.value = "disconnected";
       }
     }
     function editConnection() {
@@ -44413,10 +44446,10 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
               createBaseVNode("div", _hoisted_7$6, [
                 createBaseVNode("span", _hoisted_8$6, toDisplayString(getDbTypeLabel(__props.connection?.type)), 1),
                 createBaseVNode("span", {
-                  class: normalizeClass(["connection-status", __props.connection?.enabled ? "status-online" : "status-offline"])
+                  class: normalizeClass(["connection-status", connectionStatusClass.value])
                 }, [
                   _cache[14] || (_cache[14] = createBaseVNode("div", { class: "status-dot" }, null, -1)),
-                  createTextVNode(" " + toDisplayString(__props.connection?.enabled ? "已连接" : "未连接"), 1)
+                  createTextVNode(" " + toDisplayString(connectionStatusText.value), 1)
                 ], 2)
               ])
             ])
@@ -44566,8 +44599,8 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
               ])], 2)
             ])
           ]),
-          createBaseVNode("div", _hoisted_39$2, [
-            withDirectives(createBaseVNode("div", _hoisted_40$2, [
+          createBaseVNode("div", _hoisted_39$3, [
+            withDirectives(createBaseVNode("div", _hoisted_40$3, [
               createBaseVNode("div", _hoisted_41$2, [
                 createBaseVNode("div", _hoisted_42$2, [
                   createBaseVNode("div", _hoisted_43$2, [
@@ -44799,7 +44832,7 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const ConnectionDetail = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-454c289d"]]);
+const ConnectionDetail = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-1b219b5d"]]);
 var DatabaseType = /* @__PURE__ */ ((DatabaseType2) => {
   DatabaseType2["MYSQL"] = "mysql";
   DatabaseType2["POSTGRESQL"] = "postgres";
@@ -46276,8 +46309,8 @@ const _hoisted_38$2 = {
   key: 0,
   class: "table-comment"
 };
-const _hoisted_39$1 = { class: "table-actions" };
-const _hoisted_40$1 = ["onClick"];
+const _hoisted_39$2 = { class: "table-actions" };
+const _hoisted_40$2 = ["onClick"];
 const _hoisted_41$1 = {
   key: 0,
   class: "empty-state"
@@ -46761,13 +46794,13 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
                           ])
                         ]),
                         table.comment ? (openBlock(), createElementBlock("div", _hoisted_38$2, toDisplayString(table.comment), 1)) : createCommentVNode("", true),
-                        createBaseVNode("div", _hoisted_39$1, [
+                        createBaseVNode("div", _hoisted_39$2, [
                           createBaseVNode("button", {
                             class: "btn btn-sm btn-outline-primary",
                             onClick: withModifiers(($event) => editTable(table), ["stop"])
                           }, [..._cache[33] || (_cache[33] = [
                             createBaseVNode("i", { class: "bi bi-pencil" }, null, -1)
-                          ])], 8, _hoisted_40$1)
+                          ])], 8, _hoisted_40$2)
                         ])
                       ])
                     ], 8, _hoisted_27$3);
@@ -47653,8 +47686,8 @@ const _hoisted_35$1 = {
 const _hoisted_36$1 = { class: "table table-sm table-striped table-hover" };
 const _hoisted_37$1 = { class: "table-light" };
 const _hoisted_38$1 = { class: "column-header" };
-const _hoisted_39 = { class: "text-muted d-block" };
-const _hoisted_40 = {
+const _hoisted_39$1 = { class: "text-muted d-block" };
+const _hoisted_40$1 = {
   key: 0,
   class: "column-key"
 };
@@ -48360,8 +48393,8 @@ const _sfc_main$1 = /* @__PURE__ */ defineComponent({
                           }, [
                             createBaseVNode("div", _hoisted_38$1, [
                               createBaseVNode("span", null, toDisplayString(column.name), 1),
-                              createBaseVNode("small", _hoisted_39, toDisplayString(column.type), 1),
-                              column.isPrimary ? (openBlock(), createElementBlock("span", _hoisted_40, [..._cache[45] || (_cache[45] = [
+                              createBaseVNode("small", _hoisted_39$1, toDisplayString(column.type), 1),
+                              column.isPrimary ? (openBlock(), createElementBlock("span", _hoisted_40$1, [..._cache[45] || (_cache[45] = [
                                 createBaseVNode("i", { class: "bi bi-key-fill" }, null, -1)
                               ])])) : createCommentVNode("", true)
                             ])
@@ -48811,46 +48844,48 @@ const _hoisted_13 = { class: "node-actions" };
 const _hoisted_14 = ["onClick"];
 const _hoisted_15 = ["onClick"];
 const _hoisted_16 = ["onClick"];
-const _hoisted_17 = {
-  key: 0,
-  class: "node-spinner"
-};
+const _hoisted_17 = ["onClick"];
 const _hoisted_18 = {
   key: 0,
+  class: "node-spinner"
+};
+const _hoisted_19 = {
+  key: 0,
   class: "tree-children"
 };
-const _hoisted_19 = { class: "node-content database-content" };
-const _hoisted_20 = ["onClick"];
+const _hoisted_20 = { class: "node-content database-content" };
 const _hoisted_21 = ["onClick"];
-const _hoisted_22 = { class: "node-label" };
-const _hoisted_23 = { class: "database-name" };
-const _hoisted_24 = { class: "node-actions" };
-const _hoisted_25 = ["onClick"];
-const _hoisted_26 = {
+const _hoisted_22 = ["onClick"];
+const _hoisted_23 = { class: "node-label" };
+const _hoisted_24 = { class: "database-name" };
+const _hoisted_25 = { class: "node-actions" };
+const _hoisted_26 = ["onClick"];
+const _hoisted_27 = ["onClick"];
+const _hoisted_28 = {
   key: 0,
   class: "node-spinner"
 };
-const _hoisted_27 = {
+const _hoisted_29 = {
   key: 0,
   class: "tree-children"
 };
-const _hoisted_28 = { class: "node-content table-content" };
-const _hoisted_29 = ["onClick"];
-const _hoisted_30 = { class: "node-label" };
-const _hoisted_31 = { class: "table-name" };
-const _hoisted_32 = {
+const _hoisted_30 = { class: "node-content table-content" };
+const _hoisted_31 = ["onClick"];
+const _hoisted_32 = { class: "node-label" };
+const _hoisted_33 = { class: "table-name" };
+const _hoisted_34 = {
   key: 0,
   class: "table-info"
 };
-const _hoisted_33 = { class: "node-actions" };
-const _hoisted_34 = ["onClick"];
-const _hoisted_35 = ["onClick"];
-const _hoisted_36 = {
+const _hoisted_35 = { class: "node-actions" };
+const _hoisted_36 = ["onClick"];
+const _hoisted_37 = ["onClick"];
+const _hoisted_38 = {
   key: 0,
   class: "empty-state"
 };
-const _hoisted_37 = { class: "explorer-main" };
-const _hoisted_38 = {
+const _hoisted_39 = { class: "explorer-main" };
+const _hoisted_40 = {
   key: 3,
   class: "default-state"
 };
@@ -49232,6 +49267,74 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
       await loadDatabaseInfo(connection, database);
       showToast("", `数据库 "${database}" 已刷新`, "success");
     }
+    async function deleteDatabase(connection, database) {
+      const result = await modal.confirm(`确定要删除数据库 "${database}" 吗？此操作将删除数据库及其所有数据且不可恢复。`);
+      if (result) {
+        try {
+          isGlobalLoading.value = true;
+          loadingMessage.value = `正在删除数据库 "${database}"...`;
+          const deleteSql = `DROP DATABASE \`${database}\``;
+          const result2 = await databaseService2.executeQuery(connection.id, deleteSql);
+          if (result2.ret === 0) {
+            showToast("成功", `数据库 "${database}" 已删除`, "success");
+            const connectionId = connection.id || "";
+            const databases = databaseCache.value.get(connectionId) || [];
+            databaseCache.value.set(connectionId, databases.filter((db) => db !== database));
+            if (selectedDatabase.value === database) {
+              selectedDatabase.value = "";
+              selectedTable.value = null;
+            }
+            const dbKey = `${connection.id}-${database}`;
+            tableCache.value.delete(dbKey);
+            databaseInfoCache.value.delete(dbKey);
+          } else {
+            showToast("错误", `删除数据库失败: ${result2.error}`, "error");
+          }
+        } catch (error) {
+          console.error("删除数据库失败:", error);
+          modal.error(error.msg || error.message || "删除数据库失败", {
+            operation: "DELETE_DATABASE",
+            database,
+            stack: error.stack
+          });
+        } finally {
+          isGlobalLoading.value = false;
+        }
+      }
+    }
+    async function deleteConnection(connection) {
+      const result = await modal.confirm(`确定要删除连接 "${connection.name}" 吗？此操作将删除该连接的配置但不会删除实际的数据库数据。`);
+      if (result) {
+        try {
+          isGlobalLoading.value = true;
+          loadingMessage.value = `正在删除连接 "${connection.name}"...`;
+          await connectionService2.deleteConnection(connection.id || "");
+          showToast("成功", `连接 "${connection.name}" 已删除`, "success");
+          const index = connections2.value.findIndex((conn) => conn.id === connection.id);
+          if (index !== -1) {
+            connections2.value.splice(index, 1);
+          }
+          databaseCache.value.delete(connection.id);
+          tableCache.value.clear();
+          databaseInfoCache.value.clear();
+          expandedConnections.value.delete(connection.id);
+          if (selectedConnection.value?.id === connection.id) {
+            selectedConnection.value = null;
+            selectedDatabase.value = "";
+            selectedTable.value = null;
+          }
+        } catch (error) {
+          console.error("删除连接失败:", error);
+          modal.error(error.msg || error.message || "删除连接失败", {
+            operation: "DELETE_CONNECTION",
+            connectionId: connection.id,
+            stack: error.stack
+          });
+        } finally {
+          isGlobalLoading.value = false;
+        }
+      }
+    }
     async function refreshTable(connection, database, table) {
       if (selectedTable.value?.name === table.name) {
         await loadTableData(connection, database, table.name);
@@ -49436,19 +49539,26 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
                           title: "测试连接"
                         }, [..._cache[5] || (_cache[5] = [
                           createBaseVNode("i", { class: "bi bi-wifi" }, null, -1)
-                        ])], 8, _hoisted_16)
+                        ])], 8, _hoisted_16),
+                        createBaseVNode("button", {
+                          class: "btn btn-sm btn-icon btn-icon-danger",
+                          onClick: withModifiers(($event) => deleteConnection(connection), ["stop"]),
+                          title: "删除连接"
+                        }, [..._cache[6] || (_cache[6] = [
+                          createBaseVNode("i", { class: "bi bi-trash" }, null, -1)
+                        ])], 8, _hoisted_17)
                       ]),
-                      loadingConnections.value.has(connection.id) ? (openBlock(), createElementBlock("div", _hoisted_17, [..._cache[6] || (_cache[6] = [
+                      loadingConnections.value.has(connection.id) ? (openBlock(), createElementBlock("div", _hoisted_18, [..._cache[7] || (_cache[7] = [
                         createBaseVNode("div", { class: "spinner-border spinner-border-sm" }, null, -1)
                       ])])) : createCommentVNode("", true)
                     ]),
-                    expandedConnections.value.has(connection.id) ? (openBlock(), createElementBlock("div", _hoisted_18, [
+                    expandedConnections.value.has(connection.id) ? (openBlock(), createElementBlock("div", _hoisted_19, [
                       (openBlock(true), createElementBlock(Fragment, null, renderList(getDatabasesForConnection(connection.id), (database) => {
                         return openBlock(), createElementBlock("div", {
                           key: `${connection.id}-${database}`,
                           class: normalizeClass(["tree-node database-node", { "selected": selectedDatabase.value === database && selectedConnection.value?.id === connection.id && !selectedTable.value }])
                         }, [
-                          createBaseVNode("div", _hoisted_19, [
+                          createBaseVNode("div", _hoisted_20, [
                             createBaseVNode("div", {
                               class: "node-expand",
                               onClick: ($event) => toggleDatabase(connection, database)
@@ -49456,65 +49566,72 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
                               createBaseVNode("i", {
                                 class: normalizeClass(["bi bi-chevron-right", { "expanded": expandedDatabases.value.has(`${connection.id}-${database}`) }])
                               }, null, 2)
-                            ], 8, _hoisted_20),
+                            ], 8, _hoisted_21),
                             createBaseVNode("div", {
                               class: "node-main",
                               onClick: ($event) => selectDatabase(connection, database)
                             }, [
-                              _cache[7] || (_cache[7] = createBaseVNode("div", { class: "node-icon" }, [
+                              _cache[8] || (_cache[8] = createBaseVNode("div", { class: "node-icon" }, [
                                 createBaseVNode("i", { class: "bi bi-database" })
                               ], -1)),
-                              createBaseVNode("div", _hoisted_22, [
-                                createBaseVNode("span", _hoisted_23, toDisplayString(database), 1)
+                              createBaseVNode("div", _hoisted_23, [
+                                createBaseVNode("span", _hoisted_24, toDisplayString(database), 1)
                               ])
-                            ], 8, _hoisted_21),
-                            createBaseVNode("div", _hoisted_24, [
+                            ], 8, _hoisted_22),
+                            createBaseVNode("div", _hoisted_25, [
                               createBaseVNode("button", {
                                 class: "btn btn-sm btn-icon",
                                 onClick: withModifiers(($event) => refreshDatabase(connection, database), ["stop"]),
                                 title: "刷新数据库"
-                              }, [..._cache[8] || (_cache[8] = [
+                              }, [..._cache[9] || (_cache[9] = [
                                 createBaseVNode("i", { class: "bi bi-arrow-clockwise" }, null, -1)
-                              ])], 8, _hoisted_25)
+                              ])], 8, _hoisted_26),
+                              createBaseVNode("button", {
+                                class: "btn btn-sm btn-icon btn-icon-danger",
+                                onClick: withModifiers(($event) => deleteDatabase(connection, database), ["stop"]),
+                                title: "删除数据库"
+                              }, [..._cache[10] || (_cache[10] = [
+                                createBaseVNode("i", { class: "bi bi-trash" }, null, -1)
+                              ])], 8, _hoisted_27)
                             ]),
-                            loadingDatabases.value.has(`${connection.id}-${database}`) ? (openBlock(), createElementBlock("div", _hoisted_26, [..._cache[9] || (_cache[9] = [
+                            loadingDatabases.value.has(`${connection.id}-${database}`) ? (openBlock(), createElementBlock("div", _hoisted_28, [..._cache[11] || (_cache[11] = [
                               createBaseVNode("div", { class: "spinner-border spinner-border-sm" }, null, -1)
                             ])])) : createCommentVNode("", true)
                           ]),
-                          expandedDatabases.value.has(`${connection.id}-${database}`) ? (openBlock(), createElementBlock("div", _hoisted_27, [
+                          expandedDatabases.value.has(`${connection.id}-${database}`) ? (openBlock(), createElementBlock("div", _hoisted_29, [
                             (openBlock(true), createElementBlock(Fragment, null, renderList(getTablesForDatabase(connection.id, database), (table) => {
                               return openBlock(), createElementBlock("div", {
                                 key: `${connection.id}-${database}-${table.name}`,
                                 class: normalizeClass(["tree-node table-node", { "selected": selectedTable.value?.name === table.name && selectedDatabase.value === database && selectedConnection.value?.id === connection.id }])
                               }, [
-                                createBaseVNode("div", _hoisted_28, [
-                                  _cache[12] || (_cache[12] = createBaseVNode("div", { class: "node-icon" }, [
+                                createBaseVNode("div", _hoisted_30, [
+                                  _cache[14] || (_cache[14] = createBaseVNode("div", { class: "node-icon" }, [
                                     createBaseVNode("i", { class: "bi bi-table" })
                                   ], -1)),
                                   createBaseVNode("div", {
                                     class: "node-main",
                                     onClick: ($event) => selectTable(connection, database, table)
                                   }, [
-                                    createBaseVNode("div", _hoisted_30, [
-                                      createBaseVNode("span", _hoisted_31, toDisplayString(table.name), 1),
-                                      table.rowCount !== void 0 ? (openBlock(), createElementBlock("span", _hoisted_32, toDisplayString(formatNumber2(table.rowCount)) + " 行", 1)) : createCommentVNode("", true)
+                                    createBaseVNode("div", _hoisted_32, [
+                                      createBaseVNode("span", _hoisted_33, toDisplayString(table.name), 1),
+                                      table.rowCount !== void 0 ? (openBlock(), createElementBlock("span", _hoisted_34, toDisplayString(formatNumber2(table.rowCount)) + " 行", 1)) : createCommentVNode("", true)
                                     ])
-                                  ], 8, _hoisted_29),
-                                  createBaseVNode("div", _hoisted_33, [
+                                  ], 8, _hoisted_31),
+                                  createBaseVNode("div", _hoisted_35, [
                                     createBaseVNode("button", {
                                       class: "btn btn-sm btn-icon",
                                       onClick: withModifiers(($event) => refreshTable(connection, database, table), ["stop"]),
                                       title: "刷新表"
-                                    }, [..._cache[10] || (_cache[10] = [
+                                    }, [..._cache[12] || (_cache[12] = [
                                       createBaseVNode("i", { class: "bi bi-arrow-clockwise" }, null, -1)
-                                    ])], 8, _hoisted_34),
+                                    ])], 8, _hoisted_36),
                                     createBaseVNode("button", {
                                       class: "btn btn-sm btn-icon",
                                       onClick: withModifiers(($event) => viewTableStructure(connection, database, table), ["stop"]),
                                       title: "查看结构"
-                                    }, [..._cache[11] || (_cache[11] = [
+                                    }, [..._cache[13] || (_cache[13] = [
                                       createBaseVNode("i", { class: "bi bi-diagram-3" }, null, -1)
-                                    ])], 8, _hoisted_35)
+                                    ])], 8, _hoisted_37)
                                   ])
                                 ])
                               ], 2);
@@ -49526,16 +49643,16 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
                   ], 2);
                 }), 128))
               ]),
-              connections2.value.length === 0 ? (openBlock(), createElementBlock("div", _hoisted_36, [
-                _cache[15] || (_cache[15] = createBaseVNode("div", { class: "empty-icon" }, [
+              connections2.value.length === 0 ? (openBlock(), createElementBlock("div", _hoisted_38, [
+                _cache[17] || (_cache[17] = createBaseVNode("div", { class: "empty-icon" }, [
                   createBaseVNode("i", { class: "bi bi-inbox" })
                 ], -1)),
                 createBaseVNode("div", { class: "empty-text" }, [
-                  _cache[14] || (_cache[14] = createBaseVNode("p", null, "还没有数据库连接", -1)),
+                  _cache[16] || (_cache[16] = createBaseVNode("p", null, "还没有数据库连接", -1)),
                   createBaseVNode("button", {
                     class: "btn btn-primary btn-sm",
                     onClick: showAddConnectionModal
-                  }, [..._cache[13] || (_cache[13] = [
+                  }, [..._cache[15] || (_cache[15] = [
                     createBaseVNode("i", { class: "bi bi-plus" }, null, -1),
                     createTextVNode(" 添加连接 ", -1)
                   ])])
@@ -49543,7 +49660,7 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
               ])) : createCommentVNode("", true)
             ])
           ]),
-          createBaseVNode("div", _hoisted_37, [
+          createBaseVNode("div", _hoisted_39, [
             selectedConnection.value && !selectedDatabase.value && !selectedTable.value ? (openBlock(), createBlock(ConnectionDetail, {
               key: 0,
               connection: selectedConnection.value,
@@ -49584,7 +49701,7 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
               onEditRow: handleEditRow,
               onDeleteRow: handleDeleteRow,
               onExecuteSql: handleExecuteSql
-            }, null, 8, ["connection", "database", "table", "table-data", "table-structure", "loading", "total", "sql-result", "sql-executing"])) : (openBlock(), createElementBlock("div", _hoisted_38, [..._cache[16] || (_cache[16] = [
+            }, null, 8, ["connection", "database", "table", "table-data", "table-structure", "loading", "total", "sql-result", "sql-executing"])) : (openBlock(), createElementBlock("div", _hoisted_40, [..._cache[18] || (_cache[18] = [
               createBaseVNode("div", { class: "default-content" }, [
                 createBaseVNode("div", { class: "default-icon" }, [
                   createBaseVNode("i", { class: "bi bi-diagram-3" })
@@ -49608,7 +49725,7 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const explorer = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-5e3cead5"]]);
+const explorer = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-488c965d"]]);
 export {
   explorer as default
 };
