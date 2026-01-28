@@ -50,7 +50,7 @@ async function build() {
     for (const platform of platforms) {
       console.log(`\n正在构建 ${platform} 平台...`);
       
-      await nwbuilder.default({
+      const buildOptions = {
         mode: 'build',
         srcDir: distPath,
         version: '0.78.1',
@@ -66,7 +66,14 @@ async function build() {
         app: {
           icon: resolve(__dirname, 'public', 'favicon.ico')
         }
-      });
+      };
+      
+      // macOS 平台需要额外的配置
+      if (platform === 'osx') {
+        buildOptions.app.LSApplicationCategoryType = 'public.app-category.productivity';
+      }
+      
+      await nwbuilder.default(buildOptions);
       
       console.log(`✅ ${platform} 平台构建完成`);
     }

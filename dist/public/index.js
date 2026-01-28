@@ -3452,12 +3452,12 @@ async function requestServer(url, data, option) {
           const path = require("path");
           const fs = require("fs");
           const appPath = process.cwd();
-          const serverFilePath = path.join(appPath, "server", "index.cjs");
+          const serverFilePath = path.join(appPath, "server", "index.js");
           console.log("尝试加载服务端代码:", serverFilePath);
           if (fs.existsSync(serverFilePath)) {
             server = require(serverFilePath);
           } else {
-            server = require("./server/index.cjs");
+            server = require("./server/index.js");
           }
         } catch (err) {
           console.error("所有路径尝试失败:", err);

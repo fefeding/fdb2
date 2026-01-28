@@ -50,11 +50,7 @@ export class DatabaseService {
   /**
    * 获取数据库服务实例
    */
-  public getDatabaseService(type: string): BaseDatabaseService {
-    // 检查是否在 Node.js 环境中
-    if (typeof window !== 'undefined') {
-      throw new Error('数据库服务只能在服务器端使用');
-    }
+  public getDatabaseService(type: string): BaseDatabaseService {    
     
     switch (type.toLowerCase()) {
       case 'mysql':
