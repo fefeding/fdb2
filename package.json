@@ -1,5 +1,5 @@
 {
-  "name": "fdb",
+  "name": "fdb2",
   "version": "1.0.0",
   "private": true,
   "type": "commonjs",
@@ -16,9 +16,9 @@
     "icon": "public/favicon.ico"
   },
   "scripts": {
-    "start": "pm2 start server.js --name fdb-server --disable-logs --",
-    "restart": "pm2 restart fdb-server --disable-logs --",
-    "stop": "pm2 stop fdb-server --",
+    "start": "pm2 start server.js --name fdb2-server --disable-logs --",
+    "restart": "pm2 restart fdb2-server --disable-logs --",
+    "stop": "pm2 stop fdb2-server --",
     "dev": "vite",
     "build": "npm run build-only",
     "preview": "vite preview",
@@ -101,7 +101,7 @@
     "xlsx": "^0.18.5"
   },
   "bin": {
-    "fdb": "bin/fdb.js"
+    "fdb2": "bin/fdb2.js"
   },
   "pkg": {
     "scripts": [

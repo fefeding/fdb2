@@ -30,7 +30,7 @@ switch (command) {
 
 // 启动项目
 function startProject() {
-  console.log('Starting FDB project...');
+  console.log('Starting FDB2 project...');
   
   // 命令和参数
   let cmd, args;
@@ -67,7 +67,7 @@ function startProject() {
 
 // 停止项目
 function stopProject() {
-  console.log('Stopping FDB project...');
+  console.log('Stopping FDB2 project...');
   
   // 读取 PID 文件
   const pidFilePath = path.join(projectRoot, 'server.pid');
@@ -103,7 +103,7 @@ function stopProject() {
 
 // 重启项目
 function restartProject() {
-  console.log('Restarting FDB project...');
+  console.log('Restarting FDB2 project...');
   
   // 先停止当前运行的进程
   try {
@@ -132,11 +132,11 @@ function restartProject() {
 
 // 显示帮助信息
 function showHelp() {
-  console.log('FDB Database Tool');
+  console.log('FDB2 Database Tool');
   console.log('');
   console.log('Usage:');
-  console.log('  fdb start    Start the project');
-  console.log('  fdb stop     Stop the project');
-  console.log('  fdb restart  Restart the project');
+  console.log('  fdb2 start    Start the project');
+  console.log('  fdb2 stop     Stop the project');
+  console.log('  fdb2 restart  Restart the project');
   console.log('');
 }

@@ -8,6 +8,37 @@ importers:
 
   .:
     dependencies:
+      '@fefeding/common':
+        specifier: ^1.0.58
+        version: 1.0.58(mysql2@3.15.3)(pg@8.16.3)(sqlite3@5.1.7)
+      axios:
+        specifier: ^1.13.2
+        version: 1.13.2
+      dayjs:
+        specifier: ^1.11.19
+        version: 1.11.19
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
+      mysql2:
+        specifier: ^3.15.3
+        version: 3.15.3
+      pg:
+        specifier: ^8.16.3
+        version: 8.16.3
+      pm2:
+        specifier: ^6.0.14
+        version: 6.0.14
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      sqlite3:
+        specifier: ^5.1.7
+        version: 5.1.7
+      typeorm:
+        specifier: ^0.3.27
+        version: 0.3.27(mysql2@3.15.3)(pg@8.16.3)(reflect-metadata@0.2.2)(sqlite3@5.1.7)
+    devDependencies:
       '@codemirror/commands':
         specifier: ^6.10.1
         version: 6.10.1
@@ -32,52 +63,6 @@ importers:
       '@codemirror/view':
         specifier: ^6.39.11
         version: 6.39.11
-      '@fefeding/common':
-        specifier: ^1.0.58
-        version: 1.0.58(mysql2@3.15.3)(pg@8.16.3)(sqlite3@5.1.7)
-      '@fefeding/utils':
-        specifier: ^1.0.39
-        version: 1.0.39
-      axios:
-        specifier: ^1.13.2
-        version: 1.13.2
-      codemirror:
-        specifier: ^6.0.2
-        version: 6.0.2
-      dayjs:
-        specifier: ^1.11.19
-        version: 1.11.19
-      express:
-        specifier: ^5.2.1
-        version: 5.2.1
-      lodash-es:
-        specifier: ^4.17.21
-        version: 4.17.21
-      mysql2:
-        specifier: ^3.15.3
-        version: 3.15.3
-      pg:
-        specifier: ^8.16.3
-        version: 8.16.3
-      pm2:
-        specifier: ^6.0.14
-        version: 6.0.14
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      sqlite3:
-        specifier: ^5.1.7
-        version: 5.1.7
-      typeorm:
-        specifier: ^0.3.27
-        version: 0.3.27(mysql2@3.15.3)(pg@8.16.3)(reflect-metadata@0.2.2)(sqlite3@5.1.7)
-      vconsole:
-        specifier: ^3.15.1
-        version: 3.15.1
-      xlsx:
-        specifier: ^0.18.5
-        version: 0.18.5
-    devDependencies:
       '@fefeding/eventemitter':
         specifier: ^1.0.4
         version: 1.0.5
@@ -126,6 +111,9 @@ importers:
       bootstrap-icons:
         specifier: ^1.13.1
         version: 1.13.1
+      codemirror:
+        specifier: ^6.0.2
+        version: 6.0.2
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
@@ -168,6 +156,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      vconsole:
+        specifier: ^3.15.1
+        version: 3.15.1
       vite:
         specifier: latest
         version: 7.3.1(@types/node@24.10.1)(jiti@1.21.7)(sass@1.94.2)
@@ -192,6 +183,9 @@ importers:
       vuex:
         specifier: ^4.1.0
         version: 4.1.0(vue@3.5.25(typescript@5.9.3))
+      xlsx:
+        specifier: ^0.18.5
+        version: 0.18.5
 
 packages:
 
@@ -582,9 +576,6 @@ packages:
 
   '@fefeding/eventemitter@1.0.5':
     resolution: {integrity: sha512-OAcCs5zfky//9orzERK8agN5y9ByV/9BTqHsPcp1GQsbS6Y8jRXBtImPstcg+S1N/DR6kX2qAj9/FDnp8DXwTg==}
-
-  '@fefeding/utils@1.0.39':
-    resolution: {integrity: sha512-Mfl+B/1IlPIyi2ayeLwka7YkhPPTRxJnz35vbPoGTRBWl2XTIc4ARytjqgmN2bD9gLxUr4jg1wbnjTwVWToPpQ==}
 
   '@fefeding/vite-nunjucks-plugin@1.0.1':
     resolution: {integrity: sha512-rBcTuEExicoI6qARqkZ6cN/tS981E+IHn3iHR7ki1DbHTeQYcJEbJ/4w4jB/DAUbx0tm0NYdRazff9FL7uac8w==}
@@ -2403,9 +2394,6 @@ packages:
   isstream@0.1.2:
     resolution: {integrity: sha512-Yljz7ffyPbrLpLngrMtZ7NduUgVvi6wG9RJ9IUcyCd59YQ911PBJphODUcbOVbqYfxe1wuYf/LJ8PauMRwsM/g==}
 
-  j-eventemitter@1.0.1:
-    resolution: {integrity: sha512-HjJIK9634bMMCorUqk/RmpJ/E8TXR5VFTPST/4oPlurLsUfZLb66VEX/IMvoqbvB8S/2qqgpO1odlXYzsNAA7Q==}
-
   jackspeak@3.4.3:
     resolution: {integrity: sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==}
 
@@ -2497,9 +2485,6 @@ packages:
   locate-path@3.0.0:
     resolution: {integrity: sha512-7AO748wWnIhNqAuaty2ZWHkQHRSNfPVIsPIfwEOWO22AmaoVrWavlOcMR5nzTLNYvp36X220/maaRsrec1G65A==}
     engines: {node: '>=6'}
-
-  lodash-es@4.17.21:
-    resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
 
   lodash.defaults@4.2.0:
     resolution: {integrity: sha512-qjxPLHd3r5DnsdGacqOMU6pb/avJzdh9tFX2ymgoZE27BmjXrNy/y4LoaiTeAb+O3gL8AfpJGtqfX/ae2leYYQ==}
@@ -4505,10 +4490,6 @@ snapshots:
     dependencies:
       eventemitter3: 5.0.1
 
-  '@fefeding/utils@1.0.39':
-    dependencies:
-      j-eventemitter: 1.0.1
-
   '@fefeding/vite-nunjucks-plugin@1.0.1(rollup@4.53.3)':
     dependencies:
       '@rollup/pluginutils': 5.3.0(rollup@4.53.3)
@@ -6366,10 +6347,6 @@ snapshots:
 
   isstream@0.1.2: {}
 
-  j-eventemitter@1.0.1:
-    dependencies:
-      eventemitter3: 5.0.1
-
   jackspeak@3.4.3:
     dependencies:
       '@isaacs/cliui': 8.0.2
@@ -6476,8 +6453,6 @@ snapshots:
     dependencies:
       p-locate: 3.0.0
       path-exists: 3.0.0
-
-  lodash-es@4.17.21: {}
 
   lodash.defaults@4.2.0: {}
 

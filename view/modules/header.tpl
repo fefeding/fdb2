@@ -4,7 +4,7 @@
     {% include "./initial_state.tpl" %}   
     <link rel="icon" href="{{prefix}}/public/favicon.png" />    
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>数据库管理</title>
+    <title>fdb2-数据库管理</title>
     <meta name="description" content="{{description}}">
     <script>
       window.addEventListener('vite:preloadError', function (event) {
