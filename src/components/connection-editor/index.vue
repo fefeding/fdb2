@@ -174,6 +174,23 @@
       </button>
     </template>
   </Modal>
+  
+  <!-- 错误提示模态框 -->
+  <Modal 
+    ref="errorModal"
+    title="错误提示"
+    :closeButton="{ text: '确定', show: true }"
+    :confirmButton="{ text: '', show: false }"
+    :isFullScreen="false"
+    :style="{ maxWidth: '400px!important', width: '100%' }"
+  >
+    <div class="error-content">
+      <div class="error-icon">
+        <i class="bi bi-exclamation-triangle"></i>
+      </div>
+      <div class="error-message">{{ errorMessage }}</div>
+    </div>
+  </Modal>
 </template>
 
 <script lang="ts" setup>
@@ -203,6 +220,8 @@ const emit = defineEmits<{
 // 组件实例
 const connectionModal = ref();
 const toastRef = ref();
+const errorModal = ref();
+const errorMessage = ref('');
 
 // 响应式数据
 const editingConnection = ref<ConnectionEntity | null>(null);
@@ -296,12 +315,14 @@ function showEditModal(connection: ConnectionEntity) {
 }
 
 // 保存连接配置（不测试连接）
-async function saveConnection() {
+async function saveConnection(closeModal = true) {
   try {
+    debugger
     // 先进行前端验证
     const validation = validateConnection(connectionForm.value);
     if (!validation.isValid) {
-      showToast('错误', validation.message, 'error');
+      errorMessage.value = validation.message;
+      errorModal.value?.show();
       return;
     }
     
@@ -312,48 +333,47 @@ async function saveConnection() {
       await connectionService.addConnection(connectionForm.value);
     }
     
-    hide();
+    if (closeModal) {
+      hide();
+    }
     emit('saved', connectionForm.value);
     showToast('', editingConnection.value ? '连接配置更新成功' : '连接配置添加成功');
   } catch (error) {
     console.error('保存连接配置失败:', error);
-    let errorMessage = '保存配置失败';
+    let errorMsg = '保存配置失败';
     if (error.message) {
       if (error.message.includes('连接') && error.message.includes('失败')) {
-        errorMessage = '配置保存失败，请检查服务器状态';
+        errorMsg = '配置保存失败，请检查服务器状态';
       } else {
-        errorMessage = `保存配置失败: ${error.message}`;
+        errorMsg = `保存配置失败: ${error.message}`;
       }
     }
-    showToast('错误', errorMessage, 'error');
+    errorMessage.value = errorMsg;
+    errorModal.value?.show();
   }
 }
 
 // 保存并测试连接
 async function saveAndTestConnection() {
   try {
-    // 先保存配置
-    const connectionService = new ConnectionService();
-    if (editingConnection.value) {
-      await connectionService.updateConnection(editingConnection.value.id!, connectionForm.value);
-    } else {
-      await connectionService.addConnection(connectionForm.value);
-    }
+    // 先保存配置（不关闭模态框）
+    await saveConnection(false);
     
     // 然后测试连接
     await testConnection(connectionForm.value);
     
+    // 测试成功后关闭模态框
     hide();
     emit('saved', connectionForm.value);
     showToast('', editingConnection.value ? '连接配置更新并测试成功' : '连接配置添加并测试成功');
   } catch (error) {
     console.error('保存并测试连接失败:', error);
+    // 如果是保存失败，错误已经在 saveConnection 中处理了
+    // 如果是测试失败，显示警告
     if (error.message && error.message.includes('连接测试失败')) {
       showToast('警告', '配置已保存，但连接测试失败', 'warning');
       hide();
       emit('saved', connectionForm.value);
-    } else {
-      showToast('', `操作失败: ${error.message || '未知错误'}`, 'error');
     }
   }
 }
@@ -539,5 +559,32 @@ loadDatabaseTypes();
 .required {
   color: #dc3545;
   margin-left: 0.25rem;
+}
+
+.error-content {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  gap: 1rem;
+}
+
+.error-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #dc3545 0%, #ff6b6b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.error-message {
+  flex: 1;
+  color: #333;
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
 </style>

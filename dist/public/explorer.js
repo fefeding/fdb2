@@ -1,4 +1,4 @@
-import { s as defineComponent, a as ref, j as computed, w as watch, c as createBlock, N as withCtx, o as openBlock, A as createBaseVNode, L as withModifiers, v as createElementBlock, z as createCommentVNode, O as withDirectives, I as createTextVNode, P as vModelText, F as Fragment, x as renderList, B as toDisplayString, Q as vModelSelect, R as vModelCheckbox, G as onMounted, y as normalizeClass, S as vShow, H as createVNode, T as useRouter, K as normalizeStyle, n as nextTick, U as withKeys, V as useRoute } from "./vue.js";
+import { s as defineComponent, a as ref, j as computed, w as watch, v as createElementBlock, F as Fragment, H as createVNode, N as withCtx, o as openBlock, A as createBaseVNode, L as withModifiers, z as createCommentVNode, O as withDirectives, I as createTextVNode, P as vModelText, x as renderList, B as toDisplayString, Q as vModelSelect, R as vModelCheckbox, G as onMounted, y as normalizeClass, S as vShow, T as useRouter, K as normalizeStyle, n as nextTick, U as withKeys, V as useRoute, c as createBlock } from "./vue.js";
 import { r as request, M as Modal, _ as _export_sfc, g as getModalInstance, s as showAlert, a as showConfirm, d as defineStore, t as toast, c as commonjsGlobal, T as Toast } from "./index.js";
 import "./bootstrap.js";
 class ConnectionService {
@@ -387,6 +387,8 @@ const _hoisted_23$6 = { class: "form-section" };
 const _hoisted_24$6 = { class: "section-content" };
 const _hoisted_25$6 = { class: "form-group-modern" };
 const _hoisted_26$6 = { class: "form-check-modern" };
+const _hoisted_27$6 = { class: "error-content" };
+const _hoisted_28$6 = { class: "error-message" };
 const _sfc_main$8 = /* @__PURE__ */ defineComponent({
   __name: "index",
   props: {
@@ -399,6 +401,8 @@ const _sfc_main$8 = /* @__PURE__ */ defineComponent({
     const emit = __emit;
     const connectionModal = ref();
     const toastRef = ref();
+    const errorModal = ref();
+    const errorMessage = ref("");
     const editingConnection = ref(null);
     const connectionForm = ref({
       id: "",
@@ -468,11 +472,13 @@ const _sfc_main$8 = /* @__PURE__ */ defineComponent({
       connectionForm.value = { ...connection };
       show();
     }
-    async function saveConnection() {
+    async function saveConnection(closeModal = true) {
       try {
+        debugger;
         const validation = validateConnection(connectionForm.value);
         if (!validation.isValid) {
-          showToast("错误", validation.message, "error");
+          errorMessage.value = validation.message;
+          errorModal.value?.show();
           return;
         }
         const connectionService2 = new ConnectionService();
@@ -481,30 +487,28 @@ const _sfc_main$8 = /* @__PURE__ */ defineComponent({
         } else {
           await connectionService2.addConnection(connectionForm.value);
         }
-        hide();
+        if (closeModal) {
+          hide();
+        }
         emit("saved", connectionForm.value);
         showToast("", editingConnection.value ? "连接配置更新成功" : "连接配置添加成功");
       } catch (error) {
         console.error("保存连接配置失败:", error);
-        let errorMessage = "保存配置失败";
+        let errorMsg = "保存配置失败";
         if (error.message) {
           if (error.message.includes("连接") && error.message.includes("失败")) {
-            errorMessage = "配置保存失败，请检查服务器状态";
+            errorMsg = "配置保存失败，请检查服务器状态";
           } else {
-            errorMessage = `保存配置失败: ${error.message}`;
+            errorMsg = `保存配置失败: ${error.message}`;
           }
         }
-        showToast("错误", errorMessage, "error");
+        errorMessage.value = errorMsg;
+        errorModal.value?.show();
       }
     }
     async function saveAndTestConnection() {
       try {
-        const connectionService2 = new ConnectionService();
-        if (editingConnection.value) {
-          await connectionService2.updateConnection(editingConnection.value.id, connectionForm.value);
-        } else {
-          await connectionService2.addConnection(connectionForm.value);
-        }
+        await saveConnection(false);
         await testConnection(connectionForm.value);
         hide();
         emit("saved", connectionForm.value);
@@ -515,8 +519,6 @@ const _sfc_main$8 = /* @__PURE__ */ defineComponent({
           showToast("警告", "配置已保存，但连接测试失败", "warning");
           hide();
           emit("saved", connectionForm.value);
-        } else {
-          showToast("", `操作失败: ${error.message || "未知错误"}`, "error");
         }
       }
     }
@@ -575,302 +577,323 @@ const _sfc_main$8 = /* @__PURE__ */ defineComponent({
     });
     loadDatabaseTypes();
     return (_ctx, _cache) => {
-      return openBlock(), createBlock(Modal, {
-        ref_key: "connectionModal",
-        ref: connectionModal,
-        title: editingConnection.value ? "编辑数据库连接" : "新增数据库连接",
-        closeButton: { text: "取消", show: true },
-        confirmButton: { text: "", show: false },
-        isFullScreen: true,
-        style: { maxWidth: "800px", width: "100%" },
-        onOnClose: handleModalClose
-      }, {
-        footer: withCtx(() => [
-          _cache[31] || (_cache[31] = createBaseVNode("button", {
-            type: "button",
-            class: "btn btn-secondary",
-            "data-bs-dismiss": "modal"
-          }, [
-            createBaseVNode("i", { class: "bi bi-x-circle me-1" }),
-            createTextVNode("取消 ")
-          ], -1)),
-          createBaseVNode("button", {
-            type: "button",
-            class: "btn btn-outline-primary",
-            onClick: _cache[10] || (_cache[10] = ($event) => testConnection(connectionForm.value))
-          }, [..._cache[28] || (_cache[28] = [
-            createBaseVNode("i", { class: "bi bi-wifi me-1" }, null, -1),
-            createTextVNode("测试连接 ", -1)
-          ])]),
-          createBaseVNode("button", {
-            type: "button",
-            class: "btn btn-primary",
-            onClick: saveConnection
-          }, [
-            _cache[29] || (_cache[29] = createBaseVNode("i", { class: "bi bi-save me-1" }, null, -1)),
-            createTextVNode(toDisplayString(editingConnection.value ? "更新配置" : "保存配置"), 1)
+      return openBlock(), createElementBlock(Fragment, null, [
+        createVNode(Modal, {
+          ref_key: "connectionModal",
+          ref: connectionModal,
+          title: editingConnection.value ? "编辑数据库连接" : "新增数据库连接",
+          closeButton: { text: "取消", show: true },
+          confirmButton: { text: "", show: false },
+          isFullScreen: true,
+          style: { maxWidth: "800px", width: "100%" },
+          onOnClose: handleModalClose
+        }, {
+          footer: withCtx(() => [
+            _cache[31] || (_cache[31] = createBaseVNode("button", {
+              type: "button",
+              class: "btn btn-secondary",
+              "data-bs-dismiss": "modal"
+            }, [
+              createBaseVNode("i", { class: "bi bi-x-circle me-1" }),
+              createTextVNode("取消 ")
+            ], -1)),
+            createBaseVNode("button", {
+              type: "button",
+              class: "btn btn-outline-primary",
+              onClick: _cache[10] || (_cache[10] = ($event) => testConnection(connectionForm.value))
+            }, [..._cache[28] || (_cache[28] = [
+              createBaseVNode("i", { class: "bi bi-wifi me-1" }, null, -1),
+              createTextVNode("测试连接 ", -1)
+            ])]),
+            createBaseVNode("button", {
+              type: "button",
+              class: "btn btn-primary",
+              onClick: saveConnection
+            }, [
+              _cache[29] || (_cache[29] = createBaseVNode("i", { class: "bi bi-save me-1" }, null, -1)),
+              createTextVNode(toDisplayString(editingConnection.value ? "更新配置" : "保存配置"), 1)
+            ]),
+            createBaseVNode("button", {
+              type: "button",
+              class: "btn btn-success",
+              onClick: saveAndTestConnection
+            }, [..._cache[30] || (_cache[30] = [
+              createBaseVNode("i", { class: "bi bi-check-circle me-1" }, null, -1),
+              createTextVNode("保存并测试 ", -1)
+            ])])
           ]),
-          createBaseVNode("button", {
-            type: "button",
-            class: "btn btn-success",
-            onClick: saveAndTestConnection
-          }, [..._cache[30] || (_cache[30] = [
-            createBaseVNode("i", { class: "bi bi-check-circle me-1" }, null, -1),
-            createTextVNode("保存并测试 ", -1)
-          ])])
-        ]),
-        default: withCtx(() => [
-          createBaseVNode("form", {
-            onSubmit: withModifiers(saveConnection, ["prevent"]),
-            class: "connection-form-modern"
-          }, [
-            createBaseVNode("div", _hoisted_1$8, [
-              _cache[14] || (_cache[14] = createBaseVNode("div", { class: "section-header" }, [
-                createBaseVNode("div", { class: "section-icon" }, [
-                  createBaseVNode("i", { class: "bi bi-info-circle" })
-                ]),
-                createBaseVNode("h3", { class: "section-title" }, "基本信息")
-              ], -1)),
-              createBaseVNode("div", _hoisted_2$8, [
-                createBaseVNode("div", _hoisted_3$8, [
-                  createBaseVNode("div", _hoisted_4$8, [
-                    _cache[11] || (_cache[11] = createBaseVNode("label", { class: "form-label-modern" }, [
-                      createBaseVNode("i", { class: "bi bi-tag me-2" }),
-                      createTextVNode("连接名称 "),
-                      createBaseVNode("span", { class: "required" }, "*")
-                    ], -1)),
-                    withDirectives(createBaseVNode("input", {
-                      type: "text",
-                      class: "form-control-modern",
-                      "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => connectionForm.value.name = $event),
-                      placeholder: "为连接起一个易记的名称",
-                      required: ""
-                    }, null, 512), [
-                      [vModelText, connectionForm.value.name]
-                    ])
+          default: withCtx(() => [
+            createBaseVNode("form", {
+              onSubmit: withModifiers(saveConnection, ["prevent"]),
+              class: "connection-form-modern"
+            }, [
+              createBaseVNode("div", _hoisted_1$8, [
+                _cache[14] || (_cache[14] = createBaseVNode("div", { class: "section-header" }, [
+                  createBaseVNode("div", { class: "section-icon" }, [
+                    createBaseVNode("i", { class: "bi bi-info-circle" })
                   ]),
-                  createBaseVNode("div", _hoisted_5$8, [
-                    _cache[13] || (_cache[13] = createBaseVNode("label", { class: "form-label-modern" }, [
-                      createBaseVNode("i", { class: "bi bi-diagram-3 me-2" }),
-                      createTextVNode("数据库类型 "),
-                      createBaseVNode("span", { class: "required" }, "*")
-                    ], -1)),
-                    withDirectives(createBaseVNode("select", {
-                      class: "form-select-modern",
-                      "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => connectionForm.value.type = $event),
-                      onChange: onTypeChange,
-                      required: ""
-                    }, [
-                      _cache[12] || (_cache[12] = createBaseVNode("option", { value: "" }, "请选择数据库类型", -1)),
-                      (openBlock(true), createElementBlock(Fragment, null, renderList(databaseTypes.value, (dbType) => {
-                        return openBlock(), createElementBlock("option", {
-                          key: dbType.value,
-                          value: dbType.value
-                        }, toDisplayString(dbType.label), 9, _hoisted_6$8);
-                      }), 128))
-                    ], 544), [
-                      [vModelSelect, connectionForm.value.type]
-                    ])
-                  ])
-                ])
-              ])
-            ]),
-            connectionForm.value.type !== "sqlite" ? (openBlock(), createElementBlock("div", _hoisted_7$8, [
-              _cache[19] || (_cache[19] = createBaseVNode("div", { class: "section-header" }, [
-                createBaseVNode("div", { class: "section-icon" }, [
-                  createBaseVNode("i", { class: "bi bi-hdd-network" })
-                ]),
-                createBaseVNode("h3", { class: "section-title" }, "连接配置")
-              ], -1)),
-              createBaseVNode("div", _hoisted_8$8, [
-                createBaseVNode("div", _hoisted_9$8, [
-                  createBaseVNode("div", _hoisted_10$8, [
-                    _cache[15] || (_cache[15] = createBaseVNode("label", { class: "form-label-modern" }, [
-                      createBaseVNode("i", { class: "bi bi-server me-2" }),
-                      createTextVNode("主机地址 "),
-                      createBaseVNode("span", { class: "required" }, "*")
-                    ], -1)),
-                    withDirectives(createBaseVNode("input", {
-                      type: "text",
-                      class: "form-control-modern",
-                      "onUpdate:modelValue": _cache[2] || (_cache[2] = ($event) => connectionForm.value.host = $event),
-                      placeholder: "数据库服务器地址",
-                      required: ""
-                    }, null, 512), [
-                      [vModelText, connectionForm.value.host]
-                    ])
-                  ]),
-                  createBaseVNode("div", _hoisted_11$8, [
-                    _cache[16] || (_cache[16] = createBaseVNode("label", { class: "form-label-modern" }, [
-                      createBaseVNode("i", { class: "bi bi-door-closed me-2" }),
-                      createTextVNode("端口 "),
-                      createBaseVNode("span", { class: "required" }, "*")
-                    ], -1)),
-                    withDirectives(createBaseVNode("input", {
-                      type: "number",
-                      class: "form-control-modern",
-                      "onUpdate:modelValue": _cache[3] || (_cache[3] = ($event) => connectionForm.value.port = $event),
-                      placeholder: "数据库端口号",
-                      min: "1",
-                      max: "65535",
-                      required: ""
-                    }, null, 512), [
-                      [
-                        vModelText,
-                        connectionForm.value.port,
-                        void 0,
-                        { number: true }
-                      ]
-                    ])
-                  ]),
-                  createBaseVNode("div", _hoisted_12$8, [
-                    _cache[17] || (_cache[17] = createBaseVNode("label", { class: "form-label-modern" }, [
-                      createBaseVNode("i", { class: "bi bi-database me-2" }),
-                      createTextVNode("数据库名 "),
-                      createBaseVNode("span", { class: "required" }, "*")
-                    ], -1)),
-                    withDirectives(createBaseVNode("input", {
-                      type: "text",
-                      class: "form-control-modern",
-                      "onUpdate:modelValue": _cache[4] || (_cache[4] = ($event) => connectionForm.value.database = $event),
-                      placeholder: "要连接的数据库名",
-                      required: ""
-                    }, null, 512), [
-                      [vModelText, connectionForm.value.database]
-                    ])
-                  ]),
-                  createBaseVNode("div", _hoisted_13$8, [
-                    _cache[18] || (_cache[18] = createBaseVNode("label", { class: "form-label-modern" }, [
-                      createBaseVNode("i", { class: "bi bi-clock me-2" }),
-                      createTextVNode("连接超时 ")
-                    ], -1)),
-                    withDirectives(createBaseVNode("input", {
-                      type: "number",
-                      class: "form-control-modern",
-                      "onUpdate:modelValue": _cache[5] || (_cache[5] = ($event) => connectionForm.value.options.timeout = $event),
-                      placeholder: "连接超时时间（秒）",
-                      min: "1"
-                    }, null, 512), [
-                      [
-                        vModelText,
-                        connectionForm.value.options.timeout,
-                        void 0,
-                        { number: true }
-                      ]
-                    ])
-                  ])
-                ])
-              ])
-            ])) : createCommentVNode("", true),
-            connectionForm.value.type === "sqlite" ? (openBlock(), createElementBlock("div", _hoisted_14$8, [
-              _cache[21] || (_cache[21] = createBaseVNode("div", { class: "section-header" }, [
-                createBaseVNode("div", { class: "section-icon" }, [
-                  createBaseVNode("i", { class: "bi bi-file-earmark-text" })
-                ]),
-                createBaseVNode("h3", { class: "section-title" }, "SQLite配置")
-              ], -1)),
-              createBaseVNode("div", _hoisted_15$8, [
-                createBaseVNode("div", _hoisted_16$7, [
-                  createBaseVNode("div", _hoisted_17$7, [
-                    _cache[20] || (_cache[20] = createBaseVNode("label", { class: "form-label-modern" }, [
-                      createBaseVNode("i", { class: "bi bi-file-earmark me-2" }),
-                      createTextVNode("数据库文件 "),
-                      createBaseVNode("span", { class: "required" }, "*")
-                    ], -1)),
-                    withDirectives(createBaseVNode("input", {
-                      type: "text",
-                      class: "form-control-modern",
-                      "onUpdate:modelValue": _cache[6] || (_cache[6] = ($event) => connectionForm.value.database = $event),
-                      placeholder: "SQLite数据库文件路径",
-                      required: ""
-                    }, null, 512), [
-                      [vModelText, connectionForm.value.database]
-                    ])
-                  ])
-                ])
-              ])
-            ])) : createCommentVNode("", true),
-            createBaseVNode("div", _hoisted_18$7, [
-              _cache[24] || (_cache[24] = createBaseVNode("div", { class: "section-header" }, [
-                createBaseVNode("div", { class: "section-icon" }, [
-                  createBaseVNode("i", { class: "bi bi-shield-lock" })
-                ]),
-                createBaseVNode("h3", { class: "section-title" }, "认证信息")
-              ], -1)),
-              createBaseVNode("div", _hoisted_19$6, [
-                createBaseVNode("div", _hoisted_20$6, [
-                  createBaseVNode("div", _hoisted_21$6, [
-                    _cache[22] || (_cache[22] = createBaseVNode("label", { class: "form-label-modern" }, [
-                      createBaseVNode("i", { class: "bi bi-person me-2" }),
-                      createTextVNode("用户名 ")
-                    ], -1)),
-                    withDirectives(createBaseVNode("input", {
-                      type: "text",
-                      class: "form-control-modern",
-                      "onUpdate:modelValue": _cache[7] || (_cache[7] = ($event) => connectionForm.value.username = $event),
-                      placeholder: "数据库用户名"
-                    }, null, 512), [
-                      [vModelText, connectionForm.value.username]
-                    ])
-                  ]),
-                  createBaseVNode("div", _hoisted_22$6, [
-                    _cache[23] || (_cache[23] = createBaseVNode("label", { class: "form-label-modern" }, [
-                      createBaseVNode("i", { class: "bi bi-key me-2" }),
-                      createTextVNode("密码 ")
-                    ], -1)),
-                    withDirectives(createBaseVNode("input", {
-                      type: "password",
-                      class: "form-control-modern",
-                      "onUpdate:modelValue": _cache[8] || (_cache[8] = ($event) => connectionForm.value.password = $event),
-                      placeholder: "数据库密码"
-                    }, null, 512), [
-                      [vModelText, connectionForm.value.password]
-                    ])
-                  ])
-                ])
-              ])
-            ]),
-            createBaseVNode("div", _hoisted_23$6, [
-              _cache[27] || (_cache[27] = createBaseVNode("div", { class: "section-header" }, [
-                createBaseVNode("div", { class: "section-icon" }, [
-                  createBaseVNode("i", { class: "bi bi-gear" })
-                ]),
-                createBaseVNode("h3", { class: "section-title" }, "其他选项")
-              ], -1)),
-              createBaseVNode("div", _hoisted_24$6, [
-                createBaseVNode("div", _hoisted_25$6, [
-                  _cache[26] || (_cache[26] = createBaseVNode("label", { class: "form-label-modern" }, [
-                    createBaseVNode("i", { class: "bi bi-toggle-on me-2" }),
-                    createTextVNode("连接状态 ")
-                  ], -1)),
-                  createBaseVNode("div", _hoisted_26$6, [
-                    withDirectives(createBaseVNode("input", {
-                      class: "form-check-input-modern",
-                      type: "checkbox",
-                      "onUpdate:modelValue": _cache[9] || (_cache[9] = ($event) => connectionForm.value.enabled = $event),
-                      id: "enabled"
-                    }, null, 512), [
-                      [vModelCheckbox, connectionForm.value.enabled]
+                  createBaseVNode("h3", { class: "section-title" }, "基本信息")
+                ], -1)),
+                createBaseVNode("div", _hoisted_2$8, [
+                  createBaseVNode("div", _hoisted_3$8, [
+                    createBaseVNode("div", _hoisted_4$8, [
+                      _cache[11] || (_cache[11] = createBaseVNode("label", { class: "form-label-modern" }, [
+                        createBaseVNode("i", { class: "bi bi-tag me-2" }),
+                        createTextVNode("连接名称 "),
+                        createBaseVNode("span", { class: "required" }, "*")
+                      ], -1)),
+                      withDirectives(createBaseVNode("input", {
+                        type: "text",
+                        class: "form-control-modern",
+                        "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => connectionForm.value.name = $event),
+                        placeholder: "为连接起一个易记的名称",
+                        required: ""
+                      }, null, 512), [
+                        [vModelText, connectionForm.value.name]
+                      ])
                     ]),
-                    _cache[25] || (_cache[25] = createBaseVNode("label", {
-                      class: "form-check-label-modern",
-                      for: "enabled"
-                    }, [
-                      createBaseVNode("span", { class: "check-text" }, "启用此连接"),
-                      createBaseVNode("span", { class: "check-description" }, "创建后将自动启用连接")
-                    ], -1))
+                    createBaseVNode("div", _hoisted_5$8, [
+                      _cache[13] || (_cache[13] = createBaseVNode("label", { class: "form-label-modern" }, [
+                        createBaseVNode("i", { class: "bi bi-diagram-3 me-2" }),
+                        createTextVNode("数据库类型 "),
+                        createBaseVNode("span", { class: "required" }, "*")
+                      ], -1)),
+                      withDirectives(createBaseVNode("select", {
+                        class: "form-select-modern",
+                        "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => connectionForm.value.type = $event),
+                        onChange: onTypeChange,
+                        required: ""
+                      }, [
+                        _cache[12] || (_cache[12] = createBaseVNode("option", { value: "" }, "请选择数据库类型", -1)),
+                        (openBlock(true), createElementBlock(Fragment, null, renderList(databaseTypes.value, (dbType) => {
+                          return openBlock(), createElementBlock("option", {
+                            key: dbType.value,
+                            value: dbType.value
+                          }, toDisplayString(dbType.label), 9, _hoisted_6$8);
+                        }), 128))
+                      ], 544), [
+                        [vModelSelect, connectionForm.value.type]
+                      ])
+                    ])
+                  ])
+                ])
+              ]),
+              connectionForm.value.type !== "sqlite" ? (openBlock(), createElementBlock("div", _hoisted_7$8, [
+                _cache[19] || (_cache[19] = createBaseVNode("div", { class: "section-header" }, [
+                  createBaseVNode("div", { class: "section-icon" }, [
+                    createBaseVNode("i", { class: "bi bi-hdd-network" })
+                  ]),
+                  createBaseVNode("h3", { class: "section-title" }, "连接配置")
+                ], -1)),
+                createBaseVNode("div", _hoisted_8$8, [
+                  createBaseVNode("div", _hoisted_9$8, [
+                    createBaseVNode("div", _hoisted_10$8, [
+                      _cache[15] || (_cache[15] = createBaseVNode("label", { class: "form-label-modern" }, [
+                        createBaseVNode("i", { class: "bi bi-server me-2" }),
+                        createTextVNode("主机地址 "),
+                        createBaseVNode("span", { class: "required" }, "*")
+                      ], -1)),
+                      withDirectives(createBaseVNode("input", {
+                        type: "text",
+                        class: "form-control-modern",
+                        "onUpdate:modelValue": _cache[2] || (_cache[2] = ($event) => connectionForm.value.host = $event),
+                        placeholder: "数据库服务器地址",
+                        required: ""
+                      }, null, 512), [
+                        [vModelText, connectionForm.value.host]
+                      ])
+                    ]),
+                    createBaseVNode("div", _hoisted_11$8, [
+                      _cache[16] || (_cache[16] = createBaseVNode("label", { class: "form-label-modern" }, [
+                        createBaseVNode("i", { class: "bi bi-door-closed me-2" }),
+                        createTextVNode("端口 "),
+                        createBaseVNode("span", { class: "required" }, "*")
+                      ], -1)),
+                      withDirectives(createBaseVNode("input", {
+                        type: "number",
+                        class: "form-control-modern",
+                        "onUpdate:modelValue": _cache[3] || (_cache[3] = ($event) => connectionForm.value.port = $event),
+                        placeholder: "数据库端口号",
+                        min: "1",
+                        max: "65535",
+                        required: ""
+                      }, null, 512), [
+                        [
+                          vModelText,
+                          connectionForm.value.port,
+                          void 0,
+                          { number: true }
+                        ]
+                      ])
+                    ]),
+                    createBaseVNode("div", _hoisted_12$8, [
+                      _cache[17] || (_cache[17] = createBaseVNode("label", { class: "form-label-modern" }, [
+                        createBaseVNode("i", { class: "bi bi-database me-2" }),
+                        createTextVNode("数据库名 "),
+                        createBaseVNode("span", { class: "required" }, "*")
+                      ], -1)),
+                      withDirectives(createBaseVNode("input", {
+                        type: "text",
+                        class: "form-control-modern",
+                        "onUpdate:modelValue": _cache[4] || (_cache[4] = ($event) => connectionForm.value.database = $event),
+                        placeholder: "要连接的数据库名",
+                        required: ""
+                      }, null, 512), [
+                        [vModelText, connectionForm.value.database]
+                      ])
+                    ]),
+                    createBaseVNode("div", _hoisted_13$8, [
+                      _cache[18] || (_cache[18] = createBaseVNode("label", { class: "form-label-modern" }, [
+                        createBaseVNode("i", { class: "bi bi-clock me-2" }),
+                        createTextVNode("连接超时 ")
+                      ], -1)),
+                      withDirectives(createBaseVNode("input", {
+                        type: "number",
+                        class: "form-control-modern",
+                        "onUpdate:modelValue": _cache[5] || (_cache[5] = ($event) => connectionForm.value.options.timeout = $event),
+                        placeholder: "连接超时时间（秒）",
+                        min: "1"
+                      }, null, 512), [
+                        [
+                          vModelText,
+                          connectionForm.value.options.timeout,
+                          void 0,
+                          { number: true }
+                        ]
+                      ])
+                    ])
+                  ])
+                ])
+              ])) : createCommentVNode("", true),
+              connectionForm.value.type === "sqlite" ? (openBlock(), createElementBlock("div", _hoisted_14$8, [
+                _cache[21] || (_cache[21] = createBaseVNode("div", { class: "section-header" }, [
+                  createBaseVNode("div", { class: "section-icon" }, [
+                    createBaseVNode("i", { class: "bi bi-file-earmark-text" })
+                  ]),
+                  createBaseVNode("h3", { class: "section-title" }, "SQLite配置")
+                ], -1)),
+                createBaseVNode("div", _hoisted_15$8, [
+                  createBaseVNode("div", _hoisted_16$7, [
+                    createBaseVNode("div", _hoisted_17$7, [
+                      _cache[20] || (_cache[20] = createBaseVNode("label", { class: "form-label-modern" }, [
+                        createBaseVNode("i", { class: "bi bi-file-earmark me-2" }),
+                        createTextVNode("数据库文件 "),
+                        createBaseVNode("span", { class: "required" }, "*")
+                      ], -1)),
+                      withDirectives(createBaseVNode("input", {
+                        type: "text",
+                        class: "form-control-modern",
+                        "onUpdate:modelValue": _cache[6] || (_cache[6] = ($event) => connectionForm.value.database = $event),
+                        placeholder: "SQLite数据库文件路径",
+                        required: ""
+                      }, null, 512), [
+                        [vModelText, connectionForm.value.database]
+                      ])
+                    ])
+                  ])
+                ])
+              ])) : createCommentVNode("", true),
+              createBaseVNode("div", _hoisted_18$7, [
+                _cache[24] || (_cache[24] = createBaseVNode("div", { class: "section-header" }, [
+                  createBaseVNode("div", { class: "section-icon" }, [
+                    createBaseVNode("i", { class: "bi bi-shield-lock" })
+                  ]),
+                  createBaseVNode("h3", { class: "section-title" }, "认证信息")
+                ], -1)),
+                createBaseVNode("div", _hoisted_19$6, [
+                  createBaseVNode("div", _hoisted_20$6, [
+                    createBaseVNode("div", _hoisted_21$6, [
+                      _cache[22] || (_cache[22] = createBaseVNode("label", { class: "form-label-modern" }, [
+                        createBaseVNode("i", { class: "bi bi-person me-2" }),
+                        createTextVNode("用户名 ")
+                      ], -1)),
+                      withDirectives(createBaseVNode("input", {
+                        type: "text",
+                        class: "form-control-modern",
+                        "onUpdate:modelValue": _cache[7] || (_cache[7] = ($event) => connectionForm.value.username = $event),
+                        placeholder: "数据库用户名"
+                      }, null, 512), [
+                        [vModelText, connectionForm.value.username]
+                      ])
+                    ]),
+                    createBaseVNode("div", _hoisted_22$6, [
+                      _cache[23] || (_cache[23] = createBaseVNode("label", { class: "form-label-modern" }, [
+                        createBaseVNode("i", { class: "bi bi-key me-2" }),
+                        createTextVNode("密码 ")
+                      ], -1)),
+                      withDirectives(createBaseVNode("input", {
+                        type: "password",
+                        class: "form-control-modern",
+                        "onUpdate:modelValue": _cache[8] || (_cache[8] = ($event) => connectionForm.value.password = $event),
+                        placeholder: "数据库密码"
+                      }, null, 512), [
+                        [vModelText, connectionForm.value.password]
+                      ])
+                    ])
+                  ])
+                ])
+              ]),
+              createBaseVNode("div", _hoisted_23$6, [
+                _cache[27] || (_cache[27] = createBaseVNode("div", { class: "section-header" }, [
+                  createBaseVNode("div", { class: "section-icon" }, [
+                    createBaseVNode("i", { class: "bi bi-gear" })
+                  ]),
+                  createBaseVNode("h3", { class: "section-title" }, "其他选项")
+                ], -1)),
+                createBaseVNode("div", _hoisted_24$6, [
+                  createBaseVNode("div", _hoisted_25$6, [
+                    _cache[26] || (_cache[26] = createBaseVNode("label", { class: "form-label-modern" }, [
+                      createBaseVNode("i", { class: "bi bi-toggle-on me-2" }),
+                      createTextVNode("连接状态 ")
+                    ], -1)),
+                    createBaseVNode("div", _hoisted_26$6, [
+                      withDirectives(createBaseVNode("input", {
+                        class: "form-check-input-modern",
+                        type: "checkbox",
+                        "onUpdate:modelValue": _cache[9] || (_cache[9] = ($event) => connectionForm.value.enabled = $event),
+                        id: "enabled"
+                      }, null, 512), [
+                        [vModelCheckbox, connectionForm.value.enabled]
+                      ]),
+                      _cache[25] || (_cache[25] = createBaseVNode("label", {
+                        class: "form-check-label-modern",
+                        for: "enabled"
+                      }, [
+                        createBaseVNode("span", { class: "check-text" }, "启用此连接"),
+                        createBaseVNode("span", { class: "check-description" }, "创建后将自动启用连接")
+                      ], -1))
+                    ])
                   ])
                 ])
               ])
+            ], 32)
+          ]),
+          _: 1
+        }, 8, ["title"]),
+        createVNode(Modal, {
+          ref_key: "errorModal",
+          ref: errorModal,
+          title: "错误提示",
+          closeButton: { text: "确定", show: true },
+          confirmButton: { text: "", show: false },
+          isFullScreen: false,
+          style: { maxWidth: "400px!important", width: "100%" }
+        }, {
+          default: withCtx(() => [
+            createBaseVNode("div", _hoisted_27$6, [
+              _cache[32] || (_cache[32] = createBaseVNode("div", { class: "error-icon" }, [
+                createBaseVNode("i", { class: "bi bi-exclamation-triangle" })
+              ], -1)),
+              createBaseVNode("div", _hoisted_28$6, toDisplayString(errorMessage.value), 1)
             ])
-          ], 32)
-        ]),
-        _: 1
-      }, 8, ["title"]);
+          ]),
+          _: 1
+        }, 512)
+      ], 64);
     };
   }
 });
-const ConnectionEditor = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["__scopeId", "data-v-01a4e6b5"]]);
+const ConnectionEditor = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["__scopeId", "data-v-093594aa"]]);
 class ModalHelper {
   /**
    * 获取全局modal实例
@@ -1136,13 +1159,13 @@ const useConnectionStore = defineStore("connection", {
           return true;
         } else {
           this.error = result.msg || "连接测试失败";
-          toast.error(this.error);
+          toast.error(this.error || "连接测试失败");
           return false;
         }
       } catch (error) {
         this.error = error.message || "连接测试失败";
         console.error("连接测试失败:", error);
-        toast.error(this.error);
+        toast.error(this.error || "连接测试失败");
         return false;
       } finally {
         this.loading.executing = false;
@@ -44269,6 +44292,7 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
       isDetailsExpanded.value = !isDetailsExpanded.value;
     }
     const showCreateDatabase = ref(false);
+    const creatingDatabase = ref(false);
     const newDatabase = ref({
       name: "",
       options: {
@@ -44380,26 +44404,34 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
       emit("create-database");
       showCreateDatabase.value = true;
     }
-    function createDatabase() {
+    async function createDatabase() {
       if (!newDatabase.value.name) {
         modal.warning("请输入数据库名称");
         return;
       }
       if (props.connection) {
-        modal.success("数据库创建成功");
-        showCreateDatabase.value = false;
-        newDatabase.value = {
-          name: "",
-          options: {
-            charset: "",
-            collation: "",
-            owner: "",
-            template: "",
-            encoding: "",
-            tablespace: ""
-          }
-        };
-        loadDatabases();
+        creatingDatabase.value = true;
+        try {
+          await connectionStore.createDatabase(newDatabase.value.name);
+          modal.success("数据库创建成功");
+          showCreateDatabase.value = false;
+          newDatabase.value = {
+            name: "",
+            options: {
+              charset: "",
+              collation: "",
+              owner: "",
+              template: "",
+              encoding: "",
+              tablespace: ""
+            }
+          };
+          loadDatabases();
+        } catch (error) {
+          modal.error(error.message || "创建数据库失败");
+        } finally {
+          creatingDatabase.value = false;
+        }
       }
     }
     function formatFileSize(bytes) {
@@ -44819,9 +44851,9 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
                   type: "button",
                   class: "btn btn-primary",
                   onClick: createDatabase,
-                  disabled: !newDatabase.value.name || _ctx.creatingDatabase
+                  disabled: !newDatabase.value.name || creatingDatabase.value
                 }, [
-                  _ctx.creatingDatabase ? (openBlock(), createElementBlock("span", _hoisted_77$2)) : createCommentVNode("", true),
+                  creatingDatabase.value ? (openBlock(), createElementBlock("span", _hoisted_77$2)) : createCommentVNode("", true),
                   _cache[55] || (_cache[55] = createTextVNode(" 创建 ", -1))
                 ], 8, _hoisted_76$2)
               ])
@@ -44832,7 +44864,7 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const ConnectionDetail = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-1b219b5d"]]);
+const ConnectionDetail = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-0f8e9231"]]);
 var DatabaseType = /* @__PURE__ */ ((DatabaseType2) => {
   DatabaseType2["MYSQL"] = "mysql";
   DatabaseType2["POSTGRESQL"] = "postgres";
@@ -46548,7 +46580,8 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
         }
       } catch (error) {
         console.error("保存视图失败:", error);
-        modal.error(error.message || "保存视图失败");
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        modal.error(errorMsg || "保存视图失败");
       }
     }
     async function deleteView(view) {
@@ -46564,7 +46597,8 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
           }
         } catch (error) {
           console.error("删除视图失败:", error);
-          modal.error(error.message || "删除视图失败");
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          modal.error(errorMsg || "删除视图失败");
         }
       }
     }
@@ -46624,7 +46658,8 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
         }
       } catch (error) {
         console.error("保存存储过程失败:", error);
-        modal.error(error.message || "保存存储过程失败");
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        modal.error(errorMsg || "保存存储过程失败");
       }
     }
     async function deleteProcedure(procedure) {
@@ -47177,7 +47212,7 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const DatabaseDetail = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["__scopeId", "data-v-9e964d95"]]);
+const DatabaseDetail = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["__scopeId", "data-v-cdf5979c"]]);
 function isNumericType(type) {
   const numericTypes = [
     "int",
@@ -47469,10 +47504,11 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
         }
       } catch (error) {
         console.error("提交数据失败:", error);
-        modal.error(error.msg || error.message || error, {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        modal.error(errorMsg, {
           operation: props.isEdit ? "UPDATE" : "INSERT",
           table: props.tableName,
-          stack: error.stack
+          stack: error instanceof Error ? error.stack : void 0
         });
         loading.value = false;
       }
@@ -47641,7 +47677,7 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const DataEditor = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["__scopeId", "data-v-38fc5a4c"]]);
+const DataEditor = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["__scopeId", "data-v-082bb783"]]);
 const _hoisted_1$1 = { class: "table-detail" };
 const _hoisted_2$1 = { class: "table-header" };
 const _hoisted_3$1 = { class: "table-header-content" };

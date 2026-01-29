@@ -9029,8 +9029,8 @@ o.A;
 export {
   createBaseVNode as A,
   toDisplayString as B,
-  createApp as C,
-  getCurrentInstance as D,
+  getCurrentInstance as C,
+  createApp as D,
   onUnmounted as E,
   Fragment as F,
   onMounted as G,

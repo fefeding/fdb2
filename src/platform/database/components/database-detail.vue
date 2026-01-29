@@ -639,7 +639,8 @@ async function createOrUpdateView() {
     }
   } catch (error) {
     console.error('保存视图失败:', error);
-    modal.error(error.message || '保存视图失败');
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    modal.error(errorMsg || '保存视图失败');
   }
 }
 
@@ -657,7 +658,8 @@ async function deleteView(view: any) {
       }
     } catch (error) {
       console.error('删除视图失败:', error);
-      modal.error(error.message || '删除视图失败');
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      modal.error(errorMsg || '删除视图失败');
     }
   }
 }
@@ -729,7 +731,8 @@ async function createOrUpdateProcedure() {
     }
   } catch (error) {
     console.error('保存存储过程失败:', error);
-    modal.error(error.message || '保存存储过程失败');
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    modal.error(errorMsg || '保存存储过程失败');
   }
 }
 

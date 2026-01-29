@@ -1,5 +1,5 @@
 const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./layout.js","./vue.js","./vue.css","./bootstrap.js","./bootstrap.css","./layout.css","./explorer.js","./explorer.css"])))=>i.map(i=>d[i]);
-import { c as createBlock, r as resolveComponent, o as openBlock, e as effectScope, a as ref, m as markRaw, b as reactive, i as isRef, d as isReactive, t as toRaw, g as getCurrentScope, f as onScopeDispose, w as watch, n as nextTick, h as toRefs, j as computed, k as inject, l as hasInjectionContext, p as createRouter, q as createWebHistory, u as useTitle, s as defineComponent, v as createElementBlock, F as Fragment, x as renderList, y as normalizeClass, z as createCommentVNode, A as createBaseVNode, B as toDisplayString, C as createApp, D as getCurrentInstance, E as onUnmounted, G as onMounted, H as createVNode, I as createTextVNode, J as renderSlot, K as normalizeStyle, L as withModifiers, M as resolveDynamicComponent } from "./vue.js";
+import { c as createBlock, r as resolveComponent, o as openBlock, e as effectScope, a as ref, m as markRaw, b as reactive, i as isRef, d as isReactive, t as toRaw, g as getCurrentScope, f as onScopeDispose, w as watch, n as nextTick, h as toRefs, j as computed, k as inject, l as hasInjectionContext, p as createRouter, q as createWebHistory, u as useTitle, s as defineComponent, v as createElementBlock, F as Fragment, x as renderList, y as normalizeClass, z as createCommentVNode, A as createBaseVNode, B as toDisplayString, C as getCurrentInstance, D as createApp, E as onUnmounted, G as onMounted, H as createVNode, I as createTextVNode, J as renderSlot, K as normalizeStyle, L as withModifiers, M as resolveDynamicComponent } from "./vue.js";
 import { M as Modal$1 } from "./bootstrap.js";
 (function polyfill() {
   const relList = document.createElement("link").relList;
@@ -11908,18 +11908,70 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
   }
 });
 const Toast = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["__scopeId", "data-v-a1eb4510"]]);
-const toast = {
+let globalToast = null;
+function setGlobalToast(toast2) {
+  globalToast = toast2;
+}
+class ToastHelper {
+  getToast() {
+    if (globalToast) {
+      return globalToast;
+    }
+    const instance2 = getCurrentInstance();
+    if (!instance2) {
+      console.warn("ToastHelper: Vue实例不存在，请确保已注册toast插件");
+      return null;
+    }
+    const toast2 = instance2.appContext.config?.globalProperties?.$toast;
+    return toast2 || null;
+  }
+  success(message, title = "", duration = 3e3) {
+    const toast2 = this.getToast();
+    if (toast2?.success) {
+      toast2.success(message, title, duration);
+    }
+  }
+  error(message, title = "", duration = 3e3) {
+    const toast2 = this.getToast();
+    if (toast2?.error) {
+      toast2.error(message, title, duration);
+    }
+  }
+  warning(message, title = "", duration = 3e3) {
+    const toast2 = this.getToast();
+    if (toast2?.warning) {
+      toast2.warning(message, title, duration);
+    }
+  }
+  info(message, title = "", duration = 3e3) {
+    const toast2 = this.getToast();
+    if (toast2?.info) {
+      toast2.info(message, title, duration);
+    }
+  }
+  show(title, message, type2, duration = 3e3) {
+    const toast2 = this.getToast();
+    if (toast2?.show) {
+      toast2.show(message, title, type2, duration);
+    }
+  }
+}
+const toast = new ToastHelper();
+const toastPlugin = {
   install(app2) {
     const toastMount = document.createElement("div");
     document.body.appendChild(toastMount);
     const toastApp = createApp(Toast);
     const toastInstance = toastApp.mount(toastMount);
-    app2.config.globalProperties.$toast = {
+    const toastMethods = {
       show: (message, title, type2, duration = 3e3) => toastInstance.addToast(title, message, type2, duration),
       success: (msg, title, duration = 3e3) => toastInstance.addToast(title, msg, "success", duration),
       error: (msg, title, duration = 3e3) => toastInstance.addToast(title, msg, "danger", duration),
-      warning: (msg, title, duration = 3e3) => toastInstance.addToast(title, msg, "warning", duration)
+      warning: (msg, title, duration = 3e3) => toastInstance.addToast(title, msg, "warning", duration),
+      info: (msg, title, duration = 3e3) => toastInstance.addToast(title, msg, "info", duration)
     };
+    setGlobalToast(toastMethods);
+    app2.config.globalProperties.$toast = toastMethods;
   },
   getToast() {
     const instance2 = getCurrentInstance();
@@ -12731,7 +12783,7 @@ const pinia = createPinia();
 pinia.use(src_default);
 app.use(router);
 app.use(pinia);
-app.use(toast);
+app.use(toastPlugin);
 app.use(modalPlugin);
 app.component("Modal", Modal);
 app.component("DataGrid", DataGrid);

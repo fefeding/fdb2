@@ -18,6 +18,7 @@ coverage
 
 # NW.js
 nw-build/
+nw-build-*/
 nw-cache/
 
 

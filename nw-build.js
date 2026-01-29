@@ -2,6 +2,10 @@ const nwbuilder = require('nw-builder');
     const { resolve, join } = require('path');
     const { copyFileSync, existsSync, rmSync, readdirSync } = require('fs');
 
+// 解析命令行参数
+const args = process.argv.slice(2);
+const targetPlatform = args.find(arg => arg.startsWith('--platform='))?.split('=')[1];
+
 async function build() {
   try {
     console.log('开始构建 NW.js 应用...');
@@ -43,54 +47,68 @@ async function build() {
 
     console.log('4. 配置 NW.js 构建参数...');
     
-    // 支持的平台配置
-    const platforms = ['win', 'osx', 'linux'];
-    
-    // 为每个平台单独构建
-    for (const platform of platforms) {
-      console.log(`\n正在构建 ${platform} 平台...`);
-      
-      const buildOptions = {
-        mode: 'build',
-        srcDir: distPath,
-        version: '0.78.1',
-        flavor: 'normal',
-        platform: platform,
-        arch: 'x64',
-        outDir: resolve(__dirname, 'nw-build'),
-        cacheDir: resolve(__dirname, 'nw-cache'),
-        zip: false,
-        downloadUrl: 'https://dl.nwjs.io',
-        logLevel: 'info',
-        glob: false,
-        app: {
-          icon: resolve(__dirname, 'public', 'favicon.ico')
-        }
-      };
-      
-      // macOS 平台需要额外的配置
-      if (platform === 'osx') {
-        buildOptions.app.LSApplicationCategoryType = 'public.app-category.productivity';
-      }
-      
-      await nwbuilder.default(buildOptions);
-      
-      console.log(`✅ ${platform} 平台构建完成`);
+    // 根据命令行参数或当前操作系统确定要构建的平台
+    let platform;
+    if (targetPlatform) {
+      platform = targetPlatform;
+      console.log(`使用命令行指定的平台: ${platform}`);
+    } else {
+      platform = process.platform === 'darwin' ? 'osx' : 
+                process.platform === 'linux' ? 'linux' : 'win';
+      console.log(`使用当前操作系统平台: ${platform}`);
     }
+    
+    // 为每个平台使用不同的输出目录
+    const outDir = resolve(__dirname, `nw-build-${platform}`);
+    console.log(`输出目录: ${outDir}`);
+    
+    console.log(`\n正在构建 ${platform} 平台...`);
+    
+    const buildOptions = {
+      mode: 'build',
+      srcDir: distPath,
+      version: '0.78.1',
+      flavor: 'normal',
+      platform: platform,
+      arch: 'x64',
+      outDir: outDir,
+      cacheDir: resolve(__dirname, 'nw-cache'),
+      zip: false,
+      downloadUrl: 'https://dl.nwjs.io',
+      logLevel: 'info',
+      glob: false,
+      app: {
+        icon: resolve(__dirname, 'public', 'favicon.ico')
+      }
+    };
+    
+    // macOS 平台需要额外的配置
+    if (platform === 'osx') {
+      buildOptions.app.LSApplicationCategoryType = 'public.app-category.productivity';
+      buildOptions.app.NSHumanReadableCopyright = 'Copyright © 2025';
+      buildOptions.app.NSLocalNetworkUsageDescription = '需要网络访问以连接数据库';
+      buildOptions.app.CFBundleIdentifier = 'com.fdb.database';
+      buildOptions.app.CFBundleName = '数据库管理工具';
+      buildOptions.app.CFBundleDisplayName = '数据库管理工具';
+      buildOptions.app.CFBundleShortVersionString = '1.0.0';
+      buildOptions.app.CFBundleVersion = '1.0.0';
+    }
+    
+    await nwbuilder.default(buildOptions);
+    
+    console.log(`✅ ${platform} 平台构建完成`);
 
     console.log('\n5. 打包完成！');
-    console.log(`应用已生成在: ${resolve(__dirname, 'nw-build')}`);
+    console.log(`应用已生成在: ${outDir}`);
     
     // 验证打包后的应用程序
-    platforms.forEach(platform => {
-      const packagedNodeModulesPath = join(__dirname, 'nw-build', platform, 'x64', 'package.nw', 'node_modules');
-      if (existsSync(packagedNodeModulesPath)) {
-        console.log(`✅ ${platform} 应用程序已包含 node_modules 目录`);
-        console.log(`✅ ${platform} 依赖包数量:`, readdirSync(packagedNodeModulesPath).length, '个');
-      } else {
-        console.warn(`⚠️  ${platform} 应用程序不包含 node_modules 目录`);
-      }
-    });
+    const packagedNodeModulesPath = join(outDir, platform, 'x64', 'package.nw', 'node_modules');
+    if (existsSync(packagedNodeModulesPath)) {
+      console.log(`✅ ${platform} 应用程序已包含 node_modules 目录`);
+      console.log(`✅ ${platform} 依赖包数量:`, readdirSync(packagedNodeModulesPath).length, '个');
+    } else {
+      console.warn(`⚠️  ${platform} 应用程序不包含 node_modules 目录`);
+    }
 
   } catch (error) {
     console.error('构建过程中出错:', error);

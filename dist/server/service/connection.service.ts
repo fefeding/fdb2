@@ -314,6 +314,10 @@ export class ConnectionService {
    */
   private async saveConnections(connections: ConnectionEntity[]): Promise<void> {
     try {
+      const dir = path.dirname(this.configPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
       fs.writeFileSync(this.configPath, JSON.stringify(connections, null, 2), 'utf8');
     } catch (error) {
       console.error('保存连接配置失败:', error);

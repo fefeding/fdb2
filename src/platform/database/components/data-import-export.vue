@@ -59,7 +59,7 @@
             <h3>拖拽文件到此处或点击选择</h3>
             <p>支持 CSV、Excel (xlsx)、JSON 格式</p>
             <input type="file" ref="fileInput" @change="handleFileSelect" accept=".csv,.xlsx,.json" hidden>
-            <button class="btn-select-file" @click="$refs.fileInput.click()">
+            <button class="btn-select-file" @click="fileInput?.click()">
               <i class="bi bi-folder2-open"></i>
               <span>选择文件</span>
             </button>
@@ -412,6 +412,7 @@ import { ConnectionService } from '@/service/database';
 import type { ConnectionEntity } from '@/typings/database';
 import { exportDataToCSV, exportDataToJSON, exportDataToExcel, exportDataToSQL } from '../utils/export';
 import { readExcel, decodeBook } from '@/utils/xlsx';
+import { toast } from '@/utils/toast';
 
 const connectionService = new ConnectionService();
 
@@ -419,6 +420,7 @@ const connectionService = new ConnectionService();
 const activeTab = ref('import');
 const currentStep = ref(1);
 const selectedFiles = ref<File[]>([]);
+const fileInput = ref<HTMLInputElement | null>(null);
 const isDragOver = ref(false);
 const connections = ref<ConnectionEntity[]>([]);
 const tables = ref<string[]>([]);
@@ -520,7 +522,7 @@ async function loadConnections() {
   } catch (error) {
     console.error('加载连接失败:', error);
     const errorMessage = error instanceof Error ? error.message : '未知错误';
-    showToast('错误', `加载连接失败: ${errorMessage}`, 'error');
+    toast.error(`加载连接失败: ${errorMessage}`);
   }
 }
 
@@ -582,7 +584,7 @@ async function parseCSVFile(file: File): Promise<any[]> {
         const data: any[] = [];
         let headers: string[] = [];
         
-        if (hasHeader && lines.length > 0) {
+        if (hasHeader && lines.length > 0 && lines[0]) {
           headers = lines[0].split(delimiter).map(header => header.trim().replace(/^"|"$/g, ''));
           lines.slice(1).forEach(line => {
             const values = line.split(delimiter).map(value => value.trim().replace(/^"|"$/g, ''));
@@ -627,7 +629,10 @@ async function parseExcelFile(file: File): Promise<any[]> {
         const formattedRow: any = {};
         Object.keys(row).forEach(key => {
           const colIndex = parseInt(key.replace(/[^0-9]/g, ''));
-          formattedRow[headers[colIndex]] = row[key];
+          const header = headers[colIndex];
+          if (header !== undefined) {
+            formattedRow[header] = row[key];
+          }
         });
         data.push(formattedRow);
       });
@@ -637,7 +642,7 @@ async function parseExcelFile(file: File): Promise<any[]> {
     return [];
   } catch (error) {
     console.error('解析Excel文件失败:', error);
-    showToast('错误', `解析Excel文件失败: ${error instanceof Error ? error.message : '未知错误'}`, 'error');
+    toast.error(`解析Excel文件失败: ${error instanceof Error ? error.message : '未知错误'}`);
     return [];
   }
 }
@@ -674,7 +679,7 @@ async function parseFile(file: File): Promise<any[]> {
     }
   } catch (error) {
     console.error('解析文件失败:', error);
-    showToast('错误', `解析文件失败: ${error instanceof Error ? error.message : '未知错误'}`, 'error');
+    toast.error(`解析文件失败: ${error instanceof Error ? error.message : '未知错误'}`);
     return [];
   }
 }
@@ -682,12 +687,16 @@ async function parseFile(file: File): Promise<any[]> {
 // 开始导入
 async function startImport() {
   if (selectedFiles.value.length === 0 || !importConfig.value.connectionId || !importConfig.value.tableName) {
-    showToast('错误', '请选择文件并配置导入选项', 'error');
+    toast.error('请选择文件并配置导入选项');
     return;
   }
   
   try {
     const file = selectedFiles.value[0];
+    if (!file) {
+      toast.error('请选择文件');
+      return;
+    }
     const data = await parseFile(file);
     
     importProgress.value.total = data.length;
@@ -719,11 +728,11 @@ async function startImport() {
     importComplete.value = true;
     importProgress.value.message = '导入完成';
     
-    showToast('成功', `成功导入 ${importResult.value.success} 条记录，失败 ${importResult.value.failed} 条`, 'success');
+    toast.success(`成功导入 ${importResult.value.success} 条记录，失败 ${importResult.value.failed} 条`);
   } catch (error) {
     importProgress.value.status = 'error';
     importProgress.value.message = '导入失败';
-    showToast('错误', `导入失败: ${error instanceof Error ? error.message : '未知错误'}`, 'error');
+    toast.error(`导入失败: ${error instanceof Error ? error.message : '未知错误'}`);
   }
 }
 
@@ -748,7 +757,7 @@ async function loadPreviewData() {
     }
   } catch (error) {
     console.error('加载预览数据失败:', error);
-    showToast('错误', `加载预览数据失败: ${error instanceof Error ? error.message : '未知错误'}`, 'error');
+    toast.error(`加载预览数据失败: ${error instanceof Error ? error.message : '未知错误'}`);
   }
 }
 
@@ -883,7 +892,8 @@ function resetImport() {
   importProgress.value = {
     current: 0,
     total: 0,
-    message: ''
+    message: '',
+    status: 'pending'
   };
 }
 

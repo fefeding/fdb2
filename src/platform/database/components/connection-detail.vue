@@ -375,6 +375,7 @@ function toggleDetails() {
 
 // 创建数据库相关
 const showCreateDatabase = ref(false);
+const creatingDatabase = ref(false);
 const newDatabase = ref({
   name: '',
   options: {
@@ -518,30 +519,37 @@ function showCreateDatabaseModal() {
   showCreateDatabase.value = true;
 }
 
-function createDatabase() {
+async function createDatabase() {
   if (!newDatabase.value.name) {
     modal.warning('请输入数据库名称');
     return;
   }
   
   if (props.connection) {
-    // 这里应该调用创建数据库的API
-    modal.success('数据库创建成功');
-    showCreateDatabase.value = false;
-    // 重置表单
-    newDatabase.value = {
-      name: '',
-      options: {
-        charset: '',
-        collation: '',
-        owner: '',
-        template: '',
-        encoding: '',
-        tablespace: ''
-      }
-    };
-    // 刷新数据库列表
-    loadDatabases();
+    creatingDatabase.value = true;
+    try {
+      await connectionStore.createDatabase(newDatabase.value.name);
+      modal.success('数据库创建成功');
+      showCreateDatabase.value = false;
+      // 重置表单
+      newDatabase.value = {
+        name: '',
+        options: {
+          charset: '',
+          collation: '',
+          owner: '',
+          template: '',
+          encoding: '',
+          tablespace: ''
+        }
+      };
+      // 刷新数据库列表
+      loadDatabases();
+    } catch (error: any) {
+      modal.error(error.message || '创建数据库失败');
+    } finally {
+      creatingDatabase.value = false;
+    }
   }
 }
 

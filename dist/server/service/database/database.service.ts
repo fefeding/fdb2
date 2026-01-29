@@ -12,14 +12,11 @@ let SQLiteService: any;
 let OracleService: any;
 let SQLServerService: any;
 
-// 只在 Node.js 环境中加载
-if (typeof window === 'undefined') {
   MySQLService = require('./mysql.service').MySQLService;
   PostgreSQLService = require('./postgres.service').PostgreSQLService;
   SQLiteService = require('./sqlite.service').SQLiteService;
   OracleService = require('./oracle.service').OracleService;
   SQLServerService = require('./mssql.service').SQLServerService;
-}
 
 /**
  * 数据库服务管理类
@@ -37,14 +34,11 @@ export class DatabaseService {
   constructor() {
     this.connectionService = new ConnectionService();
     
-    // 只在 Node.js 环境中实例化数据库服务类
-    if (typeof window === 'undefined') {
       this.mysqlService = new MySQLService();
       this.postgreSQLService = new PostgreSQLService();
       this.sqliteService = new SQLiteService();
       this.oracleService = new OracleService();
       this.sqlServerService = new SQLServerService();
-    }
   }
 
   /**
@@ -75,6 +69,7 @@ export class DatabaseService {
    */
   async getDatabases(connectionId: string): Promise<string[]> {
     const dataSource = await this.connectionService.getActiveConnection(connectionId);
+    console.log(dataSource);
     const databaseService = this.getDatabaseService(dataSource.options.type as string);
     return databaseService.getDatabases(dataSource);
   }

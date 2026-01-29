@@ -375,10 +375,11 @@ async function handleSubmit() {
     }
   } catch (error) {
     console.error('提交数据失败:', error);
-    modal.error(error.msg || error.message || error, {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    modal.error(errorMsg, {
       operation: props.isEdit ? 'UPDATE' : 'INSERT',
       table: props.tableName,
-      stack: error.stack
+      stack: error instanceof Error ? error.stack : undefined
     });
     loading.value = false;
   } 

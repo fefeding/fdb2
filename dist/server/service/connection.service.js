@@ -323,6 +323,10 @@ class ConnectionService {
      */
     async saveConnections(connections) {
         try {
+            const dir = path.dirname(this.configPath);
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+            }
             fs.writeFileSync(this.configPath, JSON.stringify(connections, null, 2), 'utf8');
         }
         catch (error) {

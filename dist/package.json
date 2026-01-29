@@ -30,6 +30,9 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "nw:dev": "node nw-dev.js",
     "nw:build": "node nw-build.js",
+    "nw:build:win": "node nw-build.js --platform=win",
+    "nw:build:osx": "node nw-build.js --platform=osx",
+    "nw:build:linux": "node nw-build.js --platform=linux",
     "pkg:server": "cd d:/code/ycnull/db_tool && pkg dist/server/index.js -t node18-win-x64 -o dist/server/server.exe",
     "build:server:pkg": "ncc build server/index.ts -o dist/server/pkg"
   },

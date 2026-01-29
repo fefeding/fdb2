@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { DatabaseService, ConnectionService } from '@/service/database';
 import type { ConnectionEntity, DatabaseEntity, TableEntity } from '@/typings/database';
 import { modal } from '@/utils/modal';
-import toast from '@/components/toast';
+import { toast } from '@/utils/toast';
 
 // 定义连接状态类型
 export type ConnectionState = {
@@ -241,13 +241,13 @@ export const useConnectionStore = defineStore('connection', {
           return true;
         } else {
           this.error = result.msg || '连接测试失败';
-          toast.error(this.error);
+          toast.error(this.error || '连接测试失败');
           return false;
         }
       } catch (error: any) {
         this.error = error.message || '连接测试失败';
         console.error('连接测试失败:', error);
-        toast.error(this.error);
+        toast.error(this.error || '连接测试失败');
         return false;
       } finally {
         this.loading.executing = false;

@@ -8,14 +8,11 @@ let PostgreSQLService;
 let SQLiteService;
 let OracleService;
 let SQLServerService;
-// 只在 Node.js 环境中加载
-if (typeof window === 'undefined') {
-    MySQLService = require('./mysql.service').MySQLService;
-    PostgreSQLService = require('./postgres.service').PostgreSQLService;
-    SQLiteService = require('./sqlite.service').SQLiteService;
-    OracleService = require('./oracle.service').OracleService;
-    SQLServerService = require('./mssql.service').SQLServerService;
-}
+MySQLService = require('./mysql.service').MySQLService;
+PostgreSQLService = require('./postgres.service').PostgreSQLService;
+SQLiteService = require('./sqlite.service').SQLiteService;
+OracleService = require('./oracle.service').OracleService;
+SQLServerService = require('./mssql.service').SQLServerService;
 /**
  * 数据库服务管理类
  * 负责根据数据库类型选择相应的服务实现
@@ -29,14 +26,11 @@ class DatabaseService {
     sqlServerService;
     constructor() {
         this.connectionService = new connection_service_1.ConnectionService();
-        // 只在 Node.js 环境中实例化数据库服务类
-        if (typeof window === 'undefined') {
-            this.mysqlService = new MySQLService();
-            this.postgreSQLService = new PostgreSQLService();
-            this.sqliteService = new SQLiteService();
-            this.oracleService = new OracleService();
-            this.sqlServerService = new SQLServerService();
-        }
+        this.mysqlService = new MySQLService();
+        this.postgreSQLService = new PostgreSQLService();
+        this.sqliteService = new SQLiteService();
+        this.oracleService = new OracleService();
+        this.sqlServerService = new SQLServerService();
     }
     /**
      * 获取数据库服务实例
@@ -64,6 +58,7 @@ class DatabaseService {
      */
     async getDatabases(connectionId) {
         const dataSource = await this.connectionService.getActiveConnection(connectionId);
+        console.log(dataSource);
         const databaseService = this.getDatabaseService(dataSource.options.type);
         return databaseService.getDatabases(dataSource);
     }
