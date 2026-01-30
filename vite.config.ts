@@ -10,8 +10,6 @@ import ViteNunjucksPlugin from '@fefeding/vite-nunjucks-plugin';
 import * as path from 'path';
 import * as fs from 'fs';
 
-import * as server from './server/index';
-
 
 const urlPrefix = process.env.PREFIX ? `/${process.env.PREFIX}` : '';
 console.log(urlPrefix);
@@ -336,7 +334,9 @@ async function serverRoute(req: Connect.IncomingMessage, res: http.ServerRespons
     // 路由分发
     if (pathname.startsWith('/api/database/')) {
         try {
-            const data = await server.handleDatabaseRoutes(pathname, body);
+            // 动态导入 server 模块，避免在 Vite 配置加载时就导入 sqlite3
+            const serverModule = await import('./server/index');
+            const data = await serverModule.handleDatabaseRoutes(pathname, body);
             sendJSON(res, data);
         }
         catch(error) {

@@ -4,19 +4,11 @@ import {
   DatabaseEntity, 
   TableEntity 
 } from '../../model/database.entity';
-
-// 动态导入数据库服务类，避免在浏览器环境中加载 Node.js 特有模块
-let MySQLService: any;
-let PostgreSQLService: any;
-let SQLiteService: any;
-let OracleService: any;
-let SQLServerService: any;
-
-  MySQLService = require('./mysql.service').MySQLService;
-  PostgreSQLService = require('./postgres.service').PostgreSQLService;
-  SQLiteService = require('./sqlite.service').SQLiteService;
-  OracleService = require('./oracle.service').OracleService;
-  SQLServerService = require('./mssql.service').SQLServerService;
+import { MySQLService } from './mysql.service';
+import { PostgreSQLService } from './postgres.service';
+import { SQLiteService } from './sqlite.service';
+import { OracleService } from './oracle.service';
+import { SQLServerService } from './mssql.service';
 
 /**
  * 数据库服务管理类
@@ -25,11 +17,11 @@ let SQLServerService: any;
 export class DatabaseService {
 
   public connectionService: ConnectionService;
-  private mysqlService: any;
-  private postgreSQLService: any;
-  private sqliteService: any;
-  private oracleService: any;
-  private sqlServerService: any;
+  private mysqlService: MySQLService;
+  private postgreSQLService: PostgreSQLService;
+  private sqliteService: SQLiteService;
+  private oracleService: OracleService;
+  private sqlServerService: SQLServerService;
 
   constructor() {
     this.connectionService = new ConnectionService();

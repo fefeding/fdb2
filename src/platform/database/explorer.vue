@@ -256,7 +256,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, computed, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ConnectionService, DatabaseService } from '@/service/database';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import ConnectionEditor from '@/components/connection-editor/index.vue';
@@ -268,6 +268,7 @@ import TableDetail from './components/table-detail.vue';
 import { modal } from '@/utils/modal';
 
 const route = useRoute();
+const router = useRouter();
 const connectionService = new ConnectionService();
 const databaseService = new DatabaseService();
 
@@ -340,6 +341,9 @@ onMounted(() => {
   });
 });
 
+// 标志位，用于区分是用户操作还是 URL 变化
+let isUpdatingFromUrl = false;
+
 // 处理 URL query 参数
 function handleRouteQuery() {
   const connectionId = route.query.connectionId as string;
@@ -349,8 +353,14 @@ function handleRouteQuery() {
     // 查找对应的连接
     const connection = connections.value.find(conn => conn.id === connectionId);
     if (connection) {
+      // 设置标志位，避免触发 URL 更新
+      isUpdatingFromUrl = true;
+      
       // 选择连接
-      selectConnection(connection);
+      selectedConnection.value = connection;
+      selectedDatabase.value = '';
+      selectedTable.value = null;
+      activeTab.value = 'overview';
       
       // 展开连接节点并加载数据库
       if (!expandedConnections.value.has(connectionId)) {
@@ -361,7 +371,9 @@ function handleRouteQuery() {
       // 如果提供了数据库参数，选择数据库
       if (database) {
         setTimeout(() => {
-          selectDatabase(connection, database);
+          selectedDatabase.value = database;
+          selectedTable.value = null;
+          activeTab.value = 'tables';
           
           // 展开数据库节点
           const dbKey = `${connectionId}-${database}`;
@@ -370,7 +382,13 @@ function handleRouteQuery() {
             loadDatabaseInfo(connection, database);
             loadTablesForDatabase(connection, database);
           }
+          
+          // 重置标志位
+          isUpdatingFromUrl = false;
         }, 100);
+      } else {
+        // 重置标志位
+        isUpdatingFromUrl = false;
       }
     }
   }
@@ -411,6 +429,22 @@ function selectConnection(connection: ConnectionEntity) {
   selectedDatabase.value = '';
   selectedTable.value = null;
   activeTab.value = 'overview';
+
+  // 如果不是从 URL 更新触发的，才更新 URL 参数
+  if (!isUpdatingFromUrl) {
+    // 更新 URL 参数，只保留 connectionId，移除 database
+    // 检查当前 URL 参数是否已经匹配，避免重复更新
+    const currentConnectionId = route.query.connectionId as string;
+    const currentDatabase = route.query.database as string;
+    
+    if (currentConnectionId !== connection.id || currentDatabase !== undefined) {
+      router.push({
+        query: {
+          connectionId: connection.id
+        }
+      });
+    }
+  }
 }
 
 async function loadDatabasesForConnection(connection: ConnectionEntity, forceRefresh = false) {
@@ -466,8 +500,25 @@ function selectDatabase(connection: ConnectionEntity, database: string) {
   selectedTable.value = null;
   activeTab.value = 'tables';
 
+  // 如果不是从 URL 更新触发的，才更新 URL 参数
+  if (!isUpdatingFromUrl) {
+    // 更新 URL 参数，同时包含 connectionId 和 database
+    // 检查当前 URL 参数是否已经匹配，避免重复更新
+    const currentConnectionId = route.query.connectionId as string;
+    const currentDatabase = route.query.database as string;
+    
+    if (currentConnectionId !== connection.id || currentDatabase !== database) {
+      router.push({
+        query: {
+          connectionId: connection.id,
+          database: database
+        }
+      });
+    }
+  }
+
   loadDatabaseInfo(connection, database);
-  //loadTablesForDatabase(connection, database);
+  loadTablesForDatabase(connection, database, true);
 }
 
 async function loadTablesForDatabase(connection: ConnectionEntity, database: string, forceRefresh = false) {
@@ -508,14 +559,14 @@ async function loadTablesForDatabase(connection: ConnectionEntity, database: str
   }
 }
 
-async function loadDatabaseInfo(connection: ConnectionEntity, database: string) {
+async function loadDatabaseInfo(connection: ConnectionEntity, database: string, forceRefresh = false) {
   const dbKey = `${connection.id}-${database}`;
   
   try {
     const info = await databaseService.getDatabaseInfo(connection.id || '', database);
     databaseInfoCache.value.set(dbKey, info.data);
 
-    loadTablesForDatabase(connection, database);
+    loadTablesForDatabase(connection, database, forceRefresh);
   } catch (error) {
     console.error('加载数据库信息失败:', error);
     

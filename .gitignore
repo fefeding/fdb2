@@ -38,3 +38,5 @@ server/backups
 server/exports
 data/exports/
 dist/
+data/*.sqlite
+main
