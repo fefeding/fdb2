@@ -756,19 +756,27 @@ async function deleteProcedure(procedure: any) {
 }
 
 async function handleTableChange(result: any) {
-  try {      
+  try {
+      // 根据传递的 mode 来判断是创建表还是修改表结构
+      const isCreate = result.mode === 'create';
+      
       if (result.success) {
-        // 表结构修改成功，刷新结构
+        // 操作成功，刷新结构
         emit('refresh-database');
-        await modal.success('表结构修改成功');
+        const successMessage = isCreate ? '创建表成功' : '表结构修改成功';
+        await modal.success(successMessage);
       } else {
-        await modal.error('表结构修改失败');
+        const errorMessage = isCreate ? '创建表失败' : '表结构修改失败';
+        await modal.error(errorMessage);
       }
     } catch (error) {
-      console.error('处理表结构修改失败:', error);
+      console.error('处理表操作失败:', error);
       
-      modal.error(error.msg || error.message || '表结构修改失败', {
-        operation: 'MODIFY_TABLE',
+      const isCreate = result.mode === 'create';
+      const errorMessage = isCreate ? '创建表失败' : '表结构修改失败';
+      
+      modal.error(error.msg || error.message || errorMessage, {
+        operation: isCreate ? 'CREATE_TABLE' : 'MODIFY_TABLE',
         stack: error.stack
       });
     }

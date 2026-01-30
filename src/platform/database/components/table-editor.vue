@@ -358,8 +358,16 @@ function generateSQL(): string {
         }
       }
       
-      // 处理NULL约束
-      if (!col.nullable) sql += ' NOT NULL';
+      // SQLite 特殊处理：自增主键必须在列定义中包含 PRIMARY KEY
+      const isSqliteAutoIncrementPrimary = 
+        props.connection?.type.toLowerCase() === 'sqlite' && 
+        col.isAutoIncrement && 
+        col.isPrimary;
+      
+      // 处理NULL约束（SQLite 自增主键不需要 NOT NULL）
+      if (!col.nullable && !isSqliteAutoIncrementPrimary) {
+        sql += ' NOT NULL';
+      }
       
       // 处理默认值
       if (col.defaultValue) {
@@ -381,7 +389,17 @@ function generateSQL(): string {
             }
             break;
           case 'sqlite':
-            sql += ' AUTOINCREMENT';
+            // SQLite 中 AUTOINCREMENT 只能用于 INTEGER 类型
+            // 如果类型是 INT，需要改为 INTEGER
+            if (col.type.toUpperCase() === 'INT') {
+              sql = sql.replace(/\bINT\b/, 'INTEGER');
+            }
+            // SQLite 自增主键必须在列定义中包含 PRIMARY KEY
+            if (col.isPrimary) {
+              sql += ' PRIMARY KEY AUTOINCREMENT';
+            } else {
+              sql += ' AUTOINCREMENT';
+            }
             break;
           case 'oracle':
             // Oracle 使用序列和触发器，这里简化处理
@@ -423,7 +441,11 @@ function generateSQL(): string {
     
     let sql = `CREATE TABLE ${quoteIdentifier(formData.value.tableName)} (\n  ${columnsSQL}`;
     
-    if (primaryKeys.length > 0) {
+    // SQLite 自增主键已经在列定义中包含 PRIMARY KEY，不需要再添加
+    const hasSqliteAutoIncrementPrimary = props.connection?.type.toLowerCase() === 'sqlite' && 
+      formData.value.columns.some(col => col.isAutoIncrement && col.isPrimary);
+    
+    if (primaryKeys.length > 0 && !hasSqliteAutoIncrementPrimary) {
       sql += `,\n  PRIMARY KEY (${primaryKeys.join(', ')})`;
     }
     
@@ -524,7 +546,8 @@ async function submit() {
     emit('submit', {
       success: result.ret === 0,
       message: result.ret === 0 ? '操作成功' : '操作失败',
-      data: result.data
+      data: result.data,
+      mode: props.mode
     });
     
     close();
@@ -532,7 +555,8 @@ async function submit() {
     console.error('提交失败:', error);
     emit('submit', {
       success: false,
-      message: '操作失败'
+      message: '操作失败',
+      mode: props.mode
     });
   }
 }
