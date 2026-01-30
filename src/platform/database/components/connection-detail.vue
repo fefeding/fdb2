@@ -544,7 +544,9 @@ async function createDatabase() {
         }
       };
       // 刷新数据库列表
-      loadDatabases();
+      await loadDatabases();
+      // 通知父组件刷新数据库缓存
+      emit('create-database');
     } catch (error: any) {
       modal.error(error.message || '创建数据库失败');
     } finally {

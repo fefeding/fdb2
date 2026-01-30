@@ -26,13 +26,13 @@
                   <small class="text-muted ms-2">{{ column.type }}</small>
                 </label>
                 
-                <!-- 主键且自增时禁用编辑 -->
+                <!-- 主键且自增时禁用编辑或隐藏 -->
                 <input 
-                  v-if="column.isPrimary && column.isAutoIncrement && isEdit"
+                  v-if="column.isPrimary && column.isAutoIncrement"
                   type="text" 
                   data-type="primary"
                   class="form-control" 
-                  :value="formData[column.name]"
+                  :value="isEdit ? formData[column.name] : '自动生成'"
                   disabled
                   readonly
                 >
@@ -338,6 +338,17 @@ async function handleSubmit() {
     
     loading.value = true;    
     let response;
+    
+    // 准备提交的数据，过滤掉自增字段
+    const submitData: any = {};
+    Object.keys(formData.value).forEach(key => {
+      const column = props.columns.find(col => col.name === key);
+      // 如果列存在且不是自增字段，则包含在提交数据中
+      if (!column || !column.isAutoIncrement) {
+        submitData[key] = formData.value[key];
+      }
+    });
+    
     if (props.isEdit && props.data) {
       // 更新数据
       const whereClause = getPrimaryKeyWhere();
@@ -345,7 +356,7 @@ async function handleSubmit() {
         props.connection?.id || '',
         props.database || '',
         props.tableName || '',
-        formData.value,
+        submitData,
         whereClause
       );
     } else {
@@ -354,7 +365,7 @@ async function handleSubmit() {
         props.connection?.id || '',
         props.database || '',
         props.tableName || '',
-        formData.value
+        submitData
       );
     }
     

@@ -79,6 +79,9 @@ export class PostgreSQLService extends BaseDatabaseService {
 
     // 获取主键信息
     const primaryKeys = await this.getPrimaryKeys(dataSource, table);
+    
+    // 获取 IDENTITY 列信息（PostgreSQL 10+）
+    const identityColumns = await this.getIdentityColumns(dataSource, table);
 
     // 从data_type中解析精度信息
     return result.map((row: any) => {
@@ -93,13 +96,17 @@ export class PostgreSQLService extends BaseDatabaseService {
         scale = parseInt(decimalMatch[3]);
       }
       
+      // 检查是否为自增列（SERIAL 或 IDENTITY）
+      const isAutoIncrement = row.defaultValue?.includes('nextval') || 
+                            identityColumns.includes(row.name);
+      
       return {
         name: row.name,
         type: row.type,
         nullable: row.nullable === 'YES',
         defaultValue: row.defaultValue,
         isPrimary: primaryKeys.includes(row.name),
-        isAutoIncrement: row.defaultValue?.includes('nextval') || false,
+        isAutoIncrement: isAutoIncrement,
         length: row.length,
         precision: precision,
         scale: scale
@@ -182,6 +189,24 @@ export class PostgreSQLService extends BaseDatabaseService {
         AND tc.table_name = $1
     `, [table]);
     return result.map((row: any) => row.column_name);
+  }
+
+  /**
+   * 获取PostgreSQL IDENTITY列信息（PostgreSQL 10+）
+   */
+  private async getIdentityColumns(dataSource: DataSource, table: string): Promise<string[]> {
+    try {
+      const result = await dataSource.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = $1 
+          AND is_identity = 'YES'
+      `, [table]);
+      return result.map((row: any) => row.column_name);
+    } catch (error) {
+      // 如果查询失败（PostgreSQL 版本低于 10），返回空数组
+      return [];
+    }
   }
 
   /**
@@ -523,7 +548,7 @@ export class PostgreSQLService extends BaseDatabaseService {
             } else if (typeof value === 'boolean') {
               return value ? 'TRUE' : 'FALSE';
             } else if (value instanceof Date) {
-              return `'${value.toISOString().slice(0, 19).replace('T', ' ')}'`;
+              return `'${value.toISOString()}'`;
             } else if (typeof value === 'object' && value !== null) {
               // 处理JSON类型
               try {

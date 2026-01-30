@@ -69,7 +69,6 @@ export class DatabaseService {
    */
   async getDatabases(connectionId: string): Promise<string[]> {
     const dataSource = await this.connectionService.getActiveConnection(connectionId);
-    console.log(dataSource);
     const databaseService = this.getDatabaseService(dataSource.options.type as string);
     return databaseService.getDatabases(dataSource);
   }

@@ -86,6 +86,9 @@ export class OracleService extends BaseDatabaseService {
 
     // 获取主键信息
     const primaryKeys = await this.getPrimaryKeys(dataSource, database, table);
+    
+    // 获取序列信息（Oracle使用序列实现自增）
+    const sequenceColumns = await this.getSequenceColumns(dataSource, database, table);
 
     // 从data_type中解析精度信息
     return result.map((row: any) => {
@@ -108,7 +111,7 @@ export class OracleService extends BaseDatabaseService {
         nullable: row.nullable === 'Y',
         defaultValue: row.defaultValue,
         isPrimary: primaryKeys.includes(row.name),
-        isAutoIncrement: false, // Oracle不使用自增，使用序列
+        isAutoIncrement: sequenceColumns.includes(row.name),
         length: row.length,
         precision: precision,
         scale: scale
@@ -250,6 +253,32 @@ export class OracleService extends BaseDatabaseService {
       table.toUpperCase() 
     ]);
     return result.map((row: any) => row.column_name);
+  }
+
+  /**
+   * 获取Oracle序列信息（用于检测自增列）
+   */
+  private async getSequenceColumns(dataSource: DataSource, database: string, table: string): Promise<string[]> {
+    try {
+      const result = await dataSource.query(`
+        SELECT acc.column_name
+        FROM all_tab_columns acc
+        JOIN all_triggers at ON acc.table_name = at.table_name 
+          AND acc.owner = at.owner
+        JOIN all_sequences seq ON at.trigger_name LIKE seq.sequence_name || '%'
+        WHERE acc.owner = ? 
+          AND acc.table_name = ?
+          AND acc.data_default IS NOT NULL
+          AND acc.data_default LIKE seq.sequence_name || '.nextval'
+      `, [ 
+        database.toUpperCase(), 
+        table.toUpperCase() 
+      ]);
+      return result.map((row: any) => row.column_name);
+    } catch (error) {
+      // 如果查询失败，返回空数组
+      return [];
+    }
   }
 
   /**

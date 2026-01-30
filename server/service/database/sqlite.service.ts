@@ -54,13 +54,21 @@ export class SQLiteService extends BaseDatabaseService {
   async getColumns(dataSource: DataSource, database: string, table: string): Promise<ColumnEntity[]> {
     const result = await dataSource.query(`PRAGMA table_info(${table})`);
     
+    // 获取自增列信息
+    const xinfoResult = await dataSource.query(`PRAGMA table_xinfo(${table})`);
+    const autoIncrementColumns = new Set(
+      xinfoResult
+        .filter((row: any) => row.hidden === 2 && row.pk === 1)
+        .map((row: any) => row.name)
+    );
+    
     return result.map((row: any) => ({
       name: row.name,
       type: row.type,
       nullable: row.notnull === 0,
       defaultValue: row.dflt_value,
       isPrimary: row.pk === 1,
-      isAutoIncrement: false
+      isAutoIncrement: autoIncrementColumns.has(row.name)
     }));
   }
 

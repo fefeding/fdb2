@@ -216,13 +216,12 @@ export const useConnectionStore = defineStore('connection', {
         
         await connectionService.createDatabase(this.currentConnection.id, databaseName, filteredOptions);
         
-        modal.success('数据库创建成功');
         // 重新加载数据库列表
         this.loadDatabases();
       } catch (error: any) {
         this.error = error.message || '创建数据库失败';
         console.error('创建数据库失败:', error);
-        modal.error(this.error);
+        throw error;
       } finally {
         this.loading.executing = false;
       }

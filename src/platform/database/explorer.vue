@@ -190,6 +190,7 @@
           @open-sql-query="handleOpenSqlQuery"
           @export-schema="handleExportSchema"
           @view-logs="handleViewLogs"
+          @create-database="handleCreateDatabase"
         />
 
         <!-- 数据库详情组件 -->
@@ -426,7 +427,11 @@ async function loadDatabasesForConnection(connection: ConnectionEntity, forceRef
   
   try {
     const databases = await databaseService.getDatabases(cacheKey);
-    databaseCache.value.set(cacheKey, (databases as any)?.data || []);
+    
+    // 使用新的 Map 实例来触发响应式更新
+    const newCache = new Map(databaseCache.value);
+    newCache.set(cacheKey, (databases as any)?.data || []);
+    databaseCache.value = newCache;
   } catch (error) {
     console.error('加载数据库失败:', error);
     
@@ -435,7 +440,10 @@ async function loadDatabasesForConnection(connection: ConnectionEntity, forceRef
       connectionId: connection.id,
       stack: error.stack
     });
-    databaseCache.value.set(cacheKey, []);
+    
+    const newCache = new Map(databaseCache.value);
+    newCache.set(cacheKey, []);
+    databaseCache.value = newCache;
   } finally {
     loadingConnections.value.delete(cacheKey);
   }
@@ -477,7 +485,11 @@ async function loadTablesForDatabase(connection: ConnectionEntity, database: str
   try {
     const info = await databaseService.getDatabaseInfo(connection.id, database);
     const tables = info?.data?.tables || [];
-    tableCache.value.set(dbKey, tables);
+    
+    // 使用新的 Map 实例来触发响应式更新
+    const newCache = new Map(tableCache.value);
+    newCache.set(dbKey, tables);
+    tableCache.value = newCache;
   } catch (error) {
     console.error('加载表失败:', error);
     
@@ -487,7 +499,10 @@ async function loadTablesForDatabase(connection: ConnectionEntity, database: str
       database: database,
       stack: error.stack
     });
-    tableCache.value.set(dbKey, []);
+    
+    const newCache = new Map(tableCache.value);
+    newCache.set(dbKey, []);
+    tableCache.value = newCache;
   } finally {
     loadingTables.value.delete(dbKey);
   }
@@ -669,6 +684,18 @@ function handleRefreshAll(connection: ConnectionEntity) {
   refreshConnection(connection);
 }
 
+function handleCreateDatabase() {
+  if (selectedConnection.value) {
+    // 刷新数据库缓存
+    const connectionId = selectedConnection.value.id || '';
+    
+    // 强制重新加载数据库列表
+    if (expandedConnections.value.has(connectionId)) {
+      loadDatabasesForConnection(selectedConnection.value, true);
+    }
+  }
+}
+
 function handleOpenSqlQuery(connection: ConnectionEntity) {
   // TODO: 打开SQL查询界面
   showToast('提示', 'SQL查询功能开发中...', 'info');
@@ -801,10 +828,14 @@ async function refreshDatabase(connection: ConnectionEntity, database: string) {
   databaseInfoCache.value.delete(dbKey);
   
   // 如果数据库已展开，则重新加载表
-  //if (expandedDatabases.value.has(dbKey)) {
+  if (expandedDatabases.value.has(dbKey)) {
     await loadTablesForDatabase(connection, database, true);
     await loadDatabaseInfo(connection, database);
-  //}
+  } else {
+    // 如果数据库未展开，展开它并加载数据
+    expandedDatabases.value.add(dbKey);
+    await loadDatabaseInfo(connection, database);
+  }
   
   showToast('', `数据库 "${database}" 已刷新`, 'success');
 }
