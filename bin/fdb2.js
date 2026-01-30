@@ -32,37 +32,54 @@ switch (command) {
 function startProject() {
   console.log('Starting FDB2 project...');
   
+  // 检查 PID 文件是否存在，如果存在则说明服务器已经在运行
+  const pidFilePath = path.join(projectRoot, 'server.pid');
+  if (fs.existsSync(pidFilePath)) {
+    try {
+      const pid = parseInt(fs.readFileSync(pidFilePath, 'utf8'));
+      process.kill(pid, 0);
+      console.log('Server is already running with PID:', pid);
+      return;
+    } catch (error) {
+      if (error.code === 'ESRCH') {
+        console.log('Cleaning up stale PID file...');
+        fs.unlinkSync(pidFilePath);
+      }
+    }
+  }
+  
   // 命令和参数
   let cmd, args;
   
-  // 根据不同的操作系统选择不同的命令
-  if (process.platform === 'win32') {
-    // Windows 系统
-    cmd = 'cmd.exe';
-    args = ['/c', 'node', 'server.js', ...commandArgs];
-  } else {
-    // Linux/macOS 系统
-    cmd = 'node';
-    args = ['server.js', ...commandArgs];
-  }
+  // 直接使用 node 命令启动服务器
+  cmd = 'node';
+  args = ['server.js', ...commandArgs];
   
   console.log('Executing:', cmd, args);
   
-  // 使用 node 命令启动服务器
-  const result = spawnSync(cmd, args, {
+  // 日志文件路径
+  const logFilePath = path.join(projectRoot, 'server.log');
+  
+  // 创建日志文件的写入流
+  const out = fs.openSync(logFilePath, 'a');
+  const err = fs.openSync(logFilePath, 'a');
+  
+  // 使用 node 命令启动服务器（异步，后台运行）
+  const child = spawn(cmd, args, {
     cwd: projectRoot,
-    stdio: 'inherit'
+    detached: true,
+    stdio: ['ignore', out, err]
   });
   
-  if (result.error) {
-    console.error('Failed to start server:', result.error.message);
-    process.exit(1);
-  } else if (result.status === 0) {
-    console.log('Server started successfully');
-  } else {
-    console.error('Failed to start server with code', result.status);
-    process.exit(1);
-  }
+  // 解除父子进程关联，让子进程在后台独立运行
+  child.unref();
+  
+  // 保存 PID 到文件
+  fs.writeFileSync(pidFilePath, child.pid.toString());
+  
+  console.log('Server started successfully with PID:', child.pid);
+  console.log('Server is running in the background');
+  console.log('Logs are written to:', logFilePath);
 }
 
 // 停止项目

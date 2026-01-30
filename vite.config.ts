@@ -282,7 +282,7 @@ const config = defineConfig({
     base: urlPrefix,
     server: {
         host: '0.0.0.0',
-        port: +`${process.env.VITE_PORT}` || 9300,
+        port: +`${process.env.VITE_PORT}` || 9800,
         cors: true,
     },
 });

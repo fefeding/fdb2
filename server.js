@@ -4,6 +4,28 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 
+// 预加载 sqlite3 模块，确保原生绑定文件能够正确加载
+// 并将其缓存到全局模块缓存中，以便 dist/server/index.js 可以使用
+try {
+  const sqlite3 = require('sqlite3');
+  console.log('SQLite3 module preloaded successfully');
+  
+  // 将 sqlite3 模块添加到全局 require.cache 中
+  const Module = require('module');
+  const sqlite3Path = require.resolve('sqlite3');
+  
+  // 修改模块解析函数，确保 sqlite3 从正确的路径加载
+  const originalResolveFilename = Module._resolveFilename;
+  Module._resolveFilename = function(request, parent) {
+    if (request === 'sqlite3') {
+      return sqlite3Path;
+    }
+    return originalResolveFilename.call(this, request, parent);
+  };
+} catch (error) {
+  console.error('Warning: Failed to preload sqlite3 module:', error.message);
+}
+
 // 日志文件路径 - 使用绝对路径
 const logFilePath = path.resolve(__dirname, 'server.log');
 
@@ -96,7 +118,7 @@ for (let i = 0; i < process.argv.length; i++) {
 }
 
 // 启动服务器
-const PORT = portFromArgs || process.env.PORT || 9300;
+const PORT = portFromArgs || process.env.PORT || 9800;
 app.listen(PORT, () => {
   
   // 将 PID 写入 PID 文件
