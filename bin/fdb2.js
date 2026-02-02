@@ -3,6 +3,7 @@
 const { exec, spawn, execSync, spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const net = require('net');
 
 // 项目根目录
 const projectRoot = path.resolve(__dirname, '..');
@@ -28,8 +29,48 @@ switch (command) {
     break;
 }
 
+// 检查端口是否可用
+function isPortAvailable(port) {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    
+    server.once('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        resolve(false);
+      } else {
+        resolve(false);
+      }
+    });
+    
+    server.once('listening', () => {
+      server.close();
+      resolve(true);
+    });
+    
+    server.listen(port);
+  });
+}
+
+// 查找可用端口
+async function findAvailablePort(startPort) {
+  let port = startPort;
+  let attempts = 0;
+  const maxAttempts = 100;
+  
+  while (attempts < maxAttempts) {
+    const available = await isPortAvailable(port);
+    if (available) {
+      return port;
+    }
+    attempts++;
+    port++;
+  }
+  
+  throw new Error(`无法找到可用端口，已尝试 ${maxAttempts} 次`);
+}
+
 // 启动项目
-function startProject() {
+async function startProject() {
   console.log('Starting FDB2 project...');
   
   // 检查 PID 文件是否存在，如果存在则说明服务器已经在运行
@@ -53,6 +94,18 @@ function startProject() {
   const portIndex = commandArgs.findIndex(arg => arg === '-p' || arg === '--port');
   if (portIndex !== -1 && commandArgs[portIndex + 1]) {
     port = parseInt(commandArgs[portIndex + 1]);
+  }
+  
+  // 查找可用端口
+  console.log(`Checking port ${port} availability...`);
+  try {
+    port = await findAvailablePort(port);
+    if (port !== parseInt(commandArgs[portIndex + 1] || 9800)) {
+      console.log(`Port ${commandArgs[portIndex + 1] || 9800} is in use, using port ${port} instead`);
+    }
+  } catch (error) {
+    console.error('Error:', error.message);
+    process.exit(1);
   }
   
   // 命令和参数
