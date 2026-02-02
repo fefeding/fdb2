@@ -299,57 +299,6 @@ export class DatabaseService {
         }
       },
       {
-        value: 'aurora-mysql',
-        label: 'Aurora MySQL',
-        icon: 'bi-database',
-        defaultPort: 3306,
-        description: 'AWS Aurora MySQL兼容数据库（使用MySQL服务）',
-        features: {
-          supportSchemas: false,
-          supportProcedures: true,
-          supportTriggers: true,
-          supportViews: true,
-          supportFullTextSearch: true,
-          supportJson: true,
-          supportCloud: true
-        }
-      },
-      {
-        value: 'aurora-postgres',
-        label: 'Aurora PostgreSQL',
-        icon: 'bi-database',
-        defaultPort: 5432,
-        description: 'AWS Aurora PostgreSQL兼容数据库（使用PostgreSQL服务）',
-        features: {
-          supportSchemas: true,
-          supportProcedures: true,
-          supportTriggers: true,
-          supportViews: true,
-          supportFullTextSearch: true,
-          supportJson: true,
-          supportArrays: true,
-          supportEnum: true,
-          supportCloud: true
-        }
-      },
-      {
-        value: 'better-sqlite3',
-        label: 'Better-SQLite3',
-        icon: 'bi-database',
-        defaultPort: null,
-        description: '高性能SQLite封装库（使用SQLite服务）',
-        features: {
-          supportSchemas: false,
-          supportProcedures: false,
-          supportTriggers: true,
-          supportViews: true,
-          supportFullTextSearch: true,
-          supportJson: false,
-          supportArrays: false,
-          supportHighPerformance: true
-        }
-      },
-      {
         value: 'mongodb',
         label: 'MongoDB',
         icon: 'bi-database',
@@ -649,43 +598,6 @@ export class DatabaseService {
           supportArrays: true,
           supportEnum: true,
           supportDistributed: true
-        };
-      case 'aurora-mysql':
-      case 'auroramysql':
-        return {
-          supportSchemas: false,
-          supportProcedures: true,
-          supportTriggers: true,
-          supportViews: true,
-          supportFullTextSearch: true,
-          supportJson: true,
-          supportCloud: true
-        };
-      case 'aurora-postgres':
-      case 'aurorapostgres':
-      case 'aurora-postgresql':
-        return {
-          supportSchemas: true,
-          supportProcedures: true,
-          supportTriggers: true,
-          supportViews: true,
-          supportFullTextSearch: true,
-          supportJson: true,
-          supportArrays: true,
-          supportEnum: true,
-          supportCloud: true
-        };
-      case 'better-sqlite3':
-      case 'bettersqlite3':
-        return {
-          supportSchemas: false,
-          supportProcedures: false,
-          supportTriggers: true,
-          supportViews: true,
-          supportFullTextSearch: true,
-          supportJson: false,
-          supportArrays: false,
-          supportHighPerformance: true
         };
       case 'mongodb':
       case 'mongo':

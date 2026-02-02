@@ -65,9 +65,9 @@ export class SAPHANADatabaseService extends BaseDatabaseService {
         name: row.name,
         type: row.type,
         comment: row.comment || '',
-        rowCount: 0,
-        dataSize: 0,
-        indexSize: 0
+        rowCount: undefined,
+        dataSize: undefined,
+        indexSize: undefined
       }));
     } catch (error) {
       console.error('获取SAP HANA表列表失败:', error);

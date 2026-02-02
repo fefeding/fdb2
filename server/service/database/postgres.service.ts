@@ -39,9 +39,6 @@ export class PostgreSQLService extends BaseDatabaseService {
       SELECT 
         t.table_name as name,
         'BASE TABLE' as type,
-        (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = t.table_name) as rowCount,
-        0 as dataSize,
-        0 as indexSize,
         '' as collation,
         obj_description(c.oid) as comment
       FROM information_schema.tables t
@@ -53,11 +50,11 @@ export class PostgreSQLService extends BaseDatabaseService {
     return result.map((row: any) => ({
       name: row.name,
       type: row.type,
-      rowCount: row.rowcount || 0,
-      dataSize: row.datasize || 0,
-      indexSize: row.indexsize || 0,
+      rowCount: undefined,
+      dataSize: undefined,
+      indexSize: undefined,
       collation: row.collation,
-      comment: row.comment
+      comment: row.comment || ''
     }));
   }
 

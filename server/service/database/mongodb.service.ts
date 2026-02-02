@@ -42,9 +42,9 @@ export class MongoDBService extends BaseDatabaseService {
       return result.map((collectionName: string) => ({
         name: collectionName,
         type: 'collection',
-        rowCount: 0,
-        dataSize: 0,
-        indexSize: 0
+        rowCount: undefined,
+        dataSize: undefined,
+        indexSize: undefined
       }));
     } catch (error) {
       console.error('获取MongoDB集合列表失败:', error);

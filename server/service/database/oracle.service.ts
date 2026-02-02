@@ -47,20 +47,13 @@ export class OracleService extends BaseDatabaseService {
       ORDER BY table_name
     `, [database.toUpperCase()]);
 
-    // 获取表的统计信息
-    const tablesWithStats = [];
-    for (const table of result) {
-      const stats = await this.getTableStats(dataSource, database, table.name);
-      tablesWithStats.push({
-        name: table.name,
-        type: table.type,
-        rowCount: stats.rowCount,
-        dataSize: stats.dataSize,
-        indexSize: stats.indexSize
-      });
-    }
-
-    return tablesWithStats;
+    return result.map((row: any) => ({
+      name: row.name,
+      type: row.type,
+      rowCount: undefined,
+      dataSize: undefined,
+      indexSize: undefined
+    }));
   }
 
   /**
