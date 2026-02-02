@@ -42,6 +42,7 @@
     "dayjs": "^1.11.19",
     "express": "^5.2.1",
     "mysql2": "^3.16.2",
+    "oracledb": "^6.10.0",
     "pg": "^8.17.2",
     "reflect-metadata": "^0.2.2",
     "sqlite3": "^5.1.7",

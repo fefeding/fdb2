@@ -10,7 +10,7 @@ export type QueryType = 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'CREATE' | '
 export type QueryStatus = 'success' | 'failed' | 'running';
 
 // 数据库类型
-export type DatabaseType = 'mysql' | 'postgres' | 'sqlite' | 'mssql' | 'oracle' | 'mongodb';
+export type DatabaseType = 'mysql' | 'postgres' | 'sqlite' | 'mssql' | 'oracle' | 'mongodb' | 'cockroachdb' | 'sap';
 
 // 导入模式
 export type ImportMode = 'insert' | 'replace' | 'update' | 'append';

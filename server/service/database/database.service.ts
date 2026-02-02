@@ -9,6 +9,9 @@ import { PostgreSQLService } from './postgres.service';
 import { SQLiteService } from './sqlite.service';
 import { OracleService } from './oracle.service';
 import { SQLServerService } from './mssql.service';
+import { CockroachDBService } from './cockroachdb.service';
+import { MongoDBService } from './mongodb.service';
+import { SAPHANADatabaseService } from './sap.service';
 
 /**
  * 数据库服务管理类
@@ -22,6 +25,9 @@ export class DatabaseService {
   private sqliteService: SQLiteService;
   private oracleService: OracleService;
   private sqlServerService: SQLServerService;
+  private cockroachDBService: CockroachDBService;
+  private mongoDBService: MongoDBService;
+  private sapHANADatabaseService: SAPHANADatabaseService;
 
   constructor() {
     this.connectionService = new ConnectionService();
@@ -31,6 +37,9 @@ export class DatabaseService {
       this.sqliteService = new SQLiteService();
       this.oracleService = new OracleService();
       this.sqlServerService = new SQLServerService();
+      this.cockroachDBService = new CockroachDBService();
+      this.mongoDBService = new MongoDBService();
+      this.sapHANADatabaseService = new SAPHANADatabaseService();
   }
 
   /**
@@ -40,17 +49,37 @@ export class DatabaseService {
     
     switch (type.toLowerCase()) {
       case 'mysql':
+      case 'aurora-mysql':
+      case 'auroramysql':
         return this.mysqlService;
       case 'postgres':
       case 'postgresql':
+      case 'aurora-postgres':
+      case 'aurorapostgres':
+      case 'aurora-postgresql':
         return this.postgreSQLService;
       case 'sqlite':
+      case 'better-sqlite3':
+      case 'bettersqlite3':
         return this.sqliteService;
       case 'oracle':
         return this.oracleService;
       case 'mssql':
       case 'sqlserver':
         return this.sqlServerService;
+      case 'cockroachdb':
+      case 'cockroach':
+        return this.cockroachDBService;
+      case 'better-sqlite3':
+      case 'bettersqlite3':
+        return this.betterSQLite3Service;
+      case 'mongodb':
+      case 'mongo':
+        return this.mongoDBService;
+      case 'sap':
+      case 'sap-hana':
+      case 'saphana':
+        return this.sapHANADatabaseService;
       default:
         throw new Error(`不支持的数据库类型: ${type}`);
     }
@@ -249,6 +278,111 @@ export class DatabaseService {
           supportJson: true,
           supportArrays: false,
           supportStoredProcedures: true
+        }
+      },
+      {
+        value: 'cockroachdb',
+        label: 'CockroachDB',
+        icon: 'bi-database',
+        defaultPort: 26257,
+        description: 'CockroachDB分布式SQL数据库',
+        features: {
+          supportSchemas: true,
+          supportProcedures: true,
+          supportTriggers: true,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: true,
+          supportArrays: true,
+          supportEnum: true,
+          supportDistributed: true
+        }
+      },
+      {
+        value: 'aurora-mysql',
+        label: 'Aurora MySQL',
+        icon: 'bi-database',
+        defaultPort: 3306,
+        description: 'AWS Aurora MySQL兼容数据库（使用MySQL服务）',
+        features: {
+          supportSchemas: false,
+          supportProcedures: true,
+          supportTriggers: true,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: true,
+          supportCloud: true
+        }
+      },
+      {
+        value: 'aurora-postgres',
+        label: 'Aurora PostgreSQL',
+        icon: 'bi-database',
+        defaultPort: 5432,
+        description: 'AWS Aurora PostgreSQL兼容数据库（使用PostgreSQL服务）',
+        features: {
+          supportSchemas: true,
+          supportProcedures: true,
+          supportTriggers: true,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: true,
+          supportArrays: true,
+          supportEnum: true,
+          supportCloud: true
+        }
+      },
+      {
+        value: 'better-sqlite3',
+        label: 'Better-SQLite3',
+        icon: 'bi-database',
+        defaultPort: null,
+        description: '高性能SQLite封装库（使用SQLite服务）',
+        features: {
+          supportSchemas: false,
+          supportProcedures: false,
+          supportTriggers: true,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: false,
+          supportArrays: false,
+          supportHighPerformance: true
+        }
+      },
+      {
+        value: 'mongodb',
+        label: 'MongoDB',
+        icon: 'bi-database',
+        defaultPort: 27017,
+        description: 'MongoDB文档数据库',
+        features: {
+          supportSchemas: false,
+          supportProcedures: false,
+          supportTriggers: false,
+          supportViews: false,
+          supportFullTextSearch: true,
+          supportJson: true,
+          supportArrays: true,
+          supportDocuments: true,
+          supportNoSQL: true
+        }
+      },
+      {
+        value: 'sap',
+        label: 'SAP HANA',
+        icon: 'bi-database',
+        defaultPort: 39013,
+        description: 'SAP HANA内存数据库',
+        features: {
+          supportSchemas: true,
+          supportProcedures: true,
+          supportTriggers: true,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: true,
+          supportArrays: false,
+          supportInMemory: true,
+          supportHighPerformance: true
         }
       }
     ];
@@ -502,6 +636,83 @@ export class DatabaseService {
           supportJson: true,
           supportArrays: false,
           supportStoredProcedures: true
+        };
+      case 'cockroachdb':
+      case 'cockroach':
+        return {
+          supportSchemas: true,
+          supportProcedures: true,
+          supportTriggers: true,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: true,
+          supportArrays: true,
+          supportEnum: true,
+          supportDistributed: true
+        };
+      case 'aurora-mysql':
+      case 'auroramysql':
+        return {
+          supportSchemas: false,
+          supportProcedures: true,
+          supportTriggers: true,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: true,
+          supportCloud: true
+        };
+      case 'aurora-postgres':
+      case 'aurorapostgres':
+      case 'aurora-postgresql':
+        return {
+          supportSchemas: true,
+          supportProcedures: true,
+          supportTriggers: true,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: true,
+          supportArrays: true,
+          supportEnum: true,
+          supportCloud: true
+        };
+      case 'better-sqlite3':
+      case 'bettersqlite3':
+        return {
+          supportSchemas: false,
+          supportProcedures: false,
+          supportTriggers: true,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: false,
+          supportArrays: false,
+          supportHighPerformance: true
+        };
+      case 'mongodb':
+      case 'mongo':
+        return {
+          supportSchemas: false,
+          supportProcedures: false,
+          supportTriggers: false,
+          supportViews: false,
+          supportFullTextSearch: true,
+          supportJson: true,
+          supportArrays: true,
+          supportDocuments: true,
+          supportNoSQL: true
+        };
+      case 'sap':
+      case 'sap-hana':
+      case 'saphana':
+        return {
+          supportSchemas: true,
+          supportProcedures: true,
+          supportTriggers: true,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: true,
+          supportArrays: false,
+          supportInMemory: true,
+          supportHighPerformance: true
         };
       default:
         return {};
