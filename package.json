@@ -1,6 +1,6 @@
 {
   "name": "fdb2",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "private": false,
   "type": "commonjs",
   "main": "view/index.html",
@@ -16,6 +16,7 @@
     "icon": "public/favicon.ico"
   },
   "scripts": {
+    "preinstall": "node scripts/preinstall.js",
     "start": "pm2 start server.js --name fdb2-server --disable-logs --",
     "restart": "pm2 restart fdb2-server --disable-logs --",
     "stop": "pm2 stop fdb2-server --",

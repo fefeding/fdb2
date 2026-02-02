@@ -48,12 +48,19 @@ function startProject() {
     }
   }
   
+  // 解析端口参数
+  let port = 9800;
+  const portIndex = commandArgs.findIndex(arg => arg === '-p' || arg === '--port');
+  if (portIndex !== -1 && commandArgs[portIndex + 1]) {
+    port = parseInt(commandArgs[portIndex + 1]);
+  }
+  
   // 命令和参数
   let cmd, args;
   
-  // 直接使用 node 命令启动服务器
+  // 直接使用 node 命令启动服务器，传递端口参数
   cmd = 'node';
-  args = ['server.js', ...commandArgs];
+  args = ['server.js', '-p', port.toString()];
   
   console.log('Executing:', cmd, args);
   
@@ -77,9 +84,10 @@ function startProject() {
   // 保存 PID 到文件
   fs.writeFileSync(pidFilePath, child.pid.toString());
   
+  console.log('Logs are written to:', logFilePath);
   console.log('Server started successfully with PID:', child.pid);
   console.log('Server is running in the background');
-  console.log('Logs are written to:', logFilePath);
+  console.log(`Server is running at http://localhost:${port}`);
 }
 
 // 停止项目

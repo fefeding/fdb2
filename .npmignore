@@ -13,8 +13,7 @@ tmp/
 temp/
 
 # 忽略构建产物（如果不需要包含）
-node_modules/
-dist/
+node_modules
 *.tsbuildinfo
 nw-*
 
