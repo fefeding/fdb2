@@ -74,7 +74,7 @@ async function startProject() {
   console.log('Starting FDB2 project...');
   
   // 检查 PID 文件是否存在，如果存在则说明服务器已经在运行
-  const pidFilePath = path.join(projectRoot, 'server.pid');
+  const pidFilePath = path.join(projectRoot, 'fdb2.server.pid');
   if (fs.existsSync(pidFilePath)) {
     try {
       const pid = parseInt(fs.readFileSync(pidFilePath, 'utf8'));
@@ -148,7 +148,7 @@ function stopProject() {
   console.log('Stopping FDB2 project...');
   
   // 读取 PID 文件
-  const pidFilePath = path.join(projectRoot, 'server.pid');
+  const pidFilePath = path.join(projectRoot, 'fdb2.server.pid');
   
   if (!fs.existsSync(pidFilePath)) {
     console.log('No server process found (PID file not exists)');
@@ -196,7 +196,7 @@ function restartProject() {
   console.log('Waiting for server process to stop...');
   for (let i = 0; i < 10; i++) {
     // 检查 PID 文件是否存在
-    const pidFilePath = path.join(projectRoot, 'server.pid');
+    const pidFilePath = path.join(projectRoot, 'fdb2.server.pid');
     if (!fs.existsSync(pidFilePath)) {
       break;
     }

@@ -122,7 +122,7 @@ const PORT = portFromArgs || process.env.PORT || 9800;
 app.listen(PORT, () => {
   
   // 将 PID 写入 PID 文件
-  const pidFilePath = path.join(__dirname, 'server.pid');
+  const pidFilePath = path.join(__dirname, 'fdb2.server.pid');
   fs.writeFileSync(pidFilePath, process.pid.toString());
   console.log(`PID ${process.pid} written to ${pidFilePath}`);
   
