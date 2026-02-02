@@ -1,0 +1,43 @@
+# 忽略数据目录
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# 忽略日志
+logs/
+*.log
+
+# 忽略临时文件
+tmp/
+temp/
+
+# 忽略构建产物（如果不需要包含）
+node_modules/
+dist/
+*.tsbuildinfo
+
+# 忽略开发配置
+.env
+.env.local
+.env.*.local
+
+# 忽略测试覆盖率
+coverage/
+.nyc_output/
+
+# 忽略 IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 忽略系统文件
+.DS_Store
+Thumbs.db
+
+# 忽略文档（如果不需要包含）
+docs/
+*.md
+!README.md

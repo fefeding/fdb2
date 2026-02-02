@@ -70,9 +70,6 @@ export class DatabaseService {
       case 'cockroachdb':
       case 'cockroach':
         return this.cockroachDBService;
-      case 'better-sqlite3':
-      case 'bettersqlite3':
-        return this.betterSQLite3Service;
       case 'mongodb':
       case 'mongo':
         return this.mongoDBService;

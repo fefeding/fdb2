@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 import { ConnectionEntity } from '../model/connection.entity';
 import { DataSource, type DataSourceOptions } from 'typeorm';
 
@@ -11,13 +12,19 @@ export class ConnectionService {
 
   /**
    * 连接配置文件路径
+   * 优先使用环境变量 DB_TOOL_DATA_DIR，否则使用用户主目录下的 .db-tool 目录
    */
-  private readonly configPath = path.join(process.cwd(), 'data', 'connections.json');
+  private readonly configPath: string;
 
   /**
    * 活跃的数据库连接实例
    */
   private activeConnections: Map<string, DataSource> = new Map();
+
+  constructor() {
+    const dataDir = process.env.DB_TOOL_DATA_DIR || path.join(os.homedir(), '.fdb2');
+    this.configPath = path.join(dataDir, 'connections.json');
+  }
 
   /**
    * 初始化服务，创建配置目录
