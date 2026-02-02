@@ -19,8 +19,8 @@
           </div>
         </div>
         <div class="table-stats">
-          <div class="stat-item">
-            <div class="stat-value">{{ formatNumber(table?.rowCount || 0) }}</div>
+          <div class="stat-item" v-if="table?.rowCount !== undefined">
+            <div class="stat-value">{{ formatNumber(table?.rowCount) }}</div>
             <div class="stat-label">行数据</div>
           </div>
           <div class="stat-item">
@@ -31,8 +31,8 @@
             <div class="stat-value">{{ tableStructure?.indexes?.length || 0 }}</div>
             <div class="stat-label">索引</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-value">{{ formatSize(table?.dataSize || 0) }}</div>
+          <div class="stat-item" v-if="table?.dataSize !== undefined">
+            <div class="stat-value">{{ formatSize(table?.dataSize) }}</div>
             <div class="stat-label">大小</div>
           </div>
         </div>

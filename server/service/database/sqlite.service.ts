@@ -43,9 +43,9 @@ export class SQLiteService extends BaseDatabaseService {
     return result.map((row: any) => ({
       name: row.name,
       type: row.type,
-      rowCount: 0, // SQLite需要额外查询
-      dataSize: 0,
-      indexSize: 0
+      rowCount: undefined,
+      dataSize: undefined,
+      indexSize: undefined
     }));
   }
 

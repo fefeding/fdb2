@@ -127,19 +127,19 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <div class="table-stats">
-                    <div class="stat">
-                      <span class="stat-label">行数</span>
-                      <span class="stat-value">{{ formatNumber(table.rowCount || 0) }}</span>
+                    <div class="table-stats">
+                      <div class="stat" v-if="table.rowCount !== undefined">
+                        <span class="stat-label">行数</span>
+                        <span class="stat-value">{{ formatNumber(table.rowCount) }}</span>
+                      </div>
+                      <div class="stat" v-if="table.dataSize !== undefined">
+                        <span class="stat-label">大小</span>
+                        <span class="stat-value">{{ formatSize(table.dataSize) }}</span>
+                      </div>
                     </div>
-                    <div class="stat">
-                      <span class="stat-label">大小</span>
-                      <span class="stat-value">{{ formatSize(table.dataSize || 0) }}</span>
+                    <div class="table-comment" v-if="table.comment">
+                      {{ table.comment }}
                     </div>
-                  </div>
-                  <div class="table-comment" v-if="table.comment">
-                    {{ table.comment }}
-                  </div>
                   <div class="table-actions">
                     <button class="btn btn-sm btn-outline-primary" @click.stop="editTable(table)">
                       <i class="bi bi-pencil"></i>
