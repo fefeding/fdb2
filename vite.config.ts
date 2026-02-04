@@ -46,24 +46,24 @@ const config = defineConfig({
             writeBundle: async () => {
                 const serverSrcDir = path.resolve(__dirname, './server');
                 const serverDistDir = path.resolve(__dirname, './dist/server');
-                
+
                 if (!fs.existsSync(serverDistDir)) {
                     fs.mkdirSync(serverDistDir, { recursive: true });
                 }
-                
+
                 const copyRecursiveSync = (src: string, dest: string) => {
                     const exists = fs.existsSync(src);
                     const stats = exists && fs.statSync(src);
                     const isDirectory = exists && stats.isDirectory();
-                    
+
                     if (isDirectory) {
                         if (!fs.existsSync(dest)) {
                             fs.mkdirSync(dest);
                         }
-                        
+
                         fs.readdirSync(src).forEach(childItemName => {
                             copyRecursiveSync(
-                                path.join(src, childItemName), 
+                                path.join(src, childItemName),
                                 path.join(dest, childItemName)
                             );
                         });
@@ -73,9 +73,49 @@ const config = defineConfig({
                         }
                     }
                 };
-                
+
                 copyRecursiveSync(serverSrcDir, serverDistDir);
                 console.log('Server files copied to', serverDistDir);
+            }
+        },
+        {
+            name: 'copy-scripts',
+            writeBundle: async () => {
+                const scriptsSrcDir = path.resolve(__dirname, './scripts');
+                const scriptsDistDir = path.resolve(__dirname, './dist/scripts');
+
+                if (!fs.existsSync(scriptsSrcDir)) {
+                    console.log('Scripts directory does not exist, skipping.');
+                    return;
+                }
+
+                if (!fs.existsSync(scriptsDistDir)) {
+                    fs.mkdirSync(scriptsDistDir, { recursive: true });
+                }
+
+                const copyRecursiveSync = (src: string, dest: string) => {
+                    const exists = fs.existsSync(src);
+                    const stats = exists && fs.statSync(src);
+                    const isDirectory = exists && stats.isDirectory();
+
+                    if (isDirectory) {
+                        if (!fs.existsSync(dest)) {
+                            fs.mkdirSync(dest);
+                        }
+
+                        fs.readdirSync(src).forEach(childItemName => {
+                            copyRecursiveSync(
+                                path.join(src, childItemName),
+                                path.join(dest, childItemName)
+                            );
+                        });
+                    } else {
+                        fs.copyFileSync(src, dest);
+                    }
+                };
+
+                copyRecursiveSync(scriptsSrcDir, scriptsDistDir);
+                console.log('Scripts files copied to', scriptsDistDir);
             }
         },
         {

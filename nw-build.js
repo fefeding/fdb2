@@ -1,6 +1,6 @@
 const nwbuilder = require('nw-builder');
-    const { resolve, join } = require('path');
-    const { copyFileSync, existsSync, rmSync, readdirSync } = require('fs');
+const { resolve, join } = require('path');
+const { copyFileSync, existsSync, readdirSync, readFileSync, writeFileSync } = require('fs');
 
 // 解析命令行参数
 const args = process.argv.slice(2);
@@ -9,7 +9,7 @@ const targetPlatform = args.find(arg => arg.startsWith('--platform='))?.split('=
 async function build() {
   try {
     console.log('开始构建 NW.js 应用...');
-    
+
     // 首先构建 Vue 应用
     console.log('1. 构建 Vue 应用...');
     const { execSync } = require('child_process');
@@ -29,13 +29,13 @@ async function build() {
     // 使用绝对路径执行 npm install 命令
     const distPath = resolve(__dirname, 'dist');
     console.log('Dist 路径:', distPath);
-    
+
     // 执行 npm install 命令
-    execSync('pnpm install --only=production', { 
-      stdio: 'inherit', 
-      cwd: distPath 
+    execSync('pnpm install --only=production', {
+      stdio: 'inherit',
+      cwd: distPath
     });
-    
+
     // 检查 node_modules 目录是否创建成功
     const nodeModulesPath = join(distPath, 'node_modules');
     if (existsSync(nodeModulesPath)) {
@@ -46,24 +46,24 @@ async function build() {
     }
 
     console.log('4. 配置 NW.js 构建参数...');
-    
+
     // 根据命令行参数或当前操作系统确定要构建的平台
     let platform;
     if (targetPlatform) {
       platform = targetPlatform;
       console.log(`使用命令行指定的平台: ${platform}`);
     } else {
-      platform = process.platform === 'darwin' ? 'osx' : 
+      platform = process.platform === 'darwin' ? 'osx' :
                 process.platform === 'linux' ? 'linux' : 'win';
       console.log(`使用当前操作系统平台: ${platform}`);
     }
-    
+
     // 为每个平台使用不同的输出目录
     const outDir = resolve(__dirname, `nw-build-${platform}`);
     console.log(`输出目录: ${outDir}`);
-    
+
     console.log(`\n正在构建 ${platform} 平台...`);
-    
+
     const buildOptions = {
       mode: 'build',
       srcDir: distPath,
@@ -73,15 +73,15 @@ async function build() {
       arch: 'x64',
       outDir: outDir,
       cacheDir: resolve(__dirname, 'nw-cache'),
-      zip: false,
       downloadUrl: 'https://dl.nwjs.io',
+      zip: false,
       logLevel: 'info',
       glob: false,
       app: {
         icon: resolve(__dirname, 'public', 'favicon.ico')
       }
     };
-    
+
     // macOS 平台需要额外的配置
     if (platform === 'osx') {
       buildOptions.app.LSApplicationCategoryType = 'public.app-category.productivity';
@@ -93,14 +93,14 @@ async function build() {
       buildOptions.app.CFBundleShortVersionString = '1.0.0';
       buildOptions.app.CFBundleVersion = '1.0.0';
     }
-    
+
     await nwbuilder.default(buildOptions);
-    
+
     console.log(`✅ ${platform} 平台构建完成`);
 
     console.log('\n5. 打包完成！');
     console.log(`应用已生成在: ${outDir}`);
-    
+
     // 验证打包后的应用程序
     const packagedNodeModulesPath = join(outDir, platform, 'x64', 'package.nw', 'node_modules');
     if (existsSync(packagedNodeModulesPath)) {
