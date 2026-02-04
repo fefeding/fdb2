@@ -1,4 +1,4 @@
-# 数据库管理工具
+# fdb2 - 数据库管理工具
 
 一款轻量级、跨平台的数据库管理工具，支持多种数据库类型，提供类似 Navicat Premium 的使用体验。
 
@@ -35,41 +35,41 @@ fdb2 restart
 
 ### 访问应用
 
-启动服务后，在浏览器中打开(具体路径请看输出的信息，端口有可能变化)：
+启动服务后，在浏览器中打开（具体路径请看输出的信息，端口有可能变化）：
 ```
 http://localhost:9800
 ```
 
 ## 功能特性
 
-### 🔗 连接管理
+### 连接管理
 - 支持 8 种数据库类型：MySQL、PostgreSQL、SQLite、SQL Server、Oracle、CockroachDB、MongoDB、SAP HANA
 - 可视化连接配置界面，操作简单直观
 - 一键测试连接，快速验证配置
 - 连接信息本地安全存储，无需重复输入
 
-### 🏗️ 数据库结构
+### 数据库结构
 - 清晰的数据库信息概览
 - 详细的表结构查看
 - 完整的列信息、索引、外键关系展示
 - 实时显示数据库大小和统计信息
 
-### 📊 数据操作
+### 数据操作
 - 表数据快速查看和分页浏览
 - 灵活的条件查询和排序
 - 便捷的数据插入、编辑、删除
 - 支持导出数据为 JSON、CSV 格式
 
-### 💻 SQL查询
+### SQL 查询
 - 代码编辑器风格的 SQL 输入框
 - SQL 语法格式化，提升可读性
 - 自动保存查询历史记录
 - 批量查询结果展示
 
-### 🎯 核心优势
+### 核心优势
 - **零配置启动**：全局安装后即可使用，无需复杂配置
 - **跨平台支持**：Windows、macOS、Linux 全平台兼容
-- **轻量高效**：基于 Node.js，资源占用低
+- **轻量高效**：资源占用低
 - **本地存储**：数据保存在本地，安全可靠
 - **离线使用**：无需联网即可管理本地数据库
 
@@ -77,7 +77,7 @@ http://localhost:9800
 
 ### 添加数据库连接
 
-1. 打开浏览器访问 `http://localhost:3000`
+1. 打开浏览器访问 `http://localhost:9800`
 2. 点击左侧导航的"连接管理"
 3. 点击"新增连接"按钮
 4. 填写连接信息：
@@ -149,26 +149,6 @@ UPDATE users SET status = 'inactive' WHERE last_login < '2024-01-01';
 DELETE FROM logs WHERE created_at < '2024-01-01';
 ```
 
-## 数据存储位置
-
-### 连接配置
-- **默认位置**：`~/.db-tool/connections.json`
-  - Windows: `C:\Users\用户名\.db-tool\connections.json`
-  - macOS/Linux: `/Users/用户名/.db-tool/connections.json` 或 `/home/用户名/.db-tool/connections.json`
-- **自定义位置**：设置环境变量 `DB_TOOL_DATA_DIR`
-  ```bash
-  # Windows
-  set DB_TOOL_DATA_DIR=D:\mydata\dbtool
-  
-  # macOS/Linux
-  export DB_TOOL_DATA_DIR=/path/to/custom/data
-  ```
-
-### 查询历史
-- **存储位置**：浏览器 LocalStorage
-- **自动保存**：每次执行查询后自动保存
-- **数量限制**：最多保存 50 条记录
-
 ## 支持的数据库类型
 
 | 数据库类型 | 默认端口 | 特性 |
@@ -198,7 +178,7 @@ A: 请检查以下几点：
 1. 确认已正确安装：`npm install -g fdb2`
 2. 检查 Node.js 版本（建议 v14 或更高）：`node --version`
 3. 查看错误信息：`fdb2 start --verbose`
-4. 检查端口 3000 是否被占用：`netstat -ano | findstr :3000`（Windows）或 `lsof -i :3000`（Mac/Linux）
+4. 检查端口是否被占用
 
 **Q: 如何更换端口？**
 
@@ -312,56 +292,6 @@ rmdir /s C:\Users\用户名\.db-tool
 rm -rf ~/.db-tool
 ```
 
-## 高级技巧
-
-### 批量操作
-
-**批量执行 SQL 文件：**
-```sql
--- 创建一个 .sql 文件
-USE my_database;
-UPDATE users SET status = 'active' WHERE id > 100;
-DELETE FROM logs WHERE created_at < '2024-01-01';
-```
-
-然后在 SQL 查询页面复制粘贴执行。
-
-### 数据导出技巧
-
-**导出特定字段：**
-```sql
-SELECT id, name, email FROM users WHERE status = 'active';
-```
-
-**导出并格式化数据：**
-```sql
-SELECT 
-  id,
-  name,
-  DATE_FORMAT(created_at, '%Y-%m-%d') as created_date
-FROM users;
-```
-
-### 性能监控
-
-**查看表大小：**
-```sql
--- MySQL
-SELECT 
-  table_name,
-  ROUND(((data_length + index_length) / 1024 / 1024), 2) AS size_mb
-FROM information_schema.tables
-WHERE table_schema = 'your_database';
-
--- PostgreSQL
-SELECT 
-  schemaname,
-  tablename,
-  pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size
-FROM pg_tables
-WHERE schemaname = 'public';
-```
-
 ## 获取帮助
 
 - **GitHub Issues**: [提交问题](https://github.com/fefeding/fdb2/issues)
@@ -370,4 +300,4 @@ WHERE schemaname = 'public';
 
 ---
 
-**享受使用数据库管理工具！如有任何问题，欢迎反馈。**
+**享受使用 fdb2 数据库管理工具！如有任何问题，欢迎反馈。**
