@@ -364,7 +364,7 @@ WHERE schemaname = 'public';
 
 ## 获取帮助
 
-- **GitHub Issues**: [提交问题](https://github.com/yourusername/fdb2/issues)
+- **GitHub Issues**: [提交问题](https://github.com/fefeding/fdb2/issues)
 - **文档**: 查看在线文档
 - **社区**: 加入用户交流群
 
