@@ -1,0 +1,259 @@
+
+.database-panel[data-v-974a0a17] {
+  padding: 16px;
+  height: 100vh;
+  overflow: auto;
+}
+.panel-header[data-v-974a0a17] {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+.panel-title[data-v-974a0a17] {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--vscode-foreground);
+}
+.panel-actions[data-v-974a0a17] {
+  display: flex;
+  gap: 8px;
+}
+.connection-selector[data-v-974a0a17] {
+  width: 300px;
+  padding: 6px 10px;
+  border: 1px solid var(--vscode-input-border);
+  background-color: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border-radius: 4px;
+  font-size: 13px;
+}
+.btn[data-v-974a0a17] {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.btn-primary[data-v-974a0a17] {
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+.btn-primary[data-v-974a0a17]:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
+.btn-secondary[data-v-974a0a17] {
+  background-color: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+}
+.btn-secondary[data-v-974a0a17]:hover {
+  background-color: var(--vscode-button-secondaryHoverBackground);
+}
+.database-grid[data-v-974a0a17] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.database-card[data-v-974a0a17] {
+  padding: 16px;
+  background-color: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.database-card[data-v-974a0a17]:hover {
+  border-color: var(--vscode-focusBorder);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+.database-header[data-v-974a0a17] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.database-icon[data-v-974a0a17] {
+  font-size: 28px;
+  color: var(--vscode-textLink-foreground);
+}
+.database-name[data-v-974a0a17] {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+.database-info[data-v-974a0a17] {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+.database-stat[data-v-974a0a17] {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.section-title[data-v-974a0a17] {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 24px 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  color: var(--vscode-foreground);
+}
+.tabs[data-v-974a0a17] {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+.tab[data-v-974a0a17] {
+  padding: 8px 16px;
+  border: none;
+  background-color: transparent;
+  color: var(--vscode-foreground);
+  font-size: 13px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+.tab[data-v-974a0a17]:hover {
+  background-color: var(--vscode-list-hoverBackground);
+}
+.tab.active[data-v-974a0a17] {
+  border-bottom-color: var(--vscode-focusBorder);
+  color: var(--vscode-textLink-foreground);
+}
+.tab-content[data-v-974a0a17] {
+  display: none;
+}
+.tab-content.active[data-v-974a0a17] {
+  display: block;
+}
+.table-list[data-v-974a0a17] {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.table-item[data-v-974a0a17] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.table-item[data-v-974a0a17]:hover {
+  background-color: var(--vscode-list-hoverBackground);
+}
+.table-icon[data-v-974a0a17] {
+  font-size: 20px;
+  color: var(--vscode-textLink-foreground);
+  width: 24px;
+  text-align: center;
+}
+.table-info[data-v-974a0a17] {
+  flex: 1;
+}
+.table-name[data-v-974a0a17] {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 2px;
+  color: var(--vscode-foreground);
+}
+.table-comment[data-v-974a0a17] {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+.table-meta[data-v-974a0a17] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  margin-top: 4px;
+}
+.table-type[data-v-974a0a17] {
+  padding: 2px 8px;
+  border-radius: 12px;
+  background-color: var(--vscode-badge-background);
+  font-weight: 500;
+  font-size: 12px;
+}
+.table-type.table[data-v-974a0a17] {
+  background-color: var(--vscode-badge-background);
+}
+.table-type.view[data-v-974a0a17] {
+  background-color: var(--vscode-gitDecorationModifiedResourceForeground);
+  color: white;
+}
+.table-actions[data-v-974a0a17] {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.table-item:hover .table-actions[data-v-974a0a17] {
+  opacity: 1;
+}
+.action-btn[data-v-974a0a17] {
+  padding: 4px 8px;
+  font-size: 12px;
+  background-color: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.action-btn[data-v-974a0a17]:hover {
+  background-color: var(--vscode-button-secondaryHoverBackground);
+}
+.empty-state[data-v-974a0a17] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+.empty-icon[data-v-974a0a17] {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+.empty-title[data-v-974a0a17] {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--vscode-foreground);
+}
+.empty-text[data-v-974a0a17] {
+  font-size: 14px;
+  color: var(--vscode-descriptionForeground);
+}
+.loading[data-v-974a0a17] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+.spinner[data-v-974a0a17] {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--vscode-progressBar-background);
+  border-top-color: var(--vscode-progressBar-foreground);
+  border-radius: 50%;
+  animation: spin-974a0a17 0.6s linear infinite;
+}
+@keyframes spin-974a0a17 {
+to {
+    transform: rotate(360deg);
+}
+}

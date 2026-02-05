@@ -1,0 +1,142 @@
+{
+  "name": "fdb2-vscode",
+  "displayName": "fdb2 - Database Tool",
+  "description": "强大的数据库管理工具，支持多种数据库类型",
+  "version": "1.0.0",
+  "publisher": "fdb2",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other",
+    "Data Science"
+  ],
+  "activationEvents": [
+    "onView:databaseExplorer",
+    "onCommand:fdb2.openQueryPanel"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "fdb2",
+          "title": "Database Tool",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "fdb2": [
+        {
+          "id": "databaseExplorer",
+          "name": "数据库连接"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "fdb2.addConnection",
+        "title": "添加连接",
+        "icon": "$(add)"
+      },
+      {
+        "command": "fdb2.refreshConnections",
+        "title": "刷新",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "fdb2.openQueryPanel",
+        "title": "打开查询面板",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "fdb2.openDatabasePanel",
+        "title": "打开数据库管理",
+        "icon": "$(database)"
+      },
+      {
+        "command": "fdb2.deleteConnection",
+        "title": "删除连接",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "fdb2.editConnection",
+        "title": "编辑连接",
+        "icon": "$(edit)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "fdb2.addConnection",
+          "when": "view == databaseExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "fdb2.refreshConnections",
+          "when": "view == databaseExplorer",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "fdb2.deleteConnection",
+          "when": "view == databaseExplorer && viewItem == connection",
+          "group": "edit"
+        },
+        {
+          "command": "fdb2.editConnection",
+          "when": "view == databaseExplorer && viewItem == connection",
+          "group": "edit"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "fdb2",
+      "properties": {
+        "fdb2.defaultPort": {
+          "type": "number",
+          "default": 3306,
+          "description": "默认数据库端口"
+        },
+        "fdb2.queryLimit": {
+          "type": "number",
+          "default": 100,
+          "description": "查询结果限制"
+        },
+        "fdb2.autoReconnect": {
+          "type": "boolean",
+          "default": true,
+          "description": "自动重连"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.75.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "typescript": "^5.0.0",
+    "@vscode/test-electron": "^2.3.0"
+  },
+  "dependencies": {
+    "mysql2": "^3.16.3",
+    "pg": "^8.18.0",
+    "sqlite3": "^5.1.7",
+    "typeorm": "^0.3.28",
+    "oracledb": "^6.10.0"
+  }
+}

@@ -1,0 +1,162 @@
+
+.query-panel[data-v-eaf4025e] {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+.query-toolbar[data-v-eaf4025e] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: var(--vscode-editorGroupHeader-tabsBackground);
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+.query-selector[data-v-eaf4025e] {
+  min-width: 200px;
+  padding: 6px 10px;
+  border: 1px solid var(--vscode-input-border);
+  background-color: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border-radius: 4px;
+}
+.btn[data-v-eaf4025e] {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.btn-primary[data-v-eaf4025e] {
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+.btn-primary[data-v-eaf4025e]:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
+.btn-secondary[data-v-eaf4025e] {
+  background-color: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+}
+.btn-secondary[data-v-eaf4025e]:hover {
+  background-color: var(--vscode-button-secondaryHoverBackground);
+}
+.query-editor[data-v-eaf4025e] {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  min-height: 200px;
+}
+.query-textarea[data-v-eaf4025e] {
+  flex: 1;
+  padding: 16px;
+  font-family: var(--vscode-editor-font-family, 'Consolas', 'Monaco', monospace);
+  font-size: 14px;
+  line-height: 1.6;
+  border: none;
+  resize: none;
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+}
+.query-textarea[data-v-eaf4025e]:focus {
+  outline: none;
+}
+.query-results[data-v-eaf4025e] {
+  flex: 1;
+  overflow: auto;
+  padding: 12px;
+}
+.loading-state[data-v-eaf4025e] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 12px;
+}
+.spinner[data-v-eaf4025e] {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--vscode-progressBar-background);
+  border-top-color: var(--vscode-progressBar-foreground);
+  border-radius: 50%;
+  animation: spin-eaf4025e 0.6s linear infinite;
+}
+@keyframes spin-eaf4025e {
+to {
+    transform: rotate(360deg);
+}
+}
+.results-header[data-v-eaf4025e] {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background-color: var(--vscode-editorGroupHeader-tabsBackground);
+  border-radius: 4px;
+}
+.results-title[data-v-eaf4025e] {
+  font-size: 14px;
+  font-weight: 600;
+}
+.results-meta[data-v-eaf4025e] {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+.data-table[data-v-eaf4025e] {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.data-table th[data-v-eaf4025e],
+.data-table td[data-v-eaf4025e] {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+.data-table th[data-v-eaf4025e] {
+  background-color: var(--vscode-editorGroupHeader-tabsBackground);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+.data-table tbody tr[data-v-eaf4025e]:hover {
+  background-color: var(--vscode-list-hoverBackground);
+}
+.empty-state[data-v-eaf4025e] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+.empty-icon[data-v-eaf4025e] {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+.empty-text[data-v-eaf4025e] {
+  font-size: 14px;
+  color: var(--vscode-descriptionForeground);
+}
+.status-bar[data-v-eaf4025e] {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: var(--vscode-statusBar-background);
+  color: var(--vscode-statusBar-foreground);
+  font-size: 12px;
+}
+.status-item[data-v-eaf4025e] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.status-icon[data-v-eaf4025e] {
+  color: var(--vscode-textLink-foreground);
+}

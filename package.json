@@ -27,6 +27,9 @@
     "test:unit": "vitest",
     "build-only": "vite build && npm run build-server",
     "build-server": "tsc -p tsconfig.server.json",
+    "build:vscode": "vite build --config vite.config.vscode.ts",
+    "build:vscode:extension": "cd packages/vscode && npm run compile",
+    "build:all": "npm run build && npm run build:vscode && npm run build:vscode:extension",
     "move-assets": "node move-assets.cjs",
     "type-check": "vue-tsc --noEmit --composite false",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
@@ -36,7 +39,9 @@
     "nw:build:osx": "node nw-build.js --platform=osx",
     "nw:build:linux": "node nw-build.js --platform=linux",
     "pkg:server": "cd d:/code/ycnull/db_tool && pkg dist/server/index.js -t node18-win-x64 -o dist/server/server.exe",
-    "build:server:pkg": "ncc build server/index.ts -o dist/server/pkg"
+    "build:server:pkg": "ncc build server/index.ts -o dist/server/pkg",
+    "vscode:dev": "cd packages/vscode && npm run watch",
+    "vscode:package": "cd packages/vscode && vsce package"
   },
   "dependencies": {
     "@fefeding/common": "^1.0.58",
