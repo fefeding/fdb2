@@ -40,6 +40,8 @@ fdb2 restart
 http://localhost:9800
 ```
 
+**主页**: [https://surl.fit/tools/tools/fdb2](https://surl.fit/tools/tools/fdb2)
+
 ## 功能特性
 
 ### 连接管理
