@@ -4,6 +4,7 @@
   "private": false,
   "type": "commonjs",
   "main": "view/index.html",
+  "homepage": "https://surl.fit/tools/tools/fdb2",
   "window": {
     "title": "数据库管理工具",
     "width": 1200,
