@@ -41,6 +41,7 @@ export class ConnectionService {
    */
   async getAllConnections(): Promise<ConnectionEntity[]> {
     try {
+      console.log('configPath', this.configPath);
       if (!fs.existsSync(this.configPath)) {
         return [];
       }
