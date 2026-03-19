@@ -738,4 +738,135 @@ export class PostgreSQLService extends BaseDatabaseService {
       throw new Error(`导出表数据到Excel失败: ${error.message}`);
     }
   }
+
+  /**
+   * 修改表结构
+   */
+  async alterTable(dataSource: DataSource, databaseName: string, tableDiff: any): Promise<any> {
+    try {
+      const tableName = tableDiff.tableName;
+      const sqlStatements: string[] = [];
+
+      // 修改表注释
+      if (tableDiff.tableCommentChanged) {
+        sqlStatements.push(`COMMENT ON TABLE "${tableName}" IS '${tableDiff.tableComment}';`);
+      }
+
+      // 添加新列
+      tableDiff.addedColumns.forEach((column: any) => {
+        // 检查type是否已经包含长度信息（括号）
+        const typeHasLength = /\(\d+\)/.test(column.type);
+
+        let columnSQL = `ALTER TABLE "${tableName}" ADD COLUMN "${column.name}" ${column.type}`;
+
+        // 处理长度和精度（仅当type中没有指定长度时才添加）
+        if (!typeHasLength) {
+          if (column.length) {
+            columnSQL += `(${column.length})`;
+          } else if (column.precision) {
+            if (column.scale) {
+              columnSQL += `(${column.precision},${column.scale})`;
+            } else {
+              columnSQL += `(${column.precision})`;
+            }
+          }
+        }
+
+        // 处理NULL约束
+        if (!column.nullable) {
+          columnSQL += ' NOT NULL';
+        }
+
+        // 处理默认值
+        if (column.defaultValue) {
+          const upperDefault = column.defaultValue.toString().toUpperCase();
+          if (['CURRENT_TIMESTAMP', 'NOW()', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
+            columnSQL += ` DEFAULT ${upperDefault}`;
+          } else {
+            columnSQL += ` DEFAULT '${column.defaultValue}'`;
+          }
+        }
+
+        // 处理自增（PostgreSQL使用SERIAL或GENERATED AS IDENTITY）
+        if (column.isAutoIncrement) {
+          if (column.type.toLowerCase().includes('serial') || column.type.toLowerCase().includes('bigserial')) {
+            // 类型已经包含自增
+          } else {
+            columnSQL += ' GENERATED ALWAYS AS IDENTITY';
+          }
+        }
+
+        sqlStatements.push(columnSQL + ';');
+
+        // 添加列注释
+        if (column.comment) {
+          sqlStatements.push(`COMMENT ON COLUMN "${tableName}"."${column.name}" IS '${column.comment}';`);
+        }
+      });
+
+      // 修改列
+      tableDiff.modifiedColumns.forEach((modification: any) => {
+        const { oldColumn, newColumn } = modification;
+
+        // 检查type是否已经包含长度信息（括号）
+        const typeHasLength = /\(\d+\)/.test(newColumn.type);
+
+        let columnSQL = `ALTER TABLE "${tableName}" ALTER COLUMN "${newColumn.name}" SET DATA TYPE ${newColumn.type}`;
+
+        // 处理长度和精度（仅当type中没有指定长度时才添加）
+        if (!typeHasLength) {
+          if (newColumn.length) {
+            columnSQL += `(${newColumn.length})`;
+          } else if (newColumn.precision) {
+            if (newColumn.scale) {
+              columnSQL += `(${newColumn.precision},${newColumn.scale})`;
+            } else {
+              columnSQL += `(${newColumn.precision})`;
+            }
+          }
+        }
+
+        sqlStatements.push(columnSQL + ';');
+
+        // 修改NULL约束
+        if (!newColumn.nullable) {
+          sqlStatements.push(`ALTER TABLE "${tableName}" ALTER COLUMN "${newColumn.name}" SET NOT NULL;`);
+        } else {
+          sqlStatements.push(`ALTER TABLE "${tableName}" ALTER COLUMN "${newColumn.name}" DROP NOT NULL;`);
+        }
+
+        // 修改默认值
+        if (newColumn.defaultValue) {
+          const upperDefault = newColumn.defaultValue.toString().toUpperCase();
+          if (['CURRENT_TIMESTAMP', 'NOW()', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
+            sqlStatements.push(`ALTER TABLE "${tableName}" ALTER COLUMN "${newColumn.name}" SET DEFAULT ${upperDefault};`);
+          } else {
+            sqlStatements.push(`ALTER TABLE "${tableName}" ALTER COLUMN "${newColumn.name}" SET DEFAULT '${newColumn.defaultValue}';`);
+          }
+        } else {
+          sqlStatements.push(`ALTER TABLE "${tableName}" ALTER COLUMN "${newColumn.name}" DROP DEFAULT;`);
+        }
+
+        // 修改列注释
+        if (newColumn.comment) {
+          sqlStatements.push(`COMMENT ON COLUMN "${tableName}"."${newColumn.name}" IS '${newColumn.comment}';`);
+        }
+      });
+
+      // 删除列
+      tableDiff.deletedColumns.forEach((column: any) => {
+        sqlStatements.push(`ALTER TABLE "${tableName}" DROP COLUMN "${column.name}";`);
+      });
+
+      // 执行SQL语句
+      if (sqlStatements.length > 0) {
+        await this.executeBatchQuery(dataSource, sqlStatements, { useTransaction: true });
+      }
+
+      return { ret: 0, message: '表结构修改成功' };
+    } catch (error) {
+      console.error('PostgreSQL修改表结构失败:', error);
+      return { ret: 1, message: `修改表结构失败: ${error instanceof Error ? error.message : String(error)}` };
+    }
+  }
 }

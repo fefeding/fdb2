@@ -247,12 +247,18 @@ const formData = ref({
   }]
 });
 
+// 原始表结构（用于对比差异）
+const originalTableData = ref({
+  tableName: '',
+  tableComment: '',
+  columns: []
+});
+
 // 初始化表单数据
-function initFormData() {
-  debugger
+function initFormData() {  
   if (props.mode === 'edit' && props.table) {
     const columns = props.columns || props.table.columns || [];
-    formData.value = {
+    const tableData = {
       tableName: props.table.name || '',
       tableComment: props.table.comment || '',
       columns: columns.map(col => ({
@@ -268,6 +274,8 @@ function initFormData() {
         comment: col.comment || ''
       })) || []
     };
+    formData.value = { ...tableData };
+    originalTableData.value = JSON.parse(JSON.stringify(tableData));
   } else {
     formData.value = {
       tableName: '',
@@ -285,9 +293,70 @@ function initFormData() {
         comment: ''
       }]
     };
+    originalTableData.value = {
+      tableName: '',
+      tableComment: '',
+      columns: []
+    };
   }
 }
 
+// 计算表结构差异
+function calculateTableDiff() {
+  const diff = {
+    tableName: formData.value.tableName,
+    tableCommentChanged: formData.value.tableComment !== originalTableData.value.tableComment,
+    tableComment: formData.value.tableComment,
+    addedColumns: [],
+    modifiedColumns: [],
+    deletedColumns: []
+  };
+
+  // 创建原始列的映射（按列名）
+  const originalColumnsMap = new Map();
+  originalTableData.value.columns.forEach(col => {
+    originalColumnsMap.set(col.name, col);
+  });
+
+  // 检查新增和修改的列
+  formData.value.columns.forEach(newCol => {
+    const originalCol = originalColumnsMap.get(newCol.name);
+    
+    if (!originalCol) {
+      // 新增列
+      diff.addedColumns.push(newCol);
+    } else {
+      // 检查列是否被修改
+      const isModified = 
+        newCol.type !== originalCol.type ||
+        newCol.length !== originalCol.length ||
+        newCol.precision !== originalCol.precision ||
+        newCol.scale !== originalCol.scale ||
+        newCol.nullable !== originalCol.nullable ||
+        newCol.defaultValue !== originalCol.defaultValue ||
+        newCol.isPrimary !== originalCol.isPrimary ||
+        newCol.isAutoIncrement !== originalCol.isAutoIncrement ||
+        newCol.comment !== originalCol.comment;
+
+      if (isModified) {
+        diff.modifiedColumns.push({
+          oldColumn: originalCol,
+          newColumn: newCol
+        });
+      }
+    }
+  });
+
+  // 检查删除的列
+  originalTableData.value.columns.forEach(originalCol => {
+    const existsInNew = formData.value.columns.some(newCol => newCol.name === originalCol.name);
+    if (!existsInNew) {
+      diff.deletedColumns.push(originalCol);
+    }
+  });
+
+  return diff;
+}
 // 添加字段
 function addColumn() {
   formData.value.columns.push({
@@ -659,18 +728,41 @@ async function submit() {
       return;
     }
     
-    const sql = generateSQL();
-    
     if (!props.connection?.id) {
       await modal.warning('请先选择数据库连接');
       return;
     }
+
+    let result;
     
-    const result = await databaseService.executeQuery(
-      props.connection.id,
-      sql,
-      props.database
-    );
+    if (props.mode === 'create') {
+      // 创建表：使用 SQL 语句
+      const sql = generateSQL();
+      result = await databaseService.executeQuery(
+        props.connection.id,
+        sql,
+        props.database
+      );
+    } else {
+      // 修改表：使用差异化对比
+      const tableDiff = calculateTableDiff();
+      
+      // 检查是否有实际修改
+      if (tableDiff.addedColumns.length === 0 && 
+          tableDiff.modifiedColumns.length === 0 && 
+          tableDiff.deletedColumns.length === 0 && 
+          !tableDiff.tableCommentChanged) {
+        await modal.info('没有检测到任何修改');
+        return;
+      }
+
+      // 调用修改表接口（需要后端实现）
+      result = await databaseService.alterTable(
+        props.connection.id,
+        props.database,
+        tableDiff
+      );
+    }
     
     emit('submit', {
       success: result.ret === 0,

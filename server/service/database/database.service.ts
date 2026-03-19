@@ -145,6 +145,15 @@ export class DatabaseService {
   }
 
   /**
+   * 修改表结构
+   */
+  async alterTable(connectionId: string, databaseName: string, tableDiff: any): Promise<any> {
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+    const databaseService = this.getDatabaseService(dataSource.options.type as string);
+    return databaseService.alterTable(dataSource, databaseName, tableDiff);
+  }
+
+  /**
    * 获取视图列表
    */
   async getViews(connectionId: string, databaseName: string): Promise<any[]> {

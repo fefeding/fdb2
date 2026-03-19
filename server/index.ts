@@ -259,16 +259,11 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
 
     // /api/database/alterTable
     if (pathname === '/api/database/alterTable') {
-      const { id, database, tableName, columns, oldColumns } = body;
-      if (!id || !database || !tableName || !columns) throw Error('Missing parameters');
+      const { id, database, tableDiff } = body;
+      if (!id || !database || !tableDiff) throw Error('Missing parameters');
 
-      const sqlStatements = generateAlterTableSQL(tableName, columns, oldColumns);
-      const results = [] as Array<any>;
-      for (const sql of sqlStatements) {
-        const result = await databaseService.executeQuery(id, sql, database);
-        results.push({ sql, result });
-      }
-      return { success: true, statements: sqlStatements, results };
+      const result = await databaseService.alterTable(id, database, tableDiff);
+      return result;
     }
 
     // /api/database/insertData

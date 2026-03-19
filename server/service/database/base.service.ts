@@ -174,7 +174,7 @@ export abstract class BaseDatabaseService {
                 success++;
               } catch (error) {
                 failed++;
-                errors.push({ statement, error: error.message });
+                errors.push({ statement, error: error instanceof Error ? error.message : String(error) });
                 if (!continueOnError) {
                   throw error;
                 }
@@ -189,7 +189,7 @@ export abstract class BaseDatabaseService {
               success++;
             } catch (error) {
               failed++;
-              errors.push({ statement, error: error.message });
+              errors.push({ statement, error: error instanceof Error ? error.message : String(error) });
               if (!continueOnError) {
                 throw error;
               }
@@ -199,7 +199,7 @@ export abstract class BaseDatabaseService {
       } catch (batchError) {
         console.error(`批次执行失败 (${i}-${i + batchSize}):`, batchError);
         if (!continueOnError) {
-          throw new Error(`批次执行失败: ${batchError.message}`);
+          throw new Error(`批次执行失败: ${batchError instanceof Error ? batchError.message : String(batchError)}`);
         }
       }
     }
@@ -360,4 +360,9 @@ export abstract class BaseDatabaseService {
    * 导出表数据到 Excel 文件 - 子类实现
    */
   abstract exportTableDataToExcel(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string>;
+
+  /**
+   * 修改表结构 - 子类实现
+   */
+  abstract alterTable(dataSource: DataSource, databaseName: string, tableDiff: any): Promise<any>;
 }

@@ -258,16 +258,12 @@ export class DatabaseService {
   async alterTable(
     connectionId: string,
     database: string,
-    tableName: string,
-    columns: any[],
-    oldColumns?: any[]
+    tableDiff: any
   ) {
     return request('/api/database/alterTable', {
       id: connectionId,
       database,
-      tableName,
-      columns,
-      oldColumns
+      tableDiff
     });
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "fdb2",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "private": false,
   "type": "commonjs",
   "main": "view/index.html",
@@ -117,5 +117,8 @@
       "dist/node_modules/**/*",
       "dist/client/**/*"
     ]
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
   }
 }
