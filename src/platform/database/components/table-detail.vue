@@ -461,6 +461,7 @@
       :connection="connection"
       :database="database"
       :table="table"
+      :columns="tableStructure?.columns"
       :mode="tableEditorMode"
       @close="closeTableEditor"
       @submit="handleTableStructureChange"
