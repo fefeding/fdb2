@@ -158,9 +158,9 @@
                 </thead>
                 <tbody>
                   <tr v-for="(row, index) in paginatedData" :key="index">
-                    <td v-for="(value, key) in row" :key="key">
+                    <td v-for="column in safeTableColumns" :key="column.name">
                       <div class="cell-value">
-                        {{ formatCellValue(value) }}
+                        {{ formatCellValue(row[column.name]) }}
                       </div>
                     </td>
                     <td>
