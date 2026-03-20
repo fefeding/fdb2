@@ -40,3 +40,4 @@ data/exports/
 dist/
 data/*.sqlite
 main
+fdb2.server.pid
