@@ -493,4 +493,14 @@ export class DatabaseService {
       database: databaseName 
     });
   }
+
+  /**
+   * 同步表结构和数据到其他数据库
+   */
+  async syncTable(connectionId: string, syncConfig: any) {
+    return request('/api/database/syncTable', {
+      id: connectionId,
+      syncConfig
+    });
+  }
 }

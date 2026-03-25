@@ -921,7 +921,6 @@ function getDbLogoText(type?: string): string {
 .connection-tabs {
   border: 1px solid #dee2e6;
   border-radius: 8px;
-  overflow: hidden;
   flex: 1;
   display: flex;
   flex-direction: column;

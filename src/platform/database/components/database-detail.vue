@@ -943,11 +943,11 @@ function handleExecuteSQL(sql: string) {
 }
 
 .tab-content {
-  padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .tab-panel {
@@ -955,6 +955,7 @@ function handleExecuteSQL(sql: string) {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .table-grid {

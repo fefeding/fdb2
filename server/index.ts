@@ -266,6 +266,15 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
       return result;
     }
 
+    // /api/database/syncTable
+    if (pathname === '/api/database/syncTable') {
+      const { id, syncConfig } = body;
+      if (!id || !syncConfig) throw Error('Missing parameters');
+
+      const result = await databaseService.syncTable(id, syncConfig);
+      return result;
+    }
+
     // /api/database/insertData
     if (pathname === '/api/database/insertData') {
       const { id, database, table, data } = body;

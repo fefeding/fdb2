@@ -779,4 +779,93 @@ export class CockroachDBService extends BaseDatabaseService {
       return { ret: 1, message: `修改表结构失败: ${error instanceof Error ? error.message : String(error)}` };
     }
   }
+
+  /**
+   * 批量插入数据
+   */
+  async bulkInsert(dataSource: DataSource, databaseName: string, tableName: string, data: any[]): Promise<void> {
+    if (data.length === 0) return;
+
+    const columns = Object.keys(data[0]);
+    const placeholders = data.map((_, index) => 
+      `(${columns.map((_, colIndex) => `$${index * columns.length + colIndex + 1}`).join(', ')})`
+    ).join(', ');
+
+    const values = data.flatMap(row => 
+      columns.map(column => row[column])
+    );
+
+    const sql = `INSERT INTO "${tableName}" (${columns.map(col => `"${col}"`).join(', ')}) VALUES ${placeholders}`;
+    
+    await dataSource.query(sql, values);
+  }
+
+  /**
+   * 插入单条数据
+   */
+  async insertData(dataSource: DataSource, databaseName: string, tableName: string, data: any): Promise<void> {
+    const columns = Object.keys(data);
+    const placeholders = columns.map((_, index) => `$${index + 1}`).join(', ');
+    const values = columns.map(column => data[column]);
+
+    const sql = `INSERT INTO "${tableName}" (${columns.map(col => `"${col}"`).join(', ')}) VALUES (${placeholders})`;
+    
+    await dataSource.query(sql, values);
+  }
+
+  /**
+   * 删除表
+   */
+  async dropTable(dataSource: DataSource, databaseName: string, tableName: string): Promise<void> {
+    const sql = `DROP TABLE IF EXISTS "${tableName}"`;
+    await dataSource.query(sql);
+  }
+
+  /**
+   * 创建表
+   */
+  async createTable(dataSource: DataSource, databaseName: string, table: any): Promise<void> {
+    const { name, columns, comment } = table;
+    
+    let sql = `CREATE TABLE "${name}" (\n`;
+    const columnDefs: string[] = [];
+
+    columns.forEach((column: any) => {
+      let columnDef = `  "${column.name}" ${column.type}`;
+      
+      if (!column.nullable) {
+        columnDef += ' NOT NULL';
+      }
+      
+      if (column.defaultValue) {
+        const upperDefault = column.defaultValue.toString().toUpperCase();
+        if (['CURRENT_TIMESTAMP', 'NOW()', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
+          columnDef += ` DEFAULT ${upperDefault}`;
+        } else {
+          columnDef += ` DEFAULT '${column.defaultValue}'`;
+        }
+      }
+      
+      if (column.isAutoIncrement) {
+        columnDef += ' SERIAL';
+      }
+      
+      if (column.comment) {
+        columnDef += ` COMMENT '${column.comment}'`;
+      }
+      
+      columnDefs.push(columnDef);
+    });
+
+    sql += columnDefs.join(',\n');
+    sql += '\n)';
+    
+    if (comment) {
+      sql += ` COMMENT '${comment}'`;
+    }
+    
+    sql += ';';
+    
+    await dataSource.query(sql);
+  }
 }

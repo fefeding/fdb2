@@ -154,6 +154,143 @@ export class DatabaseService {
   }
 
   /**
+   * 同步表结构和数据到其他数据库
+   */
+  async syncTable(connectionId: string, syncConfig: any): Promise<any> {
+    try {
+      const { source, target, options } = syncConfig;
+      
+      // 获取源数据库连接
+      const sourceDataSource = await this.connectionService.getActiveConnection(connectionId, source.database);
+      const sourceService = this.getDatabaseService(sourceDataSource.options.type as string);
+
+      // 创建目标数据库连接
+      let targetDataSource;
+      let targetService;
+      let targetDatabaseName;
+      
+      if (target.connectionId) {
+        // 使用已配置的连接
+        const dbName = target.database || source.database;
+        targetDataSource = await this.connectionService.getActiveConnection(target.connectionId, dbName);
+        targetService = this.getDatabaseService(targetDataSource.options.type as string);
+        targetDatabaseName = dbName;
+      } else {
+        // 使用手动配置的连接
+        targetDataSource = await this.connectionService.createTemporaryConnection({
+          type: target.dbType,
+          host: target.host,
+          port: target.port,
+          username: target.username,
+          password: target.password,
+          database: target.database
+        });
+        targetService = this.getDatabaseService(target.dbType);
+        targetDatabaseName = target.database;
+      }
+
+      const syncResults = [];
+
+      // 处理单个表
+      const sourceTableName = source.tableName;
+      const tableSyncResult = {
+        tableName: sourceTableName,
+        structureSynced: false,
+        dataSynced: false,
+        rowsSynced: 0,
+        messages: []
+      };
+
+      try {
+        // 获取源表结构
+        const tableStructure = await sourceService.getTableStructure(sourceDataSource, source.database, sourceTableName);
+        const columns = tableStructure.columns;
+        
+        // 同步表结构
+        if (options.syncStructure) {
+          console.log(`开始同步表结构: ${sourceTableName} -> ${target.tableName}`);
+          tableSyncResult.messages.push(`开始同步表结构: ${sourceTableName} -> ${target.tableName}`);
+          
+          // 检查目标表是否存在
+          const targetTables = await targetService.getTables(targetDataSource, targetDatabaseName);
+          const tableExists = targetTables.some(t => t.name === target.tableName);
+
+          if (tableExists) {
+            if (options.dropIfExists) {
+              tableSyncResult.messages.push(`目标表已存在，删除表: ${target.tableName}`);
+              await targetService.dropTable(targetDataSource, targetDatabaseName, target.tableName);
+            } else {
+              tableSyncResult.messages.push(`目标表已存在，跳过表结构同步`);
+            }
+          }
+
+          if (!tableExists || options.dropIfExists) {
+            tableSyncResult.messages.push(`创建目标表: ${target.tableName}`);
+            await targetService.createTable(targetDataSource, targetDatabaseName, {
+              name: target.tableName,
+              columns: columns,
+              comment: tableStructure.comment
+            });
+            tableSyncResult.structureSynced = true;
+          }
+        }
+
+        // 同步表数据
+        if (options.syncData) {
+          tableSyncResult.messages.push(`开始同步表数据: ${sourceTableName} -> ${target.tableName}`);
+          
+          // 获取源表数据（分批获取，避免内存问题）
+          const batchSize = 1000;
+          let offset = 0;
+          let totalRows = 0;
+
+          while (true) {
+            const sourceData = await sourceService.query(sourceDataSource, {
+              sql: `SELECT * FROM ${sourceService.quoteIdentifier(sourceTableName)} LIMIT ? OFFSET ?`,
+              params: [batchSize, offset]
+            });
+
+            if (sourceData.length === 0) {
+              break;
+            }
+
+            // 插入数据到目标表
+            if (options.bulkInsert) {
+              await targetService.bulkInsert(targetDataSource, targetDatabaseName, target.tableName, sourceData, options.overrideExisting);
+            } else {
+              for (const row of sourceData) {
+                await targetService.insertData(targetDataSource, targetDatabaseName, target.tableName, row, options.overrideExisting);
+              }
+            }
+
+            totalRows += sourceData.length;
+            tableSyncResult.messages.push(`已同步 ${totalRows} 行数据`);
+            offset += batchSize;
+          }
+
+          tableSyncResult.dataSynced = true;
+          tableSyncResult.rowsSynced = totalRows;
+          tableSyncResult.messages.push(`数据同步完成，共同步 ${totalRows} 行`);
+        }
+
+        syncResults.push(tableSyncResult);
+      } catch (error: any) {
+        console.error(`同步表 ${sourceTableName} 失败:`, error);
+        tableSyncResult.messages.push(`同步失败: ${error instanceof Error ? error.message : String(error)}`);
+        syncResults.push(tableSyncResult);
+        throw error;
+      }
+      finally {
+        console.log(tableSyncResult.messages);
+      }
+      return { tables: syncResults };
+    } catch (error: any) {
+      console.error('同步表失败:', error);
+     throw error;
+    }
+  }
+
+  /**
    * 获取视图列表
    */
   async getViews(connectionId: string, databaseName: string): Promise<any[]> {

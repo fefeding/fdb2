@@ -443,7 +443,45 @@ export class MongoDBService extends BaseDatabaseService {
    * 集合中的文档可以有不同的结构，因此不需要ALTER TABLE
    */
   async alterTable(dataSource: DataSource, databaseName: string, tableDiff: any): Promise<any> {
-    return { ret: 0, message: 'MongoDB是文档数据库，不需要修改表结构' };
+    return { ret: 0, message: 'MongoDB是文档数据库，不需要修改表结构' };        
+  }
+
+  /**
+   * 批量插入数据
+   */
+  async bulkInsert(dataSource: DataSource, databaseName: string, tableName: string, data: any[]): Promise<void> {
+    if (data.length === 0) return;
+    // MongoDB使用Repository模式
+    const repository = dataSource.getMongoRepository(tableName);
+    await repository.insertMany(data);
+  }
+
+  /**
+   * 插入单条数据
+   */
+  async insertData(dataSource: DataSource, databaseName: string, tableName: string, data: any): Promise<void> {
+    // MongoDB使用Repository模式
+    const repository = dataSource.getMongoRepository(tableName);
+    await repository.insertOne(data);
+  }
+
+  /**
+   * 删除表（集合）
+   */
+  async dropTable(dataSource: DataSource, databaseName: string, tableName: string): Promise<void> {
+    // MongoDB使用Repository模式
+    const repository = dataSource.getMongoRepository(tableName);
+    await repository.deleteMany({});
+  }
+
+  /**
+   * 创建表（集合）
+   */
+  async createTable(dataSource: DataSource, databaseName: string, table: any): Promise<void> {
+    const { name } = table;
+    // MongoDB会自动创建集合，无需显式创建
+    await this.insertData(dataSource, databaseName, name, {});
+    await this.dropTable(dataSource, databaseName, name);
   }
 }
 
