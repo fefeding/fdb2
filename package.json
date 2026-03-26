@@ -1,6 +1,6 @@
 {
   "name": "fdb2",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "private": false,
   "type": "commonjs",
   "main": "view/index.html",
@@ -52,7 +52,7 @@
     "oracledb": "^6.10.0",
     "pg": "^8.18.0",
     "reflect-metadata": "^0.2.2",
-    "sqlite3": "^5.1.7",
+    "better-sqlite3": "^11.0.0",
     "typeorm": "^0.3.28"
   },
   "devDependencies": {
@@ -120,5 +120,10 @@
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
+    ]
   }
 }

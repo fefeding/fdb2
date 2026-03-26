@@ -282,9 +282,11 @@ export class ConnectionService {
     // 根据数据库类型调整配置
     switch (connectionConfig.type.toLowerCase()) {
       case 'sqlite':
+      case 'better-sqlite3':
+      case 'bettersqlite3':
         return {
           ...baseOptions,
-          type: 'sqlite' as any,
+          type: 'better-sqlite3' as any,
           database: connectionConfig.database,
           host: undefined,
           port: undefined,
