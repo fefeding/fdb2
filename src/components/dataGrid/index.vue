@@ -4,9 +4,18 @@
     <table class="table table-light table-striped table-hover">
         <thead class="table-light">
             <tr>
-                <th v-for="column in props.columns" :key="column.name" scope="col" class="datagrid-th" :style="column.headerStyle||''" > 
+                <th v-for="column in props.columns" :key="column.name" scope="col" class="datagrid-th" :style="column.headerStyle||''" 
+                    @click="column.sortable !== false && handleSort(column.name)"
+                    :class="{ 'sortable': column.sortable !== false }"> 
                   <slot :name="column.name+'_header'" :column="column">
-                        <span>{{column.text||column.name||''}}</span>
+                        <div class="header-content">
+                            <span>{{column.text||column.name||''}}</span>
+                            <span v-if="column.sortable !== false" class="sort-icon">
+                                <i v-if="props.sortField === column.name && props.sortOrder === 'ASC'" class="bi bi-caret-up-fill"></i>
+                                <i v-else-if="props.sortField === column.name && props.sortOrder === 'DESC'" class="bi bi-caret-down-fill"></i>
+                                <i v-else class="bi bi-caret-up text-muted opacity-50"></i>
+                            </span>
+                        </div>
                     </slot>                    
                 </th>
             </tr>
@@ -43,7 +52,8 @@
     component?: Component;
     headerStyle?: string;
     style?: string;
-    formatter?: (value: any) => string;
+    sortable?: boolean;
+    formatter?: (row: any, column: ColumnType) => string;
   };
   
   const props = defineProps({
@@ -75,10 +85,18 @@
     columns: {
         type: Array<ColumnType>,
         default: []
+    },
+    sortField: {
+        type: String,
+        default: ''
+    },
+    sortOrder: {
+        type: String,
+        default: '' // ASC, DESC, ''
     }
   });
 
-  const emits = defineEmits(['pageChanged', 'rowClicked']);
+  const emits = defineEmits(['pageChanged', 'rowClicked', 'sortChanged']);
 
   function renderDataItem(row: any, column: any) {
     if(typeof column === 'string') return row[column];
@@ -92,14 +110,54 @@
     emits('pageChanged', page);
   }
 
+  function handleSort(field: string) {
+    let order: 'ASC' | 'DESC' | '' = 'ASC';
+    if (props.sortField === field) {
+        if (props.sortOrder === 'ASC') {
+            order = 'DESC';
+        } else if (props.sortOrder === 'DESC') {
+            order = ''; // 取消排序
+        }
+    }
+    emits('sortChanged', { field: order ? field : '', order });
+  }
+
 </script>
   
 <style scoped>
+  .datagrid-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
   .datagrid-inner {
+    flex: 1;
     overflow: auto;
     margin-bottom: 10px;
   }
   .datagrid-th {
     min-width: 80px;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f8f9fa;
+  }
+  .datagrid-th.sortable {
+    cursor: pointer;
+    user-select: none;
+  }
+  .datagrid-th.sortable:hover {
+    background-color: #e9ecef;
+  }
+  .header-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .sort-icon {
+    display: flex;
+    align-items: center;
+    font-size: 0.75rem;
   }
 </style>  
