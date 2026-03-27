@@ -1193,11 +1193,13 @@ function downloadSQLFile(content: string, filename: string) {
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .nav-tabs {
   border-bottom: 1px solid #dee2e6;
   background-color: #f8f9fa;
+  flex-shrink: 0;
 }
 
 .nav-tabs .nav-link {
@@ -1225,10 +1227,16 @@ function downloadSQLFile(content: string, filename: string) {
   overflow: auto;
   padding: 20px;
   background-color: #fff;
+  display: flex;
+  flex-direction: column;
 }
 
 .tab-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   height: 100%;
+  overflow: auto;
 }
 
 .data-content {

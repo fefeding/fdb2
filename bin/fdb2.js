@@ -4,9 +4,42 @@ const { exec, spawn, execSync, spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const net = require('net');
+const os = require('os');
 
 // 项目根目录
 const projectRoot = path.resolve(__dirname, '..');
+
+// 获取 PID 文件路径
+function getPidFilePath() {
+  const dataDir = process.env.DB_TOOL_DATA_DIR || path.join(os.homedir(), '.fdb2');
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+  return path.join(dataDir, 'fdb2.server.pid');
+}
+
+// 读取 PID
+function readPid() {
+  const pidFilePath = getPidFilePath();
+  if (fs.existsSync(pidFilePath)) {
+    return parseInt(fs.readFileSync(pidFilePath, 'utf8'));
+  }
+  return null;
+}
+
+// 写入 PID
+function writePid(pid) {
+  const pidFilePath = getPidFilePath();
+  fs.writeFileSync(pidFilePath, pid.toString());
+}
+
+// 删除 PID
+function deletePid() {
+  const pidFilePath = getPidFilePath();
+  if (fs.existsSync(pidFilePath)) {
+    fs.unlinkSync(pidFilePath);
+  }
+}
 
 // 解析命令行参数
 const args = process.argv.slice(2);
@@ -74,17 +107,16 @@ async function startProject() {
   console.log('Starting FDB2 project...');
   
   // 检查 PID 文件是否存在，如果存在则说明服务器已经在运行
-  const pidFilePath = path.join(projectRoot, 'fdb2.server.pid');
-  if (fs.existsSync(pidFilePath)) {
+  const pid = readPid();
+  if (pid) {
     try {
-      const pid = parseInt(fs.readFileSync(pidFilePath, 'utf8'));
       process.kill(pid, 0);
       console.log('Server is already running with PID:', pid);
       return;
     } catch (error) {
       if (error.code === 'ESRCH') {
         console.log('Cleaning up stale PID file...');
-        fs.unlinkSync(pidFilePath);
+        deletePid();
       }
     }
   }
@@ -135,7 +167,7 @@ async function startProject() {
   child.unref();
   
   // 保存 PID 到文件
-  fs.writeFileSync(pidFilePath, child.pid.toString());
+  writePid(child.pid);
   
   console.log('Logs are written to:', logFilePath);
   console.log('Server started successfully with PID:', child.pid);
@@ -147,32 +179,28 @@ async function startProject() {
 function stopProject() {
   console.log('Stopping FDB2 project...');
   
-  // 读取 PID 文件
-  const pidFilePath = path.join(projectRoot, 'fdb2.server.pid');
+  // 读取 PID
+  const pid = readPid();
   
-  if (!fs.existsSync(pidFilePath)) {
+  if (!pid) {
     console.log('No server process found (PID file not exists)');
     return;
   }
   
   try {
-    // 读取 PID
-    const pid = parseInt(fs.readFileSync(pidFilePath, 'utf8'));
     console.log(`Stopping server process with PID: ${pid}`);
     
     // 发送终止信号
     process.kill(pid);
     
     // 删除 PID 文件
-    fs.unlinkSync(pidFilePath);
+    deletePid();
     console.log('Server stopped successfully');
   } catch (error) {
     // 如果进程不存在（ESRCH 错误），也删除 PID 文件
     if (error.code === 'ESRCH') {
       console.log('Server process not found, cleaning up PID file');
-      if (fs.existsSync(pidFilePath)) {
-        fs.unlinkSync(pidFilePath);
-      }
+      deletePid();
     } else {
       console.error('Failed to stop server:', error.message);
     }
@@ -196,8 +224,7 @@ function restartProject() {
   console.log('Waiting for server process to stop...');
   for (let i = 0; i < 10; i++) {
     // 检查 PID 文件是否存在
-    const pidFilePath = path.join(projectRoot, 'fdb2.server.pid');
-    if (!fs.existsSync(pidFilePath)) {
+    if (!readPid()) {
       break;
     }
     // 等待 100 毫秒
