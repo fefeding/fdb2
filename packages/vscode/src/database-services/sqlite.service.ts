@@ -8,7 +8,6 @@ import {
   IndexEntity, 
   ForeignKeyEntity 
 } from './model/database.entity';
-import 'better-sqlite3';
 
 /**
  * SQLite数据库服务实现
