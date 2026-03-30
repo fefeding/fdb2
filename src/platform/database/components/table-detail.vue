@@ -337,7 +337,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import { DatabaseService } from '@/service/database';
 import DataEditor from './data-editor.vue';
@@ -437,9 +437,11 @@ function formatNumber(num: number): string {
 }
 
 function refreshData() {
-  if (tableDataGridRef.value) {
-    tableDataGridRef.value.refresh();
-  }
+  nextTick(() => {
+    if (tableDataGridRef.value) {
+      tableDataGridRef.value.refresh();
+    }
+  });
 }
 
 function insertData(newData?: any) {  
@@ -545,7 +547,9 @@ async function truncateTable() {
       );
       if (response.ret === 0) {
         await modal.success('表清空成功');
-        refreshData();
+        nextTick(() => {
+          refreshData();
+        });
       } else {
         await modal.error('清空表失败');
       }
