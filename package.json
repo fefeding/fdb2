@@ -1,9 +1,17 @@
 {
   "name": "fdb2",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "private": false,
   "type": "commonjs",
   "main": "view/index.html",
+  "files": [
+    "bin/",
+    "public/",
+    "view/",
+    "server.js",
+    "package.json",
+    "README.md"
+  ],
   "homepage": "https://surl.fit/tools/tools/fdb2",
   "icon": "public/favicon.ico",
   "window": {

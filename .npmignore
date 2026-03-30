@@ -11,6 +11,10 @@ logs/
 # 忽略临时文件
 tmp/
 temp/
+packages/
+
+src/
+server/
 
 # 忽略构建产物（如果不需要包含）
 node_modules
@@ -41,3 +45,6 @@ Thumbs.db
 docs/
 *.md
 !README.md
+
+nw-*/
+release/
