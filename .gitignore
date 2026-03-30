@@ -20,6 +20,8 @@ coverage
 nw-build/
 nw-build-*/
 nw-cache/
+release/fdb2/
+release/fdb2-*/
 
 
 # Editor directories and files

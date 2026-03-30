@@ -1,117 +1,131 @@
 const nwbuilder = require('nw-builder');
 const { resolve, join } = require('path');
-const { copyFileSync, existsSync, readdirSync, readFileSync, writeFileSync } = require('fs');
+const { copyFileSync, existsSync, readdirSync } = require('fs');
 
-// 获取项目根目录 (因为脚本现在在 scripts 目录下)
 const projectRoot = resolve(__dirname, '..');
 
-// 解析命令行参数
 const args = process.argv.slice(2);
 const targetPlatform = args.find(arg => arg.startsWith('--platform='))?.split('=')[1];
 
+const supportedPlatforms = ['win', 'osx', 'linux'];
+
+function getCurrentPlatform() {
+  const platform = process.platform;
+  if (platform === 'darwin') return ['osx'];
+  if (platform === 'linux') return ['linux'];
+  return ['win', 'linux'];
+}
+
+function getAppConfig(platform) {
+  const config = {
+    icon: resolve(projectRoot, 'public', 'favicon.ico')
+  };
+
+  if (platform === 'osx') {
+    config.LSApplicationCategoryType = 'public.app-category.productivity';
+    config.NSHumanReadableCopyright = 'Copyright © 2025';
+    config.NSLocalNetworkUsageDescription = '需要网络访问以连接数据库';
+    config.CFBundleIdentifier = 'com.fdb.database';
+    config.CFBundleName = '数据库管理工具';
+    config.CFBundleDisplayName = '数据库管理工具';
+    config.CFBundleShortVersionString = '1.0.1';
+    config.CFBundleVersion = '1.0.1';
+  }
+
+  return config;
+}
+
+async function buildPlatform(platform) {
+  const outDir = resolve(projectRoot, `release/fdb2-${platform}`);
+  console.log(`\n========================================`);
+  console.log(`开始构建 ${platform} 平台...`);
+  console.log(`========================================`);
+
+  const buildOptions = {
+    mode: 'build',
+    srcDir: resolve(projectRoot, 'dist'),
+    version: '0.78.1',
+    flavor: 'normal',
+    platform: platform,
+    arch: 'x64',
+    outDir: outDir,
+    cacheDir: resolve(projectRoot, 'nw-cache'),
+    downloadUrl: 'https://github.com/nwjs/nw.js/releases/download/v0.78.1',
+    zip: false,
+    logLevel: 'info',
+    glob: false,
+    app: getAppConfig(platform)
+  };
+
+  await nwbuilder.default(buildOptions);
+
+  const packagedPath = join(outDir, platform, 'x64', 'package.nw', 'node_modules');
+  if (existsSync(packagedPath)) {
+    console.log(`✅ ${platform} 应用程序已包含 node_modules 目录 (${readdirSync(packagedPath).length} 个包)`);
+  } else {
+    console.log(`⚠️  ${platform} 应用程序不包含 node_modules 目录`);
+  }
+
+  console.log(`✅ ${platform} 平台构建完成 -> ${outDir}`);
+}
+
 async function build() {
   try {
-    console.log('开始构建 NW.js 应用...');
+    console.log('开始构建 NW.js 应用...\n');
 
-    // 首先构建 Vue 应用
     console.log('1. 构建 Vue 应用...');
     const { execSync } = require('child_process');
     execSync('npm run build', { stdio: 'inherit', cwd: projectRoot });
 
-    console.log('2. 复制 package.json 到 dist 目录...');
-    const srcPackageJson = join(projectRoot, 'package.json');
-    const destPackageJson = join(projectRoot, 'dist', 'package.json');
-    if (existsSync(srcPackageJson)) {
-      copyFileSync(srcPackageJson, destPackageJson);
-      console.log('package.json 复制成功');
-    } else {
-      throw new Error('未找到 package.json 文件');
-    }
+    console.log('\n2. 复制 package.json 到 dist 目录...');
+    copyFileSync(
+      join(projectRoot, 'package.json'),
+      join(projectRoot, 'dist', 'package.json')
+    );
 
-    console.log('3. 安装 npm 依赖到 dist 目录...');
-    // 使用绝对路径执行 npm install 命令
+    console.log('\n3. 安装 npm 依赖到 dist 目录...');
     const distPath = resolve(projectRoot, 'dist');
-    console.log('Dist 路径:', distPath);
-
-    // 执行 npm install 命令
     execSync('pnpm install --only=production', {
       stdio: 'inherit',
       cwd: distPath
     });
 
-    // 检查 node_modules 目录是否创建成功
-    const nodeModulesPath = join(distPath, 'node_modules');
-    if (existsSync(nodeModulesPath)) {
-      console.log('npm 依赖安装成功');
-      console.log('node_modules 目录大小:', readdirSync(nodeModulesPath).length, '个包');
-    } else {
-      throw new Error('npm install 失败，node_modules 目录未创建');
+    if (!existsSync(join(distPath, 'node_modules'))) {
+      throw new Error('npm install 失败');
     }
+    console.log('npm 依赖安装成功\n');
 
     console.log('4. 配置 NW.js 构建参数...');
 
-    // 根据命令行参数或当前操作系统确定要构建的平台
-    let platform;
+    let platformsToBuild = [];
+
     if (targetPlatform) {
-      platform = targetPlatform;
-      console.log(`使用命令行指定的平台: ${platform}`);
-    } else {
-      platform = process.platform === 'darwin' ? 'osx' :
-                process.platform === 'linux' ? 'linux' : 'win';
-      console.log(`使用当前操作系统平台: ${platform}`);
-    }
-
-    // 为每个平台使用不同的输出目录
-    const outDir = resolve(projectRoot, `release/nw-build-${platform}`);
-    console.log(`输出目录: ${outDir}`);
-
-    console.log(`\n正在构建 ${platform} 平台...`);
-
-    const buildOptions = {
-      mode: 'build',
-      srcDir: distPath,
-      version: '0.78.1',
-      flavor: 'normal',
-      platform: platform,
-      arch: 'x64',
-      outDir: outDir,
-      cacheDir: resolve(projectRoot, 'nw-cache'),
-      downloadUrl: 'https://github.com/fefeding/fdb2/tree/main/release',
-      zip: false,
-      logLevel: 'info',
-      glob: false,
-      app: {
-        icon: resolve(projectRoot, 'public', 'favicon.ico')
+      if (targetPlatform === 'all') {
+        platformsToBuild = supportedPlatforms;
+        console.log(`构建所有支持平台: ${supportedPlatforms.join(', ')}`);
+      } else if (supportedPlatforms.includes(targetPlatform)) {
+        platformsToBuild = [targetPlatform];
+        console.log(`构建指定平台: ${targetPlatform}`);
+      } else {
+        console.error(`不支持的平台: ${targetPlatform}`);
+        console.log(`支持的平台: ${supportedPlatforms.join(', ')} 或 all`);
+        process.exit(1);
       }
-    };
-
-    // macOS 平台需要额外的配置
-    if (platform === 'osx') {
-      buildOptions.app.LSApplicationCategoryType = 'public.app-category.productivity';
-      buildOptions.app.NSHumanReadableCopyright = 'Copyright © 2025';
-      buildOptions.app.NSLocalNetworkUsageDescription = '需要网络访问以连接数据库';
-      buildOptions.app.CFBundleIdentifier = 'com.fdb.database';
-      buildOptions.app.CFBundleName = '数据库管理工具';
-      buildOptions.app.CFBundleDisplayName = '数据库管理工具';
-      buildOptions.app.CFBundleShortVersionString = '1.0.1';
-      buildOptions.app.CFBundleVersion = '1.0.1';
-    }
-
-    await nwbuilder.default(buildOptions);
-
-    console.log(`✅ ${platform} 平台构建完成`);
-
-    console.log('\n5. 打包完成！');
-    console.log(`应用已生成在: ${outDir}`);
-
-    // 验证打包后的应用程序
-    const packagedNodeModulesPath = join(outDir, platform, 'x64', 'package.nw', 'node_modules');
-    if (existsSync(packagedNodeModulesPath)) {
-      console.log(`✅ ${platform} 应用程序已包含 node_modules 目录`);
-      console.log(`✅ ${platform} 依赖包数量:`, readdirSync(packagedNodeModulesPath).length, '个');
     } else {
-      console.warn(`⚠️  ${platform} 应用程序不包含 node_modules 目录`);
+      platformsToBuild = getCurrentPlatform();
+      console.log(`未指定平台，自动使用当前平台: ${platformsToBuild}`);
     }
+
+    console.log(`输出目录: ${resolve(projectRoot, 'release')}`);
+
+    for (const platform of platformsToBuild) {
+      await buildPlatform(platform);
+    }
+
+    console.log('\n========================================');
+    console.log('🎉 所有平台构建完成！');
+    console.log('========================================');
+    console.log(`输出目录: ${resolve(projectRoot, 'release')}`);
 
   } catch (error) {
     console.error('构建过程中出错:', error);
@@ -119,5 +133,4 @@ async function build() {
   }
 }
 
-// 开始构建
 build();
