@@ -176,13 +176,27 @@
             </div>
           </div>
         </div>
+        
+        <!-- 工具信息（移到左下角） -->
+        <div class="sidebar-tool-info" @click="showAboutPage">
+          <div class="tool-logo">
+            <i class="bi bi-info-circle"></i>
+          </div>
+          <div class="tool-details">
+            <div class="tool-name">fdb2</div>
+            <div class="tool-description">关于工具</div>
+          </div>
+        </div>
       </div>
 
       <!-- 右侧内容区域 -->
       <div class="explorer-main">
+        <!-- About 页面组件 -->
+        <About v-if="showAbout" />
+        
         <!-- 连接详情组件 -->
         <ConnectionDetail 
-          v-if="selectedConnection && !selectedDatabase && !selectedTable"
+          v-else-if="selectedConnection && !selectedDatabase && !selectedTable"
           :connection="selectedConnection"
           @test-connection="handleTestConnection"
           @edit-connection="handleEditConnection"
@@ -265,6 +279,7 @@ import Loading from '@/components/loading/index.vue';
 import ConnectionDetail from './components/connection-detail.vue';
 import DatabaseDetail from './components/database-detail.vue';
 import TableDetail from './components/table-detail.vue';
+import About from './components/about.vue';
 import { modal } from '@/utils/modal';
 
 const route = useRoute();
@@ -316,6 +331,9 @@ const loadingMessage = ref('加载中...');
 // 组件引用
 const connectionEditorRef = ref();
 const toastRef = ref();
+
+// about 页面状态
+const showAbout = ref(false);
 
 // 计算属性
 const databaseInfo = computed(() => {
@@ -1149,6 +1167,10 @@ async function handleExecuteSql(sql: string) {
 function showToast(title: string, message: string, type: string = 'success') {
   toastRef.value?.addToast(title, message, type);
 }
+
+function showAboutPage() {
+  showAbout.value = true;
+}
 </script>
 
 <style scoped>
@@ -1174,6 +1196,66 @@ function showToast(title: string, message: string, type: string = 'success') {
   display: flex;
   flex-direction: column;
   background: #ffffff;
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-container {
+  flex: 1;
+}
+
+/* 工具信息样式 - 固定在左下角 */
+.sidebar-tool-info {
+  padding: 0.75rem;
+  border-top: 1px solid #e1e5e9;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sidebar-tool-info:hover {
+  background: linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 100%);
+  transform: translateY(-1px);
+}
+
+.tool-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.tool-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.tool-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.tool-description {
+  font-size: 0.75rem;
+  color: #64748b;
 }
 
 .sidebar-header {
