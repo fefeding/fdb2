@@ -482,7 +482,7 @@ async function testConnection() {
   connectionStatus.value = 'testing';
   
   try {
-    const isConnected = await connectionStore.testConnection(props.connection);
+    const isConnected = await connectionStore.testConnection(props.connection);    
     connectionStatus.value = isConnected ? 'connected' : 'disconnected';
   } catch (error) {
     console.error('连接测试失败:', error);
