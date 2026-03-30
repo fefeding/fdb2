@@ -1,4 +1,3 @@
-import type { Connect } from "vite";
 import * as http from "node:http";
 import * as url from "node:url";
 import { ConnectionService } from './service/connection.service';

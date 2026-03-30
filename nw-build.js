@@ -59,7 +59,7 @@ async function build() {
     }
 
     // 为每个平台使用不同的输出目录
-    const outDir = resolve(__dirname, `nw-build-${platform}`);
+    const outDir = resolve(__dirname, `release/nw-build-${platform}`);
     console.log(`输出目录: ${outDir}`);
 
     console.log(`\n正在构建 ${platform} 平台...`);
@@ -73,7 +73,7 @@ async function build() {
       arch: 'x64',
       outDir: outDir,
       cacheDir: resolve(__dirname, 'nw-cache'),
-      downloadUrl: 'https://dl.nwjs.io',
+      downloadUrl: 'https://github.com/fefeding/fdb2/tree/main/release',
       zip: false,
       logLevel: 'info',
       glob: false,
@@ -90,8 +90,8 @@ async function build() {
       buildOptions.app.CFBundleIdentifier = 'com.fdb.database';
       buildOptions.app.CFBundleName = '数据库管理工具';
       buildOptions.app.CFBundleDisplayName = '数据库管理工具';
-      buildOptions.app.CFBundleShortVersionString = '1.0.0';
-      buildOptions.app.CFBundleVersion = '1.0.0';
+      buildOptions.app.CFBundleShortVersionString = '1.0.1';
+      buildOptions.app.CFBundleVersion = '1.0.1';
     }
 
     await nwbuilder.default(buildOptions);

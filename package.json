@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@fefeding/common": "^1.0.58",
-    "axios": "^1.13.6",
+    "axios": "^1.14.0",
     "dayjs": "^1.11.20",
     "express": "^5.2.1",
     "mysql2": "^3.20.0",
