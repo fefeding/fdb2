@@ -245,6 +245,21 @@ export class ConnectionService {
   }
 
   /**
+   * 创建临时数据库连接
+   * 用于同步操作中的目标数据库连接
+   */
+  async createTemporaryConnection(connectionOptions: DataSourceOptions): Promise<DataSource> {
+    try {
+      const dataSource = new DataSource(connectionOptions);
+      await dataSource.initialize();
+      return dataSource;
+    } catch (error) {
+      console.error('创建临时连接失败:', error);
+      throw error;
+    }
+  }
+
+  /**
    * 获取TypeORM连接配置
    */
   private getTypeORMOptions(connectionConfig: ConnectionEntity): DataSourceOptions {
@@ -267,9 +282,11 @@ export class ConnectionService {
     // 根据数据库类型调整配置
     switch (connectionConfig.type.toLowerCase()) {
       case 'sqlite':
+      case 'better-sqlite3':
+      case 'bettersqlite3':
         return {
           ...baseOptions,
-          type: 'sqlite' as any,
+          type: 'better-sqlite3' as any,
           database: connectionConfig.database,
           host: undefined,
           port: undefined,

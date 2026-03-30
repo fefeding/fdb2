@@ -52,15 +52,26 @@ export async function requestServer(url: string, data?: any, option?: AxiosReque
             }
             
             const res = await server.handleDatabaseRoutes(apiPath, data);
+            const retData = {
+                ret: 0,
+                msg: 'success',
+                data: res
+            };
+            
+            // 安全地检查 res 是否为对象且包含特定属性
+            if (res && typeof res === 'object') {
+                if ('ret' in res && ('msg' in res || 'message' in res)) {
+                    retData.ret = res.ret;
+                    retData.msg = res.msg || res.message;
+                    retData.data = res.data;
+                }
+            }
+            
             // 模拟 HTTP 响应格式
             return {
                 status: 200,
                 statusText: 'OK',
-                data: {
-                    ret: 0,
-                    msg: 'success',
-                    data: res
-                }
+                data: retData
             };
         } catch (error) {
             console.error('NW.js 环境下执行后端代码失败:', error);

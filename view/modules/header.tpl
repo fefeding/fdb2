@@ -2,7 +2,7 @@
     <meta charset="UTF-8" />
     <base href="{{viteTarget}}" />
     {% include "./initial_state.tpl" %}   
-    <link rel="icon" href="{{prefix}}/public/favicon.png" />    
+    <link rel="icon" href="{{prefix}}/public/favicon.ico" />    
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>fdb2-数据库管理</title>
     <meta name="description" content="{{description}}">

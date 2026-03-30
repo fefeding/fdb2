@@ -193,6 +193,7 @@ import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import { DatabaseService } from '@/service/database';
 import { modal } from '@/utils/modal';
 import { getColumnTypesByName, ColumnCategory } from '@/typings/database-types';
+import { isNumericType, isBooleanType } from '@/utils/database-types';
 
 // Props
 const props = defineProps<{
@@ -200,6 +201,7 @@ const props = defineProps<{
   connection: ConnectionEntity | null;
   database: string;
   table?: TableEntity | null;
+  columns?: any[];
   mode: 'create' | 'edit';
 }>();
 
@@ -245,13 +247,21 @@ const formData = ref({
   }]
 });
 
+// 原始表结构（用于对比差异）
+const originalTableData = ref({
+  tableName: '',
+  tableComment: '',
+  columns: []
+});
+
 // 初始化表单数据
-function initFormData() {
+function initFormData() {  
   if (props.mode === 'edit' && props.table) {
-    formData.value = {
+    const columns = props.columns || props.table.columns || [];
+    const tableData = {
       tableName: props.table.name || '',
       tableComment: props.table.comment || '',
-      columns: props.table.columns?.map(col => ({
+      columns: columns.map(col => ({
         name: col.name || '',
         type: col.type || '',
         length: col.length || '',
@@ -264,6 +274,8 @@ function initFormData() {
         comment: col.comment || ''
       })) || []
     };
+    formData.value = { ...tableData };
+    originalTableData.value = JSON.parse(JSON.stringify(tableData));
   } else {
     formData.value = {
       tableName: '',
@@ -281,9 +293,70 @@ function initFormData() {
         comment: ''
       }]
     };
+    originalTableData.value = {
+      tableName: '',
+      tableComment: '',
+      columns: []
+    };
   }
 }
 
+// 计算表结构差异
+function calculateTableDiff() {
+  const diff = {
+    tableName: formData.value.tableName,
+    tableCommentChanged: formData.value.tableComment !== originalTableData.value.tableComment,
+    tableComment: formData.value.tableComment,
+    addedColumns: [],
+    modifiedColumns: [],
+    deletedColumns: []
+  };
+
+  // 创建原始列的映射（按列名）
+  const originalColumnsMap = new Map();
+  originalTableData.value.columns.forEach(col => {
+    originalColumnsMap.set(col.name, col);
+  });
+
+  // 检查新增和修改的列
+  formData.value.columns.forEach(newCol => {
+    const originalCol = originalColumnsMap.get(newCol.name);
+    
+    if (!originalCol) {
+      // 新增列
+      diff.addedColumns.push(newCol);
+    } else {
+      // 检查列是否被修改
+      const isModified = 
+        newCol.type !== originalCol.type ||
+        newCol.length !== originalCol.length ||
+        newCol.precision !== originalCol.precision ||
+        newCol.scale !== originalCol.scale ||
+        newCol.nullable !== originalCol.nullable ||
+        newCol.defaultValue !== originalCol.defaultValue ||
+        newCol.isPrimary !== originalCol.isPrimary ||
+        newCol.isAutoIncrement !== originalCol.isAutoIncrement ||
+        newCol.comment !== originalCol.comment;
+
+      if (isModified) {
+        diff.modifiedColumns.push({
+          oldColumn: originalCol,
+          newColumn: newCol
+        });
+      }
+    }
+  });
+
+  // 检查删除的列
+  originalTableData.value.columns.forEach(originalCol => {
+    const existsInNew = formData.value.columns.some(newCol => newCol.name === originalCol.name);
+    if (!existsInNew) {
+      diff.deletedColumns.push(originalCol);
+    }
+  });
+
+  return diff;
+}
 // 添加字段
 function addColumn() {
   formData.value.columns.push({
@@ -347,10 +420,10 @@ function generateSQL(): string {
       
       let sql = `${quoteIdentifier(col.name)} ${col.type}`;
       
-      // 处理长度和精度参数
-      if (col.length && (needsLength(col) || col.type.includes('CHAR'))) {
+      // 处理长度和精度参数（仅当类型中不包含括号时）
+      if (!col.type.includes('(') && col.length && (needsLength(col) || col.type.includes('CHAR'))) {
         sql += `(${col.length})`;
-      } else if (col.precision) {
+      } else if (!col.type.includes('(') && col.precision) {
         if (col.scale) {
           sql += `(${col.precision},${col.scale})`;
         } else {
@@ -490,8 +563,125 @@ function generateSQL(): string {
     
     return sql;
   } else {
-    // 修改表SQL（简化版，实际应该对比差异）
-    return `-- 表结构修改SQL（需要对比差异生成）\n-- 当前表名: ${formData.value.tableName}`;
+    // 修改表SQL
+    const quoteIdentifier = (name: string) => {
+      if (!props.connection) return `"${name}"`;
+      switch (props.connection.type.toLowerCase()) {
+        case 'mysql': return `\`${name}\``;
+        case 'postgres': return `"${name}"`;
+        case 'sqlite': return `"${name}"`;
+        case 'oracle': return `"${name.toUpperCase()}"`;
+        case 'mssql': return `[${name}]`;
+        default: return `"${name}"`;
+      }
+    };
+
+    const sqlStatements: string[] = [];
+    const tableName = formData.value.tableName;
+
+    // 修改表注释
+    if (formData.value.tableComment) {
+      switch (props.connection?.type.toLowerCase()) {
+        case 'mysql':
+          sqlStatements.push(`ALTER TABLE ${quoteIdentifier(tableName)} COMMENT='${formData.value.tableComment}'`);
+          break;
+        case 'postgres':
+          sqlStatements.push(`COMMENT ON TABLE ${quoteIdentifier(tableName)} IS '${formData.value.tableComment}'`);
+          break;
+        case 'oracle':
+          sqlStatements.push(`COMMENT ON TABLE ${quoteIdentifier(tableName)} IS '${formData.value.tableComment}'`);
+          break;
+        case 'mssql':
+          sqlStatements.push(`EXEC sp_addextendedproperty 'MS_Description', '${formData.value.tableComment}', 'SCHEMA', 'dbo', 'TABLE', '${tableName}'`);
+          break;
+      }
+    }
+
+    // 生成列修改语句
+    formData.value.columns.forEach(col => {
+      if (!col.name || !col.type) return;
+
+      let columnSQL = `${quoteIdentifier(col.name)} ${col.type}`;
+      
+      // 处理长度和精度参数（仅当类型中不包含括号时）
+      if (!col.type.includes('(') && col.length && (needsLength(col) || col.type.includes('CHAR'))) {
+        columnSQL += `(${col.length})`;
+      } else if (!col.type.includes('(') && col.precision) {
+        if (col.scale) {
+          columnSQL += `(${col.precision},${col.scale})`;
+        } else {
+          columnSQL += `(${col.precision})`;
+        }
+      }
+
+      // 处理NULL约束
+      if (!col.nullable) {
+        columnSQL += ' NOT NULL';
+      } else {
+        columnSQL += ' NULL';
+      }
+
+      // 处理默认值
+      if (col.defaultValue) {
+        columnSQL += ` DEFAULT ${formatDefaultValue(col.defaultValue, col.type)}`;
+      }
+
+      // 处理注释
+      let commentStatement = '';
+      if (col.comment) {
+        switch (props.connection?.type.toLowerCase()) {
+          case 'mysql':
+            columnSQL += ` COMMENT '${col.comment}'`;
+            break;
+          case 'postgres':
+            commentStatement = `COMMENT ON COLUMN ${quoteIdentifier(tableName)}.${quoteIdentifier(col.name)} IS '${col.comment}'`;
+            break;
+          case 'oracle':
+            columnSQL += ` COMMENT '${col.comment}'`;
+            break;
+          case 'mssql':
+            commentStatement = `EXEC sp_addextendedproperty 'MS_Description', '${col.comment}', 'SCHEMA', 'dbo', 'TABLE', '${tableName}', 'COLUMN', '${col.name}'`;
+            break;
+        }
+      }
+
+      // 根据数据库类型生成 ALTER COLUMN 或 MODIFY COLUMN 语句
+      switch (props.connection?.type.toLowerCase()) {
+        case 'mysql':
+          sqlStatements.push(`ALTER TABLE ${quoteIdentifier(tableName)} MODIFY COLUMN ${columnSQL}`);
+          break;
+        case 'postgres':
+        case 'mssql':
+          sqlStatements.push(`ALTER TABLE ${quoteIdentifier(tableName)} ALTER COLUMN ${columnSQL}`);
+          break;
+        case 'oracle':
+          sqlStatements.push(`ALTER TABLE ${quoteIdentifier(tableName)} MODIFY ${columnSQL}`);
+          break;
+        case 'sqlite':
+          // SQLite 不支持直接修改列，需要重建表
+          sqlStatements.push(`-- SQLite 不支持直接修改列，需要重建表`);
+          break;
+      }
+
+      // 添加注释语句
+      if (commentStatement) {
+        sqlStatements.push(commentStatement);
+      }
+    });
+
+    // 处理主键
+    const primaryKeys = formData.value.columns
+      .filter(col => col.isPrimary)
+      .map(col => quoteIdentifier(col.name));
+    
+    if (primaryKeys.length > 0) {
+      // 先删除旧主键（如果存在）
+      sqlStatements.push(`ALTER TABLE ${quoteIdentifier(tableName)} DROP PRIMARY KEY`);
+      // 添加新主键
+      sqlStatements.push(`ALTER TABLE ${quoteIdentifier(tableName)} ADD PRIMARY KEY (${primaryKeys.join(', ')})`);
+    }
+
+    return sqlStatements.join(';\n') + ';';
   }
 }
 
@@ -501,15 +691,23 @@ function formatDefaultValue(value: any, type: string): string {
     return 'NULL';
   }
   
+  const lowerValue = String(value).toLowerCase();
+  
+  // 处理特殊关键字（不加引号）
+  const specialKeywords = ['current_timestamp', 'now()', 'current_date', 'current_time', 'localtimestamp', 'localtime'];
+  if (specialKeywords.includes(lowerValue)) {
+    return value;
+  }
+  
   const lowerType = type.toLowerCase();
   
   // 数值类型不加引号
-  if (isNumberInput(lowerType) && !isNaN(value)) {
+  if (isNumericType(lowerType) && !isNaN(value)) {
     return String(value);
   }
   
   // 布尔类型
-  if (isBooleanInput(lowerType)) {
+  if (isBooleanType(lowerType)) {
     return value ? 'TRUE' : 'FALSE';
   }
   
@@ -530,18 +728,41 @@ async function submit() {
       return;
     }
     
-    const sql = generateSQL();
-    
     if (!props.connection?.id) {
       await modal.warning('请先选择数据库连接');
       return;
     }
+
+    let result;
     
-    const result = await databaseService.executeQuery(
-      props.connection.id,
-      sql,
-      props.database
-    );
+    if (props.mode === 'create') {
+      // 创建表：使用 SQL 语句
+      const sql = generateSQL();
+      result = await databaseService.executeQuery(
+        props.connection.id,
+        sql,
+        props.database
+      );
+    } else {
+      // 修改表：使用差异化对比
+      const tableDiff = calculateTableDiff();
+      
+      // 检查是否有实际修改
+      if (tableDiff.addedColumns.length === 0 && 
+          tableDiff.modifiedColumns.length === 0 && 
+          tableDiff.deletedColumns.length === 0 && 
+          !tableDiff.tableCommentChanged) {
+        await modal.info('没有检测到任何修改');
+        return;
+      }
+
+      // 调用修改表接口（需要后端实现）
+      result = await databaseService.alterTable(
+        props.connection.id,
+        props.database,
+        tableDiff
+      );
+    }
     
     emit('submit', {
       success: result.ret === 0,
@@ -592,7 +813,13 @@ function getCategoryLabel(category: string): string {
 
 // 获取选中的类型信息
 function getSelectedType(column: any) {
-  return columnTypes.value.find(t => t.name === column.type);
+  if (!column.type) return null;
+  
+  // 提取类型名称（去掉括号和长度信息）
+  const typeName = column.type.match(/^[a-zA-Z]+/)?.[0] || column.type;
+  
+  // 大小写不敏感匹配
+  return columnTypes.value.find(t => t.name.toLowerCase() === typeName.toLowerCase());
 }
 
 // 检查类型是否需要长度参数

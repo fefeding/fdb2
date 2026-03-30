@@ -86,6 +86,17 @@ export abstract class BaseDatabaseService {
   }
 
   /**
+   * 获取表结构（包含列信息）
+   */
+  async getTableStructure(dataSource: DataSource, databaseName: string, tableName: string): Promise<any> {
+    const table = await this.getTableInfo(dataSource, databaseName, tableName);
+    return {
+      columns: table.columns,
+      comment: table.comment
+    };
+  }
+
+  /**
    * 通用方法：获取表数据
    */
   async getTableData(
@@ -174,7 +185,7 @@ export abstract class BaseDatabaseService {
                 success++;
               } catch (error) {
                 failed++;
-                errors.push({ statement, error: error.message });
+                errors.push({ statement, error: error instanceof Error ? error.message : String(error) });
                 if (!continueOnError) {
                   throw error;
                 }
@@ -189,7 +200,7 @@ export abstract class BaseDatabaseService {
               success++;
             } catch (error) {
               failed++;
-              errors.push({ statement, error: error.message });
+              errors.push({ statement, error: error instanceof Error ? error.message : String(error) });
               if (!continueOnError) {
                 throw error;
               }
@@ -199,7 +210,7 @@ export abstract class BaseDatabaseService {
       } catch (batchError) {
         console.error(`批次执行失败 (${i}-${i + batchSize}):`, batchError);
         if (!continueOnError) {
-          throw new Error(`批次执行失败: ${batchError.message}`);
+          throw new Error(`批次执行失败: ${batchError instanceof Error ? batchError.message : String(batchError)}`);
         }
       }
     }
@@ -360,4 +371,37 @@ export abstract class BaseDatabaseService {
    * 导出表数据到 Excel 文件 - 子类实现
    */
   abstract exportTableDataToExcel(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string>;
+
+  /**
+   * 修改表结构 - 子类实现
+   */
+  abstract alterTable(dataSource: DataSource, databaseName: string, tableDiff: any): Promise<any>;
+
+  /**
+   * 批量插入数据 - 子类实现
+   */
+  abstract bulkInsert(dataSource: DataSource, databaseName: string, tableName: string, data: any[]): Promise<void>;
+
+  /**
+   * 插入单条数据 - 子类实现
+   */
+  abstract insertData(dataSource: DataSource, databaseName: string, tableName: string, data: any): Promise<void>;
+
+  /**
+   * 删除表 - 子类实现
+   */
+  abstract dropTable(dataSource: DataSource, databaseName: string, tableName: string): Promise<void>;
+
+  /**
+   * 创建表 - 子类实现
+   */
+  abstract createTable(dataSource: DataSource, databaseName: string, table: any): Promise<void>;
+
+  /**
+   * 执行查询 - 通用方法
+   */
+  async query(dataSource: DataSource, queryOptions: { sql: string; params?: any[] }): Promise<any[]> {
+    const { sql, params = [] } = queryOptions;
+    return dataSource.query(sql, params);
+  }
 }

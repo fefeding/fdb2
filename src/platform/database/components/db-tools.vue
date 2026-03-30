@@ -100,7 +100,7 @@
           <button class="btn btn-outline-success btn-sm" @click="showImportModal">
             <i class="bi bi-box-arrow-in-down"></i> 导入数据
           </button>
-          <button class="btn btn-outline-warning btn-sm" @click="showSyncModal">
+          <button class="btn btn-outline-warning btn-sm" @click="selectTool('sync')">
             <i class="bi bi-arrow-repeat"></i> 数据同步
           </button>
         </div>
@@ -121,6 +121,160 @@
           </button>
           <button class="btn btn-outline-warning btn-sm" @click="showAuditLog">
             <i class="bi bi-journal-text"></i> 审计日志
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 工具组件展示区域 -->
+    <div class="tool-component-area" v-if="selectedTool">
+      <div class="component-header">
+        <h6 class="component-title">
+          <i :class="getToolIcon(selectedTool)"></i>
+          {{ getToolTitle(selectedTool) }}
+        </h6>
+        <button class="btn btn-outline-secondary btn-sm" @click="closeTool">
+          <i class="bi bi-x"></i> 关闭
+        </button>
+      </div>
+      
+      <!-- 数据同步组件 -->
+      <div v-if="selectedTool === 'sync'" class="tool-component sync-component">
+        <!-- 源数据库配置 -->
+        <div class="mb-4">
+          <h6 class="text-primary mb-2"><i class="bi bi-database"></i> 源数据库</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">数据库名称</label>
+              <input type="text" class="form-control" v-model="syncConfig.source.database" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">选择表</label>
+              <select class="form-select" v-model="syncConfig.source.tableName">
+                <option value="">请选择表</option>
+                <option v-for="table in tables" :key="table.name" :value="table.name">{{ table.name }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 目标数据库配置 -->
+        <div class="mb-4">
+          <h6 class="text-primary mb-2"><i class="bi bi-database"></i> 目标数据库</h6>
+          
+          <!-- 连接模式选择 -->
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" v-model="useExistingConnection" id="useExistingConnection">
+              <label class="form-check-label" for="useExistingConnection">使用已配置的数据库连接</label>
+            </div>
+          </div>
+          
+          <!-- 已配置连接选择 -->
+          <div v-if="useExistingConnection" class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">选择数据库连接</label>
+              <select class="form-select" v-model="selectedConnectionId">
+                <option value="">请选择连接</option>
+                <option v-for="conn in connections" :key="conn.id" :value="conn.id">{{ conn.name }} ({{ conn.type }})</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">选择数据库</label>
+              <select class="form-select" v-model="selectedDatabaseName">
+                <option value="">请选择数据库</option>
+                <option v-for="db in databases" :key="db" :value="db">{{ db }}</option>
+              </select>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">目标表名</label>
+              <input type="text" class="form-control" v-model="syncConfig.target.tableName">
+            </div>
+          </div>
+          
+          <!-- 手动配置 -->
+          <div v-else class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">数据库类型</label>
+              <select class="form-select" v-model="syncConfig.target.dbType">
+                <option value="mysql">MySQL</option>
+                <option value="postgresql">PostgreSQL</option>
+                <option value="sqlite">SQLite</option>
+                <option value="sqlserver">SQL Server</option>
+                <option value="oracle">Oracle</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">主机</label>
+              <input type="text" class="form-control" v-model="syncConfig.target.host">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">端口</label>
+              <input type="number" class="form-control" v-model="syncConfig.target.port">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">数据库名</label>
+              <input type="text" class="form-control" v-model="syncConfig.target.database">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">用户名</label>
+              <input type="text" class="form-control" v-model="syncConfig.target.username">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">密码</label>
+              <input type="password" class="form-control" v-model="syncConfig.target.password">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">目标表名</label>
+              <input type="text" class="form-control" v-model="syncConfig.target.tableName">
+            </div>
+          </div>
+        </div>
+
+        <!-- 同步选项 -->
+        <div class="mb-4">
+          <h6 class="text-primary mb-2"><i class="bi bi-sliders"></i> 同步选项</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" v-model="syncConfig.options.syncStructure" id="syncStructure">
+                <label class="form-check-label" for="syncStructure">同步表结构</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" v-model="syncConfig.options.syncData" id="syncData">
+                <label class="form-check-label" for="syncData">同步表数据</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" v-model="syncConfig.options.dropIfExists" id="dropIfExists">
+                <label class="form-check-label" for="dropIfExists">目标表存在时删除</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" v-model="syncConfig.options.bulkInsert" id="bulkInsert">
+                <label class="form-check-label" for="bulkInsert">批量插入数据</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" v-model="syncConfig.options.overrideExisting" id="overrideExisting">
+                <label class="form-check-label" for="overrideExisting">覆盖已存在的数据</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="tool-actions">
+          <button class="btn btn-primary btn-sm" @click="performSync" :disabled="syncing || !isSyncFormValid">
+            <i class="bi bi-play-fill"></i> 开始同步
+          </button>
+          <button v-if="syncing" class="btn btn-outline-danger btn-sm" @click="stopSync">
+            <i class="bi bi-stop-fill"></i> 停止同步
           </button>
         </div>
       </div>
@@ -189,13 +343,18 @@
         </div>
       </div>
     </div>
+
+
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
-import { DatabaseService } from '@/service/database';
+import { ref, computed, watch, onMounted } from 'vue';
+import { DatabaseService, ConnectionService } from '@/service/database';
 import { modal } from '@/utils/modal';
+import { toast } from '@/utils/toast';
+
+const connectionService = new ConnectionService();
 
 const props = defineProps<{
   connection: any;
@@ -214,6 +373,82 @@ const selectedFile = ref<File | null>(null);
 const restoring = ref(false);
 const resultsContentRef = ref<HTMLElement | null>(null);
 
+// 工具组件状态
+const selectedTool = ref<string | null>(null);
+
+// 同步功能状态
+const syncing = ref(false);
+const tables = ref<any[]>([]);
+const connections = ref<any[]>([]);
+const databases = ref<any[]>([]);
+const useExistingConnection = ref(false);
+const selectedConnectionId = ref('');
+const selectedDatabaseName = ref('');
+
+// 同步配置
+const syncConfig = ref({
+  source: {
+    database: '',
+    tableName: ''
+  },
+  target: {
+    dbType: 'mysql',
+    host: 'localhost',
+    port: 3306,
+    database: '',
+    username: 'root',
+    password: '',
+    tableName: ''
+  },
+  options: {
+    syncStructure: true,
+    syncData: true,
+    dropIfExists: false,
+    bulkInsert: true,
+    overrideExisting: false
+  }
+});
+
+// 监听源表名变化，自动更新目标表名
+watch(() => syncConfig.value.source.tableName, (newTableName) => {
+  if (newTableName) {
+    syncConfig.value.target.tableName = newTableName;
+  }
+});
+
+// 组件挂载时初始化同步数据
+onMounted(() => {
+  initSyncData();
+});
+
+// 监听连接ID变化，加载数据库列表
+async function loadDatabases(connectionId: string) {
+  if (!connectionId) {
+    databases.value = [];
+    selectedDatabaseName.value = '';
+    return;
+  }
+  
+  try {
+    const res = await databaseService.getDatabases(connectionId);
+    if (res.ret === 0) {
+      databases.value = res.data || [];
+    } else {
+      databases.value = [];
+    }
+    selectedDatabaseName.value = '';
+  } catch (error) {
+    console.error('加载数据库列表失败:', error);
+    databases.value = [];
+    selectedDatabaseName.value = '';
+  }
+}
+
+// 监听连接ID变化
+watch(selectedConnectionId, (newVal) => {
+  loadDatabases(newVal);
+});
+
 // 执行结果历史
 interface ExecutionResult {
   operation: string;
@@ -227,6 +462,25 @@ const executionResults = ref<ExecutionResult[]>([]);
 
 const restoreOptions = ref({
   dropExisting: false
+});
+
+// 验证同步表单
+const isSyncFormValid = computed(() => {
+  if (useExistingConnection.value) {
+    return syncConfig.value.source.tableName &&
+           selectedConnectionId.value &&
+           selectedDatabaseName.value &&
+           syncConfig.value.target.tableName &&
+           (syncConfig.value.options.syncStructure || syncConfig.value.options.syncData);
+  } else {
+    return syncConfig.value.source.tableName &&
+           syncConfig.value.target.host &&
+           syncConfig.value.target.port &&
+           syncConfig.value.target.database &&
+           syncConfig.value.target.username &&
+           syncConfig.value.target.tableName &&
+           (syncConfig.value.options.syncStructure || syncConfig.value.options.syncData);
+  }
 });
 
 // 添加执行结果
@@ -446,10 +700,6 @@ function showImportModal() {
   addExecutionResult('导入数据', 'info', { message: '导入数据功能开发中...' });
 }
 
-function showSyncModal() {
-  addExecutionResult('数据同步', 'info', { message: '数据同步功能开发中...' });
-}
-
 // 健康检查
 async function runHealthCheck() {
   const operation = '健康检查';
@@ -544,6 +794,172 @@ async function performRestore() {
   }
 }
 
+// 选择工具
+function selectTool(toolName: string) {
+  selectedTool.value = toolName;
+  if (toolName === 'sync') {
+    initSyncData();
+  }
+}
+
+// 关闭工具
+function closeTool() {
+  selectedTool.value = null;
+}
+
+// 获取工具图标
+function getToolIcon(toolName: string) {
+  const icons: Record<string, string> = {
+    'sync': 'bi-arrow-repeat'
+  };
+  return icons[toolName] || 'bi-gear';
+}
+
+// 获取工具标题
+function getToolTitle(toolName: string) {
+  const titles: Record<string, string> = {
+    'sync': '数据同步'
+  };
+  return titles[toolName] || '工具';
+}
+
+// 同步功能 - 初始化数据
+async function initSyncData() {
+  try {
+    // 加载表列表
+    const tablesRes = await databaseService.getTables(props.connection?.id || '', props.database);
+    if (tablesRes.ret === 0) {
+      tables.value = tablesRes.data || [];
+    }
+    
+    // 加载已配置的数据库连接列表
+    const connRes = await connectionService.getAllConnections();
+    if (connRes.ret === 0) {
+      connections.value = connRes.data || [];
+    }
+    
+    // 设置源数据库信息
+    syncConfig.value.source.database = props.database;
+    
+    // 默认选择当前连接
+    if (props.connection?.id) {
+      useExistingConnection.value = true;
+      selectedConnectionId.value = props.connection.id;
+    }
+  } catch (error: any) {
+    console.error('加载表列表失败:', error);
+    modal.error('加载表列表失败');
+  }
+}
+
+// 重置同步状态
+function resetSyncState() {
+  syncing.value = false;
+  tables.value = [];
+  databases.value = [];
+  useExistingConnection.value = false;
+  selectedConnectionId.value = '';
+  selectedDatabaseName.value = '';
+  syncConfig.value = {
+    source: {
+      database: '',
+      tableName: ''
+    },
+    target: {
+      dbType: 'mysql',
+      host: 'localhost',
+      port: 3306,
+      database: '',
+      username: 'root',
+      password: '',
+      tableName: ''
+    },
+    options: {
+      syncStructure: true,
+      syncData: true,
+      dropIfExists: false,
+      bulkInsert: true,
+      overrideExisting: false
+    }
+  };
+}
+
+async function performSync() {
+  if (!isSyncFormValid.value) {
+    modal.error('请填写完整的同步配置');
+    return;
+  }
+
+  const operation = '数据同步';
+  syncing.value = true;
+  
+  try {
+    // 构建同步配置
+    let syncData;
+    if (useExistingConnection.value) {
+      // 使用已配置连接
+      syncData = {
+        source: {
+          database: syncConfig.value.source.database,
+          tableName: syncConfig.value.source.tableName
+        },
+        target: {
+          connectionId: selectedConnectionId.value,
+          database: selectedDatabaseName.value,
+          tableName: syncConfig.value.target.tableName
+        },
+        options: syncConfig.value.options
+      };
+    } else {
+      // 使用手动配置
+      syncData = syncConfig.value;
+    }
+    
+    // 添加同步开始记录
+    addExecutionResult(operation, 'info', {
+      message: '开始同步数据',
+      config: syncData
+    });
+
+    // 执行同步
+    const res = await databaseService.syncTable(
+      props.connection?.id || '',
+      syncData
+    );
+
+    if (res.ret === 0) {
+      const tables = res.data?.tables || [];
+      let successCount = 0;
+      let totalRows = 0;
+      
+      tables.forEach((table: any) => {
+        if (table.rowsSynced > 0) {
+          successCount++;
+          totalRows += table.rowsSynced;
+        }
+      });
+      
+      addExecutionResult(operation, 'success', {
+        message: `数据同步成功，${successCount}/${tables.length} 个表同步完成，共同步 ${totalRows} 行数据`,
+        data: res.data
+      });
+      toast.success(`数据同步成功，${successCount}/${tables.length} 个表同步完成`);
+    } else {
+      addExecutionResult(operation, 'error', {
+        message: res.msg || '同步失败',
+        error: res.error
+      });
+      toast.error(res.msg || '同步失败');
+    }
+  } catch (error: any) {
+    console.error('同步失败:', error);
+    addExecutionResult(operation, 'error', formatError(error));
+    toast.error(error.msg || error.message || '同步失败');
+  } finally {
+    syncing.value = false;
+  }
+}
+
 function showScheduleModal() {
   addExecutionResult('定时备份', 'info', { message: '定时备份功能开发中...' });
 }
@@ -554,7 +970,6 @@ function showScheduleModal() {
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
 }
 
 .tools-header {
@@ -575,7 +990,6 @@ function showScheduleModal() {
 
 .tools-content {
   padding: 1.5rem;
-  max-height: 500px;
   overflow-y: auto;
 }
 
@@ -627,6 +1041,40 @@ function showScheduleModal() {
 .modal-footer {
   background: #f8fafc;
   border-top: 1px solid #e2e8f0;
+}
+
+/* 工具组件区域 */
+.tool-component-area {
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.component-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #f1f5f9 0%, #f8fafc 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.component-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tool-component {
+  padding: 1.5rem;
+}
+
+.sync-component {
+  background: white;
+  border-radius: 0.375rem;
 }
 
 /* 执行结果区域 */

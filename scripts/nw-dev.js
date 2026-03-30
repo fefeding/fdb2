@@ -2,8 +2,10 @@ const { exec } = require('child_process');
 const { createServer } = require('http');
 const { join, resolve } = require('path');
 
+const projectRoot = resolve(__dirname, '..');
+
 // 启动 Vite 开发服务器
-const viteProcess = exec('npm run dev', (error, stdout, stderr) => {
+const viteProcess = exec('npm run dev', { cwd: projectRoot }, (error, stdout, stderr) => {
   if (error) {
     console.error(`执行 npm run dev 时出错: ${error}`);
     return;
@@ -18,7 +20,7 @@ viteProcess.stdout.on('data', (data) => {
   if (data.includes('ready')) {
     setTimeout(() => {
       console.log('starting NW.js...', 'npx nw . --url=http://localhost:9300');
-      const nwProcess = exec('npx nw . --url=http://localhost:9300', (error, stdout, stderr) => {
+      const nwProcess = exec('npx nw . --url=http://localhost:9300', { cwd: projectRoot }, (error, stdout, stderr) => {
         if (error) {
           console.error(`启动 NW.js 时出错: ${error}`);
           return;

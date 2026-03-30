@@ -258,16 +258,12 @@ export class DatabaseService {
   async alterTable(
     connectionId: string,
     database: string,
-    tableName: string,
-    columns: any[],
-    oldColumns?: any[]
+    tableDiff: any
   ) {
     return request('/api/database/alterTable', {
       id: connectionId,
       database,
-      tableName,
-      columns,
-      oldColumns
+      tableDiff
     });
   }
 
@@ -495,6 +491,16 @@ export class DatabaseService {
       id: connectionId, 
       sql, 
       database: databaseName 
+    });
+  }
+
+  /**
+   * 同步表结构和数据到其他数据库
+   */
+  async syncTable(connectionId: string, syncConfig: any) {
+    return request('/api/database/syncTable', {
+      id: connectionId,
+      syncConfig
     });
   }
 }

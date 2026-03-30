@@ -720,4 +720,213 @@ export class SQLServerService extends BaseDatabaseService {
       throw new Error(`导出表数据到Excel失败: ${error.message}`);
     }
   }
+
+  /**
+   * 修改表结构
+   */
+  async alterTable(dataSource: DataSource, databaseName: string, tableDiff: any): Promise<any> {
+    try {
+      const tableName = tableDiff.tableName;
+      const sqlStatements: string[] = [];
+
+      // 修改表注释（使用扩展属性）
+      if (tableDiff.tableCommentChanged) {
+        sqlStatements.push(`EXEC sp_addextendedproperty @name = N'MS_Description', @value = '${tableDiff.tableComment}', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'${tableName}';`);
+      }
+
+      // 添加新列
+      tableDiff.addedColumns.forEach((column: any) => {
+        // 检查type是否已经包含长度信息（括号）
+        const typeHasLength = /\(\d+\)/.test(column.type);
+
+        let columnSQL = `ALTER TABLE [${databaseName}].[dbo].[${tableName}] ADD [${column.name}] ${column.type}`;
+
+        // 处理长度和精度（仅当type中没有指定长度时才添加）
+        if (!typeHasLength) {
+          if (column.length) {
+            columnSQL += `(${column.length})`;
+          } else if (column.precision) {
+            if (column.scale) {
+              columnSQL += `(${column.precision},${column.scale})`;
+            } else {
+              columnSQL += `(${column.precision})`;
+            }
+          }
+        }
+
+        // 处理NULL约束
+        if (!column.nullable) {
+          columnSQL += ' NOT NULL';
+        }
+
+        // 处理默认值
+        if (column.defaultValue) {
+          const upperDefault = column.defaultValue.toString().toUpperCase();
+          if (['GETDATE()', 'GETUTCDATE()', 'CURRENT_TIMESTAMP', 'SYSDATETIME()'].includes(upperDefault)) {
+            columnSQL += ` DEFAULT ${upperDefault}`;
+          } else {
+            columnSQL += ` DEFAULT '${column.defaultValue}'`;
+          }
+        }
+
+        // 处理自增（MSSQL使用IDENTITY）
+        if (column.isAutoIncrement) {
+          if (column.type.toLowerCase().includes('int') || column.type.toLowerCase().includes('bigint')) {
+            columnSQL += ' IDENTITY(1,1)';
+          }
+        }
+
+        sqlStatements.push(columnSQL + ';');
+
+        // 添加列注释
+        if (column.comment) {
+          sqlStatements.push(`EXEC sp_addextendedproperty @name = N'MS_Description', @value = '${column.comment}', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'${tableName}', @level2type = N'COLUMN', @level2name = N'${column.name}';`);
+        }
+      });
+
+      // 修改列
+      tableDiff.modifiedColumns.forEach((modification: any) => {
+        const { oldColumn, newColumn } = modification;
+
+        // 检查type是否已经包含长度信息（括号）
+        const typeHasLength = /\(\d+\)/.test(newColumn.type);
+
+        // 修改列类型和长度
+        let columnSQL = `ALTER TABLE [${databaseName}].[dbo].[${tableName}] ALTER COLUMN [${newColumn.name}] ${newColumn.type}`;
+
+        // 处理长度和精度（仅当type中没有指定长度时才添加）
+        if (!typeHasLength) {
+          if (newColumn.length) {
+            columnSQL += `(${newColumn.length})`;
+          } else if (newColumn.precision) {
+            if (newColumn.scale) {
+              columnSQL += `(${newColumn.precision},${newColumn.scale})`;
+            } else {
+              columnSQL += `(${newColumn.precision})`;
+            }
+          }
+        }
+
+        // 处理NULL约束
+        if (!newColumn.nullable) {
+          columnSQL += ' NOT NULL';
+        } else {
+          columnSQL += ' NULL';
+        }
+
+        sqlStatements.push(columnSQL + ';');
+
+        // 修改列注释
+        if (newColumn.comment) {
+          sqlStatements.push(`EXEC sp_addextendedproperty @name = N'MS_Description', @value = '${newColumn.comment}', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'${tableName}', @level2type = N'COLUMN', @level2name = N'${newColumn.name}';`);
+        }
+      });
+
+      // 删除列
+      tableDiff.deletedColumns.forEach((column: any) => {
+        sqlStatements.push(`ALTER TABLE [${databaseName}].[dbo].[${tableName}] DROP COLUMN [${column.name}];`);
+      });
+
+      // 执行SQL语句
+      if (sqlStatements.length > 0) {
+        await this.executeBatchQuery(dataSource, sqlStatements, { useTransaction: true });
+      }
+
+      return { ret: 0, message: '表结构修改成功' };
+    } catch (error) {
+      console.error('SQL Server修改表结构失败:', error);
+      return { ret: 1, message: `修改表结构失败: ${error instanceof Error ? error.message : String(error)}` };
+    }
+  }
+
+  /**
+   * 批量插入数据
+   */
+  async bulkInsert(dataSource: DataSource, databaseName: string, tableName: string, data: any[]): Promise<void> {
+    if (data.length === 0) return;
+
+    const columns = Object.keys(data[0]);
+    const placeholders = data.map((_, index) => 
+      `(${columns.map((_, colIndex) => `@p${index}_${colIndex}`).join(', ')})`
+    ).join(', ');
+
+    const sql = `INSERT INTO [${databaseName}].[dbo].[${tableName}] (${columns.map(col => `[${col}]`).join(', ')}) VALUES ${placeholders}`;
+    
+    // MSSQL需要单独处理参数化查询
+    for (let i = 0; i< data.length; i++) {
+      const params: any = {};
+      columns.forEach((column, colIndex) =>{
+        params[`p${i}_${colIndex}`] = data[i][column];
+      });
+      await dataSource.query(sql, params);
+    }
+  }
+
+  /**
+   * 插入单条数据
+   */
+  async insertData(dataSource: DataSource, databaseName: string, tableName: string, data: any): Promise<void> {
+    const columns = Object.keys(data);
+    const placeholders = columns.map((_, index) => `@p${index}`).join(', ');
+    const params: any = {};
+    
+    columns.forEach((column, index) => {
+      params[`p${index}`] = data[column];
+    });
+
+    const sql = `INSERT INTO [${databaseName}].[dbo].[${tableName}] (${columns.map(col => `[${col}]`).join(', ')}) VALUES (${placeholders})`;
+    
+    await dataSource.query(sql, params);
+  }
+
+  /**
+   * 删除表
+   */
+  async dropTable(dataSource: DataSource, databaseName: string, tableName: string): Promise<void> {
+    const sql = `DROP TABLE IF EXISTS [${databaseName}].[dbo].[${tableName}]`;
+    await dataSource.query(sql);
+  }
+
+  /**
+   * 创建表
+   */
+  async createTable(dataSource: DataSource, databaseName: string, table: any): Promise<void> {
+    const { name, columns, comment } = table;
+    
+    let sql = `CREATE TABLE [${databaseName}].[dbo].[${name}] (\n`;
+    const columnDefs: string[] = [];
+
+    columns.forEach((column: any) => {
+      let columnDef = `  [${column.name}] ${column.type}`;
+      
+      if (!column.nullable) {
+        columnDef += ' NOT NULL';
+      }
+      
+      if (column.defaultValue) {
+        const upperDefault = column.defaultValue.toString().toUpperCase();
+        if (['CURRENT_TIMESTAMP', 'GETDATE()', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
+          columnDef += ` DEFAULT ${upperDefault}`;
+        } else {
+          columnDef += ` DEFAULT '${column.defaultValue}'`;
+        }
+      }
+      
+      if (column.isAutoIncrement) {
+        columnDef += ' IDENTITY(1,1)';
+      }
+      
+      columnDefs.push(columnDef);
+    });
+
+    sql += columnDefs.join(',\n');
+    sql += '\n)';
+    
+    await dataSource.query(sql);
+    
+    // 添加表注释
+    if (comment) {
+      await dataSource.query(`EXEC sp_addextendedproperty @name = N'MS_Description', @value = '${comment}', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'${name}';`);
+    }
+  }
 }

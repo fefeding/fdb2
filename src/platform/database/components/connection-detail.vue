@@ -482,7 +482,7 @@ async function testConnection() {
   connectionStatus.value = 'testing';
   
   try {
-    const isConnected = await connectionStore.testConnection(props.connection);
+    const isConnected = await connectionStore.testConnection(props.connection);    
     connectionStatus.value = isConnected ? 'connected' : 'disconnected';
   } catch (error) {
     console.error('连接测试失败:', error);
@@ -921,7 +921,6 @@ function getDbLogoText(type?: string): string {
 .connection-tabs {
   border: 1px solid #dee2e6;
   border-radius: 8px;
-  overflow: hidden;
   flex: 1;
   display: flex;
   flex-direction: column;

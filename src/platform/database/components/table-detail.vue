@@ -76,7 +76,7 @@
         </div>
       </div>
       <div class="toolbar-right">
-        <button class="btn btn-outline-warning btn-sm" @click="truncateTable" v-if="tableData.length > 0">
+        <button class="btn btn-outline-warning btn-sm" @click="truncateTable" v-if="table?.rowCount">
           <i class="bi bi-trash"></i> 清空表
         </button>
         <button class="btn btn-outline-danger btn-sm" @click="dropTable">
@@ -95,7 +95,7 @@
             @click="activeTab = 'data'"
           >
             <i class="bi bi-grid"></i> 数据
-            <span class="badge bg-secondary ms-2" v-if="tableData.length > 0">{{ tableData.length }}</span>
+            <span class="badge bg-secondary ms-2" v-if="table?.rowCount">{{ formatNumber(table?.rowCount) }}</span>
           </button>
         </li>
         <li class="nav-item">
@@ -139,148 +139,15 @@
       <div class="tab-content">
         <!-- 数据标签页 -->
         <div v-show="activeTab === 'data'" class="tab-panel">    
-          <div class="data-content" :class="{ 'loading': loading }">
-            <div class="table-responsive" v-if="!loading && paginatedData.length > 0">
-              <table class="table table-sm table-striped table-hover">
-                <thead class="table-light">
-                  <tr>
-                    <th v-for="column in safeTableColumns" :key="column.name">
-                      <div class="column-header">
-                        <span>{{ column.name }}</span>
-                        <small class="text-muted d-block">{{ column.type }}</small>
-                        <span class="column-key" v-if="column.isPrimary">
-                          <i class="bi bi-key-fill"></i>
-                        </span>
-                      </div>
-                    </th>
-                    <th width="100">操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(row, index) in paginatedData" :key="index">
-                    <td v-for="(value, key) in row" :key="key">
-                      <div class="cell-value">
-                        {{ formatCellValue(value) }}
-                      </div>
-                    </td>
-                    <td>
-                      <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary btn-sm" @click="editRow(row)">
-                          <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-outline-danger btn-sm" @click="deleteRow(row)">
-                          <i class="bi bi-trash"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- 加载状态 -->
-            <div v-if="loading" class="loading-state">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">加载中...</span>
-              </div>
-              <p>正在加载数据...</p>
-            </div>
-
-            <!-- 空状态 -->
-            <div v-if="!loading && paginatedData.length === 0" class="empty-state">
-              <i class="bi bi-inbox"></i>
-              <p v-if="searchQuery">没有找到匹配的数据</p>
-              <p v-else>表中暂无数据</p>
-              <button class="btn btn-success" @click="()=>insertData()">
-                <i class="bi bi-plus"></i> 插入第一条数据
-              </button>
-            </div>
-
-            <!-- 分页 -->
-            <nav v-if="!loading && totalPages > 0" class="pagination-nav">
-              <div class="pagination-container">
-                <div class="pagination-info">
-                  共 {{ formatNumber(total) }} 条记录，第 {{ formatNumber(currentPage) }} 页/共 {{ formatNumber(totalPages) }} 页
-                </div>
-                <ul class="pagination pagination-sm">
-                  <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                    <a class="page-link" href="#" @click.prevent="goToPage(1)" title="首页">
-                      <i class="bi bi-chevron-double-left"></i>
-                    </a>
-                  </li>
-                  <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                    <a class="page-link" href="#" @click.prevent="goToPage(currentPage - 1)" title="上一页">
-                      <i class="bi bi-chevron-left"></i>
-                    </a>
-                  </li>
-                  
-                  <!-- 第一页和省略号 -->
-                  <li v-if="currentPage > 4" class="page-item">
-                    <a class="page-link" href="#" @click.prevent="goToPage(1)">1</a>
-                  </li>
-                  <li v-if="currentPage > 5" class="page-item disabled">
-                    <span class="page-link">...</span>
-                  </li>
-                  
-                  <!-- 中间页码 -->
-                  <li 
-                    v-for="page in visiblePages" 
-                    :key="page"
-                    class="page-item" 
-                    :class="{ active: currentPage === page }"
-                  >
-                    <a class="page-link" href="#" @click.prevent="goToPage(page)">{{ page }}</a>
-                  </li>
-                  
-                  <!-- 省略号和最后一页 -->
-                  <li v-if="currentPage < totalPages - 4" class="page-item disabled">
-                    <span class="page-link">...</span>
-                  </li>
-                  <li v-if="currentPage < totalPages - 3" class="page-item">
-                    <a class="page-link" href="#" @click.prevent="goToPage(totalPages)">{{ totalPages }}</a>
-                  </li>
-                  
-                  <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                    <a class="page-link" href="#" @click.prevent="goToPage(currentPage + 1)" title="下一页">
-                      <i class="bi bi-chevron-right"></i>
-                    </a>
-                  </li>
-                  <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                    <a class="page-link" href="#" @click.prevent="goToPage(totalPages)" title="末页">
-                      <i class="bi bi-chevron-double-right"></i>
-                    </a>
-                  </li>
-                </ul>
-                <div class="page-size-selector">
-                  <label class="form-label-sm mb-0">每页显示：</label>
-                  <select class="form-select form-select-sm ms-2" v-model="pageSize" style="width: 80px;">
-                    <option :value="10">10</option>
-                    <option :value="20">20</option>
-                    <option :value="50">50</option>
-                    <option :value="100">100</option>
-                    <option :value="200">200</option>
-                    <option :value="500">500</option>
-                  </select>
-                </div>
-                <div class="page-jump">
-                  <label class="form-label-sm mb-0">跳转到：</label>
-                  <input 
-                    type="number" 
-                    class="form-control form-control-sm ms-2" 
-                    v-model.number="jumpToPage"
-                    min="1" 
-                    :max="totalPages"
-                    style="width: 70px;"
-                    @keyup.enter="jumpToPageHandler"
-                    @blur="jumpToPageHandler"
-                  >
-                  <button class="btn btn-primary btn-sm ms-2" @click="jumpToPageHandler">
-                    跳转
-                  </button>
-                </div>
-              </div>
-            </nav>
-          </div>
+          <TableDataGrid
+            ref="tableDataGridRef"
+            :connection="connection"
+            :database="database"
+            :table="table"
+            :columns="tableStructure?.columns || []"
+            @edit-row="editRow"
+            @delete-row="deleteRow"
+          />
         </div>
 
         <!-- 结构标签页 -->
@@ -461,6 +328,7 @@
       :connection="connection"
       :database="database"
       :table="table"
+      :columns="tableStructure?.columns"
       :mode="tableEditorMode"
       @close="closeTableEditor"
       @submit="handleTableStructureChange"
@@ -469,11 +337,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import { DatabaseService } from '@/service/database';
 import DataEditor from './data-editor.vue';
 
+import TableDataGrid from './table-data-grid.vue';
 import TableEditor from './table-editor.vue';
 import SqlExecutor from './sql-executor.vue';
 import { exportDataToCSV, exportDataToJSON, exportDataToExcel, formatFileName } from '../utils/export';
@@ -518,14 +387,12 @@ const emit = defineEmits<{
 
 const databaseService = new DatabaseService();
 
+// 引用
+const tableDataGridRef = ref();
+
 // 响应式数据
 const activeTab = ref('data');
-const searchQuery = ref('');
-const currentPage = ref(1);
-const pageSize = ref(50);
 const sqlQuery = ref('');
-const jumpToPage = ref(1);
-const searchTimeout = ref<NodeJS.Timeout | null>(null);
 
 // 数据编辑相关
 const showDataEditor = ref(false);
@@ -537,8 +404,6 @@ const showTableEditor = ref(false);
 const tableEditorMode = ref<'create' | 'edit'>('edit');
 
 // 计算属性
-const tableColumns = computed(() => props.tableStructure?.columns || []);
-
 // 类型安全的表列数据
 const safeTableColumns = computed(() => {
   const columns = props.tableStructure?.columns || [];
@@ -553,48 +418,9 @@ const safeTableColumns = computed(() => {
   }));
 });
 
-// 直接使用后端返回的数据，不需要前端分页和过滤
-const paginatedData = computed(() => {
-  return props.tableData || [];
-});
-
-const totalPages = computed(() => {
-  const total = parseInt(props.total) || 0;
-  return Math.ceil(total / pageSize.value);
-});
-
-const visiblePages = computed(() => {
-  const pages: number[] = [];
-  let start = Math.max(1, currentPage.value - 2);
-  let end = Math.min(totalPages.value, start + 4);
-  
-  // 如果显示的页码数不足5个，调整起始位置
-  if (end - start < 4) {
-    start = Math.max(1, end - 4);
-  }
-  
-  for (let i = start; i <= end; i++) {
-    pages.push(i);
-  }
-  return pages;
-});
-
 // 监听变化
 watch(() => props.table, () => {
   activeTab.value = 'data';
-  currentPage.value = 1;
-  searchQuery.value = '';
-});
-
-watch(pageSize, () => {
-  currentPage.value = 1;
-  jumpToPage.value = 1;
-  // 调用后端分页接口
-  emit('refresh-data', currentPage.value, pageSize.value, searchQuery.value);
-});
-
-watch(currentPage, (newPage) => {
-  jumpToPage.value = newPage;
 });
 
 // 方法
@@ -610,81 +436,12 @@ function formatNumber(num: number): string {
   return num?.toLocaleString?.() || num?.toString() || '';
 }
 
-function formatCellValue(value: any): string {
-  if (value === null || value === undefined) return 'NULL';
-  
-  // 尝试检测并格式化 JSON 数据
-  let strValue = String(value);
-  if (typeof value === 'string') {
-    // 检查是否可能是 JSON 字符串
-    const trimmedValue = strValue.trim();
-    if ((trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) || 
-        (trimmedValue.startsWith('[') && trimmedValue.endsWith(']'))) {
-      try {
-        const parsed = JSON.parse(trimmedValue);
-        // 格式化 JSON 并限制长度
-        const formatted = JSON.stringify(parsed, null, 2);
-        if (formatted.length > 50) {
-          return formatted.substring(0, 50) + '...';
-        }
-        return formatted;
-      } catch (e) {
-        // 不是有效的 JSON，继续处理
-      }
-    }
-  } else if (typeof value === 'object') {
-    // 对于对象或数组类型，直接格式化
-    try {
-      const formatted = JSON.stringify(value, null, 2);
-      if (formatted.length > 50) {
-        return formatted.substring(0, 50) + '...';
-      }
-      return formatted;
-    } catch (e) {
-      // 格式化失败，继续处理
-    }
-  }
-  
-  // 对于普通字符串，限制显示长度
-  if (strValue.length > 50) return strValue.substring(0, 50) + '...';
-  
-  return strValue;
-}
-
-function goToPage(page: number) {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page;
-    // 调用后端分页接口
-    emit('refresh-data', currentPage.value, pageSize.value, searchQuery.value);
-  }
-}
-
-function jumpToPageHandler() {
-  if (jumpToPage.value >= 1 && jumpToPage.value <= totalPages.value) {
-    currentPage.value = jumpToPage.value;
-    // 调用后端分页接口
-    emit('refresh-data', currentPage.value, pageSize.value, searchQuery.value);
-  } else {
-    // 重置到有效范围
-    jumpToPage.value = Math.max(1, Math.min(jumpToPage.value, totalPages.value));
-    currentPage.value = jumpToPage.value;
-    emit('refresh-data', currentPage.value, pageSize.value, searchQuery.value);
-  }
-}
-
-function handleSearch() {
-  // 使用防抖，避免频繁调用后端接口
-  clearTimeout(searchTimeout.value);
-  searchTimeout.value = setTimeout(() => {
-    currentPage.value = 1;
-    jumpToPage.value = 1;
-    // 调用后端搜索接口
-    emit('refresh-data', currentPage.value, pageSize.value, searchQuery.value);
-  }, 500);
-}
-
 function refreshData() {
-  emit('refresh-data', currentPage.value, pageSize.value, searchQuery.value);
+  nextTick(() => {
+    if (tableDataGridRef.value) {
+      tableDataGridRef.value.refresh();
+    }
+  });
 }
 
 function insertData(newData?: any) {  
@@ -742,10 +499,35 @@ async function deleteRow(row: any) {
     });
 
     if (result) {
-      emit('delete-row', row);
+      // 获取主键条件
+      const primaryKeys = props.tableStructure?.columns?.filter((col: any) => col.isPrimary) || [];
+      if (primaryKeys.length === 0) {
+        await modal.warning('该表没有主键，无法删除单行。');
+        return;
+      }
+
+      const where: any = {};
+      primaryKeys.forEach((pk: any) => {
+        where[pk.name] = row[pk.name];
+      });
+
+      const response = await databaseService.deleteData(
+        props.connection?.id || '',
+        props.database,
+        props.table?.name || '',
+        where
+      );
+
+      if (response.ret === 0) {
+        await modal.success('删除成功');
+        refreshData();
+      } else {
+        await modal.error('删除失败: ' + (response.msg || '未知错误'));
+      }
     }
   } catch (error) {
     console.error('删除行失败:', error);
+    modal.error('删除行失败: ' + (error as any).message);
   }
 }
 
@@ -758,7 +540,19 @@ async function truncateTable() {
     });
 
     if (result) {
-      emit('truncate-table');
+      const response = await databaseService.truncateTable(
+        props.connection?.id || '',
+        props.database,
+        props.table?.name || ''
+      );
+      if (response.ret === 0) {
+        await modal.success('表清空成功');
+        nextTick(() => {
+          refreshData();
+        });
+      } else {
+        await modal.error('清空表失败');
+      }
     }
   } catch (error) {
     console.error('清空表失败:', error);
@@ -807,7 +601,7 @@ function handleDataSubmit(result: any) {
     
     if (result.ret === 0) {
       // 操作成功，刷新数据
-      emit('refresh-data');
+      refreshData();
       closeDataEditor();
     } else {
       modal.error('操作失败');
@@ -1198,6 +992,7 @@ function downloadSQLFile(content: string, filename: string) {
 .nav-tabs {
   border-bottom: 1px solid #dee2e6;
   background-color: #f8f9fa;
+  flex-shrink: 0;
 }
 
 .nav-tabs .nav-link {
@@ -1225,10 +1020,16 @@ function downloadSQLFile(content: string, filename: string) {
   overflow: auto;
   padding: 20px;
   background-color: #fff;
+  display: flex;
+  flex-direction: column;
 }
 
 .tab-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   height: 100%;
+  overflow: auto;
 }
 
 .data-content {

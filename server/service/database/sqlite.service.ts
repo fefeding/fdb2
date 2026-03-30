@@ -8,7 +8,6 @@ import {
   IndexEntity, 
   ForeignKeyEntity 
 } from '../../model/database.entity';
-import 'sqlite3';
 
 /**
  * SQLite数据库服务实现
@@ -555,5 +554,234 @@ export class SQLiteService extends BaseDatabaseService {
       console.error('SQLite导出表数据到Excel失败:', error);
       throw new Error(`导出表数据到Excel失败: ${error.message}`);
     }
+  }
+
+  /**
+   * 修改表结构
+   * SQLite的ALTER TABLE操作非常有限，需要通过重建表来实现复杂的表结构修改
+   */
+  async alterTable(dataSource: DataSource, databaseName: string, tableDiff: any): Promise<any> {
+    try {
+      const tableName = tableDiff.tableName;
+      const sqlStatements: string[] = [];
+
+      // SQLite不支持直接修改表注释，只能忽略
+
+      // 如果有修改或删除列，需要重建表
+      if (tableDiff.modifiedColumns.length > 0 || tableDiff.deletedColumns.length > 0) {
+        const tempTableName = `_temp_${tableName}_${Date.now()}`;
+        
+        // 获取所有列（包括新增的和未修改的）
+        const allColumns = [...tableDiff.addedColumns];
+        const existingColumns = await this.getColumns(dataSource, databaseName, tableName);
+        
+        // 添加未修改的现有列
+        existingColumns.forEach(col => {
+          const isDeleted = tableDiff.deletedColumns.some((dc: any) => dc.name === col.name);
+          const isModified = tableDiff.modifiedColumns.some((mc: any) => mc.oldColumn.name === col.name);
+          if (!isDeleted && !isModified) {
+            allColumns.push(col);
+          }
+        });
+
+        // 添加修改后的列
+        tableDiff.modifiedColumns.forEach((modification: any) => {
+          allColumns.push(modification.newColumn);
+        });
+
+        // 创建临时表
+        let createTableSQL = `CREATE TABLE "${tempTableName}" (`;
+        const columnDefinitions: string[] = [];
+
+        allColumns.forEach(column => {
+          // 检查type是否已经包含长度信息（括号）
+          const typeHasLength = /\(\d+\)/.test(column.type);
+
+          let definition = `"${column.name}" ${column.type}`;
+
+          // 处理长度和精度（仅当type中没有指定长度时才添加）
+          if (!typeHasLength) {
+            if (column.length) {
+              definition += `(${column.length})`;
+            } else if (column.precision) {
+              if (column.scale) {
+                definition += `(${column.precision},${column.scale})`;
+              } else {
+                definition += `(${column.precision})`;
+              }
+            }
+          }
+
+          // 处理NULL约束
+          if (!column.nullable) {
+            definition += ' NOT NULL';
+          }
+
+          // 处理默认值
+          if (column.defaultValue) {
+            const upperDefault = column.defaultValue.toString().toUpperCase();
+            if (['CURRENT_TIMESTAMP', 'NOW()', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
+              definition += ` DEFAULT ${upperDefault}`;
+            } else {
+              definition += ` DEFAULT '${column.defaultValue}'`;
+            }
+          }
+
+          // 处理主键和自增
+          if (column.isPrimary) {
+            if (column.isAutoIncrement) {
+              definition += ' PRIMARY KEY AUTOINCREMENT';
+            } else {
+              definition += ' PRIMARY KEY';
+            }
+          }
+
+          columnDefinitions.push(definition);
+        });
+
+        createTableSQL += columnDefinitions.join(',\n');
+        createTableSQL += ')';
+        sqlStatements.push(createTableSQL + ';');
+
+        // 复制数据到临时表
+        const existingColumnNames = existingColumns.map(col => `"${col.name}"`).join(', ');
+        const newColumnNames = allColumns.map(col => `"${col.name}"`).join(', ');
+        sqlStatements.push(`INSERT INTO "${tempTableName}" (${newColumnNames}) SELECT ${existingColumnNames} FROM "${tableName}";`);
+
+        // 删除旧表
+        sqlStatements.push(`DROP TABLE "${tableName}";`);
+
+        // 重命名临时表
+        sqlStatements.push(`ALTER TABLE "${tempTableName}" RENAME TO "${tableName}";`);
+
+      } else if (tableDiff.addedColumns.length > 0) {
+        // 只有添加列，可以直接使用ALTER TABLE ADD COLUMN
+        tableDiff.addedColumns.forEach((column: any) => {
+          // 检查type是否已经包含长度信息（括号）
+          const typeHasLength = /\(\d+\)/.test(column.type);
+
+          let columnSQL = `ALTER TABLE "${tableName}" ADD COLUMN "${column.name}" ${column.type}`;
+
+          // 处理长度和精度（仅当type中没有指定长度时才添加）
+          if (!typeHasLength) {
+            if (column.length) {
+              columnSQL += `(${column.length})`;
+            } else if (column.precision) {
+              if (column.scale) {
+                columnSQL += `(${column.precision},${column.scale})`;
+              } else {
+                columnSQL += `(${column.precision})`;
+              }
+            }
+          }
+
+          // 处理NULL约束
+          if (!column.nullable) {
+            columnSQL += ' NOT NULL';
+          }
+
+          // 处理默认值
+          if (column.defaultValue) {
+            const upperDefault = column.defaultValue.toString().toUpperCase();
+            if (['CURRENT_TIMESTAMP', 'NOW()', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
+              columnSQL += ` DEFAULT ${upperDefault}`;
+            } else {
+              columnSQL += ` DEFAULT '${column.defaultValue}'`;
+            }
+          }
+
+          sqlStatements.push(columnSQL + ';');
+        });
+      }
+
+      // 执行SQL语句
+      if (sqlStatements.length > 0) {
+        await this.executeBatchQuery(dataSource, sqlStatements, { useTransaction: true });
+      }
+
+      return { ret: 0, message: '表结构修改成功' };
+    } catch (error) {
+      console.error('SQLite修改表结构失败:', error);
+      return { ret: 1, message: `修改表结构失败: ${error instanceof Error ? error.message : String(error)}` };
+    }
+  }
+
+  /**
+   * 批量插入数据
+   */
+  async bulkInsert(dataSource: DataSource, databaseName: string, tableName: string, data: any[]): Promise<void> {
+    if (data.length === 0) return;
+
+    const columns = Object.keys(data[0]);
+    const placeholders = data.map(() => 
+      `(${columns.map(() => '?').join(', ')})`
+    ).join(', ');
+
+    const values = data.flatMap(row => 
+      columns.map(column => row[column])
+    );
+
+    const sql = `INSERT INTO "${tableName}" (${columns.map(col => `"${col}"`).join(', ')}) VALUES ${placeholders}`;
+    
+    await dataSource.query(sql, values);
+  }
+
+  /**
+   * 插入单条数据
+   */
+  async insertData(dataSource: DataSource, databaseName: string, tableName: string, data: any): Promise<void> {
+    const columns = Object.keys(data);
+    const placeholders = columns.map(() => '?').join(', ');
+    const values = columns.map(column => data[column]);
+
+    const sql = `INSERT INTO "${tableName}" (${columns.map(col => `"${col}"`).join(', ')}) VALUES (${placeholders})`;
+
+    await dataSource.query(sql, values);
+  }
+
+  /**
+   * 删除表
+   */
+  async dropTable(dataSource: DataSource, databaseName: string, tableName: string): Promise<void> {
+    const sql = `DROP TABLE IF EXISTS "${tableName}"`;
+    await dataSource.query(sql);
+  }
+
+  /**
+   * 创建表
+   */
+  async createTable(dataSource: DataSource, databaseName: string, table: any): Promise<void> {
+    const { name, columns, comment } = table;
+    
+    let sql = `CREATE TABLE "${name}" (\n`;
+    const columnDefs: string[] = [];
+
+    columns.forEach((column: any) => {
+      let columnDef = `  "${column.name}" ${column.type}`;
+      
+      if (!column.nullable) {
+        columnDef += ' NOT NULL';
+      }
+      
+      if (column.defaultValue) {
+        const upperDefault = column.defaultValue.toString().toUpperCase();
+        if (['CURRENT_TIMESTAMP', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
+          columnDef += ` DEFAULT ${upperDefault}`;
+        } else {
+          columnDef += ` DEFAULT '${column.defaultValue}'`;
+        }
+      }
+      
+      if (column.isAutoIncrement) {
+        columnDef += ' AUTOINCREMENT';
+      }
+      
+      columnDefs.push(columnDef);
+    });
+
+    sql += columnDefs.join(',\n');
+    sql += '\n)';
+    
+    await dataSource.query(sql);
   }
 }

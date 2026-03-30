@@ -122,8 +122,13 @@
                     <i class="bi bi-table"></i>
                   </div>
                   <div class="table-info">
-                    <div class="table-name">{{ table.name }}</div>
-                    <div class="table-engine">{{ table.engine || '-' }}</div>
+                    <div class="table-name-wrapper">
+                      <div class="table-name" :title="table.name">{{ table.name }}</div>
+                      <div class="table-engine">{{ table.engine || '-' }}</div>
+                    </div>
+                    <div class="table-comment-header" v-if="table.comment" :title="table.comment">
+                      {{ table.comment }}
+                    </div>
                   </div>
                 </div>
                 <div class="card-body">
@@ -136,9 +141,6 @@
                         <span class="stat-label">大小</span>
                         <span class="stat-value">{{ formatSize(table.dataSize) }}</span>
                       </div>
-                    </div>
-                    <div class="table-comment" v-if="table.comment">
-                      {{ table.comment }}
                     </div>
                   <div class="table-actions">
                     <button class="btn btn-sm btn-outline-primary" @click.stop="editTable(table)">
@@ -943,11 +945,11 @@ function handleExecuteSQL(sql: string) {
 }
 
 .tab-content {
-  padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .tab-panel {
@@ -955,6 +957,7 @@ function handleExecuteSQL(sql: string) {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .table-grid {
@@ -997,10 +1000,24 @@ function handleExecuteSQL(sql: string) {
   color: white;
 }
 
+.table-info {
+  flex: 1;
+  min-width: 0; /* 允许子元素截断 */
+}
+
+.table-name-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
 .table-name {
   font-weight: 600;
   color: #1e293b;
-  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .table-engine {
@@ -1009,6 +1026,15 @@ function handleExecuteSQL(sql: string) {
   background: #f1f5f9;
   padding: 0.125rem 0.375rem;
   border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.table-comment-header {
+  font-size: 0.75rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .card-body {

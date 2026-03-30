@@ -317,7 +317,6 @@ function showEditModal(connection: ConnectionEntity) {
 // 保存连接配置（不测试连接）
 async function saveConnection(closeModal = true) {
   try {
-    debugger
     // 先进行前端验证
     const validation = validateConnection(connectionForm.value);
     if (!validation.isValid) {

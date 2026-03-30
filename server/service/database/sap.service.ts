@@ -710,4 +710,213 @@ export class SAPHANADatabaseService extends BaseDatabaseService {
   public quoteIdentifier(identifier: string): string {
     return `"${identifier}"`;
   }
+
+  /**
+   * 修改表结构
+   */
+  async alterTable(dataSource: DataSource, databaseName: string, tableDiff: any): Promise<any> {
+    try {
+      const tableName = tableDiff.tableName;
+      const sqlStatements: string[] = [];
+
+      // 修改表注释
+      if (tableDiff.tableCommentChanged) {
+        sqlStatements.push(`ALTER TABLE "${tableName}" COMMENT '${tableDiff.tableComment}'`);
+      }
+
+      // 添加新列
+      tableDiff.addedColumns.forEach((column: any) => {
+        // 检查type是否已经包含长度信息（括号）
+        const typeHasLength = /\(\d+\)/.test(column.type);
+
+        let columnSQL = `ALTER TABLE "${tableName}" ADD ("${column.name}" ${column.type}`;
+
+        // 处理长度和精度（仅当type中没有指定长度时才添加）
+        if (!typeHasLength) {
+          if (column.length) {
+            columnSQL += `(${column.length})`;
+          } else if (column.precision) {
+            if (column.scale) {
+              columnSQL += `(${column.precision},${column.scale})`;
+            } else {
+              columnSQL += `(${column.precision})`;
+            }
+          }
+        }
+
+        // 处理NULL约束
+        if (!column.nullable) {
+          columnSQL += ' NOT NULL';
+        }
+
+        // 处理默认值
+        if (column.defaultValue) {
+          const upperDefault = column.defaultValue.toString().toUpperCase();
+          if (['CURRENT_TIMESTAMP', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
+            columnSQL += ` DEFAULT ${upperDefault}`;
+          } else {
+            columnSQL += ` DEFAULT '${column.defaultValue}'`;
+          }
+        }
+
+        columnSQL += ')';
+        sqlStatements.push(columnSQL + ';');
+
+        // 添加列注释
+        if (column.comment) {
+          sqlStatements.push(`ALTER TABLE "${tableName}" ("${column.name}" COMMENT '${column.comment}')`);
+        }
+      });
+
+      // 修改列
+      tableDiff.modifiedColumns.forEach((modification: any) => {
+        const { oldColumn, newColumn } = modification;
+
+        // 检查type是否已经包含长度信息（括号）
+        const typeHasLength = /\(\d+\)/.test(newColumn.type);
+
+        let columnSQL = `ALTER TABLE "${tableName}" ("${newColumn.name}" ${newColumn.type}`;
+
+        // 处理长度和精度（仅当type中没有指定长度时才添加）
+        if (!typeHasLength) {
+          if (newColumn.length) {
+            columnSQL += `(${newColumn.length})`;
+          } else if (newColumn.precision) {
+            if (newColumn.scale) {
+              columnSQL += `(${newColumn.precision},${newColumn.scale})`;
+            } else {
+              columnSQL += `(${newColumn.precision})`;
+            }
+          }
+        }
+
+        // 处理NULL约束
+        if (!newColumn.nullable) {
+          columnSQL += ' NOT NULL';
+        }
+
+        // 处理默认值
+        if (newColumn.defaultValue) {
+          const upperDefault = newColumn.defaultValue.toString().toUpperCase();
+          if (['CURRENT_TIMESTAMP', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
+            columnSQL += ` DEFAULT ${upperDefault}`;
+          } else {
+            columnSQL += ` DEFAULT '${newColumn.defaultValue}'`;
+          }
+        }
+
+        columnSQL += ')';
+        sqlStatements.push(columnSQL + ';');
+
+        // 修改列注释
+        if (newColumn.comment) {
+          sqlStatements.push(`ALTER TABLE "${tableName}" ("${newColumn.name}" COMMENT '${newColumn.comment}')`);
+        }
+      });
+
+      // 删除列
+      tableDiff.deletedColumns.forEach((column: any) => {
+        sqlStatements.push(`ALTER TABLE "${tableName}" DROP ("${column.name}")`);
+      });
+
+      // 执行SQL语句
+      if (sqlStatements.length > 0) {
+        await this.executeBatchQuery(dataSource, sqlStatements, { useTransaction: true });
+      }
+
+      return { ret: 0, message: '表结构修改成功' };
+    } catch (error) {
+      console.error('SAP HANA修改表结构失败:', error);
+      return { ret: 1, message: `修改表结构失败: ${error instanceof Error ? error.message : String(error)}` };
+    }
+  }
+
+  /**
+   * 批量插入数据
+   */
+  async bulkInsert(dataSource: DataSource, databaseName: string, tableName: string, data: any[]): Promise<void> {
+    if (data.length === 0) return;
+
+    const columns = Object.keys(data[0]);
+    const placeholders = data.map((_, index) => 
+      `(${columns.map((_, colIndex) => `?`).join(', ')})`
+    ).join(', ');
+
+    const values = data.flatMap(row => 
+      columns.map(column => row[column])
+    );
+
+    const sql = `INSERT INTO "${tableName}" (${columns.map(col => `"${col}"`).join(', ')}) VALUES ${placeholders}`;
+    
+    await dataSource.query(sql, values);
+  }
+
+  /**
+   * 插入单条数据
+   */
+  async insertData(dataSource: DataSource, databaseName: string, tableName: string, data: any): Promise<void> {
+    const columns = Object.keys(data);
+    const placeholders = columns.map(() => '?').join(', ');
+    const values = columns.map(column => data[column]);
+
+    const sql = `INSERT INTO "${tableName}" (${columns.map(col => `"${col}"`).join(', ')}) VALUES (${placeholders})`;
+    
+    await dataSource.query(sql, values);
+  }
+
+  /**
+   * 删除表
+   */
+  async dropTable(dataSource: DataSource, databaseName: string, tableName: string): Promise<void> {
+    const sql = `DROP TABLE "${tableName}"`;
+    await dataSource.query(sql);
+  }
+
+  /**
+   * 创建表
+   */
+  async createTable(dataSource: DataSource, databaseName: string, table: any): Promise<void> {
+    const { name, columns, comment } = table;
+    
+    let sql = `CREATE COLUMN TABLE "${name}" (\n`;
+    const columnDefs: string[] = [];
+
+    columns.forEach((column: any) => {
+      let columnDef = `  "${column.name}" ${column.type}`;
+      
+      if (!column.nullable) {
+        columnDef += ' NOT NULL';
+      }
+      
+      if (column.defaultValue) {
+        const upperDefault = column.defaultValue.toString().toUpperCase();
+        if (['CURRENT_TIMESTAMP', 'CURRENT_DATE', 'CURRENT_TIME', 'SYSDATE'].includes(upperDefault)) {
+          columnDef += ` DEFAULT ${upperDefault}`;
+        } else {
+          columnDef += ` DEFAULT '${column.defaultValue}'`;
+        }
+      }
+      
+      if (column.isAutoIncrement) {
+        columnDef += ' GENERATED BY DEFAULT AS IDENTITY';
+      }
+      
+      if (column.comment) {
+        columnDef += ` COMMENT '${column.comment}'`;
+      }
+      
+      columnDefs.push(columnDef);
+    });
+
+    sql += columnDefs.join(',\n');
+    sql += '\n)';
+    
+    if (comment) {
+      sql += ` COMMENT '${comment}'`;
+    }
+    
+    sql += ';';
+    
+    await dataSource.query(sql);
+  }
 }
