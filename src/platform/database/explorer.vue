@@ -186,18 +186,7 @@
               <div class="tool-description">关于工具</div>
             </div>
           </div>
-        </div>
-        
-        <!-- 工具信息（移到左下角） -->
-        <div class="sidebar-tool-info" @click="showAboutPage">
-          <div class="tool-logo">
-            <i class="bi bi-info-circle"></i>
-          </div>
-          <div class="tool-details">
-            <div class="tool-name">fdb2</div>
-            <div class="tool-description">关于工具</div>
-          </div>
-        </div>
+        </div>        
       </div>
 
       <!-- 右侧内容区域 -->
