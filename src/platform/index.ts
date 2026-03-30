@@ -4,9 +4,12 @@ import router from './router';
 import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 
-// 引入 vconsole 进行调试
-import VConsole from 'vconsole';
-new VConsole();
+// @ts-ignore入 vconsole 进行调试
+if(window.__INITIAL_STATE__?.dev) {
+    import('vconsole').then((VConsole) => {
+        new VConsole.default();
+    });
+}
 
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';

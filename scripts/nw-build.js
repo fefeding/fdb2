@@ -2,6 +2,9 @@ const nwbuilder = require('nw-builder');
 const { resolve, join } = require('path');
 const { copyFileSync, existsSync, readdirSync, readFileSync, writeFileSync } = require('fs');
 
+// 获取项目根目录 (因为脚本现在在 scripts 目录下)
+const projectRoot = resolve(__dirname, '..');
+
 // 解析命令行参数
 const args = process.argv.slice(2);
 const targetPlatform = args.find(arg => arg.startsWith('--platform='))?.split('=')[1];
@@ -13,11 +16,11 @@ async function build() {
     // 首先构建 Vue 应用
     console.log('1. 构建 Vue 应用...');
     const { execSync } = require('child_process');
-    execSync('npm run build', { stdio: 'inherit' });
+    execSync('npm run build', { stdio: 'inherit', cwd: projectRoot });
 
     console.log('2. 复制 package.json 到 dist 目录...');
-    const srcPackageJson = join(__dirname, 'package.json');
-    const destPackageJson = join(__dirname, 'dist', 'package.json');
+    const srcPackageJson = join(projectRoot, 'package.json');
+    const destPackageJson = join(projectRoot, 'dist', 'package.json');
     if (existsSync(srcPackageJson)) {
       copyFileSync(srcPackageJson, destPackageJson);
       console.log('package.json 复制成功');
@@ -27,7 +30,7 @@ async function build() {
 
     console.log('3. 安装 npm 依赖到 dist 目录...');
     // 使用绝对路径执行 npm install 命令
-    const distPath = resolve(__dirname, 'dist');
+    const distPath = resolve(projectRoot, 'dist');
     console.log('Dist 路径:', distPath);
 
     // 执行 npm install 命令
@@ -59,7 +62,7 @@ async function build() {
     }
 
     // 为每个平台使用不同的输出目录
-    const outDir = resolve(__dirname, `release/nw-build-${platform}`);
+    const outDir = resolve(projectRoot, `release/nw-build-${platform}`);
     console.log(`输出目录: ${outDir}`);
 
     console.log(`\n正在构建 ${platform} 平台...`);
@@ -72,13 +75,13 @@ async function build() {
       platform: platform,
       arch: 'x64',
       outDir: outDir,
-      cacheDir: resolve(__dirname, 'nw-cache'),
+      cacheDir: resolve(projectRoot, 'nw-cache'),
       downloadUrl: 'https://github.com/fefeding/fdb2/tree/main/release',
       zip: false,
       logLevel: 'info',
       glob: false,
       app: {
-        icon: resolve(__dirname, 'public', 'favicon.ico')
+        icon: resolve(projectRoot, 'public', 'favicon.ico')
       }
     };
 
