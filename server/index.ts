@@ -1,4 +1,3 @@
-import type { Connect } from "vite";
 import * as http from "node:http";
 import * as url from "node:url";
 import { ConnectionService } from './service/connection.service';
@@ -586,7 +585,12 @@ function generateUpdateSQL(dbType: string, tableName: string, data: any, where: 
     .join(', ');
 
   const whereClause = Object.entries(where)
-    .map(([key, value]) => `${dbService.quoteIdentifier(key)} = ${formatValue(dbType, value)}`)
+    .map(([key, value]) => {
+      if (value === null || value === undefined) {
+        return `${dbService.quoteIdentifier(key)} IS NULL`;
+      }
+      return `${dbService.quoteIdentifier(key)} = ${formatValue(dbType, value)}`;
+    })
     .join(' AND ');
 
   return `UPDATE ${dbService.quoteIdentifier(tableName)} SET ${setClause} WHERE ${whereClause};`;
@@ -594,7 +598,12 @@ function generateUpdateSQL(dbType: string, tableName: string, data: any, where: 
 
 function generateDeleteSQL(dbType: string, tableName: string, where: any, dbService: any): string {
   const whereClause = Object.entries(where)
-    .map(([key, value]) => `${dbService.quoteIdentifier(key)} = ${formatValue(dbType, value)}`)
+    .map(([key, value]) => {
+      if (value === null || value === undefined) {
+        return `${dbService.quoteIdentifier(key)} IS NULL`;
+      }
+      return `${dbService.quoteIdentifier(key)} = ${formatValue(dbType, value)}`;
+    })
     .join(' AND ');
 
   return `DELETE FROM ${dbService.quoteIdentifier(tableName)} WHERE ${whereClause};`;
@@ -640,11 +649,6 @@ function formatValue(dbType: string, value: any): string {
     return 'NULL';
   }
 
-  // 处理空字符串，返回 NULL
-  if (value === '') {
-    return 'NULL';
-  }
-
   if (typeof value === 'number' || typeof value === 'boolean') {
     return String(value);
   }
@@ -672,7 +676,7 @@ function formatValue(dbType: string, value: any): string {
     }
   }
 
-  // 字符串类型需要加引号
+  // 处理字符串（包括空字符串 ''）
   return `'${String(value).replace(/'/g, "''")}'`;
 }
 

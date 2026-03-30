@@ -15,5 +15,5 @@
     "noEmit": false
   },
   "include": ["server/**/*"],
-  "exclude": ["**/__tests__/*", "**/*.spec.ts", "server/service/session.service.ts"]
+  "exclude": ["**/__tests__/*", "**/*.spec.ts"]
 }

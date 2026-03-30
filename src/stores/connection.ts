@@ -235,12 +235,12 @@ export const useConnectionStore = defineStore('connection', {
         
         const result = await connectionService.testConnection(connection);
         
-        if (result.ret === 0) {
-          toast.success('连接测试成功');
+        if (result.ret === 0 && result.data) {
+          //ast.success('连接测试成功');
           return true;
         } else {
-          this.error = result.msg || '连接测试失败';
-          toast.error(this.error || '连接测试失败');
+          //this.error = result.msg || '连接测试失败';
+          //toast.error(this.error || '连接测试失败');
           return false;
         }
       } catch (error: any) {

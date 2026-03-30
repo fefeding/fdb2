@@ -48,7 +48,7 @@
         <!-- 自定义单元格渲染 -->
         <template v-for="column in props.columns" :key="column.name" #[column.name]="{ row }">
           <div class="cell-value" :title="String(row[column.name])">
-            {{ formatCellValue(row[column.name]) }}
+            {{ formatCellValue(row[column.name], column.name) }}
           </div>
         </template>
 
@@ -183,13 +183,40 @@ function handleSortChange({ field, order }: { field: string, order: string }) {
   loadData();
 }
 
-function formatCellValue(value: any): string {
+function formatCellValue(value: any, columnName: string): string {
   if (value === null || value === undefined) return 'NULL';
   if (typeof value === 'object') return JSON.stringify(value);
+  
+  // 检查是否为日期时间类型
+  const column = props.columns.find(col => col.name === columnName);
+  if (column && isDateTimeType(column.type) && value) {
+    try {
+      const date = new Date(value);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleString('zh-CN', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+      }
+    } catch (e) {
+      return String(value);
+    }
+  }
+  
   return String(value);
 }
 
-// 暴露刷新方法
+// 检测是否为日期时间类型
+function isDateTimeType(type: string): boolean {
+  const upperType = type.toUpperCase();
+  return upperType.includes('DATETIME') || upperType.includes('TIMESTAMP') || upperType.includes('DATE') || upperType.includes('TIME');
+}
+
+// 监听变化暴露刷新方法
 defineExpose({
     refresh: loadData
 });

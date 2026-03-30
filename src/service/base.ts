@@ -57,11 +57,16 @@ export async function requestServer(url: string, data?: any, option?: AxiosReque
                 msg: 'success',
                 data: res
             };
-            if('ret' in res && ('msg' in res) || 'message' in res) {
-                retData.ret = res.ret;
-                retData.msg = res.msg || res.message;
-                retData.data = res.data;
+            
+            // 安全地检查 res 是否为对象且包含特定属性
+            if (res && typeof res === 'object') {
+                if ('ret' in res && ('msg' in res || 'message' in res)) {
+                    retData.ret = res.ret;
+                    retData.msg = res.msg || res.message;
+                    retData.data = res.data;
+                }
             }
+            
             // 模拟 HTTP 响应格式
             return {
                 status: 200,

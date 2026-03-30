@@ -91,17 +91,12 @@
                 </select>
                 <!-- JSON类型 -->
                 <div v-else-if="isJsonInput(column.type, 'input') || isArrayInput(column.type)" class="json-editor">
-                  <textarea 
-                    class="form-control font-monospace" 
-                  data-type="json"
-                    v-model="jsonText[column.name]"
-                    :placeholder="'请输入' + column.name + '的JSON数据'"
-                    :required="!column.nullable"
-                    rows="6"
-                    @input="validateJson(column.name)"
-                  ></textarea>
+                  <div class="json-editor-container" :ref="(el) => setJsonEditorRef(el, column.name)" style="border: 1px solid #dee2e6; border-radius: 0.375rem; overflow: hidden; height: 200px;">
+                  </div>
                   <div class="d-flex justify-content-between mt-1">
-                    <small class="text-muted">{{ jsonError[column.name] || 'JSON格式正确' }}</small>
+                    <small :class="jsonError[column.name] ? 'text-danger' : 'text-success'">
+                      {{ jsonError[column.name] || 'JSON格式正确' }}
+                    </small>
                     <button 
                       type="button" 
                       class="btn btn-sm btn-outline-primary" 
@@ -141,12 +136,17 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, computed, nextTick } from 'vue';
+import { ref, watch, computed, nextTick, onBeforeUnmount } from 'vue';
 import { DatabaseService } from '@/service/database';
 import { modal } from '@/utils/modal';
 import { isNumericType, isBooleanType, isDateTimeType, isTextType, isJsonType, isArrayType } from '@/utils/database-types';
-import VueJsonPretty from 'vue-json-pretty';
-import 'vue-json-pretty/lib/styles.css';
+
+// CodeMirror imports
+import { EditorState } from '@codemirror/state';
+import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightActiveLine, drawSelection, placeholder } from '@codemirror/view';
+import { defaultKeymap } from '@codemirror/commands';
+import { json } from '@codemirror/lang-json';
+import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 
 const databaseService = new DatabaseService();
 
@@ -174,12 +174,98 @@ const jsonText = ref<any>({});
 // JSON 验证错误
 const jsonError = ref<any>({});
 
+// CodeMirror 实例和 DOM 引用
+const jsonEditorRefs = ref<Record<string, HTMLElement | null>>({});
+const jsonEditorInstances = ref<Record<string, EditorView>>({});
+
+// 动态设置 ref
+function setJsonEditorRef(el: any, columnName: string) {
+  if (el) {
+    jsonEditorRefs.value[columnName] = el as HTMLElement;
+  }
+}
+
 // 监听显示状态变化
-watch(() => props.visible, (visible) => {
+watch(() => props.visible, async (visible) => {
   if (visible) {
     initializeFormData();
+    await nextTick();
+    initJsonEditors();
+  } else {
+    destroyJsonEditors();
   }
 });
+
+// 初始化 JSON 编辑器
+function initJsonEditors() {
+  props.columns.forEach(column => {
+    if (isJsonInput(column.type, 'input') || isArrayInput(column.type)) {
+      const container = jsonEditorRefs.value[column.name];
+      if (!container || jsonEditorInstances.value[column.name]) return;
+
+      const state = EditorState.create({
+        doc: jsonText.value[column.name] || '',
+        extensions: [
+          lineNumbers(),
+          highlightActiveLineGutter(),
+          highlightActiveLine(),
+          drawSelection(),
+          placeholder(`请输入 ${column.name} 的JSON数据`),
+          json(),
+          syntaxHighlighting(defaultHighlightStyle),
+          keymap.of(defaultKeymap),
+          EditorView.lineWrapping,
+          EditorView.updateListener.of(update => {
+            if (update.docChanged) {
+              const newValue = update.state.doc.toString();
+              jsonText.value[column.name] = newValue;
+              validateJson(column.name);
+            }
+          }),
+          EditorView.theme({
+            '&': {
+              height: '100%',
+              fontSize: '14px',
+              fontFamily: 'Monaco, Menlo, Consolas, "Courier New", monospace',
+              backgroundColor: '#f8f9fa'
+            },
+            '.cm-content': {
+              padding: '10px',
+              minHeight: '100%',
+              backgroundColor: '#ffffff'
+            },
+            '.cm-gutters': {
+              backgroundColor: '#f8f9fa',
+              color: '#6c757d',
+              borderRight: '1px solid #dee2e6'
+            },
+            '.cm-activeLineGutter': {
+              backgroundColor: '#e9ecef'
+            },
+            '.cm-activeLine': {
+              backgroundColor: '#e9ecef'
+            }
+          })
+        ]
+      });
+
+      const view = new EditorView({
+        state,
+        parent: container
+      });
+
+      jsonEditorInstances.value[column.name] = view;
+    }
+  });
+}
+
+// 销毁 JSON 编辑器
+function destroyJsonEditors() {
+  Object.values(jsonEditorInstances.value).forEach(view => {
+    view.destroy();
+  });
+  jsonEditorInstances.value = {};
+}
 
 // 初始化表单数据
 function initializeFormData() {
@@ -191,16 +277,14 @@ function initializeFormData() {
     if (props.isEdit && props.data) {
       // 编辑模式：使用现有数据
       if(isDateInput(column.type)) {
-        formData.value[column.name] = props.data[column.name] ? new Date(props.data[column.name]).toISOString().replace('.000Z', '') : null;
+        formData.value[column.name] = props.data[column.name] ? new Date(props.data[column.name]).toISOString().slice(0, 16) : null;
       }
       else if (isJsonInput(column.type) || isArrayInput(column.type)) {
-        // 对于 JSON 和数组类型，尝试解析为 JSON 对象
         let value = props.data[column.name];
         if (typeof value === 'string') {
           try {
             value = JSON.parse(value);
           } catch (e) {
-            // 如果字符串不能解析为 JSON，直接使用字符串
             value = props.data[column.name];
           }
         }
@@ -211,9 +295,18 @@ function initializeFormData() {
     } else {
       // 新增模式：设置默认值
       if (column.isPrimary && column.isAutoIncrement) {
-        formData.value[column.name] = null; // 自增主键不需要设置
+        formData.value[column.name] = null;
       } else if (column.defaultValue !== null && column.defaultValue !== undefined) {
-        formData.value[column.name] = column.defaultValue;
+        if (isDateInput(column.type) && typeof column.defaultValue === 'string') {
+          const upperDefault = column.defaultValue.toUpperCase();
+          if (upperDefault === 'CURRENT_TIMESTAMP' || upperDefault.startsWith('CURRENT_TIMESTAMP(')) {
+            formData.value[column.name] = null;
+          } else {
+            formData.value[column.name] = column.defaultValue;
+          }
+        } else {
+          formData.value[column.name] = column.defaultValue;
+        }
       } else if (column.nullable) {
         formData.value[column.name] = null;
       } else if (isBooleanInput(column.type)) {
@@ -227,6 +320,11 @@ function initializeFormData() {
     }
   });
 }
+
+// 组件卸载时清理
+onBeforeUnmount(() => {
+  destroyJsonEditors();
+});
 
 // 判断输入类型
 function isTextInput(type: string): boolean {  
@@ -291,9 +389,23 @@ function formatJson(columnName: string) {
     const value = jsonText.value[columnName];
     if (value && value.trim()) {
       const parsed = JSON.parse(value);
-      jsonText.value[columnName] = JSON.stringify(parsed, null, 2);
+      const formatted = JSON.stringify(parsed, null, 2);
+      
+      jsonText.value[columnName] = formatted;
       formData.value[columnName] = parsed;
       jsonError.value[columnName] = '';
+
+      // 更新 CodeMirror 视图
+      const view = jsonEditorInstances.value[columnName];
+      if (view) {
+        view.dispatch({
+          changes: {
+            from: 0,
+            to: view.state.doc.length,
+            insert: formatted
+          }
+        });
+      }
     }
   } catch (error) {
     jsonError.value[columnName] = 'JSON格式错误: ' + (error as Error).message;
@@ -339,13 +451,34 @@ async function handleSubmit() {
     loading.value = true;    
     let response;
     
-    // 准备提交的数据，过滤掉自增字段
+    // 准备提交的数据，过滤掉自增字段和默认值字段
     const submitData: any = {};
     Object.keys(formData.value).forEach(key => {
       const column = props.columns.find(col => col.name === key);
       // 如果列存在且不是自增字段，则包含在提交数据中
       if (!column || !column.isAutoIncrement) {
-        submitData[key] = formData.value[key];
+        const value = formData.value[key];
+
+        // 如果列有默认值且当前值为 null（表示使用默认值），跳过该字段让数据库自动处理
+        if (column?.defaultValue !== undefined && column?.defaultValue !== null && value === null) {
+          // 但如果是编辑模式且原有数据就是 null，则应该传递 null
+          if (!(props.isEdit && props.data && props.data[key] === null)) {
+            return;
+          }
+        }
+
+        // 检查是否是数据库默认时间函数
+        if (typeof value === 'string') {
+          const upperValue = value.toUpperCase();
+          if (upperValue === 'CURRENT_TIMESTAMP' || upperValue.startsWith('CURRENT_TIMESTAMP(')) {
+            return;
+          }
+        }
+        // 如果值等于默认值，也跳过该字段
+        if (column?.defaultValue !== undefined && column?.defaultValue !== null && value === column.defaultValue) {
+          return;
+        }
+        submitData[key] = value;
       }
     });
     
@@ -457,22 +590,11 @@ function getPrimaryKeyWhere() {
   font-size: 0.875rem;
 }
 
-.json-editor textarea {
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  background-color: #f8fafc;
-  border-color: #e2e8f0;
-  resize: vertical;
-}
-
-.json-editor textarea:focus {
-  background-color: #ffffff;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
 .json-editor .text-muted {
   font-size: 0.75rem;
+}
+
+.json-editor :deep(.cm-editor) {
+  height: 100%;
 }
 </style>
