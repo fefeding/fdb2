@@ -10,7 +10,7 @@
 
 ### 桌面客户端下载 (推荐)
 如果你不想使用命令行，可以直接下载我们预构建好的跨平台桌面客户端：
-- **Windows / macOS / Linux**: [前往 Release 页面下载客户端](https://github.com/fefeding/fdb2/releases)
+- **Windows / macOS / Linux**: [前往 Release 页面下载客户端](https://github.com/fefeding/fdb2/releases/tag/client)
 - 解压后双击运行即可，无需任何环境配置。
 
 ### 命令行安装
