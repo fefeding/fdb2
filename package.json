@@ -102,7 +102,6 @@
     "vite-plugin-files-copy": "^3.8.0",
     "vitest": "^3.2.4",
     "vue": "^3.5.31",
-    "vue-json-pretty": "^2.6.0",
     "vue-router": "^4.6.4",
     "vue-tsc": "^3.2.6",
     "vuex": "^4.1.0",
