@@ -18,7 +18,7 @@ function getCurrentPlatform() {
 
 function getAppConfig(platform) {
   const config = {
-    icon: resolve(projectRoot, 'public', 'favicon.ico')
+    icon: resolve(projectRoot, 'dist', 'public', 'favicon.ico')
   };
 
   if (platform === 'osx') {
