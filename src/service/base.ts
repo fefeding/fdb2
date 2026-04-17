@@ -112,7 +112,8 @@ export async function request<T = any>(url: string, data?: any, option?: AxiosRe
     if(res.status !== 200) {
         throw {
             ret: res.status,
-            msg: res.statusText,
+            msg: res.data?.msg || res.statusText,
+            message: res.data?.msg || res.statusText,
         };
     }
     
