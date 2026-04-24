@@ -57,6 +57,10 @@ switch (command) {
   case 'restart':
     restartProject();
     break;
+  case '-v':
+  case '--version':
+    showVersion();
+    break;
   default:
     showHelp();
     break;
@@ -305,6 +309,12 @@ function restartProject() {
   
   // 启动新的进程
   startProject();
+}
+
+// 显示版本号
+function showVersion() {
+  const pkg = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8'));
+  console.log(pkg.version);
 }
 
 // 显示帮助信息
