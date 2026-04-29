@@ -1,6 +1,6 @@
 {
   "name": "fdb2",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "private": false,
   "type": "commonjs",
   "main": "view/index.html",
@@ -8,6 +8,7 @@
     "bin/",
     "public/",
     "view/",
+    "dist/",
     "scripts/",
     "server.js",
     "package.json",
