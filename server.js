@@ -103,7 +103,7 @@ app.use((req, res) => {
   const indexPath = path.join(staticDir, 'view', 'index.html');
   res.sendFile(indexPath, (err) => {
     if (err) {
-      res.status(500).send('Error loading index.html');
+      res.status(500).send('Error loading index.html:' + err.toString());
     }
   });
 });
