@@ -96,12 +96,12 @@ app.use('/api/', async (req, res, next) => {
 });
 
 // 配置静态文件目录 - 只有 /public 请求指向 public 目录
-app.use('/public', express.static(path.join(staticDir, 'public')));
+app.use('/public', express.static(path.join(staticDir, 'public'), { dotfiles: 'allow' }));
 
 // 所有未匹配的路由都指向 index.html
 app.use((req, res) => {
   const indexPath = path.join(staticDir, 'view', 'index.html');
-  res.sendFile(indexPath, (err) => {
+  res.sendFile(indexPath, { dotfiles: 'allow' }, (err) => {
     if (err) {
       res.status(500).send('Error loading index.html:' + err.toString());
     }
