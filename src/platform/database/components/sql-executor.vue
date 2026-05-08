@@ -244,6 +244,46 @@ function clearSql() {
   }
 }
 
+// 检测并格式化日期值为本地时间字符串
+function formatDateValue(value: any): any {
+  if (value instanceof Date) {
+    return value.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  }
+  
+  // 如果是字符串，尝试检测是否为 ISO 日期格式
+  if (typeof value === 'string' && value.length >= 19) {
+    // 匹配 ISO 8601 格式：2024-01-01T00:00:00 或 2024-01-01T00:00:00.000Z
+    const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/;
+    if (isoDateRegex.test(value)) {
+      const date = new Date(value);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleString('zh-CN', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+      }
+    }
+  }
+  
+  return value;
+}
+
+// JSON.stringify 的 replacer，用于格式化日期字段
+function jsonDateReplacer(key: string, value: any): any {
+  return formatDateValue(value);
+}
+
 function formatCellValue(value: any): string {
   if (value === null || value === undefined) return 'NULL';
   
@@ -255,7 +295,7 @@ function formatCellValue(value: any): string {
         (trimmedValue.startsWith('[') && trimmedValue.endsWith(']'))) {
       try {
         const parsed = JSON.parse(trimmedValue);
-        const formatted = JSON.stringify(parsed, null, 2);
+        const formatted = JSON.stringify(parsed, jsonDateReplacer, 2);
         if (formatted.length > 50) {
           return formatted.substring(0, 50) + '...';
         }
@@ -266,7 +306,7 @@ function formatCellValue(value: any): string {
     }
   } else if (typeof value === 'object') {
     try {
-      const formatted = JSON.stringify(value, null, 2);
+      const formatted = JSON.stringify(value, jsonDateReplacer, 2);
       if (formatted.length > 50) {
         return formatted.substring(0, 50) + '...';
       }
@@ -436,7 +476,7 @@ function updateResultEditor() {
   
   // 格式化JSON字符串
   try {
-    const jsonString = JSON.stringify(jsonData, null, 2);
+    const jsonString = JSON.stringify(jsonData, jsonDateReplacer, 2);
     
     // 更新编辑器内容
     resultEditor.value.dispatch({
@@ -474,7 +514,7 @@ function formatJsonResult() {
   
   // 格式化JSON字符串
   try {
-    const jsonString = JSON.stringify(jsonData, null, 2);
+    const jsonString = JSON.stringify(jsonData, jsonDateReplacer, 2);
     
     // 更新编辑器内容
     resultEditor.value.dispatch({

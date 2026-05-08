@@ -113,6 +113,35 @@ const pageSize = ref(50);
 const sortField = ref('');
 const sortOrder = ref(''); // ASC, DESC, ''
 
+// 生成 sessionStorage 的 key，按连接+数据库+表隔离
+function getSortStorageKey(): string {
+  return `table_sort_${props.connection?.id || ''}_${props.database || ''}_${props.table?.name || ''}`;
+}
+
+// 从 sessionStorage 恢复排序状态
+function restoreSortState() {
+  if (!props.connection?.id || !props.database || !props.table?.name) return;
+  try {
+    const saved = sessionStorage.getItem(getSortStorageKey());
+    if (saved) {
+      const { field, order } = JSON.parse(saved);
+      sortField.value = field || '';
+      sortOrder.value = order || '';
+    }
+  } catch (e) {
+    // 解析失败时忽略
+  }
+}
+
+// 保存排序状态到 sessionStorage
+function saveSortState() {
+  if (!props.connection?.id || !props.database || !props.table?.name) return;
+  sessionStorage.setItem(getSortStorageKey(), JSON.stringify({
+    field: sortField.value,
+    order: sortOrder.value
+  }));
+}
+
 // 计算属性
 const totalPages = computed(() => Math.ceil(total.value / pageSize.value) || 1);
 
@@ -179,6 +208,7 @@ function handlePageSizeChange() {
 function handleSortChange({ field, order }: { field: string, order: string }) {
   sortField.value = field;
   sortOrder.value = order;
+  saveSortState();
   currentPage.value = 1;
   loadData();
 }
@@ -226,10 +256,12 @@ watch(() => [props.connection?.id, props.database, props.table?.name], () => {
   currentPage.value = 1;
   sortField.value = '';
   sortOrder.value = '';
+  restoreSortState(); // 尝试恢复当前表的排序状态
   loadData();
 });
 
 onMounted(() => {
+  restoreSortState(); // 尝试恢复当前表的排序状态
   loadData();
 });
 </script>
