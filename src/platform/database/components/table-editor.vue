@@ -239,20 +239,65 @@ const formData = ref({
     name: '',
     type: '',
     length: '',
+    precision: null as string | null,
+    scale: null as string | null,
     nullable: false,
     defaultValue: '',
     isPrimary: false,
     isAutoIncrement: false,
     comment: ''
-  }]
+  }] as Array<{
+    name: string;
+    type: string;
+    length: string;
+    precision: string | null;
+    scale: string | null;
+    nullable: boolean;
+    defaultValue: string;
+    isPrimary: boolean;
+    isAutoIncrement: boolean;
+    comment: string;
+  }>
 });
 
 // 原始表结构（用于对比差异）
 const originalTableData = ref({
   tableName: '',
   tableComment: '',
-  columns: []
+  columns: [] as any[]
 });
+
+// 解析类型字符串，提取基础类型名和长度/精度
+// 例如: "varchar(255)" -> { baseType: "VARCHAR", length: "255" }
+//       "decimal(10,2)" -> { baseType: "DECIMAL", precision: "10", scale: "2" }
+//       "int(11)" -> { baseType: "INT", length: "11" }
+function parseColumnType(typeStr: string): { baseType: string; length?: string; precision?: string; scale?: string } {
+  const result: { baseType: string; length?: string; precision?: string; scale?: string } = {
+    baseType: typeStr
+  };
+
+  if (!typeStr) return result;
+
+  const match = typeStr.match(/^([a-zA-Z\s]+)\(([^)]+)\)$/);
+  if (match) {
+    result.baseType = match[1].trim().toUpperCase();
+    const params = match[2].split(',').map((s: string) => s.trim());
+
+    // 查找类型定义，判断是长度还是精度
+    const typeInfo = columnTypes.value.find(t => t.name.toUpperCase() === result.baseType);
+    if (typeInfo?.requiresPrecision) {
+      result.precision = params[0] || undefined;
+      result.scale = params[1] || undefined;
+    } else {
+      result.length = params[0] || '';
+    }
+  } else {
+    // 不带括号，直接使用大写作为基础类型
+    result.baseType = typeStr.trim().toUpperCase();
+  }
+
+  return result;
+}
 
 // 初始化表单数据
 function initFormData() {  
@@ -261,18 +306,22 @@ function initFormData() {
     const tableData = {
       tableName: props.table.name || '',
       tableComment: props.table.comment || '',
-      columns: columns.map(col => ({
-        name: col.name || '',
-        type: col.type || '',
-        length: col.length || '',
-        precision: col.precision || null,
-        scale: col.scale || null,
-        nullable: col.nullable || false,
-        defaultValue: col.defaultValue || '',
-        isPrimary: col.isPrimary || false,
-        isAutoIncrement: col.isAutoIncrement || false,
-        comment: col.comment || ''
-      })) || []
+      columns: columns.map(col => {
+        // 解析类型字符串，提取基础类型名和长度/精度
+        const parsed = parseColumnType(col.type || '');
+        return {
+          name: col.name || '',
+          type: parsed.baseType,
+          length: col.length || parsed.length || '',
+          precision: col.precision || parsed.precision || null,
+          scale: col.scale || parsed.scale || null,
+          nullable: col.nullable || false,
+          defaultValue: col.defaultValue || '',
+          isPrimary: col.isPrimary || false,
+          isAutoIncrement: col.isAutoIncrement || false,
+          comment: col.comment || ''
+        } as any;
+      }) || []
     };
     formData.value = { ...tableData };
     originalTableData.value = JSON.parse(JSON.stringify(tableData));
@@ -291,12 +340,12 @@ function initFormData() {
         isPrimary: false,
         isAutoIncrement: false,
         comment: ''
-      }]
+      } as any]
     };
     originalTableData.value = {
       tableName: '',
       tableComment: '',
-      columns: []
+      columns: [] as any[]
     };
   }
 }
@@ -307,9 +356,9 @@ function calculateTableDiff() {
     tableName: formData.value.tableName,
     tableCommentChanged: formData.value.tableComment !== originalTableData.value.tableComment,
     tableComment: formData.value.tableComment,
-    addedColumns: [],
-    modifiedColumns: [],
-    deletedColumns: []
+    addedColumns: [] as any[],
+    modifiedColumns: [] as any[],
+    deletedColumns: [] as any[]
   };
 
   // 创建原始列的映射（按列名）
