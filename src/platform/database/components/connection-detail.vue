@@ -20,14 +20,14 @@
         </div>
       </div>
       <div class="connection-actions">
-        <button class="btn btn-sm btn-outline-info" @click="toggleDetails" title="查看/隐藏详细信息">
-          <i class="bi" :class="isDetailsExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i> 详情
+        <button class="btn btn-sm btn-outline-info" @click="toggleDetails" :title="$t('connection.toggleDetails')">
+          <i class="bi" :class="isDetailsExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i> {{ $t('connection.details') }}
         </button>
         <button class="btn btn-sm btn-outline-primary" @click="testConnection">
           <i class="bi bi-wifi"></i>
         </button>
         <button class="btn btn-sm btn-outline-secondary" @click="editConnection">
-          <i class="bi bi-pencil"></i> 编辑
+          <i class="bi bi-pencil"></i> {{ $t('common.edit') }}
         </button>
       </div>
     </div>
@@ -41,23 +41,23 @@
             <div class="col-md-6">
               <h6 class="section-title">
                 <i class="bi bi-info-circle"></i>
-                基本信息
+                {{ $t('connection.basicInfo') }}
               </h6>
               <div class="info-grid">
                 <div class="info-item">
-                  <label class="info-label">主机地址</label>
+                  <label class="info-label">{{ $t('connection.host') }}</label>
                   <div class="info-value">{{ connection?.host }}</div>
                 </div>
                 <div class="info-item">
-                  <label class="info-label">端口</label>
+                  <label class="info-label">{{ $t('connection.port') }}</label>
                   <div class="info-value">{{ connection?.port }}</div>
                 </div>
                 <div class="info-item">
-                  <label class="info-label">用户名</label>
+                  <label class="info-label">{{ $t('connection.username') }}</label>
                   <div class="info-value">{{ connection?.username }}</div>
                 </div>
                 <div class="info-item">
-                  <label class="info-label">数据库类型</label>
+                  <label class="info-label">{{ $t('connection.databaseType') }}</label>
                   <div class="info-value">
                     <span class="db-type-badge" :class="getDbLogoClass(connection?.type)">
                       {{ getDbTypeLabel(connection?.type) }}
@@ -71,24 +71,24 @@
             <div class="col-md-6">
               <h6 class="section-title">
                 <i class="bi bi-bar-chart"></i>
-                连接统计
+                {{ $t('connection.connectionStats') }}
               </h6>
               <div class="stats-grid">
                 <div class="stat-item">
                   <div class="stat-value">{{ connectionStats.databaseCount || 0 }}</div>
-                  <div class="stat-label">数据库数量</div>
+                  <div class="stat-label">{{ $t('connection.databaseCount') }}</div>
                 </div>
                 <div class="stat-item">
                   <div class="stat-value">{{ connectionStats.tableCount || 0 }}</div>
-                  <div class="stat-label">表总数</div>
+                  <div class="stat-label">{{ $t('connection.tableCount') }}</div>
                 </div>
                 <div class="stat-item">
                   <div class="stat-value">{{ formatFileSize(connectionStats.totalSize || 0) }}</div>
-                  <div class="stat-label">总大小</div>
+                  <div class="stat-label">{{ $t('connection.totalSize') }}</div>
                 </div>
                 <div class="stat-item">
-                  <div class="stat-value">{{ connectionStats.lastConnected || '从未' }}</div>
-                  <div class="stat-label">最后连接</div>
+                  <div class="stat-value">{{ connectionStats.lastConnected || $t('common.never') }}</div>
+                  <div class="stat-label">{{ $t('connection.lastConnected') }}</div>
                 </div>
               </div>
             </div>
@@ -102,7 +102,7 @@
       <div class="actions-header">
         <h6 class="actions-title">
           <i class="bi bi-lightning"></i>
-          快速操作
+          {{ $t('connection.quickActions') }}
         </h6>
       </div>
       <div class="actions-grid">
@@ -110,7 +110,7 @@
           <div class="action-icon">
             <i class="bi bi-plus-circle"></i>
           </div>
-          <div class="action-text">创建数据库</div>
+          <div class="action-text">{{ $t('connection.createDatabase') }}</div>
         </button>
         <!-- <button class="action-btn" @click="refreshAll">
           <div class="action-icon">
@@ -128,13 +128,13 @@
           <div class="action-icon">
             <i class="bi bi-download"></i>
           </div>
-          <div class="action-text">导出架构</div>
+          <div class="action-text">{{ $t('connection.exportSchema') }}</div>
         </button>
         <button class="action-btn" @click="viewLogs">
           <div class="action-icon">
             <i class="bi bi-file-text"></i>
           </div>
-          <div class="action-text">查看日志</div>
+          <div class="action-text">{{ $t('connection.viewLogs') }}</div>
         </button>
       </div>
     </div>
@@ -148,7 +148,7 @@
             :class="{ active: activeTab === 'databases' }"
             @click="activeTab = 'databases'"
           >
-            <i class="bi bi-database-fill"></i> 数据库列表
+            <i class="bi bi-database-fill"></i> {{ $t('connection.databaseList') }}
             <span class="badge bg-primary ms-1">{{ databases.length }}</span>
           </button>
         </li>
@@ -158,7 +158,7 @@
             :class="{ active: activeTab === 'sql' }"
             @click="activeTab = 'sql'"
           >
-            <i class="bi bi-terminal"></i> SQL查询
+            <i class="bi bi-terminal"></i> {{ $t('nav.sqlQuery') }}
           </button>
         </li>
       </ul>
@@ -174,13 +174,13 @@
                     type="text" 
                     class="form-control form-control-sm" 
                     v-model="searchKeyword" 
-                    placeholder="搜索数据库..."
+                    :placeholder="$t('connection.searchDatabase')"
                     style="width: 200px;"
                   >
                 </div>
                 <button class="btn btn-sm btn-outline-primary ms-2" @click="loadDatabases" :disabled="loadingDatabases">
                   <span v-if="loadingDatabases" class="spinner-border spinner-border-sm me-1"></span>
-                  <i class="bi bi-arrow-clockwise"></i> 刷新
+                  <i class="bi bi-arrow-clockwise"></i> {{ $t('common.refresh') }}
                 </button>
               </div>
             </div>
@@ -188,13 +188,13 @@
             <div class="databases-list">
               <div v-if="loadingDatabases" class="loading-state">
                 <div class="spinner-border text-primary"></div>
-                <span>加载数据库列表...</span>
+                <span>{{ $t('connection.loadingDatabases') }}</span>
               </div>
               <div v-else-if="filteredDatabases.length === 0" class="empty-state">
                 <i class="bi bi-database"></i>
-                <p>{{ searchKeyword ? '没有找到匹配的数据库' : '暂无数据库' }}</p>
+                <p>{{ searchKeyword ? $t('connection.noMatchDatabase') : $t('connection.noDatabase') }}</p>
                 <button class="btn btn-sm btn-primary" @click="showCreateDatabaseModal">
-                  <i class="bi bi-plus"></i> 创建数据库
+                  <i class="bi bi-plus"></i> {{ $t('connection.createDatabase') }}
                 </button>
               </div>
               <div v-else class="databases-list-simple">
@@ -225,7 +225,7 @@
             <div class="sql-header">
               <h6 class="sql-title">
                 <i class="bi bi-terminal"></i>
-                SQL查询
+                {{ $t('nav.sqlQuery') }}
               </h6>
               <div class="sql-db-info" v-if="props.connection">
                 <span class="badge bg-info">{{ props.connection.name }}</span>
@@ -245,31 +245,31 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">创建数据库</h5>
+            <h5 class="modal-title">{{ $t('connection.createDatabaseTitle') }}</h5>
             <button type="button" class="btn-close" @click="showCreateDatabase = false"></button>
           </div>
           <div class="modal-body">
             <form>
               <div class="mb-3">
-                <label class="form-label">数据库名称 <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" v-model="newDatabase.name" placeholder="输入数据库名称" required>
+                <label class="form-label">{{ $t('connection.databaseNameLabel') }} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" v-model="newDatabase.name" :placeholder="$t('connection.enterDatabaseName')" required>
               </div>
               
               <!-- MySQL特定选项 -->
               <div v-if="connection?.type === 'mysql'">
                 <div class="mb-3">
-                  <label class="form-label">字符集</label>
+                  <label class="form-label">{{ $t('connection.charset') }}</label>
                   <select class="form-select" v-model="newDatabase.options.charset">
-                    <option value="">默认</option>
+                    <option value="">{{ $t('common.default') }}</option>
                     <option value="utf8mb4">utf8mb4</option>
                     <option value="utf8">utf8</option>
                     <option value="latin1">latin1</option>
                   </select>
                 </div>
                 <div class="mb-3">
-                  <label class="form-label">排序规则</label>
+                  <label class="form-label">{{ $t('connection.collation') }}</label>
                   <select class="form-select" v-model="newDatabase.options.collation">
-                    <option value="">默认</option>
+                    <option value="">{{ $t('common.default') }}</option>
                     <option value="utf8mb4_unicode_ci">utf8mb4_unicode_ci</option>
                     <option value="utf8mb4_general_ci">utf8mb4_general_ci</option>
                     <option value="utf8_unicode_ci">utf8_unicode_ci</option>
@@ -280,24 +280,24 @@
               <!-- PostgreSQL特定选项 -->
               <div v-if="connection?.type === 'postgres'">
                 <div class="mb-3">
-                  <label class="form-label">所有者</label>
-                  <input type="text" class="form-control" v-model="newDatabase.options.owner" placeholder="数据库所有者">
+                  <label class="form-label">{{ $t('connection.owner') }}</label>
+                  <input type="text" class="form-control" v-model="newDatabase.options.owner" :placeholder="$t('connection.databaseOwner')">
                 </div>
                 <div class="mb-3">
-                  <label class="form-label">模板</label>
-                  <input type="text" class="form-control" v-model="newDatabase.options.template" placeholder="模板数据库">
+                  <label class="form-label">{{ $t('connection.template') }}</label>
+                  <input type="text" class="form-control" v-model="newDatabase.options.template" :placeholder="$t('connection.templateDatabase')">
                 </div>
                 <div class="mb-3">
-                  <label class="form-label">编码</label>
+                  <label class="form-label">{{ $t('connection.encoding') }}</label>
                   <select class="form-select" v-model="newDatabase.options.encoding">
-                    <option value="">默认</option>
+                    <option value="">{{ $t('common.default') }}</option>
                     <option value="UTF8">UTF8</option>
                     <option value="LATIN1">LATIN1</option>
                   </select>
                 </div>
                 <div class="mb-3">
-                  <label class="form-label">表空间</label>
-                  <input type="text" class="form-control" v-model="newDatabase.options.tablespace" placeholder="表空间">
+                  <label class="form-label">{{ $t('connection.tablespace') }}</label>
+                  <input type="text" class="form-control" v-model="newDatabase.options.tablespace" :placeholder="$t('connection.tablespace')">
                 </div>
               </div>
 
@@ -311,10 +311,10 @@
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="showCreateDatabase = false">取消</button>
+            <button type="button" class="btn btn-secondary" @click="showCreateDatabase = false">{{ $t('common.cancel') }}</button>
             <button type="button" class="btn btn-primary" @click="createDatabase" :disabled="!newDatabase.name || creatingDatabase">
               <span v-if="creatingDatabase" class="spinner-border spinner-border-sm me-2"></span>
-              创建
+              {{ $t('common.create') }}
             </button>
           </div>
         </div>
@@ -329,7 +329,10 @@ import { useRouter } from 'vue-router';
 import type { ConnectionEntity } from '@/typings/database';
 import { useConnectionStore } from '@/stores/connection';
 import SqlExecutor from './sql-executor.vue';
+import { useI18n } from 'vue-i18n';
 import { modal } from '@/utils/modal';
+
+const { t } = useI18n();
 
 const router = useRouter();
 
@@ -431,13 +434,13 @@ const connectionStatusClass = computed(() => {
 const connectionStatusText = computed(() => {
   switch (connectionStatus.value) {
     case 'connected':
-      return '已连接';
+      return t('connection.connected');
     case 'disconnected':
-      return '未连接';
+      return t('connection.disconnected');
     case 'testing':
-      return '测试中...';
+      return t('connection.testing');
     default:
-      return '未知';
+      return t('common.unknown');
   }
 });
 
@@ -448,7 +451,7 @@ function loadConnectionStats() {
     databaseCount: connectionStore.databaseCount,
     tableCount: connectionStore.tableCount,
     totalSize: 1024 * 1024 * 512, // 512MB
-    lastConnected: '2小时前'
+    lastConnected: t('connection.hoursAgo', { n: 2 })
   };
 }
 
@@ -521,7 +524,7 @@ function showCreateDatabaseModal() {
 
 async function createDatabase() {
   if (!newDatabase.value.name) {
-    modal.warning('请输入数据库名称');
+    modal.warning(t('connection.enterDbNameRequired'));
     return;
   }
   
@@ -529,7 +532,7 @@ async function createDatabase() {
     creatingDatabase.value = true;
     try {
       await connectionStore.createDatabase(newDatabase.value.name);
-      modal.success('数据库创建成功');
+      modal.success(t('connection.databaseCreateSuccess'));
       showCreateDatabase.value = false;
       // 重置表单
       newDatabase.value = {
@@ -548,7 +551,7 @@ async function createDatabase() {
       // 通知父组件刷新数据库缓存
       emit('create-database');
     } catch (error: any) {
-      modal.error(error.message || '创建数据库失败');
+      modal.error(error.message || t('connection.databaseCreateFailed'));
     } finally {
       creatingDatabase.value = false;
     }

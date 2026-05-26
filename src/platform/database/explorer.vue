@@ -6,13 +6,13 @@
         <div class="sidebar-header">
           <h5 class="sidebar-title">
             <i class="bi bi-diagram-3"></i>
-            数据库浏览器
+            {{ $t('explorer.title') }}
           </h5>
           <div class="sidebar-actions">
-            <button class="btn btn-sm btn-outline-primary" @click="refreshAll" title="刷新">
+            <button class="btn btn-sm btn-outline-primary" @click="refreshAll" :title="$t('explorer.refreshAll')">
               <i class="bi bi-arrow-clockwise"></i>
             </button>
-            <button class="btn btn-sm btn-outline-success" @click="showAddConnectionModal" title="添加连接">
+            <button class="btn btn-sm btn-outline-success" @click="showAddConnectionModal" :title="$t('explorer.addConnection')">
               <i class="bi bi-plus"></i>
             </button>
           </div>
@@ -47,28 +47,28 @@
                   <button 
                     class="btn btn-sm btn-icon" 
                     @click.stop="refreshConnection(connection)"
-                    title="刷新连接"
+                    :title="$t('connection.refreshConnection')"
                   >
                     <i class="bi bi-arrow-clockwise"></i>
                   </button>
                   <button 
                     class="btn btn-sm btn-icon" 
                     @click.stop="editConnection(connection)"
-                    title="编辑连接"
+                    :title="$t('connection.editConnectionTitle')"
                   >
                     <i class="bi bi-pencil"></i>
                   </button>
                   <button 
                     class="btn btn-sm btn-icon" 
                     @click.stop="testConnection(connection)"
-                    title="测试连接"
+                    :title="$t('connection.testConnection')"
                   >
                     <i class="bi bi-wifi"></i>
                   </button>
                   <button 
                     class="btn btn-sm btn-icon btn-icon-danger" 
                     @click.stop="deleteConnection(connection)"
-                    title="删除连接"
+                    :title="$t('connection.deleteConnection')"
                   >
                     <i class="bi bi-trash"></i>
                   </button>
@@ -103,14 +103,14 @@
                       <button 
                         class="btn btn-sm btn-icon" 
                         @click.stop="refreshDatabase(connection, database)"
-                        title="刷新数据库"
+                        :title="$t('explorer.refreshDatabase')"
                       >
                         <i class="bi bi-arrow-clockwise"></i>
                       </button>
                       <button 
                         class="btn btn-sm btn-icon btn-icon-danger" 
                         @click.stop="deleteDatabase(connection, database)"
-                        title="删除数据库"
+                        :title="$t('explorer.deleteDatabase')"
                       >
                         <i class="bi bi-trash"></i>
                       </button>
@@ -136,21 +136,21 @@
                         <div class="node-main" @click="selectTable(connection, database, table)">
                           <div class="node-label">
                             <span class="table-name">{{ table.name }}</span>
-                            <span class="table-info" v-if="table.rowCount !== undefined">{{ formatNumber(table.rowCount) }} 行</span>
+                            <span class="table-info" v-if="table.rowCount !== undefined">{{ formatNumber(table.rowCount) }} {{ $t('explorer.rowsSuffix') }}</span>
                           </div>
                         </div>
                         <div class="node-actions">
                           <button 
                             class="btn btn-sm btn-icon" 
                             @click.stop="refreshTable(connection, database, table)"
-                            title="刷新表"
+                            :title="$t('explorer.refreshTable')"
                           >
                             <i class="bi bi-arrow-clockwise"></i>
                           </button>
                           <button 
                             class="btn btn-sm btn-icon" 
                             @click.stop="viewTableStructure(connection, database, table)"
-                            title="查看结构"
+                            :title="$t('explorer.viewStructure')"
                           >
                             <i class="bi bi-diagram-3"></i>
                           </button>
@@ -169,9 +169,9 @@
               <i class="bi bi-inbox"></i>
             </div>
             <div class="empty-text">
-              <p>还没有数据库连接</p>
+              <p>{{ $t('connection.noConnectionYet') }}</p>
               <button class="btn btn-primary btn-sm" @click="showAddConnectionModal">
-                <i class="bi bi-plus"></i> 添加连接
+                <i class="bi bi-plus"></i> {{ $t('explorer.addConnection') }}
               </button>
             </div>
           </div>
@@ -183,7 +183,7 @@
             </div>
             <div class="tool-details">
               <div class="tool-name">fdb2</div>
-              <div class="tool-description">关于工具</div>
+              <div class="tool-description">{{ $t('connection.aboutTool') }}</div>
             </div>
           </div>
         </div>        
@@ -250,8 +250,8 @@
             <div class="default-icon">
               <i class="bi bi-diagram-3"></i>
             </div>
-            <h5>数据库浏览器</h5>
-            <p>请从左侧选择一个连接、数据库或表来查看详细信息</p>
+            <h5>{{ $t('explorer.defaultTitle') }}</h5>
+            <p>{{ $t('explorer.defaultDesc') }}</p>
           </div>
         </div>
       </div>

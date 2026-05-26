@@ -1,5 +1,7 @@
 import { createApp, getCurrentInstance, nextTick } from 'vue';
 import BootstrapModal from './index.vue';
+import { getT } from '@/i18n';
+import i18n from '@/i18n';
 
 export type ModalType = {
   show: () => void,
@@ -45,6 +47,7 @@ export default {
     
     // 创建实例
     const modalApp = createApp(BootstrapModal);
+    modalApp.use(i18n);
     globalModalInstance = modalApp.mount(mount) as any;
     
     // 添加事件监听，确保模态框完全隐藏后重置 isModalActive
@@ -83,16 +86,20 @@ export default {
         return showModal(opts);
       },
       success(content: string) {
-        return this.alert({ content, type: 'success' as const, confirmText: '确定' });
+        const t = getT();
+        return this.alert({ content, type: 'success' as const, confirmText: t('common.confirm') });
       },
       error(content: string, details?: any) {
-        return this.alert({ content, type: 'error' as const, confirmText: '确定', details });
+        const t = getT();
+        return this.alert({ content, type: 'error' as const, confirmText: t('common.confirm'), details });
       },
       warning(content: string) {
-        return this.alert({ content, type: 'warning' as const, confirmText: '确定' });
+        const t = getT();
+        return this.alert({ content, type: 'warning' as const, confirmText: t('common.confirm') });
       },
       info(content: string) {
-        return this.alert({ content, type: 'info' as const, confirmText: '确定' });
+        const t = getT();
+        return this.alert({ content, type: 'info' as const, confirmText: t('common.confirm') });
       },
     } as ModalTypeWithMethods;
   },
@@ -118,10 +125,11 @@ export const showModal = (options: ModalOptions) => {
   if (!globalModalInstance) return Promise.resolve(false);
 
   return new Promise<boolean>((resolve) => {
+    const t = getT();
     const finalOptions = {
-      title: '提示',
-      confirmText: '确定',
-      cancelText: '取消',
+      title: t('common.tip'),
+      confirmText: t('common.confirm'),
+      cancelText: t('common.cancel'),
       showCancel: false,
       type: 'info',
       ...options,
@@ -171,8 +179,9 @@ export const showAlert = (content: string, type: 'success' | 'error' | 'warning'
 };
 
 export const showConfirm = (content: string, options?: Omit<ModalOptions, 'content' | 'showCancel'>) => {
+  const t = getT();
   return showModal({
-    title: '确认',
+    title: t('common.confirmTitle'),
     content,
     type: 'warning',
     showCancel: true,

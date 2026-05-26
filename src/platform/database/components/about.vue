@@ -6,45 +6,45 @@
       </div>
       <div class="about-title">
         <h2>fdb2</h2>
-        <p>开源数据库管理工具</p>
+        <p>{{ $t('aboutPage.subtitle') }}</p>
       </div>
     </div>
     
     <div class="about-content">
       <section class="about-section">
-        <h3>关于 fdb2</h3>
+        <h3>{{ $t('aboutPage.aboutTitle') }}</h3>
         <p>
-          fdb2 是一款轻量级、跨平台的数据库管理工具，支持多种数据库类型，提供类似 Navicat Premium 的使用体验。
+          {{ $t('aboutPage.aboutDesc') }}
         </p>
       </section>
       
       <section class="about-section">
-        <h3>获取更多信息</h3>
+        <h3>{{ $t('aboutPage.getMoreInfo') }}</h3>
         <div class="about-links">
           <a href="https://surl.fit/tools/tools/fdb2" target="_blank" class="about-link">
             <i class="bi bi-globe"></i>
-            <span>官方网站</span>
+            <span>{{ $t('aboutPage.officialWebsite') }}</span>
           </a>
           <a href="https://github.com/fefeding/fdb2/" target="_blank" class="about-link">
             <i class="bi bi-github"></i>
-            <span>GitHub 仓库</span>
+            <span>{{ $t('aboutPage.githubRepo') }}</span>
           </a>
         </div>
       </section>
       
       <section class="about-section">
-        <h3>核心优势</h3>
+        <h3>{{ $t('aboutPage.coreAdvantages') }}</h3>
         <ul class="feature-list">
-          <li><i class="bi bi-check-circle"></i> 零配置启动：全局安装后即可使用，无需复杂配置</li>
-          <li><i class="bi bi-check-circle"></i> 跨平台支持：Windows、macOS、Linux 全平台兼容</li>
-          <li><i class="bi bi-check-circle"></i> 轻量高效：资源占用低</li>
-          <li><i class="bi bi-check-circle"></i> 本地存储：数据保存在本地，安全可靠</li>
-          <li><i class="bi bi-check-circle"></i> 离线使用：无需联网即可管理本地数据库</li>
+          <li><i class="bi bi-check-circle"></i> {{ $t('aboutPage.advZeroConfig') }}</li>
+          <li><i class="bi bi-check-circle"></i> {{ $t('aboutPage.advCrossPlatform') }}</li>
+          <li><i class="bi bi-check-circle"></i> {{ $t('aboutPage.advLightweight') }}</li>
+          <li><i class="bi bi-check-circle"></i> {{ $t('aboutPage.advLocal') }}</li>
+          <li><i class="bi bi-check-circle"></i> {{ $t('aboutPage.advOffline') }}</li>
         </ul>
       </section>
       
       <section class="about-section">
-        <h3>支持的数据库类型</h3>
+        <h3>{{ $t('aboutPage.supportedDbTypes') }}</h3>
         <div class="database-types">
           <div class="db-type" v-for="db in databaseTypes" :key="db.name">
             <span class="db-name">{{ db.name }}</span>
@@ -54,14 +54,16 @@
       </section>
       
       <section class="about-section">
-        <h3>许可证</h3>
-        <p>fdb2 是一个完全开源的项目，采用 MIT 开源协议，自由使用。</p>
+        <h3>{{ $t('aboutPage.license') }}</h3>
+        <p>{{ $t('aboutPage.licenseDesc') }}</p>
       </section>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const databaseTypes = [
   { name: 'MySQL', port: '3306' },
   { name: 'PostgreSQL', port: '5432' },

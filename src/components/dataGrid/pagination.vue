@@ -3,7 +3,7 @@
     <nav aria-label="Page navigation" class="px-3">
         <ul class="pagination">
             <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <a class="page-link" href="#" @click.prevent="prevPage">上一页</a>
+                <a class="page-link" href="#" @click.prevent="prevPage">{{ t('pagination.prevPage') }}</a>
             </li>
             
             <!-- 生成页码列表 -->
@@ -20,7 +20,7 @@
             </li>
             
             <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                <a class="page-link" href="#" @click.prevent="nextPage">下一页</a>
+                <a class="page-link" href="#" @click.prevent="nextPage">{{ t('pagination.nextPage') }}</a>
             </li>
         </ul>
     </nav>
@@ -28,6 +28,9 @@
     
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
     
 const props = defineProps({
     // 总页数

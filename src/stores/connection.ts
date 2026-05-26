@@ -3,6 +3,7 @@ import { DatabaseService, ConnectionService } from '@/service/database';
 import type { ConnectionEntity, DatabaseEntity, TableEntity } from '@/typings/database';
 import { modal } from '@/utils/modal';
 import { toast } from '@/utils/toast';
+import { getT } from '@/i18n';
 
 // 定义连接状态类型
 export type ConnectionState = {
@@ -102,7 +103,8 @@ export const useConnectionStore = defineStore('connection', {
         
         const connectionId = this.currentConnection.id;
         if (!connectionId) {
-          this.error = '连接ID不存在';
+          const t = getT();
+          this.error = t('store.connectionIdNotExist');
           modal.error(this.error);
           return;
         }
@@ -127,11 +129,13 @@ export const useConnectionStore = defineStore('connection', {
             tables: []
           }));
         } else {
-          this.error = (result && typeof result === 'object' && 'msg' in result && typeof result.msg === 'string') ? result.msg : '获取数据库列表失败';
+          const t = getT();
+          this.error = (result && typeof result === 'object' && 'msg' in result && typeof result.msg === 'string') ? result.msg : t('store.getDatabaseListFailed');
           modal.error(this.error);
         }
       } catch (error: any) {
-        this.error = error.message || '获取数据库列表失败';
+        const t = getT();
+        this.error = error.message || t('store.getDatabaseListFailed');
         console.error('获取数据库列表失败:', error);
         modal.error(this.error);
       } finally {
@@ -159,11 +163,13 @@ export const useConnectionStore = defineStore('connection', {
           // 更新表列表
           this.tables = databaseInfo.tables || [];
         } else {
-          this.error = result.msg || '获取数据库详细信息失败';
+          const t = getT();
+          this.error = result.msg || t('store.getDatabaseInfoFailed');
           modal.error(this.error);
         }
       } catch (error: any) {
-        this.error = error.message || '获取数据库详细信息失败';
+        const t = getT();
+        this.error = error.message || t('store.getDatabaseInfoFailed');
         console.error('获取数据库详细信息失败:', error);
         modal.error(this.error);
       } finally {
@@ -189,11 +195,13 @@ export const useConnectionStore = defineStore('connection', {
             this.databases[index].tableCount = this.tables.length;
           }
         } else {
-          this.error = result.msg || '获取表列表失败';
+          const t = getT();
+          this.error = result.msg || t('store.getTableListFailed');
           modal.error(this.error);
         }
       } catch (error: any) {
-        this.error = error.message || '获取表列表失败';
+        const t = getT();
+        this.error = error.message || t('store.getTableListFailed');
         console.error('获取表列表失败:', error);
         modal.error(this.error);
       } finally {
@@ -219,7 +227,8 @@ export const useConnectionStore = defineStore('connection', {
         // 重新加载数据库列表
         this.loadDatabases();
       } catch (error: any) {
-        this.error = error.message || '创建数据库失败';
+        const t = getT();
+        this.error = error.message || t('store.createDatabaseFailed');
         console.error('创建数据库失败:', error);
         throw error;
       } finally {
@@ -244,9 +253,10 @@ export const useConnectionStore = defineStore('connection', {
           return false;
         }
       } catch (error: any) {
-        this.error = error.message || '连接测试失败';
-        console.error('连接测试失败:', error);
-        toast.error(this.error || '连接测试失败');
+        const t = getT();
+        this.error = error.message || t('store.testConnectionFailed');
+        console.error('testConnection failed:', error);
+        toast.error(this.error || t('store.testConnectionFailed'));
         return false;
       } finally {
         this.loading.executing = false;

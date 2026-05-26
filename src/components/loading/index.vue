@@ -5,11 +5,15 @@
           <span class="visually-hidden">Loading...</span>
         </div>
       </div>
-        <p v-if="message" class="m-3 text-primary">{{ message }}</p>
+        <p v-if="displayMessage" class="m-3 text-primary">{{ displayMessage }}</p>
     </div>
   </template>
   
   <script setup lang="ts">
+  import { useI18n } from 'vue-i18n';
+  import { computed } from 'vue';
+  
+  const { t } = useI18n();
   
   const props = defineProps({
     isLoading: {
@@ -18,9 +22,11 @@
     },
     message: {
       type: String,
-      default: '加载中...'
+      default: ''
     }
-  })
+  });
+  
+  const displayMessage = computed(() => props.message || t('common.loading'));
   </script>
   
   <style scoped>

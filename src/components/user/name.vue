@@ -1,20 +1,23 @@
 <template>
     <span v-if="loading" class="text-muted">
-      <i class="bi bi-hourglass-split"></i> 加载中...
+      <i class="bi bi-hourglass-split"></i> {{ $t('user.loading') }}
     </span>
     <span v-else-if="error" class="text-danger">
-      <i class="bi bi-exclamation-circle"></i> 加载失败
+      <i class="bi bi-exclamation-circle"></i> {{ $t('user.loadFailed') }}
     </span>
     <span v-else-if="userInfo" class="user-info" :title="userInfo.id">
       <span class="user-name">{{ userInfo.name }}</span>
       <span class="user-phone ms-2 text-secondary" v-if="userInfo.mobile">({{ formatPhone(userInfo.mobile) }})</span>
     </span>
-    <span v-else class="text-secondary">未知用户</span>
+    <span v-else class="text-secondary">{{ $t('user.unknownUser') }}</span>
   </template>
   
   <script setup lang="ts">
   import { ref, watch, onMounted } from 'vue';
-  import * as userServer from '@/service/account'; // 假设用户服务路径
+  import { useI18n } from 'vue-i18n';
+  import * as userServer from '@/service/account';
+  
+  const { t } = useI18n();
   
   // 接收父组件传入的用户ID
   const props = defineProps<{
@@ -62,7 +65,7 @@
         userInfo.value = user;
         userCache.set(userId, user); // 存入缓存
       } else {
-        throw new Error(res.msg || '获取用户信息失败');
+        throw new Error(res.msg || t('user.fetchUserFailed'));
       }
     } catch (err) {
       console.error('获取用户信息失败:', err);

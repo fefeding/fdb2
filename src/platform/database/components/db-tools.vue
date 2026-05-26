@@ -3,7 +3,7 @@
     <div class="tools-header">
       <h5 class="tools-title">
         <i class="bi bi-tools"></i>
-        数据库管理工具
+        {{ $t('dbTools.title') }}
       </h5>
     </div>
     
@@ -12,17 +12,17 @@
       <div class="tool-section">
         <h6 class="section-title">
           <i class="bi bi-shield-check"></i>
-          数据备份
+          {{ $t('dbTools.dataBackup') }}
         </h6>
         <div class="tool-actions">
           <button class="btn btn-outline-primary btn-sm" @click="backupDatabase">
-            <i class="bi bi-download"></i> 备份数据库
+            <i class="bi bi-download"></i> {{ $t('dbTools.backupDatabase') }}
           </button>
           <button class="btn btn-outline-secondary btn-sm" @click="showRestoreModal">
-            <i class="bi bi-upload"></i> 恢复数据库
+            <i class="bi bi-upload"></i> {{ $t('dbTools.restoreDatabase') }}
           </button>
           <button class="btn btn-outline-info btn-sm" @click="showScheduleModal">
-            <i class="bi bi-clock"></i> 定时备份
+            <i class="bi bi-clock"></i> {{ $t('dbTools.scheduledBackup') }}
           </button>
         </div>
       </div>
@@ -31,17 +31,17 @@
       <div class="tool-section">
         <h6 class="section-title">
           <i class="bi bi-people"></i>
-          用户管理
+          {{ $t('dbTools.userManagement') }}
         </h6>
         <div class="tool-actions">
           <button class="btn btn-outline-success btn-sm" @click="showUsersList">
-            <i class="bi bi-person-lines-fill"></i> 用户列表
+            <i class="bi bi-person-lines-fill"></i> {{ $t('dbTools.userList') }}
           </button>
           <button class="btn btn-outline-primary btn-sm" @click="showCreateUserModal">
-            <i class="bi bi-person-plus"></i> 创建用户
+            <i class="bi bi-person-plus"></i> {{ $t('dbTools.createUser') }}
           </button>
           <button class="btn btn-outline-warning btn-sm" @click="showPermissionsModal">
-            <i class="bi bi-key"></i> 权限管理
+            <i class="bi bi-key"></i> {{ $t('dbTools.permissionMgmt') }}
           </button>
         </div>
       </div>
@@ -50,17 +50,17 @@
       <div class="tool-section">
         <h6 class="section-title">
           <i class="bi bi-speedometer2"></i>
-          性能监控
+          {{ $t('dbTools.perfMonitor') }}
         </h6>
         <div class="tool-actions">
           <button class="btn btn-outline-info btn-sm" @click="showProcessList">
-            <i class="bi bi-activity"></i> 进程列表
+            <i class="bi bi-activity"></i> {{ $t('dbTools.processList') }}
           </button>
           <button class="btn btn-outline-warning btn-sm" @click="showSlowQueries">
-            <i class="bi bi-hourglass-split"></i> 慢查询
+            <i class="bi bi-hourglass-split"></i> {{ $t('dbTools.slowQueries') }}
           </button>
           <button class="btn btn-outline-danger btn-sm" @click="showConnectionsList">
-            <i class="bi bi-diagram-3"></i> 连接数
+            <i class="bi bi-diagram-3"></i> {{ $t('dbTools.connectionCount') }}
           </button>
         </div>
       </div>
@@ -69,20 +69,20 @@
       <div class="tool-section">
         <h6 class="section-title">
           <i class="bi bi-gear-wide-connected"></i>
-          数据库优化
+          {{ $t('dbTools.dbOptimization') }}
         </h6>
         <div class="tool-actions">
           <button class="btn btn-outline-success btn-sm" @click="optimizeDatabase">
-            <i class="bi bi-lightning-charge"></i> 优化数据库
+            <i class="bi bi-lightning-charge"></i> {{ $t('dbTools.optimizeDatabase') }}
           </button>
           <button class="btn btn-outline-primary btn-sm" @click="analyzeTables">
-            <i class="bi bi-search"></i> 分析表
+            <i class="bi bi-search"></i> {{ $t('dbTools.analyzeTables') }}
           </button>
           <button class="btn btn-outline-secondary btn-sm" @click="repairTables">
-            <i class="bi bi-tools"></i> 修复表
+            <i class="bi bi-tools"></i> {{ $t('dbTools.repairTables') }}
           </button>
           <button class="btn btn-outline-info btn-sm" @click="clearLogs">
-            <i class="bi bi-trash"></i> 清理日志
+            <i class="bi bi-trash"></i> {{ $t('dbTools.clearLogs') }}
           </button>
         </div>
       </div>
@@ -91,17 +91,17 @@
       <div class="tool-section">
         <h6 class="section-title">
           <i class="bi bi-arrow-left-right"></i>
-          数据迁移
+          {{ $t('dbTools.dataMigration') }}
         </h6>
         <div class="tool-actions">
           <button class="btn btn-outline-primary btn-sm" @click="showExportModal">
-            <i class="bi bi-box-arrow-up-right"></i> 导出结构
+            <i class="bi bi-box-arrow-up-right"></i> {{ $t('dbTools.exportStructure') }}
           </button>
           <button class="btn btn-outline-success btn-sm" @click="showImportModal">
-            <i class="bi bi-box-arrow-in-down"></i> 导入数据
+            <i class="bi bi-box-arrow-in-down"></i> {{ $t('dbTools.importStructure') }}
           </button>
           <button class="btn btn-outline-warning btn-sm" @click="selectTool('sync')">
-            <i class="bi bi-arrow-repeat"></i> 数据同步
+            <i class="bi bi-arrow-repeat"></i> {{ $t('dbTools.dataSync') }}
           </button>
         </div>
       </div>
@@ -110,17 +110,17 @@
       <div class="tool-section">
         <h6 class="section-title">
           <i class="bi bi-heart-pulse"></i>
-          健康检查
+          {{ $t('dbTools.healthCheck') }}
         </h6>
         <div class="tool-actions">
           <button class="btn btn-outline-info btn-sm" @click="runHealthCheck">
-            <i class="bi bi-clipboard-check"></i> 健康检查
+            <i class="bi bi-clipboard-check"></i> {{ $t('dbTools.healthCheck') }}
           </button>
           <button class="btn btn-outline-secondary btn-sm" @click="showStatistics">
-            <i class="bi bi-bar-chart"></i> 数据统计
+            <i class="bi bi-bar-chart"></i> {{ $t('dbTools.dataStatistics') }}
           </button>
           <button class="btn btn-outline-warning btn-sm" @click="showAuditLog">
-            <i class="bi bi-journal-text"></i> 审计日志
+            <i class="bi bi-journal-text"></i> {{ $t('dbTools.auditLog') }}
           </button>
         </div>
       </div>
@@ -134,7 +134,7 @@
           {{ getToolTitle(selectedTool) }}
         </h6>
         <button class="btn btn-outline-secondary btn-sm" @click="closeTool">
-          <i class="bi bi-x"></i> 关闭
+          <i class="bi bi-x"></i> {{ $t('dbTools.closeBtn') }}
         </button>
       </div>
       
@@ -142,16 +142,16 @@
       <div v-if="selectedTool === 'sync'" class="tool-component sync-component">
         <!-- 源数据库配置 -->
         <div class="mb-4">
-          <h6 class="text-primary mb-2"><i class="bi bi-database"></i> 源数据库</h6>
+          <h6 class="text-primary mb-2"><i class="bi bi-database"></i> {{ $t('dbTools.sourceDatabase') }}</h6>
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label">数据库名称</label>
+              <label class="form-label">{{ $t('dbTools.databaseNameLabel') }}</label>
               <input type="text" class="form-control" v-model="syncConfig.source.database" readonly>
             </div>
             <div class="col-md-6">
-              <label class="form-label">选择表</label>
+              <label class="form-label">{{ $t('dbTools.selectTableLabel') }}</label>
               <select class="form-select" v-model="syncConfig.source.tableName">
-                <option value="">请选择表</option>
+                <option value="">{{ $t('dbTools.selectTablePlaceholder') }}</option>
                 <option v-for="table in tables" :key="table.name" :value="table.name">{{ table.name }}</option>
               </select>
             </div>
@@ -160,34 +160,34 @@
 
         <!-- 目标数据库配置 -->
         <div class="mb-4">
-          <h6 class="text-primary mb-2"><i class="bi bi-database"></i> 目标数据库</h6>
+          <h6 class="text-primary mb-2"><i class="bi bi-database"></i> {{ $t('dbTools.targetDatabase') }}</h6>
           
           <!-- 连接模式选择 -->
           <div class="mb-3">
             <div class="form-check form-switch">
               <input class="form-check-input" type="checkbox" v-model="useExistingConnection" id="useExistingConnection">
-              <label class="form-check-label" for="useExistingConnection">使用已配置的数据库连接</label>
+              <label class="form-check-label" for="useExistingConnection">{{ $t('dbTools.useExistingConnection') }}</label>
             </div>
           </div>
           
           <!-- 已配置连接选择 -->
           <div v-if="useExistingConnection" class="row g-3">
             <div class="col-md-6">
-              <label class="form-label">选择数据库连接</label>
+              <label class="form-label">{{ $t('dbTools.selectConnectionLabel') }}</label>
               <select class="form-select" v-model="selectedConnectionId">
-                <option value="">请选择连接</option>
+                <option value="">{{ $t('dbTools.selectConnectionPlaceholder') }}</option>
                 <option v-for="conn in connections" :key="conn.id" :value="conn.id">{{ conn.name }} ({{ conn.type }})</option>
               </select>
             </div>
             <div class="col-md-6">
-              <label class="form-label">选择数据库</label>
+              <label class="form-label">{{ $t('dbTools.selectDatabaseLabel') }}</label>
               <select class="form-select" v-model="selectedDatabaseName">
-                <option value="">请选择数据库</option>
+                <option value="">{{ $t('dbTools.selectDatabasePlaceholder') }}</option>
                 <option v-for="db in databases" :key="db" :value="db">{{ db }}</option>
               </select>
             </div>
             <div class="col-md-12">
-              <label class="form-label">目标表名</label>
+              <label class="form-label">{{ $t('dbTools.targetTableName') }}</label>
               <input type="text" class="form-control" v-model="syncConfig.target.tableName">
             </div>
           </div>
@@ -195,7 +195,7 @@
           <!-- 手动配置 -->
           <div v-else class="row g-3">
             <div class="col-md-4">
-              <label class="form-label">数据库类型</label>
+              <label class="form-label">{{ $t('dbTools.dbTypeLabel') }}</label>
               <select class="form-select" v-model="syncConfig.target.dbType">
                 <option value="mysql">MySQL</option>
                 <option value="postgresql">PostgreSQL</option>
@@ -205,27 +205,27 @@
               </select>
             </div>
             <div class="col-md-4">
-              <label class="form-label">主机</label>
+              <label class="form-label">{{ $t('dbTools.hostLabel') }}</label>
               <input type="text" class="form-control" v-model="syncConfig.target.host">
             </div>
             <div class="col-md-4">
-              <label class="form-label">端口</label>
+              <label class="form-label">{{ $t('dbTools.portLabel') }}</label>
               <input type="number" class="form-control" v-model="syncConfig.target.port">
             </div>
             <div class="col-md-4">
-              <label class="form-label">数据库名</label>
+              <label class="form-label">{{ $t('dbTools.dbNameLabel') }}</label>
               <input type="text" class="form-control" v-model="syncConfig.target.database">
             </div>
             <div class="col-md-4">
-              <label class="form-label">用户名</label>
+              <label class="form-label">{{ $t('dbTools.usernameLabel') }}</label>
               <input type="text" class="form-control" v-model="syncConfig.target.username">
             </div>
             <div class="col-md-4">
-              <label class="form-label">密码</label>
+              <label class="form-label">{{ $t('dbTools.passwordLabel') }}</label>
               <input type="password" class="form-control" v-model="syncConfig.target.password">
             </div>
             <div class="col-md-6">
-              <label class="form-label">目标表名</label>
+              <label class="form-label">{{ $t('dbTools.targetTableName') }}</label>
               <input type="text" class="form-control" v-model="syncConfig.target.tableName">
             </div>
           </div>
@@ -233,36 +233,36 @@
 
         <!-- 同步选项 -->
         <div class="mb-4">
-          <h6 class="text-primary mb-2"><i class="bi bi-sliders"></i> 同步选项</h6>
+          <h6 class="text-primary mb-2"><i class="bi bi-sliders"></i> {{ $t('dbTools.syncOptions') }}</h6>
           <div class="row g-3">
             <div class="col-md-6">
               <div class="form-check">
                 <input type="checkbox" class="form-check-input" v-model="syncConfig.options.syncStructure" id="syncStructure">
-                <label class="form-check-label" for="syncStructure">同步表结构</label>
+                <label class="form-check-label" for="syncStructure">{{ $t('dbTools.syncStructure') }}</label>
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-check">
                 <input type="checkbox" class="form-check-input" v-model="syncConfig.options.syncData" id="syncData">
-                <label class="form-check-label" for="syncData">同步表数据</label>
+                <label class="form-check-label" for="syncData">{{ $t('dbTools.syncData') }}</label>
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-check">
                 <input type="checkbox" class="form-check-input" v-model="syncConfig.options.dropIfExists" id="dropIfExists">
-                <label class="form-check-label" for="dropIfExists">目标表存在时删除</label>
+                <label class="form-check-label" for="dropIfExists">{{ $t('dbTools.dropIfExists') }}</label>
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-check">
                 <input type="checkbox" class="form-check-input" v-model="syncConfig.options.bulkInsert" id="bulkInsert">
-                <label class="form-check-label" for="bulkInsert">批量插入数据</label>
+                <label class="form-check-label" for="bulkInsert">{{ $t('dbTools.bulkInsert') }}</label>
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-check">
                 <input type="checkbox" class="form-check-input" v-model="syncConfig.options.overrideExisting" id="overrideExisting">
-                <label class="form-check-label" for="overrideExisting">覆盖已存在的数据</label>
+                <label class="form-check-label" for="overrideExisting">{{ $t('dbTools.overrideExisting') }}</label>
               </div>
             </div>
           </div>
@@ -271,10 +271,10 @@
         <!-- 操作按钮 -->
         <div class="tool-actions">
           <button class="btn btn-primary btn-sm" @click="performSync" :disabled="syncing || !isSyncFormValid">
-            <i class="bi bi-play-fill"></i> 开始同步
+            <i class="bi bi-play-fill"></i> {{ $t('dbTools.startSync') }}
           </button>
           <button v-if="syncing" class="btn btn-outline-danger btn-sm" @click="stopSync">
-            <i class="bi bi-stop-fill"></i> 停止同步
+            <i class="bi bi-stop-fill"></i> {{ $t('dbTools.stopSync') }}
           </button>
         </div>
       </div>
@@ -285,16 +285,16 @@
       <div class="results-header">
         <h6 class="results-title">
           <i class="bi bi-terminal"></i>
-          执行结果
+          {{ $t('dbTools.execResults') }}
         </h6>
         <button class="btn btn-outline-secondary btn-sm" @click="clearResults">
-          <i class="bi bi-trash"></i> 清空
+          <i class="bi bi-trash"></i> {{ $t('dbTools.clearBtn') }}
         </button>
       </div>
       <div class="results-content" ref="resultsContentRef">
         <div v-if="executionResults.length === 0" class="no-results">
           <i class="bi bi-inbox"></i>
-          <p>暂无执行结果</p>
+          <p>{{ $t('dbTools.noResults') }}</p>
         </div>
         <div v-for="(result, index) in executionResults" :key="index" class="result-item" :class="`result-${result.status}`">
           <div class="result-header" @click="toggleResult(index)">
@@ -317,27 +317,27 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">恢复数据库</h5>
+            <h5 class="modal-title">{{ $t('dbTools.restoreModalTitle') }}</h5>
             <button type="button" class="btn-close" @click="closeRestoreModal"></button>
           </div>
           <div class="modal-body">
-            <p>请选择要恢复的备份文件：</p>
+            <p>{{ $t('dbTools.restoreSelectFile') }}</p>
             <div class="mb-3">
               <input type="file" class="form-control" @change="handleFileChange" accept=".sql,.bak">
             </div>
             <div v-if="selectedFile" class="alert alert-info">
-              已选择文件：{{ selectedFile.name }}
+              {{ $t('dbTools.selectedFile') }}{{ selectedFile.name }}
             </div>
             <div class="mb-3 form-check">
               <input type="checkbox" class="form-check-input" v-model="restoreOptions.dropExisting" id="dropExisting">
-              <label class="form-check-label" for="dropExisting">删除现有表</label>
+              <label class="form-check-label" for="dropExisting">{{ $t('dbTools.dropExistingTable') }}</label>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="closeRestoreModal">取消</button>
+            <button type="button" class="btn btn-secondary" @click="closeRestoreModal">{{ $t('common.cancel') }}</button>
             <button type="button" class="btn btn-primary" @click="performRestore" :disabled="!selectedFile">
               <span v-if="restoring" class="spinner-border spinner-border-sm me-2"></span>
-              恢复
+              {{ $t('dbTools.restoreBtn') }}
             </button>
           </div>
         </div>
@@ -350,9 +350,12 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { DatabaseService, ConnectionService } from '@/service/database';
 import { modal } from '@/utils/modal';
 import { toast } from '@/utils/toast';
+
+const { t } = useI18n();
 
 const connectionService = new ConnectionService();
 
@@ -532,7 +535,7 @@ function toggleResult(index: number) {
 function formatError(error: any): any {
   const formatted: any = {
     success: false,
-    message: error.msg || error.message || '未知错误'
+    message: error.msg || error.message || t('dbTools.unknownError')
   };
   if (error.stack) {
     formatted.stack = error.stack;
@@ -577,108 +580,108 @@ function getResultIcon(status: string): string {
 
 // 数据备份
 async function backupDatabase() {
-  const operation = '备份数据库';
+  const operation = t('dbTools.backupDatabase');
   try {
     const res = await databaseService.backupDatabase(props.connection?.id || '', props.database);
     if(res.ret === 0) {
       addExecutionResult(operation, 'success', res);
     } else {
-      modal.error(res.msg || '备份失败');
+      modal.error(res.msg || t('dbTools.backupFailed'));
       addExecutionResult(operation, 'error', formatError(res));
     }
   } catch (error: any) {
     console.error('备份失败:', error);
-    modal.error(error.msg || error.message || '备份失败');
+    modal.error(error.msg || error.message || t('dbTools.backupFailed'));
     addExecutionResult(operation, 'error', formatError(error));
   }
 }
 
 // 用户管理
 function showUsersList() {
-  addExecutionResult('用户列表', 'info', { message: '用户列表功能开发中...' });
+  addExecutionResult(t('dbTools.userList'), 'info', { message: t('dbTools.featureInDev', { feature: t('dbTools.userList') }) });
 }
 
 function showCreateUserModal() {
-  addExecutionResult('创建用户', 'info', { message: '创建用户功能开发中...' });
+  addExecutionResult(t('dbTools.createUser'), 'info', { message: t('dbTools.featureInDev', { feature: t('dbTools.createUser') }) });
 }
 
 function showPermissionsModal() {
-  addExecutionResult('权限管理', 'info', { message: '权限管理功能开发中...' });
+  addExecutionResult(t('dbTools.permissionMgmt'), 'info', { message: t('dbTools.featureInDev', { feature: t('dbTools.permissionMgmt') }) });
 }
 
 // 性能监控
 function showProcessList() {
   const sql = 'SHOW PROCESSLIST';
-  addExecutionResult('进程列表', 'info', { sql: sql, message: '已发送 SQL 查询' });
+  addExecutionResult(t('dbTools.processList'), 'info', { sql: sql, message: t('dbTools.sqlSent') });
   emit('execute-sql', sql);
 }
 
 function showSlowQueries() {
   const sql = 'SELECT * FROM mysql.slow_log ORDER BY start_time DESC LIMIT 10';
-  addExecutionResult('慢查询', 'info', { sql: sql, message: '已发送 SQL 查询' });
+  addExecutionResult(t('dbTools.slowQueries'), 'info', { sql: sql, message: t('dbTools.sqlSent') });
   emit('execute-sql', sql);
 }
 
 function showConnectionsList() {
   const sql = 'SHOW STATUS LIKE "Threads_connected"';
-  addExecutionResult('连接数', 'info', { sql: sql, message: '已发送 SQL 查询' });
+  addExecutionResult(t('dbTools.connectionCount'), 'info', { sql: sql, message: t('dbTools.sqlSent') });
   emit('execute-sql', sql);
 }
 
 // 数据库优化
 async function optimizeDatabase() {
-  const operation = '优化数据库';
+  const operation = t('dbTools.optimizeDatabase');
   try {
     const res = await databaseService.optimizeDatabase(props.connection?.id || '', props.database);
     if(res.ret === 0) {
       addExecutionResult(operation, 'success', res.data);
     } else {
-      modal.error(res.msg || '优化失败');
+      modal.error(res.msg || t('dbTools.optimizeFailed'));
       addExecutionResult(operation, 'error', formatError(res));
     }
   } catch (error: any) {
     console.error('优化失败:', error);
-    modal.error(error.msg || error.message || '优化失败');
+    modal.error(error.msg || error.message || t('dbTools.optimizeFailed'));
     addExecutionResult(operation, 'error', formatError(error));
   }
 }
 
 async function analyzeTables() {
-  const operation = '分析表';
+  const operation = t('dbTools.analyzeTables');
   try {
     const res = await databaseService.analyzeTables(props.connection?.id || '', props.database);
     if(res.ret === 0) {
       addExecutionResult(operation, 'success', res.data);
     } else {
-      modal.error(res.msg || '分析失败');
+      modal.error(res.msg || t('dbTools.analyzeFailed'));
       addExecutionResult(operation, 'error', formatError(res));
     }
   } catch (error: any) {
     console.error('分析失败:', error);
-    modal.error(res.msg || error.message || '分析失败');
+    modal.error(error.msg || error.message || t('dbTools.analyzeFailed'));
     addExecutionResult(operation, 'error', formatError(error));
   }
 }
 
 async function repairTables() {
-  const operation = '修复表';
+  const operation = t('dbTools.repairTables');
   try {
     const res = await databaseService.repairTables(props.connection?.id || '', props.database);
     if(res.ret === 0) {
       addExecutionResult(operation, 'success', res.data);
     } else {
-      modal.error(res.msg || '修复失败');
+      modal.error(res.msg || t('dbTools.repairFailed'));
       addExecutionResult(operation, 'error', formatError(res));
     }
   } catch (error: any) {
     console.error('修复失败:', error);
-    modal.error(res.msg || error.message || '修复失败');
+    modal.error(error.msg || error.message || t('dbTools.repairFailed'));
     addExecutionResult(operation, 'error', formatError(error));
   }
 }
 
 async function clearLogs() {
-  const operation = '清理日志';
+  const operation = t('dbTools.clearLogs');
   const logs = [
     'TRUNCATE TABLE mysql.slow_log',
     'TRUNCATE TABLE mysql.general_log',
@@ -686,28 +689,28 @@ async function clearLogs() {
   ];
 
   logs.forEach(sql => {
-    addExecutionResult(`清理日志 - ${sql.split(' ')[1]}`, 'info', { sql, message: '已发送 SQL 查询' });
+    addExecutionResult(`${t('dbTools.clearLogs')} - ${sql.split(' ')[1]}`, 'info', { sql, message: t('dbTools.sqlSent') });
     emit('execute-sql', sql);
   });
 }
 
 // 数据迁移
 function showExportModal() {
-  addExecutionResult('导出结构', 'info', { message: '导出结构功能开发中...' });
+  addExecutionResult(t('dbTools.exportStructure'), 'info', { message: t('dbTools.featureInDev', { feature: t('dbTools.exportStructure') }) });
 }
 
 function showImportModal() {
-  addExecutionResult('导入数据', 'info', { message: '导入数据功能开发中...' });
+  addExecutionResult(t('dbTools.importStructure'), 'info', { message: t('dbTools.featureInDev', { feature: t('dbTools.importStructure') }) });
 }
 
 // 健康检查
 async function runHealthCheck() {
-  const operation = '健康检查';
+  const operation = t('dbTools.healthCheck');
   const checks = [
-    { name: '连接状态', sql: 'SELECT 1 as status' },
-    { name: '表完整性', sql: 'SELECT COUNT(*) as status FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = "BASE TABLE"' },
-    { name: '索引状态', sql: 'SELECT COUNT(*) as status FROM information_schema.statistics WHERE table_schema = DATABASE()' },
-    { name: '磁盘空间', sql: 'SELECT SUM(data_length + index_length) as status FROM information_schema.tables WHERE table_schema = DATABASE()' }
+    { name: t('dbTools.healthCheckConnection'), sql: 'SELECT 1 as status' },
+    { name: t('dbTools.healthCheckTableIntegrity'), sql: 'SELECT COUNT(*) as status FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = "BASE TABLE"' },
+    { name: t('dbTools.healthCheckIndexStatus'), sql: 'SELECT COUNT(*) as status FROM information_schema.statistics WHERE table_schema = DATABASE()' },
+    { name: t('dbTools.healthCheckDiskSpace'), sql: 'SELECT SUM(data_length + index_length) as status FROM information_schema.tables WHERE table_schema = DATABASE()' }
   ];
 
   const results: any[] = [];
@@ -717,7 +720,7 @@ async function runHealthCheck() {
       results.push({
         name: check.name,
         status: 'healthy',
-        message: '正常'
+        message: t('dbTools.healthNormal')
       });
     } catch (error: any) {
       results.push({
@@ -741,13 +744,13 @@ function showStatistics() {
     WHERE table_schema = DATABASE()
     ORDER BY (data_length + index_length) DESC
   `;
-  addExecutionResult('数据统计', 'info', { sql: sql, message: '已发送 SQL 查询' });
+  addExecutionResult(t('dbTools.dataStatistics'), 'info', { sql: sql, message: t('dbTools.sqlSent') });
   emit('execute-sql', sql);
 }
 
 function showAuditLog() {
   const sql = 'SELECT * FROM mysql.general_log ORDER BY event_time DESC LIMIT 100';
-  addExecutionResult('审计日志', 'info', { sql: sql, message: '已发送 SQL 查询' });
+  addExecutionResult(t('dbTools.auditLog'), 'info', { sql: sql, message: t('dbTools.sqlSent') });
   emit('execute-sql', sql);
 }
 
@@ -771,7 +774,7 @@ function handleFileSelect(event: Event) {
 async function performRestore() {
   if (!selectedFile.value) return;
 
-  const operation = '恢复数据库';
+  const operation = t('dbTools.restoreDatabase');
   try {
     restoring.value = true;
     const filePath = selectedFile.value.name;
@@ -787,7 +790,7 @@ async function performRestore() {
     closeRestoreModal();
   } catch (error: any) {
     console.error('恢复失败:', error);
-    modal.error(error.msg || error.message || '恢复失败');
+    modal.error(error.msg || error.message || t('dbTools.restoreFailed'));
     addExecutionResult(operation, 'error', formatError(error));
   } finally {
     restoring.value = false;
@@ -818,9 +821,9 @@ function getToolIcon(toolName: string) {
 // 获取工具标题
 function getToolTitle(toolName: string) {
   const titles: Record<string, string> = {
-    'sync': '数据同步'
+    'sync': t('dbTools.dataSyncTitle')
   };
-  return titles[toolName] || '工具';
+  return titles[toolName] || t('dbTools.toolTitle');
 }
 
 // 同步功能 - 初始化数据
@@ -848,7 +851,7 @@ async function initSyncData() {
     }
   } catch (error: any) {
     console.error('加载表列表失败:', error);
-    modal.error('加载表列表失败');
+    modal.error(t('dbTools.loadTablesFailed'));
   }
 }
 
@@ -886,11 +889,11 @@ function resetSyncState() {
 
 async function performSync() {
   if (!isSyncFormValid.value) {
-    modal.error('请填写完整的同步配置');
+    modal.error(t('dbTools.syncConfigIncomplete'));
     return;
   }
 
-  const operation = '数据同步';
+  const operation = t('dbTools.dataSync');
   syncing.value = true;
   
   try {
@@ -917,7 +920,7 @@ async function performSync() {
     
     // 添加同步开始记录
     addExecutionResult(operation, 'info', {
-      message: '开始同步数据',
+      message: t('dbTools.syncStarted'),
       config: syncData
     });
 
@@ -940,28 +943,28 @@ async function performSync() {
       });
       
       addExecutionResult(operation, 'success', {
-        message: `数据同步成功，${successCount}/${tables.length} 个表同步完成，共同步 ${totalRows} 行数据`,
+        message: t('dbTools.syncSuccess', { success: successCount, total: tables.length, rows: totalRows }),
         data: res.data
       });
-      toast.success(`数据同步成功，${successCount}/${tables.length} 个表同步完成`);
+      toast.success(t('dbTools.syncSuccessToast', { success: successCount, total: tables.length }));
     } else {
       addExecutionResult(operation, 'error', {
-        message: res.msg || '同步失败',
+        message: res.msg || t('dbTools.syncFailed'),
         error: res.error
       });
-      toast.error(res.msg || '同步失败');
+      toast.error(res.msg || t('dbTools.syncFailed'));
     }
   } catch (error: any) {
     console.error('同步失败:', error);
     addExecutionResult(operation, 'error', formatError(error));
-    toast.error(error.msg || error.message || '同步失败');
+    toast.error(error.msg || error.message || t('dbTools.syncFailed'));
   } finally {
     syncing.value = false;
   }
 }
 
 function showScheduleModal() {
-  addExecutionResult('定时备份', 'info', { message: '定时备份功能开发中...' });
+  addExecutionResult(t('dbTools.scheduledBackup'), 'info', { message: t('dbTools.featureInDev', { feature: t('dbTools.scheduledBackup') }) });
 }
 </script>
 

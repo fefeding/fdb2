@@ -58,7 +58,7 @@
             <td :colspan="gridColumns.length" class="text-center py-5">
                 <div class="empty-state">
                     <i class="bi bi-inbox fs-1 text-muted"></i>
-                    <p class="mt-2 text-muted">表中暂无数据</p>
+                    <p class="mt-2 text-muted">{{ $t('tableDetail.noDataInTable') }}</p>
                 </div>
             </td>
           </tr>
@@ -69,10 +69,10 @@
     <!-- 底部状态栏 -->
     <div class="grid-footer-bar mt-2 d-flex justify-content-between align-items-center px-3">
         <div class="pagination-info text-muted small">
-            共 {{ total }} 条记录
+            {{ $t('common.totalRecords', { count: total }) }}
         </div>
         <div class="page-size-selector d-flex align-items-center">
-            <label class="small text-muted me-2">每页显示：</label>
+            <label class="small text-muted me-2">{{ $t('common.pageSizeLabel') }}</label>
             <select class="form-select form-select-sm" v-model="pageSize" @change="handlePageSizeChange" style="width: 80px;">
                 <option :value="10">10</option>
                 <option :value="20">20</option>

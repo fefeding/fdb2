@@ -3,15 +3,15 @@
     <div class="sql-toolbar">
       <div class="toolbar-left">
         <button class="btn btn-primary btn-sm" @click="executeSql" :disabled="loading">
-          <i class="bi bi-play-fill"></i> 执行SQL
+          <i class="bi bi-play-fill"></i> {{ $t('sqlExecutor.executeSQL') }}
         </button>
         <button class="btn btn-outline-secondary btn-sm" @click="formatSql">
-          <i class="bi bi-braces"></i> 格式化
+          <i class="bi bi-braces"></i> {{ $t('common.format') }}
         </button>
       </div>
       <div class="toolbar-right">
         <button class="btn btn-outline-primary btn-sm" @click="clearSql">
-          <i class="bi bi-trash"></i> 清空
+          <i class="bi bi-trash"></i> {{ $t('sqlExecutor.clearBtn') }}
         </button>
       </div>
     </div>
@@ -36,23 +36,23 @@
             <h6 class="result-title">
               <div v-if="loading" class="sql-loading">
                 <div class="spinner-border spinner-border-sm me-2"></div>
-                执行中...
+                {{ $t('sqlExecutor.executing') }}
               </div>
               <template v-else-if="sqlResult">
                 <i class="bi bi-check-circle-fill text-success" v-if="sqlResult.success"></i>
                 <i class="bi bi-x-circle-fill text-danger" v-else></i>
-                执行结果
+                {{ $t('sqlExecutor.resultTitle') }}
               </template>
               <template v-else>
-                执行结果
+                {{ $t('sqlExecutor.resultTitle') }}
               </template>
             </h6>
             <div class="result-actions" v-if="sqlResult && !loading">
               <button class="btn btn-sm btn-outline-secondary me-2" @click="formatJsonResult">
-                <i class="bi bi-braces"></i> 格式化
+                <i class="bi bi-braces"></i> {{ $t('common.format') }}
               </button>
               <button class="btn btn-sm btn-outline-secondary" @click="exportResult('json')">
-                <i class="bi bi-file-earmark-code"></i> 导出JSON
+                <i class="bi bi-file-earmark-code"></i> {{ $t('sqlExecutor.exportJSON') }}
               </button>
             </div>
           </div>
@@ -62,8 +62,8 @@
             <div class="d-flex align-items-center justify-content-center py-4">
               <div class="spinner-border text-primary me-3"></div>
               <div>
-                <div class="fw-bold">正在执行SQL...</div>
-                <div class="text-muted small">请稍候，复杂查询可能需要较长时间</div>
+                <div class="fw-bold">{{ $t('sqlExecutor.executingSQL') }}</div>
+                <div class="text-muted small">{{ $t('sqlExecutor.executingHint') }}</div>
               </div>
             </div>
           </div>
@@ -90,6 +90,7 @@ import { oneDark } from '@codemirror/theme-one-dark';
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 
 // 导入其他依赖
+import { useI18n } from 'vue-i18n';
 import { DatabaseService } from '@/service/database';
 import { modal } from '@/utils/modal';
 import { exportDataToCSV, exportDataToJSON, formatFileName } from '../utils/export';
@@ -102,6 +103,7 @@ const props = defineProps<{
 }>();
 
 const databaseService = new DatabaseService();
+const { t } = useI18n();
 
 // 响应式数据
 const sqlQuery = ref('');
@@ -153,12 +155,12 @@ function startResize(event: MouseEvent) {
 
 async function executeSql() {
   if (!sqlQuery.value.trim()) {
-    modal.warning('请输入SQL语句');
+    modal.warning(t('sqlExecutor.enterSQL'));
     return;
   }
   
   if (!props.connection) {
-    modal.error('请先选择数据库连接');
+    modal.error(t('sqlExecutor.selectConnectionFirst'));
     return;
   }
   
@@ -193,7 +195,7 @@ async function executeSql() {
   } catch (error: any) {
     sqlResult.value = {
       success: false,
-      error: error.message || '执行SQL时发生未知错误'
+      error: error.message || t('sqlExecutor.unknownError')
     };
   } finally {
     loading.value = false;
@@ -355,7 +357,7 @@ function initEditor() {
       highlightActiveLineGutter(),
       highlightActiveLine(),
       drawSelection(),
-      placeholder('输入SQL查询语句...'),
+      placeholder(t('sqlExecutor.inputSQLPlaceholder')),
       sql(),
       oneDark,
       keymap.of(defaultKeymap),
@@ -409,7 +411,7 @@ function initResultEditor() {
       highlightActiveLineGutter(),
       highlightActiveLine(),
       drawSelection(),
-      placeholder('执行SQL以查看结果...'),
+      placeholder(t('sqlExecutor.resultPlaceholder')),
       json(),
       syntaxHighlighting(defaultHighlightStyle),
       keymap.of(defaultKeymap),
@@ -530,7 +532,7 @@ function formatJsonResult() {
       changes: {
         from: 0,
         to: resultEditor.value.state.doc.length,
-        insert: '无法格式化结果: ' + String(error)
+        insert: t('sqlExecutor.formatFailed') + ': ' + String(error)
       }
     });
   }

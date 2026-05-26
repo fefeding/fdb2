@@ -43,8 +43,11 @@
   
 <script setup lang="ts">
   import { ref, computed, defineComponent, type Component } from 'vue';
+  import { useI18n } from 'vue-i18n';
   import Loading from '../loading/index.vue';
   import Pagination from './pagination.vue';
+  
+  const { t } = useI18n();
 
   type ColumnType = {
     name: string;
@@ -63,7 +66,7 @@
     },
     loadingMessage: {
       type: String,
-      default: '加载中...'
+      default: ''
     },
     // 总页数
     totalPages: {

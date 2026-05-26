@@ -1,5 +1,19 @@
 <template>
   <div class="database-layout">
+    <!-- 顶部工具栏 -->
+    <div class="top-toolbar">
+      <div class="toolbar-left">
+        <router-link to="/database/index" class="brand-link">
+          <div class="brand-icon">
+            <i class="bi bi-database-gear"></i>
+          </div>
+          <span class="brand-name">fdb2</span>
+        </router-link>
+      </div>
+      <div class="toolbar-right">
+        <LanguageSwitcher />
+      </div>
+    </div>
     <!-- 主要内容区域 -->
     <main class="main-content-modern">
       <div class="content-wrapper">
@@ -10,10 +24,66 @@
 </template>
 
 <script lang="ts" setup>
-// 空的script标签用于保持组件结构
+import LanguageSwitcher from '@/components/language-switcher/index.vue';
 </script>
 
 <style scoped>
+/* 顶部工具栏 */
+.top-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.25rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: #1e293b;
+  transition: all 0.3s ease;
+}
+
+.brand-link:hover {
+  color: #667eea;
+}
+
+.brand-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.brand-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* 主布局样式 */
 .database-layout {
   height: 100vh;

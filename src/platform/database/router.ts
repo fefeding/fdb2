@@ -5,7 +5,7 @@ const routes = [
     component: () => import('./layout.vue'),
     redirect: '/database/index',
     meta: {
-      title: '数据库管理',
+      titleKey: 'nav.databaseManagement',
       icon: 'bi-database',
       needAuth: false
     },
@@ -15,7 +15,7 @@ const routes = [
         name: 'database-index',
         component: () => import('./explorer.vue'),
         meta: {
-          title: '数据库管理首页',
+          titleKey: 'nav.databaseHome',
           icon: 'bi-house',
           needAuth: false
         }
@@ -25,7 +25,7 @@ const routes = [
         name: 'database-explorer',
         component: () => import('./explorer.vue'),
         meta: {
-          title: '数据库浏览器',
+          titleKey: 'nav.databaseExplorer',
           icon: 'bi-diagram-3',
           needAuth: false
         }

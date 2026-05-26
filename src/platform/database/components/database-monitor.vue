@@ -3,27 +3,27 @@
     <div class="monitor-header">
       <div class="monitor-title">
         <i class="bi bi-activity"></i>
-        <span>数据库监控</span>
+        <span>{{ $t('monitor.title') }}</span>
       </div>
       <div class="monitor-controls">
         <select v-model="selectedConnection" class="connection-select" @change="loadMonitorData">
-          <option value="">选择数据库连接</option>
+          <option value="">{{ $t('monitor.selectConnection') }}</option>
           <option v-for="connection in connections" :key="connection.id" :value="connection.id">
             {{ connection.name }}
           </option>
         </select>
         <button class="btn-refresh" @click="refreshData" :disabled="!selectedConnection">
           <i class="bi bi-arrow-clockwise" :class="{ 'spin': isRefreshing }"></i>
-          <span>刷新</span>
+          <span>{{ $t('monitor.refresh') }}</span>
         </button>
         <div class="auto-refresh">
           <input type="checkbox" id="autoRefresh" v-model="autoRefresh" @change="toggleAutoRefresh">
-          <label for="autoRefresh">自动刷新</label>
+          <label for="autoRefresh">{{ $t('monitor.autoRefresh') }}</label>
           <select v-model="refreshInterval" @change="updateRefreshInterval">
-            <option value="5000">5秒</option>
-            <option value="10000">10秒</option>
-            <option value="30000">30秒</option>
-            <option value="60000">1分钟</option>
+            <option value="5000">{{ $t('monitor.interval5s') }}</option>
+            <option value="10000">{{ $t('monitor.interval10s') }}</option>
+            <option value="30000">{{ $t('monitor.interval30s') }}</option>
+            <option value="60000">{{ $t('monitor.interval1m') }}</option>
           </select>
         </div>
       </div>
@@ -37,7 +37,7 @@
             <i :class="getStatusIcon(connectionStatus?.status)"></i>
           </div>
           <div class="status-info">
-            <div class="status-title">连接状态</div>
+            <div class="status-title">{{ $t('monitor.connectionStatus') }}</div>
             <div class="status-value">{{ getStatusText(connectionStatus?.status) }}</div>
             <div class="status-detail">{{ connectionStatus?.uptime || '-' }}</div>
           </div>
@@ -48,7 +48,7 @@
             <i class="bi bi-speedometer2"></i>
           </div>
           <div class="status-info">
-            <div class="status-title">响应时间</div>
+            <div class="status-title">{{ $t('monitor.responseTime') }}</div>
             <div class="status-value">{{ connectionStatus?.responseTime || '-' }}ms</div>
             <div class="status-detail">{{ getPerformanceLevel(connectionStatus?.responseTime) }}</div>
           </div>
@@ -59,9 +59,9 @@
             <i class="bi bi-graph-up"></i>
           </div>
           <div class="status-info">
-            <div class="status-title">活跃查询</div>
+            <div class="status-title">{{ $t('monitor.activeQueries') }}</div>
             <div class="status-value">{{ connectionStatus?.activeQueries || 0 }}</div>
-            <div class="status-detail">{{ connectionStatus?.totalQueries || 0 }} 总查询</div>
+            <div class="status-detail">{{ $t('monitor.totalQueries', { n: connectionStatus?.totalQueries || 0 }) }}</div>
           </div>
         </div>
 
@@ -70,9 +70,9 @@
             <i class="bi bi-hdd"></i>
           </div>
           <div class="status-info">
-            <div class="status-title">存储使用</div>
+            <div class="status-title">{{ $t('monitor.storageUsage') }}</div>
             <div class="status-value">{{ formatBytes(connectionStatus?.storageUsed) }}</div>
-            <div class="status-detail">{{ formatBytes(connectionStatus?.storageTotal) }} 总容量</div>
+            <div class="status-detail">{{ $t('monitor.totalCapacity', { size: formatBytes(connectionStatus?.storageTotal) }) }}</div>
           </div>
         </div>
       </div>
@@ -81,7 +81,7 @@
       <div class="charts-section">
         <div class="chart-container">
           <div class="chart-header">
-            <h3>查询性能趋势</h3>
+            <h3>{{ $t('monitor.queryPerfTrend') }}</h3>
             <div class="chart-controls">
               <button 
                 v-for="range in timeRanges" 
@@ -101,7 +101,7 @@
 
         <div class="chart-container">
           <div class="chart-header">
-            <h3>连接数变化</h3>
+            <h3>{{ $t('monitor.connectionChanges') }}</h3>
           </div>
           <div class="chart-content">
             <div ref="connectionsChart" class="echart-container"></div>
@@ -112,10 +112,10 @@
       <!-- 慢查询列表 -->
       <div class="slow-queries-section">
         <div class="section-header">
-          <h3>慢查询分析</h3>
+          <h3>{{ $t('monitor.slowQueryAnalysis') }}</h3>
           <button class="btn-clear" @click="clearSlowQueries" v-if="slowQueries.length > 0">
             <i class="bi bi-trash"></i>
-            <span>清除记录</span>
+            <span>{{ $t('monitor.clearRecords') }}</span>
           </button>
         </div>
         
@@ -123,11 +123,11 @@
           <table class="queries-table" v-if="slowQueries.length > 0">
             <thead>
               <tr>
-                <th>时间</th>
-                <th>执行时间</th>
-                <th>查询类型</th>
-                <th>查询语句</th>
-                <th>操作</th>
+                <th>{{ $t('monitor.thTime') }}</th>
+                <th>{{ $t('monitor.thExecTime') }}</th>
+                <th>{{ $t('monitor.thQueryType') }}</th>
+                <th>{{ $t('monitor.thQuerySQL') }}</th>
+                <th>{{ $t('monitor.thOperation') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -149,7 +149,7 @@
                 <td>
                   <button class="btn-analyze" @click="analyzeQuery(query)">
                     <i class="bi bi-search"></i>
-                    分析
+                    {{ $t('monitor.analyzeBtn') }}
                   </button>
                 </td>
               </tr>
@@ -158,8 +158,8 @@
           
           <div class="empty-state" v-else>
             <i class="bi bi-check-circle"></i>
-            <p>暂无慢查询记录</p>
-            <small>所有查询都在正常执行时间内完成</small>
+            <p>{{ $t('monitor.noSlowQueries') }}</p>
+            <small>{{ $t('monitor.noSlowQueriesHint') }}</small>
           </div>
         </div>
       </div>
@@ -167,12 +167,12 @@
       <!-- 资源使用详情 -->
       <div class="resources-section">
         <div class="section-header">
-          <h3>资源使用详情</h3>
+          <h3>{{ $t('monitor.resourceUsage') }}</h3>
         </div>
         
         <div class="resources-grid">
           <div class="resource-item">
-            <div class="resource-label">CPU使用率</div>
+            <div class="resource-label">{{ $t('monitor.cpuUsage') }}</div>
             <div class="resource-value">
               <div class="resource-bar">
                 <div class="resource-fill cpu" :style="{ width: resources.cpu + '%' }"></div>
@@ -182,7 +182,7 @@
           </div>
 
           <div class="resource-item">
-            <div class="resource-label">内存使用率</div>
+            <div class="resource-label">{{ $t('monitor.memoryUsage') }}</div>
             <div class="resource-value">
               <div class="resource-bar">
                 <div class="resource-fill memory" :style="{ width: resources.memory + '%' }"></div>
@@ -192,7 +192,7 @@
           </div>
 
           <div class="resource-item">
-            <div class="resource-label">磁盘I/O</div>
+            <div class="resource-label">{{ $t('monitor.diskIO') }}</div>
             <div class="resource-value">
               <div class="resource-bar">
                 <div class="resource-fill disk" :style="{ width: resources.disk + '%' }"></div>
@@ -202,7 +202,7 @@
           </div>
 
           <div class="resource-item">
-            <div class="resource-label">网络带宽</div>
+            <div class="resource-label">{{ $t('monitor.networkBandwidth') }}</div>
             <div class="resource-value">
               <div class="resource-bar">
                 <div class="resource-fill network" :style="{ width: resources.network + '%' }"></div>
@@ -217,17 +217,20 @@
     <!-- 空状态 -->
     <div class="empty-state" v-else>
       <i class="bi bi-diagram-3"></i>
-      <h3>选择数据库连接开始监控</h3>
-      <p>从上方选择一个数据库连接以查看实时监控数据</p>
+      <h3>{{ $t('monitor.emptyTitle') }}</h3>
+      <p>{{ $t('monitor.emptyDesc') }}</p>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ConnectionService } from '@/service/database';
 import type { ConnectionEntity } from '@/typings/database';
 import * as echarts from 'echarts';
+
+const { t } = useI18n();
 
 const connectionService = new ConnectionService();
 
@@ -255,12 +258,12 @@ const connectionsChart = ref<HTMLDivElement>();
 const performanceChartInstance = ref<echarts.ECharts | null>(null);
 const connectionsChartInstance = ref<echarts.ECharts | null>(null);
 
-const timeRanges = [
-  { label: '1小时', value: '1h' },
-  { label: '6小时', value: '6h' },
-  { label: '24小时', value: '24h' },
-  { label: '7天', value: '7d' }
-];
+const timeRanges = computed(() => [
+  { label: t('monitor.timeRange1h'), value: '1h' },
+  { label: t('monitor.timeRange6h'), value: '6h' },
+  { label: t('monitor.timeRange24h'), value: '24h' },
+  { label: t('monitor.timeRange7d'), value: '7d' }
+]);
 
 // 方法
 async function loadConnections() {
@@ -400,14 +403,17 @@ function updatePerformanceChart() {
   const categories = [];
   
   for (let i = 0; i < hours; i++) {
-    categories.push(`${i}时`);
+    categories.push(t('monitor.hourLabel', { n: i }));
     data.push(Math.floor(Math.random() * 50) + 10);
   }
   
   const option: echarts.EChartsOption = {
     tooltip: {
       trigger: 'axis',
-      formatter: '{b0}<br/>响应时间: {c0}ms'
+      formatter: (params: any) => {
+        const p = params[0];
+        return p.name + '<br/>' + t('monitor.seriesResponseTime') + ': ' + p.value + 'ms';
+      }
     },
     grid: {
       left: '3%',
@@ -425,7 +431,7 @@ function updatePerformanceChart() {
     },
     yAxis: {
       type: 'value',
-      name: '响应时间(ms)',
+      name: t('monitor.yAxisResponseTime'),
       min: 0,
       max: 60,
       axisLabel: {
@@ -434,7 +440,7 @@ function updatePerformanceChart() {
     },
     series: [
       {
-        name: '响应时间',
+        name: t('monitor.seriesResponseTime'),
         type: 'line',
         smooth: true,
         data: data,
@@ -467,14 +473,17 @@ function updateConnectionsChart() {
   const categories = [];
   
   for (let i = 0; i < hours; i++) {
-    categories.push(`${i * 2}时`);
+    categories.push(t('monitor.hourLabel', { n: i * 2 }));
     data.push(Math.floor(Math.random() * 50) + 10);
   }
   
   const option: echarts.EChartsOption = {
     tooltip: {
       trigger: 'axis',
-      formatter: '{b0}<br/>连接数: {c0}'
+      formatter: (params: any) => {
+        const p = params[0];
+        return p.name + '<br/>' + t('monitor.seriesConnectionCount') + ': ' + p.value;
+      }
     },
     grid: {
       left: '3%',
@@ -491,7 +500,7 @@ function updateConnectionsChart() {
     },
     yAxis: {
       type: 'value',
-      name: '连接数',
+      name: t('monitor.yAxisConnectionCount'),
       min: 0,
       max: 60,
       axisLabel: {
@@ -500,7 +509,7 @@ function updateConnectionsChart() {
     },
     series: [
       {
-        name: '连接数',
+        name: t('monitor.seriesConnectionCount'),
         type: 'bar',
         data: data,
         itemStyle: {
@@ -538,19 +547,19 @@ function getStatusIcon(status?: string): string {
 
 function getStatusText(status?: string): string {
   switch (status) {
-    case 'online': return '在线';
-    case 'offline': return '离线';
-    case 'warning': return '警告';
-    default: return '未知';
+    case 'online': return t('monitor.statusOnline');
+    case 'offline': return t('monitor.statusOffline');
+    case 'warning': return t('monitor.statusWarning');
+    default: return t('monitor.statusUnknown');
   }
 }
 
 function getPerformanceLevel(responseTime?: number): string {
   if (!responseTime) return '-';
-  if (responseTime < 50) return '优秀';
-  if (responseTime < 100) return '良好';
-  if (responseTime < 200) return '一般';
-  return '较慢';
+  if (responseTime < 50) return t('monitor.perfExcellent');
+  if (responseTime < 100) return t('monitor.perfGood');
+  if (responseTime < 200) return t('monitor.perfAverage');
+  return t('monitor.perfSlow');
 }
 
 function formatBytes(bytes?: number): string {

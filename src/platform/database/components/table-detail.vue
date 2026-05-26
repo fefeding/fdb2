@@ -21,19 +21,19 @@
         <div class="table-stats">
           <div class="stat-item" v-if="table?.rowCount !== undefined">
             <div class="stat-value">{{ formatNumber(table?.rowCount) }}</div>
-            <div class="stat-label">行数据</div>
+            <div class="stat-label">{{ $t('tableDetail.rowData') }}</div>
           </div>
           <div class="stat-item">
             <div class="stat-value">{{ tableStructure?.columns?.length || 0 }}</div>
-            <div class="stat-label">列</div>
+            <div class="stat-label">{{ $t('common.columns') }}</div>
           </div>
           <div class="stat-item">
             <div class="stat-value">{{ tableStructure?.indexes?.length || 0 }}</div>
-            <div class="stat-label">索引</div>
+            <div class="stat-label">{{ $t('database.indexes') }}</div>
           </div>
           <div class="stat-item" v-if="table?.dataSize !== undefined">
             <div class="stat-value">{{ formatSize(table?.dataSize) }}</div>
-            <div class="stat-label">大小</div>
+            <div class="stat-label">{{ $t('databaseDetail.size') }}</div>
           </div>
         </div>
       </div>
@@ -43,44 +43,44 @@
     <div class="table-toolbar">
       <div class="toolbar-left">
         <button class="btn btn-primary btn-sm" @click="refreshData">
-          <i class="bi bi-arrow-clockwise"></i> 刷新数据
+          <i class="bi bi-arrow-clockwise"></i> {{ $t('tableDetail.refreshData') }}
         </button>
         <button class="btn btn-info btn-sm" @click="editTableStructure">
-          <i class="bi bi-pencil-square"></i> 修改表结构
+          <i class="bi bi-pencil-square"></i> {{ $t('tableDetail.modifyStructure') }}
         </button>
         <button class="btn btn-success btn-sm" @click="()=>insertData()">
-          <i class="bi bi-plus-lg"></i> 插入数据
+          <i class="bi bi-plus-lg"></i> {{ $t('tableDetail.insertData') }}
         </button>
         <div class="btn-group">
           <button class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown">
-            <i class="bi bi-download"></i> 导出
+            <i class="bi bi-download"></i> {{ $t('tableDetail.exportMenu') }}
           </button>
           <ul class="dropdown-menu">
             <li><button class="dropdown-item" @click="exportTableData('csv')">
-              <i class="bi bi-file-earmark-spreadsheet me-2"></i>导出 CSV
+              <i class="bi bi-file-earmark-spreadsheet me-2"></i>{{ $t('tableDetail.exportCSV') }}
             </button></li>
             <li><button class="dropdown-item" @click="exportTableData('json')">
-              <i class="bi bi-file-earmark-code me-2"></i>导出 JSON
+              <i class="bi bi-file-earmark-code me-2"></i>{{ $t('tableDetail.exportJSON') }}
             </button></li>
             <li><button class="dropdown-item" @click="exportTableData('excel')">
-              <i class="bi bi-file-earmark-excel me-2"></i>导出 Excel
+              <i class="bi bi-file-earmark-excel me-2"></i>{{ $t('tableDetail.exportExcel') }}
             </button></li>
             <li><hr class="dropdown-divider"></li>
             <li><button class="dropdown-item" @click="exportTableStructure()">
-              <i class="bi bi-file-earmark-text me-2"></i>导出表结构
+              <i class="bi bi-file-earmark-text me-2"></i>{{ $t('tableDetail.exportStructure') }}
             </button></li>
             <li><button class="dropdown-item" @click="exportTableDataSQL()">
-              <i class="bi bi-file-earmark-code me-2"></i>导出表数据(SQL)
+              <i class="bi bi-file-earmark-code me-2"></i>{{ $t('tableDetail.exportDataSQL') }}
             </button></li>
           </ul>
         </div>
       </div>
       <div class="toolbar-right">
         <button class="btn btn-outline-warning btn-sm" @click="truncateTable" v-if="table?.rowCount">
-          <i class="bi bi-trash"></i> 清空表
+          <i class="bi bi-trash"></i> {{ $t('tableDetail.truncateTable') }}
         </button>
         <button class="btn btn-outline-danger btn-sm" @click="dropTable">
-          <i class="bi bi-x-circle"></i> 删除表
+          <i class="bi bi-x-circle"></i> {{ $t('tableDetail.dropTable') }}
         </button>
       </div>
     </div>
@@ -94,7 +94,7 @@
             :class="{ active: activeTab === 'data' }"
             @click="activeTab = 'data'"
           >
-            <i class="bi bi-grid"></i> 数据
+            <i class="bi bi-grid"></i> {{ $t('tableDetail.dataTab') }}
             <span class="badge bg-secondary ms-2" v-if="table?.rowCount">{{ formatNumber(table?.rowCount) }}</span>
           </button>
         </li>
@@ -104,7 +104,7 @@
             :class="{ active: activeTab === 'structure' }"
             @click="activeTab = 'structure'"
           >
-            <i class="bi bi-diagram-3"></i> 结构
+            <i class="bi bi-diagram-3"></i> {{ $t('tableDetail.structureTab') }}
           </button>
         </li>
         <li class="nav-item">
@@ -113,7 +113,7 @@
             :class="{ active: activeTab === 'indexes' }"
             @click="activeTab = 'indexes'"
           >
-            <i class="bi bi-key"></i> 索引
+            <i class="bi bi-key"></i> {{ $t('tableDetail.indexesTab') }}
           </button>
         </li>
         <li class="nav-item">
@@ -122,7 +122,7 @@
             :class="{ active: activeTab === 'relations' }"
             @click="activeTab = 'relations'"
           >
-            <i class="bi bi-link-45deg"></i> 关系
+            <i class="bi bi-link-45deg"></i> {{ $t('tableDetail.relationsTab') }}
           </button>
         </li>
         <li class="nav-item">
@@ -154,10 +154,10 @@
         <div v-show="activeTab === 'structure'" class="tab-panel">
           <div class="structure-actions mb-3">
             <button class="btn btn-success btn-sm" @click="addColumn">
-              <i class="bi bi-plus-lg"></i> 新增字段
+              <i class="bi bi-plus-lg"></i> {{ $t('tableDetail.addColumn') }}
             </button>
             <button class="btn btn-info btn-sm" @click="editTableStructure">
-              <i class="bi bi-pencil-square"></i> 修改表结构
+              <i class="bi bi-pencil-square"></i> {{ $t('tableDetail.modifyStructure') }}
             </button>
           </div>
           
@@ -166,14 +166,14 @@
               <table class="table table-bordered">
                 <thead class="table-dark">
                   <tr>
-                    <th>列名</th>
-                    <th>数据类型</th>
-                    <th>可空</th>
-                    <th>默认值</th>
-                    <th>主键</th>
-                    <th>自增</th>
-                    <th>注释</th>
-                    <th width="100">操作</th>
+                    <th>{{ $t('tableDetail.columnNameHeader') }}</th>
+                    <th>{{ $t('tableDetail.dataTypeHeader') }}</th>
+                    <th>{{ $t('tableDetail.nullableHeader') }}</th>
+                    <th>{{ $t('tableDetail.defaultHeader') }}</th>
+                    <th>{{ $t('tableDetail.primaryKeyHeader') }}</th>
+                    <th>{{ $t('tableDetail.autoIncHeader') }}</th>
+                    <th>{{ $t('tableDetail.commentHeader') }}</th>
+                    <th width="100">{{ $t('tableDetail.operationsHeader') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -189,13 +189,13 @@
                     <td>{{ column.defaultValue || '-' }}</td>
                     <td>
                       <span v-if="column.isPrimary" class="badge bg-primary">
-                        <i class="bi bi-key-fill"></i> 主键
+                        <i class="bi bi-key-fill"></i> {{ $t('tableDetail.primaryKeyHeader') }}
                       </span>
                       <span v-else>-</span>
                     </td>
                     <td>
                       <span v-if="column.isAutoIncrement" class="badge bg-success">
-                        <i class="bi bi-arrow-up-circle"></i> 自增
+                        <i class="bi bi-arrow-up-circle"></i> {{ $t('tableDetail.autoIncHeader') }}
                       </span>
                       <span v-else>-</span>
                     </td>
@@ -224,11 +224,11 @@
               <table class="table table-bordered">
                 <thead class="table-dark">
                   <tr>
-                    <th>索引名</th>
-                    <th>类型</th>
-                    <th>唯一</th>
-                    <th>列</th>
-                    <th width="100">操作</th>
+                    <th>{{ $t('tableDetail.indexNameHeader') }}</th>
+                    <th>{{ $t('tableDetail.typeHeader') }}</th>
+                    <th>{{ $t('tableDetail.uniqueHeader') }}</th>
+                    <th>{{ $t('tableDetail.columnsHeader') }}</th>
+                    <th width="100">{{ $t('tableDetail.operationsHeader') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -238,7 +238,7 @@
                     <td>
                       <span :class="index.unique ? 'text-success' : 'text-secondary'">
                         <i :class="index.unique ? 'bi bi-check-circle-fill' : 'bi bi-circle'"></i>
-                        {{ index.unique ? '是' : '否' }}
+                        {{ index.unique ? $t('common.yes') : $t('common.no') }}
                       </span>
                     </td>
                     <td><code>{{ index.columns.join(', ') }}</code></td>
@@ -266,13 +266,13 @@
               <table class="table table-bordered">
                 <thead class="table-dark">
                   <tr>
-                    <th>约束名</th>
-                    <th>本表列</th>
-                    <th>目标表</th>
-                    <th>目标列</th>
-                    <th>删除规则</th>
-                    <th>更新规则</th>
-                    <th width="100">操作</th>
+                    <th>{{ $t('tableDetail.constraintNameHeader') }}</th>
+                    <th>{{ $t('tableDetail.localColumnHeader') }}</th>
+                    <th>{{ $t('tableDetail.targetTableHeader') }}</th>
+                    <th>{{ $t('tableDetail.targetColumnHeader') }}</th>
+                    <th>{{ $t('tableDetail.onDeleteHeader') }}</th>
+                    <th>{{ $t('tableDetail.onUpdateHeader') }}</th>
+                    <th width="100">{{ $t('tableDetail.operationsHeader') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -339,6 +339,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
+import { useI18n } from 'vue-i18n';
 import { DatabaseService } from '@/service/database';
 import DataEditor from './data-editor.vue';
 
@@ -386,6 +387,7 @@ const emit = defineEmits<{
 }>();
 
 const databaseService = new DatabaseService();
+const { t } = useI18n();
 
 // 引用
 const tableDataGridRef = ref();
@@ -470,7 +472,7 @@ async function performInsert(data: any) {
     });
 
     if (columns.length === 0) {
-      await modal.error('没有可插入的字段');
+      await modal.error(t('tableDetail.noInsertField'));
       return;
     }
 
@@ -480,7 +482,7 @@ async function performInsert(data: any) {
     emit('execute-sql', sql);
   } catch (error) {
     console.error('插入数据失败:', error);
-    modal.error('插入数据失败: ' + (error as any).message);
+    modal.error(t('tableDetail.insertFailed') + ': ' + (error as any).message);
   }
 }
 
@@ -492,9 +494,9 @@ async function editRow(row: any) {
 
 async function deleteRow(row: any) {
   try {
-    const result = await modal.confirm('确定要删除这条记录吗？', {
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
+    const result = await modal.confirm(t('tableDetail.confirmDeleteRow'), {
+      confirmButtonText: t('common.delete'),
+      cancelButtonText: t('common.cancel'),
       type: 'danger'
     });
 
@@ -502,7 +504,7 @@ async function deleteRow(row: any) {
       // 获取主键条件
       const primaryKeys = props.tableStructure?.columns?.filter((col: any) => col.isPrimary) || [];
       if (primaryKeys.length === 0) {
-        await modal.warning('该表没有主键，无法删除单行。');
+        await modal.warning(t('tableDetail.noPrimaryKey'));
         return;
       }
 
@@ -519,23 +521,23 @@ async function deleteRow(row: any) {
       );
 
       if (response.ret === 0) {
-        await modal.success('删除成功');
+        await modal.success(t('tableDetail.deleteSuccess'));
         refreshData();
       } else {
-        await modal.error('删除失败: ' + (response.msg || '未知错误'));
+        await modal.error(t('tableDetail.deleteFailed') + ': ' + (response.msg || t('common.unknown')));
       }
     }
   } catch (error) {
     console.error('删除行失败:', error);
-    modal.error('删除行失败: ' + (error as any).message);
+    modal.error(t('tableDetail.deleteFailed') + ': ' + (error as any).message);
   }
 }
 
 async function truncateTable() {
   try {
-    const result = await modal.confirm('确定要清空表中的所有数据吗？此操作不可恢复！', {
-      confirmButtonText: '确定清空',
-      cancelButtonText: '取消',
+    const result = await modal.confirm(t('tableDetail.confirmTruncate'), {
+      confirmButtonText: t('tableDetail.confirmTruncateBtn'),
+      cancelButtonText: t('common.cancel'),
       type: 'danger'
     });
 
@@ -546,12 +548,12 @@ async function truncateTable() {
         props.table?.name || ''
       );
       if (response.ret === 0) {
-        await modal.success('表清空成功');
+        await modal.success(t('tableDetail.truncateSuccess'));
         nextTick(() => {
           refreshData();
         });
       } else {
-        await modal.error('清空表失败');
+        await modal.error(t('tableDetail.truncateFailed'));
       }
     }
   } catch (error) {
@@ -561,9 +563,9 @@ async function truncateTable() {
 
 async function dropTable() {
   try {
-    const result = await modal.confirm('确定要删除此表吗？此操作不可恢复！', {
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
+    const result = await modal.confirm(t('tableDetail.confirmDrop'), {
+      confirmButtonText: t('common.delete'),
+      cancelButtonText: t('common.cancel'),
       type: 'danger'
     });
 
@@ -576,15 +578,15 @@ async function dropTable() {
         );
         
         if (response.ret === 0 && response.data?.success) {
-          await modal.success('表删除成功');
+          await modal.success(t('tableDetail.dropSuccess'));
           // 表删除后需要返回到数据库视图，这里通过事件通知父组件
           emit('refresh-database');
         } else {
-          await modal.error('表删除失败');
+          await modal.error(t('tableDetail.dropFailed'));
         }
       } catch (error) {
         console.error('删除表失败:', error);
-        modal.error(error.msg || error.message || '删除表失败', {
+        modal.error(error.msg || error.message || t('tableDetail.dropFailed'), {
           operation: 'DROP_TABLE',
           table: props.table?.name,
           stack: error.stack
@@ -604,12 +606,12 @@ function handleDataSubmit(result: any) {
       refreshData();
       closeDataEditor();
     } else {
-      modal.error('操作失败');
+      modal.error(t('tableDetail.operationFailed'));
     }
   } catch (error) {
     console.error('处理数据提交失败:', error);
     
-    modal.error(error.msg || error.message || '操作失败', {
+    modal.error(error.msg || error.message || t('tableDetail.operationFailed'), {
       //operation: operation,
       table: props.table?.name,
       stack: error.stack
@@ -647,14 +649,14 @@ async function handleTableStructureChange(result: any) {
       emit('refresh-structure');
       emit('refresh-database');
       closeTableEditor();
-      await modal.success('表结构修改成功');
+      await modal.success(t('tableDetail.structureModifySuccess'));
     } else {
-      await modal.error('表结构修改失败');
+      await modal.error(t('tableDetail.structureModifyFailed'));
     }
   } catch (error) {
     console.error('处理表结构修改失败:', error);
     
-    modal.error(error.msg || error.message || '表结构修改失败', {
+    modal.error(error.msg || error.message || t('tableDetail.structureModifyFailed'), {
       operation: 'MODIFY_TABLE',
       table: props.table?.name,
       stack: error.stack
@@ -671,7 +673,7 @@ function editColumn(column: any) {
 
 function deleteColumn(column: any) {
   // 删除列
-  modal.confirm(`确定要删除列 ${column.name} 吗？`, {
+  modal.confirm(t('tableDetail.confirmDeleteColumn', { name: column.name }), {
     confirmButtonText: '删除',
     cancelButtonText: '取消',
     type: 'danger'
@@ -690,7 +692,7 @@ function editIndex(index: any) {
 
 function deleteIndex(index: any) {
   // 删除索引
-  modal.confirm(`确定要删除索引 ${index.name} 吗？`, {
+  modal.confirm(t('tableDetail.confirmDeleteIndex', { name: index.name }), {
     confirmButtonText: '删除',
     cancelButtonText: '取消',
     type: 'danger'
@@ -704,7 +706,7 @@ function deleteIndex(index: any) {
 
 function deleteForeignKey(fk: any) {
   // 删除外键
-  modal.confirm(`确定要删除外键 ${fk.name} 吗？`, {
+  modal.confirm(t('tableDetail.confirmDeleteFK', { name: fk.name }), {
     confirmButtonText: '删除',
     cancelButtonText: '取消',
     type: 'danger'
@@ -739,7 +741,7 @@ function formatValueForSQL(value: any, type: string): string {
 async function exportTableData(format: 'csv' | 'json' | 'excel') {
   try {
     if (!props.connection || !props.database || !props.table?.name) {
-      await modal.warning('缺少必要的连接信息');
+      await modal.warning(t('tableDetail.missingConnectionInfo'));
       return;
     }
     
@@ -768,17 +770,17 @@ async function exportTableData(format: 'csv' | 'json' | 'excel') {
         );
         break;
       default:
-        throw new Error('不支持的导出格式');
+        throw new Error(t('tableDetail.unsupportedFormat'));
     }
     
     if (response.ret === 0) {
-      await modal.success(`表数据导出成功，文件路径：${response.data}`);
+      await modal.success(t('tableDetail.exportSuccess', { path: response.data }));
     } else {
-      await modal.error('导出表数据失败: ' + response.msg);
+      await modal.error(t('tableDetail.exportFailed') + ': ' + response.msg);
     }
   } catch (error) {
     console.error('导出表数据失败:', error);
-    modal.error('导出表数据失败: ' + (error as any).message);
+    modal.error(t('tableDetail.exportFailed') + ': ' + (error as any).message);
   }
 }
 
@@ -842,14 +844,14 @@ async function exportTableStructure() {
     downloadSQLFile(createTableSQL, `${props.table?.name}_structure.sql`);
   } catch (error) {
     console.error('导出表结构失败:', error);
-    modal.error('导出表结构失败: ' + (error as any).message);
+    modal.error(t('tableDetail.exportStructFailed') + ': ' + (error as any).message);
   }
 }
 
 async function exportTableDataSQL() {
   try {
     if (!props.connection || !props.database || !props.table?.name) {
-      await modal.warning('缺少必要的连接信息');
+      await modal.warning(t('tableDetail.missingConnectionInfo'));
       return;
     }
     
@@ -861,13 +863,13 @@ async function exportTableDataSQL() {
     );
     
     if (response.ret === 0) {
-      await modal.success(`表数据导出成功，文件路径：${response.data}`);
+      await modal.success(t('tableDetail.exportSuccess', { path: response.data }));
     } else {
-      await modal.error('导出表数据失败: ' + response.msg);
+      await modal.error(t('tableDetail.exportFailed') + ': ' + response.msg);
     }
   } catch (error) {
     console.error('导出表数据失败:', error);
-    modal.error('导出表数据失败: ' + (error as any).message);
+    modal.error(t('tableDetail.exportFailed') + ': ' + (error as any).message);
   }
 }
 

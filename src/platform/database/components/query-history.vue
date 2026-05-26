@@ -3,7 +3,7 @@
     <div class="history-header">
       <div class="header-title">
         <i class="bi bi-clock-history"></i>
-        <span>查询历史</span>
+        <span>{{ $t('queryHistory.title') }}</span>
       </div>
       <div class="header-controls">
         <div class="search-box">
@@ -11,12 +11,12 @@
           <input 
             type="text" 
             v-model="searchQuery" 
-            placeholder="搜索查询..."
+            :placeholder="$t('queryHistory.searchPlaceholder')"
             @input="handleSearch"
           >
         </div>
         <select v-model="filterType" class="filter-select" @change="filterQueries">
-          <option value="all">所有类型</option>
+          <option value="all">{{ $t('queryHistory.allTypes') }}</option>
           <option value="SELECT">SELECT</option>
           <option value="INSERT">INSERT</option>
           <option value="UPDATE">UPDATE</option>
@@ -27,7 +27,7 @@
         </select>
         <button class="btn-clear-history" @click="confirmClearHistory">
           <i class="bi bi-trash"></i>
-          <span>清空历史</span>
+          <span>{{ $t('queryHistory.clearHistory') }}</span>
         </button>
       </div>
     </div>
@@ -41,7 +41,7 @@
           </div>
           <div class="stat-info">
             <div class="stat-number">{{ totalQueries }}</div>
-            <div class="stat-label">总查询数</div>
+            <div class="stat-label">{{ $t('queryHistory.totalQueries') }}</div>
           </div>
         </div>
         <div class="stat-card">
@@ -50,7 +50,7 @@
           </div>
           <div class="stat-info">
             <div class="stat-number">{{ recentQueries.length }}</div>
-            <div class="stat-label">今日查询</div>
+            <div class="stat-label">{{ $t('queryHistory.todayQueries') }}</div>
           </div>
         </div>
         <div class="stat-card">
@@ -59,7 +59,7 @@
           </div>
           <div class="stat-info">
             <div class="stat-number">{{ favoriteQueries.length }}</div>
-            <div class="stat-label">收藏查询</div>
+            <div class="stat-label">{{ $t('queryHistory.favoriteQueries') }}</div>
           </div>
         </div>
         <div class="stat-card">
@@ -68,7 +68,7 @@
           </div>
           <div class="stat-info">
             <div class="stat-number">{{ Math.round(averageExecutionTime) }}ms</div>
-            <div class="stat-label">平均执行时间</div>
+            <div class="stat-label">{{ $t('queryHistory.avgExecTime') }}</div>
           </div>
         </div>
       </div>
@@ -81,7 +81,7 @@
           @click="setActiveFilter('all')"
         >
           <i class="bi bi-grid"></i>
-          <span>全部</span>
+          <span>{{ $t('queryHistory.filterAll') }}</span>
         </button>
         <button 
           class="filter-tag"
@@ -89,7 +89,7 @@
           @click="setActiveFilter('recent')"
         >
           <i class="bi bi-clock"></i>
-          <span>最近</span>
+          <span>{{ $t('queryHistory.filterRecent') }}</span>
         </button>
         <button 
           class="filter-tag"
@@ -97,7 +97,7 @@
           @click="setActiveFilter('favorites')"
         >
           <i class="bi bi-star"></i>
-          <span>收藏</span>
+          <span>{{ $t('queryHistory.filterFavorites') }}</span>
         </button>
         <button 
           class="filter-tag"
@@ -105,7 +105,7 @@
           @click="setActiveFilter('slow')"
         >
           <i class="bi bi-exclamation-triangle"></i>
-          <span>慢查询</span>
+          <span>{{ $t('queryHistory.filterSlow') }}</span>
         </button>
         <button 
           class="filter-tag"
@@ -113,7 +113,7 @@
           @click="setActiveFilter('failed')"
         >
           <i class="bi bi-x-circle"></i>
-          <span>失败</span>
+          <span>{{ $t('queryHistory.filterFailed') }}</span>
         </button>
       </div>
 
@@ -121,12 +121,12 @@
       <div class="queries-list">
         <div class="list-header">
           <div class="list-title">
-            <span>查询记录 ({{ filteredQueries.length }})</span>
+            <span>{{ $t('queryHistory.queryRecords', { count: filteredQueries.length }) }}</span>
           </div>
           <div class="list-actions">
             <button class="btn-export" @click="exportHistory">
               <i class="bi bi-download"></i>
-              <span>导出</span>
+              <span>{{ $t('queryHistory.exportBtn') }}</span>
             </button>
           </div>
         </div>
@@ -163,7 +163,7 @@
                   class="btn-favorite"
                   :class="{ 'active': query.isFavorite }"
                   @click.stop="toggleFavorite(query)"
-                  :title="query.isFavorite ? '取消收藏' : '收藏查询'"
+                  :title="query.isFavorite ? $t('queryHistory.unfavorite') : $t('queryHistory.addFavorite')"
                 >
                   <i class="bi bi-star-fill" v-if="query.isFavorite"></i>
                   <i class="bi bi-star" v-else></i>
@@ -171,21 +171,21 @@
                 <button 
                   class="btn-execute"
                   @click.stop="executeQuery(query)"
-                  title="重新执行"
+                  :title="$t('queryHistory.reExecute')"
                 >
                   <i class="bi bi-play-fill"></i>
                 </button>
                 <button 
                   class="btn-copy"
                   @click.stop="copyQuery(query)"
-                  title="复制SQL"
+                  :title="$t('queryHistory.copySQL')"
                 >
                   <i class="bi bi-clipboard"></i>
                 </button>
                 <button 
                   class="btn-delete"
                   @click.stop="deleteQuery(query)"
-                  title="删除记录"
+                  :title="$t('queryHistory.deleteRecord')"
                 >
                   <i class="bi bi-trash"></i>
                 </button>
@@ -199,7 +199,7 @@
                   :class="{ active: activeDetailTab === 'sql' }"
                   @click="activeDetailTab = 'sql'"
                 >
-                  <span>SQL语句</span>
+                  <span>{{ $t('queryHistory.sqlStatement') }}</span>
                 </button>
                 <button 
                   class="tab-btn"
@@ -207,7 +207,7 @@
                   @click="activeDetailTab = 'result'"
                   v-if="query.status === 'success'"
                 >
-                  <span>执行结果</span>
+                  <span>{{ $t('queryHistory.execResult') }}</span>
                 </button>
                 <button 
                   class="tab-btn"
@@ -215,14 +215,14 @@
                   @click="activeDetailTab = 'error'"
                   v-if="query.status === 'failed'"
                 >
-                  <span>错误信息</span>
+                  <span>{{ $t('queryHistory.errorInfo') }}</span>
                 </button>
                 <button 
                   class="tab-btn"
                   :class="{ active: activeDetailTab === 'plan' }"
                   @click="activeDetailTab = 'plan'"
                 >
-                  <span>执行计划</span>
+                  <span>{{ $t('queryHistory.execPlan') }}</span>
                 </button>
               </div>
               
@@ -232,7 +232,7 @@
                     <pre><code>{{ query.sql }}</code></pre>
                     <button class="btn-copy-sql" @click="copySql(query.sql)">
                       <i class="bi bi-clipboard"></i>
-                      复制
+                      {{ $t('queryHistory.copyBtn') }}
                     </button>
                   </div>
                 </div>
@@ -240,15 +240,15 @@
                 <div class="detail-panel" v-if="activeDetailTab === 'result' && query.status === 'success'">
                   <div class="result-info">
                     <div class="result-stat">
-                      <span class="stat-label">影响行数:</span>
+                      <span class="stat-label">{{ $t('queryHistory.affectedRowsLabel') }}</span>
                       <span class="stat-value">{{ query.affectedRows || 0 }}</span>
                     </div>
                     <div class="result-stat">
-                      <span class="stat-label">返回行数:</span>
+                      <span class="stat-label">{{ $t('queryHistory.returnedRowsLabel') }}</span>
                       <span class="stat-value">{{ query.returnedRows || 0 }}</span>
                     </div>
                     <div class="result-stat">
-                      <span class="stat-label">执行时间:</span>
+                      <span class="stat-label">{{ $t('queryHistory.execTimeLabel') }}</span>
                       <span class="stat-value">{{ query.executionTime }}ms</span>
                     </div>
                   </div>
@@ -276,7 +276,7 @@
                   <div class="error-message">
                     <i class="bi bi-exclamation-triangle"></i>
                     <div class="error-content">
-                      <h4>执行错误</h4>
+                      <h4>{{ $t('queryHistory.execError') }}</h4>
                       <pre>{{ query.errorMessage }}</pre>
                     </div>
                   </div>
@@ -284,7 +284,7 @@
                 
                 <div class="detail-panel" v-if="activeDetailTab === 'plan'">
                   <div class="execution-plan">
-                    <pre>{{ query.executionPlan || '暂无执行计划数据' }}</pre>
+                    <pre>{{ query.executionPlan || $t('queryHistory.noPlanData') }}</pre>
                   </div>
                 </div>
               </div>
@@ -309,17 +309,17 @@
     <div class="modal-overlay" v-if="showClearConfirm">
       <div class="modal-content">
         <div class="modal-header">
-          <h3>确认清空</h3>
+          <h3>{{ $t('queryHistory.confirmClearTitle') }}</h3>
           <button class="modal-close" @click="showClearConfirm = false">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
         <div class="modal-body">
-          <p>确定要清空所有查询历史记录吗？此操作无法撤销。</p>
+          <p>{{ $t('queryHistory.confirmClearMsg') }}</p>
         </div>
         <div class="modal-footer">
-          <button class="btn-cancel" @click="showClearConfirm = false">取消</button>
-          <button class="btn-confirm" @click="clearHistory">确认清空</button>
+          <button class="btn-cancel" @click="showClearConfirm = false">{{ $t('common.cancel') }}</button>
+          <button class="btn-confirm" @click="clearHistory">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </div>
@@ -328,6 +328,9 @@
 
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 // 响应式数据
 const searchQuery = ref('');
@@ -538,10 +541,10 @@ function formatTime(timestamp: Date): string {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
   
-  if (minutes < 1) return '刚刚';
-  if (minutes < 60) return `${minutes}分钟前`;
-  if (hours < 24) return `${hours}小时前`;
-  if (days < 7) return `${days}天前`;
+  if (minutes < 1) return t('queryHistory.justNow');
+  if (minutes < 60) return t('queryHistory.minutesAgo', { n: minutes });
+  if (hours < 24) return t('queryHistory.hoursAgo', { n: hours });
+  if (days < 7) return t('queryHistory.daysAgo', { n: days });
   
   return timestamp.toLocaleDateString('zh-CN');
 }
@@ -565,11 +568,11 @@ function clearHistory() {
 
 function exportHistory() {
   const data = filteredQueries.value.map(q => ({
-    时间: q.timestamp.toLocaleString('zh-CN'),
-    类型: q.type,
-    连接: q.connectionName,
-    执行时间: q.executionTime + 'ms',
-    状态: q.status,
+    [t('queryHistory.exportTime')]: q.timestamp.toLocaleString(),
+    [t('queryHistory.exportType')]: q.type,
+    [t('queryHistory.exportConnection')]: q.connectionName,
+    [t('queryHistory.exportExecTime')]: q.executionTime + 'ms',
+    [t('queryHistory.exportStatus')]: q.status,
     SQL: q.sql
   }));
   

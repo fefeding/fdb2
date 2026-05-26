@@ -5,7 +5,7 @@
         <div class="modal-header">
           <h5 class="modal-title">
             <i class="bi bi-pencil-square me-2"></i>
-            {{ mode === 'create' ? '创建新表' : '修改表结构' }}
+            {{ mode === 'create' ? $t('tableEditor.createNewTable') : $t('tableEditor.modifyStructure') }}
           </h5>
           <button type="button" class="btn-close" @click="close"></button>
         </div>
@@ -13,28 +13,28 @@
         <div class="modal-body">
           <!-- 表基本信息 -->
           <div class="table-info-section mb-4">
-            <h6 class="section-title">表信息</h6>
+            <h6 class="section-title">{{ $t('tableEditor.tableInfo') }}</h6>
             <div class="row">
               <div class="col-md-6">
                 <div class="mb-3">
-                  <label class="form-label">表名</label>
+                  <label class="form-label">{{ $t('tableEditor.tableNameLabel') }}</label>
                   <input 
                     v-model="formData.tableName" 
                     type="text" 
                     class="form-control" 
                     :disabled="mode === 'edit'"
-                    placeholder="请输入表名"
+                    :placeholder="$t('tableEditor.tableNamePlaceholder')"
                   >
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="mb-3">
-                  <label class="form-label">表注释</label>
+                  <label class="form-label">{{ $t('tableEditor.tableCommentLabel') }}</label>
                   <input 
                     v-model="formData.tableComment" 
                     type="text" 
                     class="form-control" 
-                    placeholder="请输入表注释"
+                    :placeholder="$t('tableEditor.tableCommentPlaceholder')"
                   >
                 </div>
               </div>
@@ -44,9 +44,9 @@
           <!-- 字段管理 -->
           <div class="columns-section">
             <div class="section-header d-flex justify-content-between align-items-center mb-3">
-              <h6 class="section-title mb-0">字段管理</h6>
+              <h6 class="section-title mb-0">{{ $t('tableEditor.columnManagement') }}</h6>
               <button class="btn btn-success btn-sm" @click="addColumn">
-                <i class="bi bi-plus-lg"></i> 添加字段
+                <i class="bi bi-plus-lg"></i> {{ $t('tableEditor.addColumn') }}
               </button>
             </div>
             
@@ -54,15 +54,15 @@
               <table class="table table-sm table-bordered">
                 <thead class="table-light">
                   <tr>
-                    <th width="120">字段名</th>
-                    <th width="140">数据类型</th>
-                    <th width="120">长度/精度</th>
-                    <th width="80">可空</th>
-                    <th width="100">默认值</th>
-                    <th width="80">主键</th>
-                    <th width="80">自增</th>
-                    <th>注释</th>
-                    <th width="100">操作</th>
+                    <th width="120">{{ $t('tableEditor.columnNameHeader') }}</th>
+                    <th width="140">{{ $t('tableEditor.dataTypeHeader') }}</th>
+                    <th width="120">{{ $t('tableEditor.lengthPrecisionHeader') }}</th>
+                    <th width="80">{{ $t('tableEditor.nullableHeader') }}</th>
+                    <th width="100">{{ $t('tableEditor.defaultHeader') }}</th>
+                    <th width="80">{{ $t('tableEditor.primaryKeyHeader') }}</th>
+                    <th width="80">{{ $t('tableEditor.autoIncHeader') }}</th>
+                    <th>{{ $t('tableEditor.commentHeader') }}</th>
+                    <th width="100">{{ $t('tableEditor.operationsHeader') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -72,12 +72,12 @@
                         v-model="column.name" 
                         type="text" 
                         class="form-control form-control-sm" 
-                        placeholder="字段名"
+                        :placeholder="$t('tableEditor.columnNamePlaceholder')"
                       >
                     </td>
                     <td>
                       <select v-model="column.type" class="form-select form-select-sm">
-                        <option value="">选择类型</option>
+                        <option value="">{{ $t('tableEditor.selectType') }}</option>
                         <optgroup v-for="(types, category) in columnTypesByCategory" :key="category" :label="getCategoryLabel(category)">
                           <option v-for="type in types" :key="type.name" :value="type.name">
                             {{ type.label }}
@@ -92,21 +92,21 @@
                           v-model="column.length" 
                           type="number" 
                           class="form-control form-control-sm" 
-                          placeholder="长度"
+                          :placeholder="$t('tableEditor.lengthPlaceholder')"
                         >
                         <input 
                           v-if="needsPrecision(column)"
                           v-model="column.precision" 
                           type="number" 
                           class="form-control form-control-sm" 
-                          placeholder="精度"
+                          :placeholder="$t('tableEditor.precisionPlaceholder')"
                         >
                         <input 
                           v-if="needsScale(column)"
                           v-model="column.scale" 
                           type="number" 
                           class="form-control form-control-sm" 
-                          placeholder="小数"
+                          :placeholder="$t('tableEditor.scalePlaceholder')"
                         >
                       </div>
                       <span v-else class="text-muted">-</span>
@@ -125,7 +125,7 @@
                         v-model="column.defaultValue" 
                         type="text" 
                         class="form-control form-control-sm" 
-                        placeholder="默认值"
+                        :placeholder="$t('tableEditor.defaultHeader')"
                       >
                     </td>
                     <td>
@@ -153,7 +153,7 @@
                         v-model="column.comment" 
                         type="text" 
                         class="form-control form-control-sm" 
-                        placeholder="字段注释"
+                        :placeholder="$t('tableEditor.fieldComment')"
                       >
                     </td>
                     <td>
@@ -173,14 +173,14 @@
 
           <!-- SQL预览 -->
           <div class="sql-preview-section mt-4">
-            <h6 class="section-title">SQL预览</h6>
+            <h6 class="section-title">{{ $t('tableEditor.sqlPreview') }}</h6>
             <pre class="sql-preview bg-light p-3 rounded">{{ generateSQL() }}</pre>
           </div>
         </div>
         
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" @click="close">取消</button>
-          <button type="button" class="btn btn-primary" @click="submit">保存</button>
+          <button type="button" class="btn btn-secondary" @click="close">{{ $t('common.cancel') }}</button>
+          <button type="button" class="btn btn-primary" @click="submit">{{ $t('common.save') }}</button>
         </div>
       </div>
     </div>
@@ -189,6 +189,7 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import { DatabaseService } from '@/service/database';
 import { modal } from '@/utils/modal';
@@ -212,6 +213,7 @@ const emit = defineEmits<{
 }>();
 
 const databaseService = new DatabaseService();
+const { t } = useI18n();
 
 // 获取当前数据库支持的列类型
 const columnTypes = computed(() => {
@@ -846,16 +848,16 @@ watch(() => props.visible, (newVal) => {
 // 获取类别标签
 function getCategoryLabel(category: string): string {
   const labels: Record<string, string> = {
-    [ColumnCategory.NUMERIC]: '数值类型',
-    [ColumnCategory.STRING]: '字符串类型',
-    [ColumnCategory.TEXT]: '文本类型',
-    [ColumnCategory.DATE_TIME]: '日期时间类型',
-    [ColumnCategory.BOOLEAN]: '布尔类型',
-    [ColumnCategory.BINARY]: '二进制类型',
-    [ColumnCategory.JSON]: 'JSON类型',
-    [ColumnCategory.ARRAY]: '数组类型',
-    [ColumnCategory.SPATIAL]: '空间类型',
-    [ColumnCategory.OTHER]: '其他类型'
+    [ColumnCategory.NUMERIC]: t('tableEditor.catNumeric'),
+    [ColumnCategory.STRING]: t('tableEditor.catString'),
+    [ColumnCategory.TEXT]: t('tableEditor.catText'),
+    [ColumnCategory.DATE_TIME]: t('tableEditor.catDateTime'),
+    [ColumnCategory.BOOLEAN]: t('tableEditor.catBoolean'),
+    [ColumnCategory.BINARY]: t('tableEditor.catBinary'),
+    [ColumnCategory.JSON]: t('tableEditor.catJson'),
+    [ColumnCategory.ARRAY]: t('tableEditor.catArray'),
+    [ColumnCategory.SPATIAL]: t('tableEditor.catSpatial'),
+    [ColumnCategory.OTHER]: t('tableEditor.catOther')
   };
   return labels[category] || category;
 }

@@ -3,6 +3,7 @@ import App from './App.vue';
 import router from './router';
 import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
+import i18n from '@/i18n';
 
 // @ts-ignore入 vconsole 进行调试
 if(window.__INITIAL_STATE__?.dev) {
@@ -27,6 +28,7 @@ pinia.use(piniaPluginPersistedstate);
 
 app.use(router);
 app.use(pinia);
+app.use(i18n);
 app.use(toastPlugin);
 app.use(modalPlugin);
 

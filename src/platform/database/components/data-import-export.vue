@@ -3,7 +3,7 @@
     <div class="import-export-header">
       <div class="header-title">
         <i class="bi bi-arrow-left-right"></i>
-        <span>数据导入导出</span>
+        <span>{{ $t('importExport.title') }}</span>
       </div>
       <div class="header-tabs">
         <button 
@@ -12,7 +12,7 @@
           @click="activeTab = 'import'"
         >
           <i class="bi bi-download"></i>
-          <span>数据导入</span>
+          <span>{{ $t('importExport.dataImport') }}</span>
         </button>
         <button 
           class="tab-btn"
@@ -20,7 +20,7 @@
           @click="activeTab = 'export'"
         >
           <i class="bi bi-upload"></i>
-          <span>数据导出</span>
+          <span>{{ $t('importExport.dataExport') }}</span>
         </button>
       </div>
     </div>
@@ -31,19 +31,19 @@
         <div class="step-indicator">
           <div class="step" :class="{ active: currentStep >= 1, completed: currentStep > 1 }">
             <span class="step-number">1</span>
-            <span class="step-title">选择文件</span>
+            <span class="step-title">{{ $t('importExport.stepSelectFile') }}</span>
           </div>
           <div class="step" :class="{ active: currentStep >= 2, completed: currentStep > 2 }">
             <span class="step-number">2</span>
-            <span class="step-title">配置选项</span>
+            <span class="step-title">{{ $t('importExport.stepConfigOptions') }}</span>
           </div>
           <div class="step" :class="{ active: currentStep >= 3, completed: currentStep > 3 }">
             <span class="step-number">3</span>
-            <span class="step-title">预览数据</span>
+            <span class="step-title">{{ $t('importExport.stepPreviewData') }}</span>
           </div>
           <div class="step" :class="{ active: currentStep >= 4 }">
             <span class="step-number">4</span>
-            <span class="step-title">执行导入</span>
+            <span class="step-title">{{ $t('importExport.stepExecuteImport') }}</span>
           </div>
         </div>
 
@@ -56,17 +56,17 @@
             <div class="upload-icon">
               <i class="bi bi-cloud-upload"></i>
             </div>
-            <h3>拖拽文件到此处或点击选择</h3>
-            <p>支持 CSV、Excel (xlsx)、JSON 格式</p>
+            <h3>{{ $t('importExport.dragFileHere') }}</h3>
+            <p>{{ $t('importExport.supportedFormats') }}</p>
             <input type="file" ref="fileInput" @change="handleFileSelect" accept=".csv,.xlsx,.json" hidden>
             <button class="btn-select-file" @click="fileInput?.click()">
               <i class="bi bi-folder2-open"></i>
-              <span>选择文件</span>
+              <span>{{ $t('importExport.selectFile') }}</span>
             </button>
           </div>
           
           <div class="selected-files" v-if="selectedFiles.length > 0">
-            <h4>已选择的文件:</h4>
+            <h4>{{ $t('importExport.selectedFiles') }}</h4>
             <div class="file-list">
               <div class="file-item" v-for="(file, index) in selectedFiles" :key="index">
                 <div class="file-icon">
@@ -82,7 +82,7 @@
               </div>
             </div>
             <button class="btn-next" @click="nextStep" :disabled="selectedFiles.length === 0">
-              下一步
+              {{ $t('importExport.nextStep') }}
               <i class="bi bi-arrow-right"></i>
             </button>
           </div>
@@ -92,21 +92,21 @@
         <div class="step-content" v-if="currentStep === 2">
           <div class="config-form">
             <div class="form-section">
-              <h4>目标表配置</h4>
+              <h4>{{ $t('importExport.targetTableConfig') }}</h4>
               <div class="form-grid">
                 <div class="form-group">
-                  <label>数据库连接</label>
+                  <label>{{ $t('importExport.databaseConnection') }}</label>
                   <select v-model="importConfig.connectionId" class="form-input">
-                    <option value="">选择连接</option>
+                    <option value="">{{ $t('importExport.selectConnection') }}</option>
                     <option v-for="connection in connections" :key="connection.id" :value="connection.id">
                       {{ connection.name }}
                     </option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label>目标表</label>
+                  <label>{{ $t('importExport.targetTable') }}</label>
                   <select v-model="importConfig.tableName" class="form-input" :disabled="!importConfig.connectionId">
-                    <option value="">选择表</option>
+                    <option value="">{{ $t('importExport.selectTable') }}</option>
                     <option v-for="table in tables" :key="table" :value="table">
                       {{ table }}
                     </option>
@@ -116,19 +116,19 @@
             </div>
 
             <div class="form-section">
-              <h4>导入选项</h4>
+              <h4>{{ $t('importExport.importOptions') }}</h4>
               <div class="form-grid">
                 <div class="form-group">
-                  <label>导入模式</label>
+                  <label>{{ $t('importExport.importMode') }}</label>
                   <select v-model="importConfig.mode" class="form-input">
-                    <option value="insert">插入新数据</option>
-                    <option value="replace">替换表数据</option>
-                    <option value="update">更新现有数据</option>
-                    <option value="append">追加数据</option>
+                    <option value="insert">{{ $t('importExport.modeInsert') }}</option>
+                    <option value="replace">{{ $t('importExport.modeReplace') }}</option>
+                    <option value="update">{{ $t('importExport.modeUpdate') }}</option>
+                    <option value="append">{{ $t('importExport.modeAppend') }}</option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label>编码格式</label>
+                  <label>{{ $t('importExport.encodingFormat') }}</label>
                   <select v-model="importConfig.encoding" class="form-input">
                     <option value="utf-8">UTF-8</option>
                     <option value="gbk">GBK</option>
@@ -139,22 +139,22 @@
             </div>
 
             <div class="form-section">
-              <h4>CSV/Excel 选项</h4>
+              <h4>{{ $t('importExport.csvExcelOptions') }}</h4>
               <div class="form-grid">
                 <div class="form-group">
-                  <label>分隔符</label>
+                  <label>{{ $t('importExport.delimiter') }}</label>
                   <select v-model="importConfig.delimiter" class="form-input">
-                    <option value=",">逗号 (,)</option>
-                    <option value=";">分号 (;)</option>
-                    <option value="\t">制表符 (Tab)</option>
-                    <option value="|">竖线 (|)</option>
+                    <option value=",">{{ $t('importExport.comma') }}</option>
+                    <option value=";">{{ $t('importExport.semicolon') }}</option>
+                    <option value="\t">{{ $t('importExport.tab') }}</option>
+                    <option value="|">{{ $t('importExport.pipe') }}</option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label>首行是否为标题</label>
+                  <label>{{ $t('importExport.firstRowHeader') }}</label>
                   <div class="checkbox-group">
                     <input type="checkbox" id="hasHeader" v-model="importConfig.hasHeader">
-                    <label for="hasHeader">首行是列标题</label>
+                    <label for="hasHeader">{{ $t('importExport.firstRowIsHeader') }}</label>
                   </div>
                 </div>
               </div>
@@ -164,10 +164,10 @@
           <div class="step-actions">
             <button class="btn-prev" @click="prevStep">
               <i class="bi bi-arrow-left"></i>
-              上一步
+              {{ $t('importExport.prevStep') }}
             </button>
             <button class="btn-next" @click="nextStep" :disabled="!isConfigValid">
-              下一步
+              {{ $t('importExport.nextStep') }}
               <i class="bi bi-arrow-right"></i>
             </button>
           </div>
@@ -177,11 +177,11 @@
         <div class="step-content" v-if="currentStep === 3">
           <div class="preview-section">
             <div class="preview-header">
-              <h4>数据预览</h4>
+              <h4>{{ $t('importExport.dataPreview') }}</h4>
               <div class="preview-info">
-                <span>显示前 {{ previewData.length }} 行数据</span>
+                <span>{{ $t('importExport.showFirstNRows', { n: previewData.length }) }}</span>
                 <button class="btn-load-more" @click="loadPreviewData" v-if="hasMoreData">
-                  加载更多
+                  {{ $t('importExport.loadMore') }}
                 </button>
               </div>
             </div>
@@ -209,10 +209,10 @@
           <div class="step-actions">
             <button class="btn-prev" @click="prevStep">
               <i class="bi bi-arrow-left"></i>
-              上一步
+              {{ $t('importExport.prevStep') }}
             </button>
             <button class="btn-next" @click="nextStep">
-              下一步
+              {{ $t('importExport.nextStep') }}
               <i class="bi bi-arrow-right"></i>
             </button>
           </div>
@@ -222,7 +222,7 @@
         <div class="step-content" v-if="currentStep === 4">
           <div class="import-progress">
             <div class="progress-header">
-              <h4>正在导入数据</h4>
+              <h4>{{ $t('importExport.importingData') }}</h4>
               <div class="progress-stats">
                 <span>{{ importProgress.current }} / {{ importProgress.total }}</span>
                 <span>{{ Math.round((importProgress.current / importProgress.total) * 100) }}%</span>
@@ -241,10 +241,10 @@
               <div class="result-icon">
                 <i class="bi bi-check-circle"></i>
               </div>
-              <h5>导入完成!</h5>
-              <p>成功导入 {{ importResult.success }} 条记录，失败 {{ importResult.failed }} 条</p>
+              <h5>{{ $t('importExport.importComplete') }}</h5>
+              <p>{{ $t('importExport.importResultStats', { success: importResult.success, failed: importResult.failed }) }}</p>
               <button class="btn-view-details" @click="showImportDetails = true">
-                查看详细信息
+                {{ $t('importExport.viewDetails') }}
               </button>
             </div>
           </div>
@@ -252,7 +252,7 @@
           <div class="step-actions" v-if="importComplete">
             <button class="btn-new-import" @click="resetImport">
               <i class="bi bi-plus-circle"></i>
-              新建导入
+              {{ $t('importExport.newImport') }}
             </button>
           </div>
         </div>
@@ -262,21 +262,21 @@
       <div class="export-section" v-if="activeTab === 'export'">
         <div class="export-form">
           <div class="form-section">
-            <h4>数据源配置</h4>
+            <h4>{{ $t('importExport.dataSourceConfig') }}</h4>
             <div class="form-grid">
               <div class="form-group">
-                <label>数据库连接</label>
+                <label>{{ $t('importExport.databaseConnection') }}</label>
                 <select v-model="exportConfig.connectionId" @change="loadTables" class="form-input">
-                  <option value="">选择连接</option>
+                  <option value="">{{ $t('importExport.selectConnection') }}</option>
                   <option v-for="connection in connections" :key="connection.id" :value="connection.id">
                     {{ connection.name }}
                   </option>
                 </select>
               </div>
               <div class="form-group">
-                <label>表名</label>
+                <label>{{ $t('importExport.tableName') }}</label>
                 <select v-model="exportConfig.tableName" class="form-input" :disabled="!exportConfig.connectionId">
-                  <option value="">选择表</option>
+                  <option value="">{{ $t('importExport.selectTable') }}</option>
                   <option v-for="table in tables" :key="table" :value="table">
                     {{ table }}
                   </option>
@@ -286,10 +286,10 @@
           </div>
 
           <div class="form-section">
-            <h4>导出选项</h4>
+            <h4>{{ $t('importExport.exportOptions') }}</h4>
             <div class="form-grid">
               <div class="form-group">
-                <label>导出格式</label>
+                <label>{{ $t('importExport.exportFormat') }}</label>
                 <select v-model="exportConfig.format" class="form-input">
                   <option value="csv">CSV</option>
                   <option value="xlsx">Excel</option>
@@ -298,7 +298,7 @@
                 </select>
               </div>
               <div class="form-group">
-                <label>编码格式</label>
+                <label>{{ $t('importExport.encodingFormat') }}</label>
                 <select v-model="exportConfig.encoding" class="form-input">
                   <option value="utf-8">UTF-8</option>
                   <option value="gbk">GBK</option>
@@ -308,37 +308,37 @@
           </div>
 
           <div class="form-section">
-            <h4>数据筛选</h4>
+            <h4>{{ $t('importExport.dataFilter') }}</h4>
             <div class="form-group">
-              <label>WHERE 条件 (可选)</label>
+              <label>{{ $t('importExport.whereCondition') }}</label>
               <textarea 
                 v-model="exportConfig.whereCondition" 
                 class="form-textarea" 
-                placeholder="例如: created_at > '2024-01-01' AND status = 'active'"
+                :placeholder="$t('importExport.wherePlaceholder')"
                 rows="3"
               ></textarea>
             </div>
             <div class="form-grid">
               <div class="form-group">
-                <label>限制行数</label>
-                <input type="number" v-model="exportConfig.limit" class="form-input" placeholder="0表示无限制">
+                <label>{{ $t('importExport.limitRows') }}</label>
+                <input type="number" v-model="exportConfig.limit" class="form-input" :placeholder="$t('importExport.limitPlaceholder')">
               </div>
               <div class="form-group">
-                <label>排序字段</label>
-                <input type="text" v-model="exportConfig.orderBy" class="form-input" placeholder="例如: id DESC">
+                <label>{{ $t('importExport.orderByField') }}</label>
+                <input type="text" v-model="exportConfig.orderBy" class="form-input" :placeholder="$t('importExport.orderByPlaceholder')">
               </div>
             </div>
           </div>
 
           <div class="form-section">
-            <h4>列选择</h4>
+            <h4>{{ $t('importExport.columnSelection') }}</h4>
             <div class="columns-selection">
               <div class="selection-header">
                 <div class="checkbox-group">
                   <input type="checkbox" id="selectAll" v-model="selectAllColumns" @change="toggleAllColumns">
-                  <label for="selectAll">全选</label>
+                  <label for="selectAll">{{ $t('importExport.selectAll') }}</label>
                 </div>
-                <span>{{ selectedColumns.length }} / {{ availableColumns.length }} 列已选择</span>
+                <span>{{ $t('importExport.columnsSelected', { selected: selectedColumns.length, total: availableColumns.length }) }}</span>
               </div>
               <div class="columns-grid">
                 <div class="column-item" v-for="column in availableColumns" :key="column">
@@ -359,13 +359,13 @@
           <div class="export-actions">
             <button class="btn-preview" @click="previewExport" :disabled="!isExportConfigValid">
               <i class="bi bi-eye"></i>
-              预览数据
+              {{ $t('importExport.previewDataBtn') }}
             </button>
             <button class="btn-export" @click="startExport" :disabled="!isExportConfigValid || isExporting">
               <i class="bi bi-download" v-if="!isExporting"></i>
               <i class="bi bi-arrow-clockwise spin" v-if="isExporting"></i>
-              <span v-if="!isExporting">开始导出</span>
-              <span v-if="isExporting">导出中...</span>
+              <span v-if="!isExporting">{{ $t('importExport.startExport') }}</span>
+              <span v-if="isExporting">{{ $t('importExport.exporting') }}</span>
             </button>
           </div>
         </div>
@@ -373,9 +373,9 @@
         <!-- 导出预览 -->
         <div class="export-preview" v-if="exportPreview.length > 0">
           <div class="preview-header">
-            <h4>导出预览</h4>
+            <h4>{{ $t('importExport.exportPreview') }}</h4>
             <div class="preview-info">
-              <span>共 {{ exportTotalCount }} 条记录</span>
+              <span>{{ $t('importExport.totalRecordsCount', { count: exportTotalCount }) }}</span>
               <button class="btn-close-preview" @click="closePreview">
                 <i class="bi bi-x"></i>
               </button>
@@ -408,11 +408,14 @@
 
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ConnectionService } from '@/service/database';
 import type { ConnectionEntity } from '@/typings/database';
 import { exportDataToCSV, exportDataToJSON, exportDataToExcel, exportDataToSQL } from '../utils/export';
 import { readExcel, decodeBook } from '@/utils/xlsx';
 import { toast } from '@/utils/toast';
+
+const { t } = useI18n();
 
 const connectionService = new ConnectionService();
 
@@ -522,7 +525,7 @@ async function loadConnections() {
   } catch (error) {
     console.error('加载连接失败:', error);
     const errorMessage = error instanceof Error ? error.message : '未知错误';
-    toast.error(`加载连接失败: ${errorMessage}`);
+    toast.error(t('importExport.loadConnectionFailed', { msg: errorMessage }));
   }
 }
 
@@ -599,7 +602,7 @@ async function parseCSVFile(file: File): Promise<any[]> {
             const values = line.split(delimiter).map(value => value.trim().replace(/^"|"$/g, ''));
             const row: any = {};
             values.forEach((value, index) => {
-              row[`列${index + 1}`] = value;
+              row[t('importExport.columnPrefix', { n: index + 1 })] = value;
             });
             data.push(row);
           });
@@ -642,7 +645,7 @@ async function parseExcelFile(file: File): Promise<any[]> {
     return [];
   } catch (error) {
     console.error('解析Excel文件失败:', error);
-    toast.error(`解析Excel文件失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    toast.error(t('importExport.parseExcelFailed', { msg: error instanceof Error ? error.message : t('common.unknown') }));
     return [];
   }
 }
@@ -675,11 +678,11 @@ async function parseFile(file: File): Promise<any[]> {
     } else if (fileName.endsWith('.json')) {
       return await parseJSONFile(file);
     } else {
-      throw new Error('不支持的文件格式');
+      throw new Error(t('importExport.unsupportedFileFormat'));
     }
   } catch (error) {
     console.error('解析文件失败:', error);
-    toast.error(`解析文件失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    toast.error(t('importExport.parseFileFailed', { msg: error instanceof Error ? error.message : t('common.unknown') }));
     return [];
   }
 }
@@ -687,21 +690,21 @@ async function parseFile(file: File): Promise<any[]> {
 // 开始导入
 async function startImport() {
   if (selectedFiles.value.length === 0 || !importConfig.value.connectionId || !importConfig.value.tableName) {
-    toast.error('请选择文件并配置导入选项');
+    toast.error(t('importExport.selectFileAndConfig'));
     return;
   }
   
   try {
     const file = selectedFiles.value[0];
     if (!file) {
-      toast.error('请选择文件');
+      toast.error(t('importExport.pleaseSelectFile'));
       return;
     }
     const data = await parseFile(file);
     
     importProgress.value.total = data.length;
     importProgress.value.current = 0;
-    importProgress.value.message = '正在准备导入...';
+    importProgress.value.message = t('importExport.preparingImport');
     importProgress.value.status = 'processing';
     importComplete.value = false;
     importResult.value = { success: 0, failed: 0, errors: [] };
@@ -712,7 +715,7 @@ async function startImport() {
       await new Promise(resolve => setTimeout(resolve, 50));
       
       importProgress.value.current = i + 1;
-      importProgress.value.message = `正在导入第 ${i + 1} 条记录...`;
+      importProgress.value.message = t('importExport.importingRecord', { n: i + 1 });
       
       // 模拟成功/失败的概率
       const isSuccess = Math.random() > 0.05; // 95%成功率
@@ -720,19 +723,19 @@ async function startImport() {
         importResult.value.success++;
       } else {
         importResult.value.failed++;
-        importResult.value.errors.push(`第 ${i + 1} 条记录导入失败`);
+        importResult.value.errors.push(t('importExport.importingRecord', { n: i + 1 }) + ' ' + t('common.error'));
       }
     }
     
     importProgress.value.status = 'completed';
     importComplete.value = true;
-    importProgress.value.message = '导入完成';
+    importProgress.value.message = t('importExport.importDone');
     
-    toast.success(`成功导入 ${importResult.value.success} 条记录，失败 ${importResult.value.failed} 条`);
+    toast.success(t('importExport.importSuccessToast', { success: importResult.value.success, failed: importResult.value.failed }));
   } catch (error) {
     importProgress.value.status = 'error';
-    importProgress.value.message = '导入失败';
-    toast.error(`导入失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    importProgress.value.message = t('importExport.importFailedMsg');
+    toast.error(t('importExport.importFailedToast', { msg: error instanceof Error ? error.message : t('common.unknown') }));
   }
 }
 
@@ -757,7 +760,7 @@ async function loadPreviewData() {
     }
   } catch (error) {
     console.error('加载预览数据失败:', error);
-    toast.error(`加载预览数据失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    toast.error(t('importExport.loadPreviewFailed', { msg: error instanceof Error ? error.message : t('common.unknown') }));
   }
 }
 

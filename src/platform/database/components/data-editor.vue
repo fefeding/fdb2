@@ -6,7 +6,7 @@
           <h5 class="modal-title">
             <i class="bi bi-pencil-square" v-if="isEdit"></i>
             <i class="bi bi-plus-circle" v-else></i>
-            {{ isEdit ? '编辑数据' : '新增数据' }}
+            {{ isEdit ? $t('dataEditor.editData') : $t('dataEditor.addData') }}
           </h5>
           <button type="button" class="btn-close" @click="closeModal"></button>
         </div>
@@ -32,7 +32,7 @@
                   type="text" 
                   data-type="primary"
                   class="form-control" 
-                  :value="isEdit ? formData[column.name] : '自动生成'"
+                  :value="isEdit ? formData[column.name] : $t('dataEditor.autoGenerate')"
                   disabled
                   readonly
                 >
@@ -43,7 +43,7 @@
                   data-type="number"
                   class="form-control" 
                   v-model="formData[column.name]"
-                  :placeholder="'请输入' + column.name"
+                  :placeholder="$t('dataEditor.inputPlaceholder', { name: column.name })"
                   :required="!column.nullable"
                   :step="isDecimalInput(column.type) ? '0.01' : '1'"
                 >
@@ -62,7 +62,7 @@
                   class="form-control" 
                   data-type="textarea"
                   v-model="formData[column.name]"
-                  :placeholder="'请输入' + column.name"
+                  :placeholder="$t('dataEditor.inputPlaceholder', { name: column.name })"
                   :required="!column.nullable"
                   rows="3"
                 ></textarea>
@@ -74,7 +74,7 @@
                   v-model="formData[column.name]"
                   :required="!column.nullable"
                 >
-                  <option value="">请选择...</option>
+                  <option value="">{{ $t('dataEditor.selectPlaceholder') }}</option>
                   <option v-for="option in getEnumOptions(column.type)" :key="option" :value="option">
                     {{ option }}
                   </option>
@@ -86,8 +86,8 @@
                   data-type="boolean"
                   v-model="formData[column.name]"
                 >
-                  <option :value="true">是/True</option>
-                  <option :value="false">否/False</option>
+                  <option :value="true">{{ $t('dataEditor.trueLabel') }}</option>
+                  <option :value="false">{{ $t('dataEditor.falseLabel') }}</option>
                 </select>
                 <!-- JSON类型 -->
                 <div v-else-if="isJsonInput(column.type, 'input') || isArrayInput(column.type)" class="json-editor">
@@ -95,14 +95,14 @@
                   </div>
                   <div class="d-flex justify-content-between mt-1">
                     <small :class="jsonError[column.name] ? 'text-danger' : 'text-success'">
-                      {{ jsonError[column.name] || 'JSON格式正确' }}
+                      {{ jsonError[column.name] || $t('dataEditor.jsonCorrect') }}
                     </small>
                     <button 
                       type="button" 
                       class="btn btn-sm btn-outline-primary" 
                       @click="formatJson(column.name)"
                     >
-                      格式化
+                      {{ $t('common.format') }}
                     </button>
                   </div>
                 </div>
@@ -113,7 +113,7 @@
                   data-type="normal"
                   class="form-control" 
                   v-model="formData[column.name]"
-                  :placeholder="'请输入' + column.name"
+                  :placeholder="$t('dataEditor.inputPlaceholder', { name: column.name })"
                   :required="!column.nullable"
                 >
               </div>
@@ -123,11 +123,11 @@
         
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" @click="closeModal">
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button type="button" class="btn btn-primary" @click="handleSubmit" :disabled="loading">
             <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
-            {{ isEdit ? '更新' : '插入' }}
+            {{ isEdit ? $t('dataEditor.updateBtn') : $t('dataEditor.insertBtn') }}
           </button>
         </div>
       </div>
@@ -137,6 +137,7 @@
 
 <script lang="ts" setup>
 import { ref, watch, computed, nextTick, onBeforeUnmount } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { DatabaseService } from '@/service/database';
 import { modal } from '@/utils/modal';
 import { isNumericType, isBooleanType, isDateTimeType, isTextType, isJsonType, isArrayType } from '@/utils/database-types';
@@ -149,6 +150,7 @@ import { json } from '@codemirror/lang-json';
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 
 const databaseService = new DatabaseService();
+const { t } = useI18n();
 
 const props = defineProps<{
   visible: boolean;
@@ -210,7 +212,7 @@ function initJsonEditors() {
           highlightActiveLineGutter(),
           highlightActiveLine(),
           drawSelection(),
-          placeholder(`请输入 ${column.name} 的JSON数据`),
+          placeholder(t('dataEditor.jsonPlaceholder', { name: column.name })),
           json(),
           syntaxHighlighting(defaultHighlightStyle),
           keymap.of(defaultKeymap),
@@ -379,7 +381,7 @@ function validateJson(columnName: string) {
       jsonError.value[columnName] = '';
     }
   } catch (error) {
-    jsonError.value[columnName] = 'JSON格式错误: ' + (error as Error).message;
+    jsonError.value[columnName] = t('dataEditor.jsonFormatError') + ': ' + (error as Error).message;
   }
 }
 
@@ -408,7 +410,7 @@ function formatJson(columnName: string) {
       }
     }
   } catch (error) {
-    jsonError.value[columnName] = 'JSON格式错误: ' + (error as Error).message;
+    jsonError.value[columnName] = t('dataEditor.jsonFormatError') + ': ' + (error as Error).message;
   }
 }
 
@@ -444,7 +446,7 @@ async function handleSubmit() {
     });
     
     if (hasInvalidJson) {
-      modal.error('请修复 JSON 格式错误后再提交');
+      modal.error(t('dataEditor.fixJsonError'));
       return;
     }
     
@@ -503,7 +505,7 @@ async function handleSubmit() {
     }
     
     if (response.ret === 0) {
-      modal.success(props.isEdit ? '数据更新成功' : '数据插入成功');
+      modal.success(props.isEdit ? t('dataEditor.updateSuccess') : t('dataEditor.insertSuccess'));
       closeModal();
       nextTick(() => {
         emit('submit', response);

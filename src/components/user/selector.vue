@@ -24,7 +24,7 @@
               v-else
               class="text-muted flex-grow-1"
             >
-              {{ placeholder || '选择用户' }}
+              {{ placeholder || $t('user.selectUser') }}
             </span>
           </div>
         </div>
@@ -45,7 +45,7 @@
             type="text"
             class="form-control"
             ref="searchInput"
-            :placeholder="searchPlaceholder || '搜索用户...'"
+            :placeholder="searchPlaceholder || $t('user.searchUser')"
             v-model="searchQuery"
             @input="handleSearchInput"
             @keydown="handleKeydown"
@@ -55,7 +55,7 @@
         <!-- 搜索结果组 -->
         <div class="mb-1">
           <div class="dropdown-header d-flex justify-content-between align-items-center">
-            <span>搜索结果</span>
+            <span>{{ $t('user.searchResults') }}</span>
             <div v-if="loading" class="w-20">
               <div class="progress" style="height: 2px;">
                 <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
@@ -79,7 +79,7 @@
               v-if="!loading && userList.length === 0" 
               class="text-center text-muted py-2"
             >
-              没有找到匹配的用户
+              {{ $t('user.noMatchUser') }}
             </div>
           </div>
         </div>
@@ -91,7 +91,7 @@
           @click="handleClear"
           :disabled="!selectedUser"
         >
-          <i class="bi bi-trash me-1"></i> 清除选择
+          <i class="bi bi-trash me-1"></i> {{ $t('user.clearSelection') }}
         </button>
       </div>
     </div>
@@ -100,8 +100,11 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import * as userService from '@/service/account';
 import { modal } from '@/utils/modal';
+
+const { t } = useI18n();
 
 interface User {
   userId: number;  // 用户ID，number类型
@@ -296,7 +299,7 @@ const fetchUsers = async (filter: string) => {
     });
     
     if (response.ret !== 0) {
-      modal.error(response.msg || '获取用户失败', {
+      modal.error(response.msg || t('user.fetchFailed'), {
         operation: 'GET_USER_LIST',
         code: response.ret
       });
@@ -310,7 +313,7 @@ const fetchUsers = async (filter: string) => {
   } catch (error) {
     console.error('获取用户列表失败:', error);
     
-    modal.error(error.message || '获取用户列表失败', {
+    modal.error(error.message || t('user.fetchUserListFailed'), {
       operation: 'GET_USER_LIST',
       stack: error.stack
     });

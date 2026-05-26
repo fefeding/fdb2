@@ -1,6 +1,6 @@
 {
   "name": "fdb2",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "private": false,
   "type": "commonjs",
   "main": "view/index.html",
@@ -62,7 +62,8 @@
     "oracledb": "^6.10.0",
     "pg": "^8.21.0",
     "reflect-metadata": "^0.2.2",
-    "typeorm": "^0.3.30"
+    "typeorm": "^0.3.30",
+    "vue-i18n": "^11.4.4"
   },
   "optionalDependencies": {
     "better-sqlite3": "^11.10.0"

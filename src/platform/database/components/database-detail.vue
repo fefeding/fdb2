@@ -18,11 +18,11 @@
         <div class="database-stats">
           <div class="stat-item">
             <div class="stat-value">{{ databaseInfo?.tableCount || 0 }}</div>
-            <div class="stat-label">表</div>
+            <div class="stat-label">{{ $t('connection.tableCount') }}</div>
           </div>
           <div class="stat-item">
             <div class="stat-value">{{ formatSize(databaseInfo?.size || 0) }}</div>
-            <div class="stat-label">大小</div>
+            <div class="stat-label">{{ $t('databaseDetail.size') }}</div>
           </div>
         </div>
       </div>
@@ -37,7 +37,7 @@
             :class="{ active: activeTab === 'tables' }"
             @click="activeTab = 'tables'"
           >
-            <i class="bi bi-table"></i> 数据表
+            <i class="bi bi-table"></i> {{ $t('databaseDetail.tables') }}
           </button>
         </li>
         <li class="nav-item">
@@ -46,7 +46,7 @@
             :class="{ active: activeTab === 'views' }"
             @click="activeTab = 'views'"
           >
-            <i class="bi bi-eye"></i> 视图
+            <i class="bi bi-eye"></i> {{ $t('databaseDetail.views') }}
           </button>
         </li>
         <li class="nav-item">
@@ -55,7 +55,7 @@
             :class="{ active: activeTab === 'procedures' }"
             @click="activeTab = 'procedures'"
           >
-            <i class="bi bi-gear"></i> 存储过程
+            <i class="bi bi-gear"></i> {{ $t('databaseDetail.procedures') }}
           </button>
         </li>
         <!-- <li class="nav-item">
@@ -73,7 +73,7 @@
             :class="{ active: activeTab === 'sql' }"
             @click="activeTab = 'sql'"
           >
-            <i class="bi bi-terminal"></i> 执行SQL
+            <i class="bi bi-terminal"></i> {{ $t('databaseDetail.executeSQL') }}
           </button>
         </li>
         <li class="nav-item">
@@ -82,7 +82,7 @@
             :class="{ active: activeTab === 'tools' }"
             @click="activeTab = 'tools'"
           >
-            <i class="bi bi-tools"></i> 工具
+            <i class="bi bi-tools"></i> {{ $t('databaseDetail.tools') }}
           </button>
         </li>
       </ul>
@@ -93,19 +93,19 @@
           <!-- 操作栏 -->
           <div class="tables-actions mb-3">
             <button class="btn btn-primary btn-sm" @click="createNewTable">
-              <i class="bi bi-plus-lg"></i> 创建表
+              <i class="bi bi-plus-lg"></i> {{ $t('databaseDetail.createTable') }}
             </button>
             <button class="btn btn-outline-secondary btn-sm" @click="handleRefreshDatabase">
-              <i class="bi bi-arrow-clockwise"></i> 刷新
+              <i class="bi bi-arrow-clockwise"></i> {{ $t('common.refresh') }}
             </button>
           </div>
           
           <!-- 加载状态 -->
           <div v-if="loading" class="loading-state">
             <div class="spinner-border" role="status">
-              <span class="visually-hidden">加载中...</span>
+              <span class="visually-hidden">{{ $t('common.loading') }}</span>
             </div>
-            <p>加载数据表中...</p>
+            <p>{{ $t('databaseDetail.loadingTables') }}</p>
           </div>
           
           <!-- 表格列表 -->
@@ -134,11 +134,11 @@
                 <div class="card-body">
                     <div class="table-stats">
                       <div class="stat" v-if="table.rowCount !== undefined">
-                        <span class="stat-label">行数</span>
+                        <span class="stat-label">{{ $t('databaseDetail.rowCountLabel') }}</span>
                         <span class="stat-value">{{ formatNumber(table.rowCount) }}</span>
                       </div>
                       <div class="stat" v-if="table.dataSize !== undefined">
-                        <span class="stat-label">大小</span>
+                        <span class="stat-label">{{ $t('databaseDetail.size') }}</span>
                         <span class="stat-value">{{ formatSize(table.dataSize) }}</span>
                       </div>
                     </div>
@@ -157,9 +157,9 @@
             <!-- 空状态 -->
             <div v-if="!tables || tables.length === 0" class="empty-state">
               <i class="bi bi-inbox"></i>
-              <p>暂无数据表</p>
+              <p>{{ $t('databaseDetail.noTable') }}</p>
               <button class="btn btn-primary" @click="createNewTable">
-                <i class="bi bi-plus"></i> 创建表
+                <i class="bi bi-plus"></i> {{ $t('databaseDetail.createTable') }}
               </button>
             </div>
           </div>
@@ -169,10 +169,10 @@
         <div v-show="activeTab === 'views'" class="tab-panel">
           <div class="views-actions mb-3">
             <button class="btn btn-success btn-sm" @click="showCreateViewModal">
-              <i class="bi bi-plus-lg"></i> 创建视图
+              <i class="bi bi-plus-lg"></i> {{ $t('databaseDetail.createView') }}
             </button>
             <button class="btn btn-info btn-sm" @click="refreshViews">
-              <i class="bi bi-arrow-clockwise"></i> 刷新
+              <i class="bi bi-arrow-clockwise"></i> {{ $t('common.refresh') }}
             </button>
           </div>
 
@@ -194,10 +194,10 @@
               <div class="card-body">
                 <div class="view-actions">
                   <button class="btn btn-sm btn-outline-primary" @click="editView(view)">
-                    <i class="bi bi-pencil"></i> 编辑
+                    <i class="bi bi-pencil"></i> {{ $t('common.edit') }}
                   </button>
                   <button class="btn btn-sm btn-outline-danger" @click="deleteView(view)">
-                    <i class="bi bi-trash"></i> 删除
+                    <i class="bi bi-trash"></i> {{ $t('common.delete') }}
                   </button>
                 </div>
               </div>
@@ -207,9 +207,9 @@
           <!-- 空状态 -->
           <div v-else class="empty-state">
             <i class="bi bi-eye"></i>
-            <p>暂无视图</p>
+            <p>{{ $t('databaseDetail.noView') }}</p>
             <button class="btn btn-success" @click="showCreateViewModal">
-              <i class="bi bi-plus"></i> 创建视图
+              <i class="bi bi-plus"></i> {{ $t('databaseDetail.createView') }}
             </button>
           </div>
         </div>
@@ -218,10 +218,10 @@
         <div v-show="activeTab === 'procedures'" class="tab-panel">
           <div class="procedures-actions mb-3">
             <button class="btn btn-info btn-sm" @click="showCreateProcedureModal">
-              <i class="bi bi-plus-lg"></i> 创建存储过程
+              <i class="bi bi-plus-lg"></i> {{ $t('databaseDetail.createProcedure') }}
             </button>
             <button class="btn btn-info btn-sm" @click="refreshProcedures">
-              <i class="bi bi-arrow-clockwise"></i> 刷新
+              <i class="bi bi-arrow-clockwise"></i> {{ $t('common.refresh') }}
             </button>
           </div>
 
@@ -247,10 +247,10 @@
               <div class="card-body">
                 <div class="procedure-actions">
                   <button class="btn btn-sm btn-outline-primary" @click="editProcedure(procedure)">
-                    <i class="bi bi-pencil"></i> 编辑
+                    <i class="bi bi-pencil"></i> {{ $t('common.edit') }}
                   </button>
                   <button class="btn btn-sm btn-outline-danger" @click="deleteProcedure(procedure)">
-                    <i class="bi bi-trash"></i> 删除
+                    <i class="bi bi-trash"></i> {{ $t('common.delete') }}
                   </button>
                 </div>
               </div>
@@ -260,9 +260,9 @@
           <!-- 空状态 -->
           <div v-else class="empty-state">
             <i class="bi bi-gear"></i>
-            <p>暂无存储过程</p>
+            <p>{{ $t('databaseDetail.noProcedure') }}</p>
             <button class="btn btn-info" @click="showCreateProcedureModal">
-              <i class="bi bi-plus"></i> 创建存储过程
+              <i class="bi bi-plus"></i> {{ $t('databaseDetail.createProcedure') }}
             </button>
           </div>
         </div>
@@ -271,7 +271,7 @@
         <div v-show="activeTab === 'functions'" class="tab-panel">
           <div class="empty-state">
             <i class="bi bi-code-slash"></i>
-            <p>函数功能开发中...</p>
+            <p>{{ $t('databaseDetail.functionInDev') }}</p>
           </div>
         </div>
 
@@ -297,24 +297,24 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">创建数据表</h5>
+            <h5 class="modal-title">{{ $t('databaseDetail.createTableTitle') }}</h5>
             <button type="button" class="btn-close" @click="showCreateTable = false"></button>
           </div>
           <div class="modal-body">
             <form>
               <div class="mb-3">
-                <label class="form-label">表名</label>
-                <input type="text" class="form-control" v-model="newTable.name" placeholder="输入表名">
+                <label class="form-label">{{ $t('databaseDetail.tableNameLabel') }}</label>
+                <input type="text" class="form-control" v-model="newTable.name" :placeholder="$t('databaseDetail.enterTableName')">
               </div>
               <div class="mb-3">
-                <label class="form-label">注释</label>
-                <textarea class="form-control" v-model="newTable.comment" placeholder="输入表注释"></textarea>
+                <label class="form-label">{{ $t('databaseDetail.commentLabel') }}</label>
+                <textarea class="form-control" v-model="newTable.comment" :placeholder="$t('databaseDetail.enterTableComment')"></textarea>
               </div>
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="showCreateTable = false">取消</button>
-            <button type="button" class="btn btn-primary" @click="createTable">创建</button>
+            <button type="button" class="btn btn-secondary" @click="showCreateTable = false">{{ $t('common.cancel') }}</button>
+            <button type="button" class="btn btn-primary" @click="createTable">{{ $t('common.create') }}</button>
           </div>
         </div>
       </div>
@@ -325,33 +325,33 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">{{ views.some(v => v.name === editingView.name) ? '编辑视图' : '创建视图' }}</h5>
+            <h5 class="modal-title">{{ views.some(v => v.name === editingView.name) ? $t('databaseDetail.editView') : $t('databaseDetail.createViewTitle') }}</h5>
             <button type="button" class="btn-close" @click="showCreateView = false"></button>
           </div>
           <div class="modal-body">
             <form>
               <div class="mb-3">
-                <label class="form-label">视图名称</label>
-                <input type="text" class="form-control" v-model="editingView.name" placeholder="输入视图名称">
+                <label class="form-label">{{ $t('databaseDetail.viewNameLabel') }}</label>
+                <input type="text" class="form-control" v-model="editingView.name" :placeholder="$t('databaseDetail.enterViewName')">
               </div>
               <div class="mb-3">
-                <label class="form-label">视图定义 (SQL查询)</label>
+                <label class="form-label">{{ $t('databaseDetail.viewDefinition') }}</label>
                 <textarea 
                   class="form-control" 
                   rows="8" 
                   v-model="editingView.definition" 
-                  placeholder="输入SELECT查询语句，例如: SELECT * FROM table_name WHERE condition"
+                  :placeholder="$t('databaseDetail.viewDefinitionPlaceholder')"
                 ></textarea>
               </div>
               <div class="mb-3">
-                <label class="form-label">注释</label>
-                <input type="text" class="form-control" v-model="editingView.comment" placeholder="输入视图注释">
+                <label class="form-label">{{ $t('databaseDetail.commentLabel') }}</label>
+                <input type="text" class="form-control" v-model="editingView.comment" :placeholder="$t('databaseDetail.enterTableComment')">
               </div>
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="showCreateView = false">取消</button>
-            <button type="button" class="btn btn-primary" @click="createOrUpdateView">保存</button>
+            <button type="button" class="btn btn-secondary" @click="showCreateView = false">{{ $t('common.cancel') }}</button>
+            <button type="button" class="btn btn-primary" @click="createOrUpdateView">{{ $t('common.save') }}</button>
           </div>
         </div>
       </div>
@@ -362,33 +362,33 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">{{ procedures.some(p => p.name === editingProcedure.name) ? '编辑存储过程' : '创建存储过程' }}</h5>
+            <h5 class="modal-title">{{ procedures.some(p => p.name === editingProcedure.name) ? $t('databaseDetail.editProcedure') : $t('databaseDetail.createProcedureTitle') }}</h5>
             <button type="button" class="btn-close" @click="showCreateProcedure = false"></button>
           </div>
           <div class="modal-body">
             <form>
               <div class="mb-3">
-                <label class="form-label">存储过程名称</label>
-                <input type="text" class="form-control" v-model="editingProcedure.name" placeholder="输入存储过程名称">
+                <label class="form-label">{{ $t('databaseDetail.procedureNameLabel') }}</label>
+                <input type="text" class="form-control" v-model="editingProcedure.name" :placeholder="$t('databaseDetail.enterProcedureName')">
               </div>
               <div class="mb-3">
-                <label class="form-label">存储过程定义</label>
+                <label class="form-label">{{ $t('databaseDetail.procedureDefinition') }}</label>
                 <textarea 
                   class="form-control" 
                   rows="12" 
                   v-model="editingProcedure.definition" 
-                  placeholder="输入存储过程的完整SQL定义，例如:&#10;BEGIN&#10;  -- 存储过程逻辑&#10;END"
+                  :placeholder="$t('databaseDetail.procedureDefPlaceholder')"
                 ></textarea>
               </div>
               <div class="mb-3">
-                <label class="form-label">注释</label>
-                <input type="text" class="form-control" v-model="editingProcedure.comment" placeholder="输入存储过程注释">
+                <label class="form-label">{{ $t('databaseDetail.commentLabel') }}</label>
+                <input type="text" class="form-control" v-model="editingProcedure.comment" :placeholder="$t('databaseDetail.enterTableComment')">
               </div>
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="showCreateProcedure = false">取消</button>
-            <button type="button" class="btn btn-primary" @click="createOrUpdateProcedure">保存</button>
+            <button type="button" class="btn btn-secondary" @click="showCreateProcedure = false">{{ $t('common.cancel') }}</button>
+            <button type="button" class="btn btn-primary" @click="createOrUpdateProcedure">{{ $t('common.save') }}</button>
           </div>
         </div>
       </div>
@@ -411,6 +411,7 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
+import { useI18n } from 'vue-i18n';
 import TableEditor from './table-editor.vue';
 import SqlExecutor from './sql-executor.vue';
 import DbTools from './db-tools.vue';
@@ -435,6 +436,7 @@ const emit = defineEmits<{
 }>();
 
 const databaseService = new DatabaseService();
+const { t } = useI18n();
 // 响应式数据
 const activeTab = ref('tables');
 const showCreateTable = ref(false);
@@ -607,13 +609,13 @@ async function editView(view: any) {
     showCreateView.value = true;
   } catch (error) {
     console.error('获取视图定义失败:', error);
-    modal.error('获取视图定义失败');
+    modal.error(t('databaseDetail.getViewDefFailed'));
   }
 }
 
 async function createOrUpdateView() {
   if (!editingView.value?.name || !editingView.value?.definition) {
-    modal.error('请填写视图名称和定义');
+    modal.error(t('databaseDetail.fillViewNameAndDef'));
     return;
   }
 
@@ -632,12 +634,12 @@ async function createOrUpdateView() {
     );
     
     if (result.success || result.ret === 0) {
-      await modal.success('视图保存成功');
+      await modal.success(t('databaseDetail.viewSaveSuccess'));
       showCreateView.value = false;
       editingView.value = null;
       await loadViews();
     } else {
-      await modal.error('视图保存失败');
+      await modal.error(t('databaseDetail.viewSaveFailed'));
     }
   } catch (error) {
     console.error('保存视图失败:', error);
@@ -647,21 +649,21 @@ async function createOrUpdateView() {
 }
 
 async function deleteView(view: any) {
-  const result = await modal.confirm(`确定要删除视图 "${view.name}" 吗？此操作不可恢复。`);
+  const result = await modal.confirm(t('databaseDetail.confirmDeleteView', { name: view.name }));
   if (result) {
     try {
       const response = await databaseService.dropView(props.connection?.id || '', props.database, view.name);
       
       if (response.success || response.ok) {
-        await modal.success('视图删除成功');
+        await modal.success(t('databaseDetail.viewDeleteSuccess'));
         await loadViews();
       } else {
-        await modal.error('视图删除失败');
+        await modal.error(t('databaseDetail.viewDeleteFailed'));
       }
     } catch (error) {
       console.error('删除视图失败:', error);
       const errorMsg = error instanceof Error ? error.message : String(error);
-      modal.error(errorMsg || '删除视图失败');
+      modal.error(errorMsg || t('databaseDetail.viewDeleteFailed'));
     }
   }
 }
@@ -699,13 +701,13 @@ async function editProcedure(procedure: any) {
     showCreateProcedure.value = true;
   } catch (error) {
     console.error('获取存储过程定义失败:', error);
-    modal.error('获取存储过程定义失败');
+    modal.error(t('databaseDetail.getProcedureDefFailed'));
   }
 }
 
 async function createOrUpdateProcedure() {
   if (!editingProcedure.value?.name || !editingProcedure.value?.definition) {
-    modal.error('请填写存储过程名称和定义');
+    modal.error(t('databaseDetail.fillProcedureNameAndDef'));
     return;
   }
 
@@ -724,12 +726,12 @@ async function createOrUpdateProcedure() {
     );
     
     if (result.success || result.ret === 0) {
-      await modal.success('存储过程保存成功');
+      await modal.success(t('databaseDetail.procedureSaveSuccess'));
       showCreateProcedure.value = false;
       editingProcedure.value = null;
       await loadProcedures();
     } else {
-      await modal.error('存储过程保存失败');
+      await modal.error(t('databaseDetail.procedureSaveFailed'));
     }
   } catch (error) {
     console.error('保存存储过程失败:', error);
@@ -739,20 +741,20 @@ async function createOrUpdateProcedure() {
 }
 
 async function deleteProcedure(procedure: any) {
-  const result = await modal.confirm(`确定要删除存储过程 "${procedure.name}" 吗？此操作不可恢复。`);
+  const result = await modal.confirm(t('databaseDetail.confirmDeleteProcedure', { name: procedure.name }));
   if (result) {
     try {
       const response = await databaseService.dropProcedure(props.connection?.id || '', props.database, procedure.name);
       
       if (response.success || response.ok) {
-        await modal.success('存储过程删除成功');
+        await modal.success(t('databaseDetail.procedureDeleteSuccess'));
         await loadProcedures();
       } else {
-        await modal.error('存储过程删除失败');
+        await modal.error(t('databaseDetail.procedureDeleteFailed'));
       }
     } catch (error) {
       console.error('删除存储过程失败:', error);
-      modal.error(error.message || '删除存储过程失败');
+      modal.error(error.message || t('databaseDetail.procedureDeleteFailed'));
     }
   }
 }
@@ -765,17 +767,17 @@ async function handleTableChange(result: any) {
       if (result.success) {
         // 操作成功，刷新结构
         emit('refresh-database');
-        const successMessage = isCreate ? '创建表成功' : '表结构修改成功';
+        const successMessage = isCreate ? t('databaseDetail.tableCreateSuccess') : t('databaseDetail.tableModifySuccess');
         await modal.success(successMessage);
       } else {
-        const errorMessage = isCreate ? '创建表失败' : '表结构修改失败';
+        const errorMessage = isCreate ? t('databaseDetail.tableCreateFailed') : t('databaseDetail.tableModifyFailed');
         await modal.error(errorMessage);
       }
     } catch (error) {
       console.error('处理表操作失败:', error);
       
       const isCreate = result.mode === 'create';
-      const errorMessage = isCreate ? '创建表失败' : '表结构修改失败';
+      const errorMessage = isCreate ? t('databaseDetail.tableCreateFailed') : t('databaseDetail.tableModifyFailed');
       
       modal.error(error.msg || error.message || errorMessage, {
         operation: isCreate ? 'CREATE_TABLE' : 'MODIFY_TABLE',

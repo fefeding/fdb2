@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useTitle } from '@vueuse/core';
 import { abortAllPending } from '@/adapter/ajax';
 import { checkLogin, initLoginState } from '@/service/login';
+import i18n from '@/i18n';
 
 import databaseRouters from './database/router';
 
@@ -33,7 +34,10 @@ router.beforeEach(async (to, from, next) => {
 });
 
 router.afterEach((to) => {
-    if (to.meta?.title) {
+    if (to.meta?.titleKey) {
+        const t = i18n.global.t;
+        useTitle(t(to.meta.titleKey as string));
+    } else if (to.meta?.title) {
         useTitle(to.meta.title as string);
     }
   });

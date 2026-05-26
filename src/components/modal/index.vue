@@ -18,7 +18,7 @@
                         </div>
                         <div v-if="shouldShowDetails()" class="error-details-toggle mt-2">
                             <button class="btn btn-sm btn-outline-secondary" @click="toggleDetails">
-                                {{detailsExpanded ? '隐藏' : '详情'}}
+                                {{detailsExpanded ? $t('common.hide') : $t('common.details')}}
                                 <i class="bi bi-chevron-{{detailsExpanded ? 'up' : 'down'}} ms-1"></i>
                             </button>
                             <div v-if="detailsExpanded" class="error-details-content mt-2">
@@ -34,18 +34,18 @@
                                 v-if="dynamicShowCancel || props.closeButton.show" 
                                 class="btn btn-secondary" 
                                 @click="cancel">
-                            {{dynamicCancelText || props.closeButton.text}}
+                            {{dynamicCancelText || props.closeButton.text || $t('common.close')}}
                         </button>
                         <button type="button" 
                                 v-if="props.confirmButton.show" 
                                 class="btn" 
                                 :class="confirmButtonClass"
                                 @click="confirm">
-                            {{dynamicConfirmText || props.confirmButton.text}}
+                            {{dynamicConfirmText || props.confirmButton.text || $t('common.confirm')}}
                         </button>
                     </template>
                 </div>
-                <Loading :isLoading="props.isLoading" :message="props.loadingMessage"></Loading>
+                <Loading :isLoading="props.isLoading" :message="props.loadingMessage || t('common.processing')"></Loading>
             </div>
         </div>
 
@@ -54,8 +54,11 @@
 
 <script lang="ts" setup>
     import { ref, onMounted, onUnmounted, watch, computed, nextTick } from 'vue';
+    import { useI18n } from 'vue-i18n';
     import * as bootstrap from 'bootstrap';
     import Loading from '@/components/loading/index.vue';
+    
+    const { t } = useI18n();
 
     // 生成唯一ID，用于区分不同的modal实例
     const modalId = `modal-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -68,14 +71,14 @@
         closeButton: {
             type: Object,
             default: {
-                text: '关闭',
+                text: '',
                 show: false
             }
         },
         confirmButton: {
             type: Object,
             default: {
-                text: '确定',
+                text: '',
                 show: true
             }
         },
@@ -85,7 +88,7 @@
         },
         loadingMessage: {
             type: String,
-            default: '处理中...'
+            default: ''
         },
         style: {
             type: Object,

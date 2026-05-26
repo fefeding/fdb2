@@ -16,37 +16,37 @@
               <div class="hero-text">
                 <div class="hero-badge">
                   <i class="bi bi-stars"></i>
-                  <span>欢迎回来</span>
+                  <span>{{ $t('home.welcomeBack') }}</span>
                 </div>
                 <h1 class="hero-title">
-                  <span class="gradient-text">数据库管理平台</span>
+                  <span class="gradient-text">{{ $t('home.title') }}</span>
                 </h1>
                 <p class="hero-description">
-                  专业的数据库管理和监控工具，为开发者提供一站式数据库操作体验。支持多种主流数据库类型，提供直观的可视化界面和强大的查询功能。
+                  {{ $t('home.description') }}
                 </p>
                 <div class="hero-actions">
                   <router-link to="/database/explorer" class="btn-hero btn-primary-hero">
                     <i class="bi bi-plus-lg"></i>
-                    <span>添加连接</span>
+                    <span>{{ $t('home.addConnection') }}</span>
                     <div class="btn-glow"></div>
                   </router-link>
                   <router-link to="/database/explorer" class="btn-hero btn-secondary-hero">
                     <i class="bi bi-terminal"></i>
-                    <span>SQL查询</span>
+                    <span>{{ $t('home.sqlQuery') }}</span>
                   </router-link>
                 </div>
                 <div class="hero-stats">
                   <div class="hero-stat">
                     <span class="stat-number">{{ connections.length }}</span>
-                    <span class="stat-label">连接数</span>
+                    <span class="stat-label">{{ $t('home.connectionCount') }}</span>
                   </div>
                   <div class="hero-stat">
                     <span class="stat-number">5</span>
-                    <span class="stat-label">支持类型</span>
+                    <span class="stat-label">{{ $t('home.supportedTypes') }}</span>
                   </div>
                   <div class="hero-stat">
                     <span class="stat-number">24/7</span>
-                    <span class="stat-label">在线监控</span>
+                    <span class="stat-label">{{ $t('home.onlineMonitor') }}</span>
                   </div>
                 </div>
               </div>
@@ -86,8 +86,8 @@
               </div>
               <div class="stat-content">
                 <div class="stat-number">{{ connections.length }}</div>
-                <div class="stat-title">数据库连接</div>
-                <div class="stat-description">活跃连接配置</div>
+                <div class="stat-title">{{ $t('home.databaseConnections') }}</div>
+                <div class="stat-description">{{ $t('home.activeConnectionConfig') }}</div>
               </div>
             </div>
           </div>
@@ -104,8 +104,8 @@
               </div>
               <div class="stat-content">
                 <div class="stat-number">{{ enabledConnections }}</div>
-                <div class="stat-title">在线状态</div>
-                <div class="stat-description">正常运行</div>
+                <div class="stat-title">{{ $t('home.onlineStatus') }}</div>
+                <div class="stat-description">{{ $t('home.normalRunning') }}</div>
               </div>
             </div>
           </div>
@@ -117,13 +117,13 @@
                 </div>
                 <div class="stat-trend">
                   <i class="bi bi-arrow-right"></i>
-                  <span>5种</span>
+                  <span>{{ dbTypesCount }}{{ $t('home.types') }}</span>
                 </div>
               </div>
               <div class="stat-content">
                 <div class="stat-number">{{ dbTypesCount }}</div>
-                <div class="stat-title">数据库类型</div>
-                <div class="stat-description">支持的引擎</div>
+                <div class="stat-title">{{ $t('home.databaseTypes') }}</div>
+                <div class="stat-description">{{ $t('home.supportedEngines') }}</div>
               </div>
             </div>
           </div>
@@ -139,9 +139,9 @@
                 </div>
               </div>
               <div class="stat-content">
-                <div class="stat-number">极速</div>
-                <div class="stat-title">响应时间</div>
-                <div class="stat-description">平均查询性能</div>
+                <div class="stat-number">{{ $t('home.ultraFast') }}</div>
+                <div class="stat-title">{{ $t('home.responseTime') }}</div>
+                <div class="stat-description">{{ $t('home.avgQueryPerf') }}</div>
               </div>
             </div>
           </div>
@@ -154,8 +154,8 @@
           <div class="section-icon">
             <i class="bi bi-stars"></i>
           </div>
-          <h2 class="section-title">核心功能</h2>
-          <p class="section-subtitle">强大的数据库管理功能，满足您的所有需求</p>
+          <h2 class="section-title">{{ $t('home.coreFeatures') }}</h2>
+          <p class="section-subtitle">{{ $t('home.coreFeaturesSubtitle') }}</p>
         </div>
         
         <div class="features-grid">
@@ -188,8 +188,8 @@
           <div class="section-icon">
             <i class="bi bi-lightning"></i>
           </div>
-          <h2 class="section-title">快速访问</h2>
-          <p class="section-subtitle">一键访问您的数据库连接</p>
+          <h2 class="section-title">{{ $t('home.quickAccess') }}</h2>
+          <p class="section-subtitle">{{ $t('home.quickAccessSubtitle') }}</p>
         </div>
         
         <div class="quick-access-grid">
@@ -212,7 +212,7 @@
             <div class="quick-access-footer">
               <button class="quick-access-btn" @click="goToSchemas(connection)">
                 <i class="bi bi-folder2-open"></i>
-                <span>查看</span>
+                <span>{{ $t('common.view') }}</span>
               </button>
             </div>
           </div>
@@ -221,7 +221,7 @@
         <div class="view-all-connections" v-if="connections.length > 6">
           <router-link to="/database/explorer" class="view-all-btn">
             <i class="bi bi-grid"></i>
-            <span>查看所有连接 ({{ connections.length }})</span>
+            <span>{{ $t('home.viewAllConnections') }} ({{ connections.length }})</span>
             <i class="bi bi-arrow-right"></i>
           </router-link>
         </div>
@@ -240,13 +240,13 @@
               <div class="empty-shape shape-c"></div>
             </div>
           </div>
-          <h2 class="empty-title">开始您的数据库管理之旅</h2>
+          <h2 class="empty-title">{{ $t('home.startJourney') }}</h2>
           <p class="empty-description">
-            还没有配置数据库连接？让我们添加第一个连接，开始强大的数据库管理体验。
+            {{ $t('home.startJourneyDesc') }}
           </p>
           <router-link to="/database/explorer" class="btn-hero btn-primary-hero">
             <i class="bi bi-plus-lg"></i>
-            <span>添加数据库连接</span>
+            <span>{{ $t('home.addDatabaseConnection') }}</span>
             <div class="btn-glow"></div>
           </router-link>
         </div>
@@ -258,9 +258,11 @@
 <script lang="ts" setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { ConnectionService } from '@/service/database';
 import type { ConnectionEntity } from '@/typings/database';
 
+const { t } = useI18n();
 const router = useRouter();
 const connectionService = new ConnectionService();
 
@@ -268,33 +270,33 @@ const connectionService = new ConnectionService();
 const connections = ref<ConnectionEntity[]>([]);
 
 // 功能特性数据
-const features = ref([
+const features = computed(() => [
   {
-    title: '连接管理',
+    title: t('home.featureConnectionMgmt'),
     icon: 'bi bi-plugin',
-    description: '支持MySQL、PostgreSQL、SQLite、SQL Server、Oracle等主流数据库的连接配置和管理',
-    tags: ['多数据库支持', '安全连接', '连接池'],
+    description: t('home.featureConnectionMgmtDesc'),
+    tags: [t('home.tagMultiDbSupport'), t('home.tagSecureConnection'), t('home.tagConnectionPool')],
     link: '/database/explorer'
   },
   {
-    title: '结构浏览',
+    title: t('home.featureStructureBrowse'),
     icon: 'bi bi-diagram-3',
-    description: '直观展示数据库表结构、索引、外键关系、视图、存储过程等数据库对象',
-    tags: ['可视化', '关系图', '详细视图'],
+    description: t('home.featureStructureBrowseDesc'),
+    tags: [t('home.tagVisual'), t('home.tagRelationDiagram'), t('home.tagDetailView')],
     link: '/database/explorer'
   },
   {
-    title: '数据操作',
+    title: t('home.featureDataOps'),
     icon: 'bi bi-table',
-    description: '查看、编辑、删除表数据，支持批量操作、分页浏览、条件筛选和数据导入导出',
-    tags: ['CRUD操作', '批量处理', '导入导出'],
+    description: t('home.featureDataOpsDesc'),
+    tags: [t('home.tagCrudOps'), t('home.tagBatchProcessing'), t('home.tagImportExport')],
     link: '/database/explorer'
   },
   {
-    title: 'SQL查询',
+    title: t('home.featureSqlQuery'),
     icon: 'bi bi-terminal',
-    description: '强大的SQL编辑器，支持语法高亮、自动补全、查询历史和结果导出功能',
-    tags: ['语法高亮', '查询历史', '结果导出'],
+    description: t('home.featureSqlQueryDesc'),
+    tags: [t('home.tagSyntaxHighlight'), t('home.tagQueryHistory'), t('home.tagResultExport')],
     link: '/database/explorer'
   }
 ]);
