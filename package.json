@@ -1,6 +1,6 @@
 {
   "name": "fdb2",
-  "version": "1.0.23",
+  "version": "1.0.24",
   "private": false,
   "type": "commonjs",
   "main": "view/index.html",

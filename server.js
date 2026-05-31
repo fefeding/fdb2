@@ -6,6 +6,7 @@ const fs = require('fs');
 
 // 预加载 better-sqlite3 模块，确保原生绑定文件能够正确加载
 // 并将其缓存到全局模块缓存中，以便 dist/server/index.js 可以使用
+const { getDataPath } = require('./dist/server/utils/data-dir');
 try {
   const betterSqlite3 = require('better-sqlite3');
   console.log('better-sqlite3 module preloaded successfully');
@@ -26,8 +27,11 @@ try {
   console.error('Warning: Failed to preload better-sqlite3 module:', error.message);
 }
 
-// 日志文件路径 - 使用绝对路径
-const logFilePath = path.resolve(__dirname, 'server.log');
+// 日志文件路径 - 使用统一数据目录
+const logFilePath = getDataPath('server.log');
+
+// PID 文件路径 - 使用统一数据目录
+const pidFilePath = getDataPath('fdb2.server.pid');
 
 // 重定向控制台输出到日志文件
 const logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
@@ -122,7 +126,6 @@ const PORT = portFromArgs || process.env.PORT || 9800;
 app.listen(PORT, () => {
   
   // 将 PID 写入 PID 文件
-  const pidFilePath = path.join(__dirname, 'fdb2.server.pid');
   fs.writeFileSync(pidFilePath, process.pid.toString());
   console.log(`PID ${process.pid} written to ${pidFilePath}`);
   

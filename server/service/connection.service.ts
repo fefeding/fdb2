@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as os from 'os';
 import { ConnectionEntity } from '../model/connection.entity';
 import { DataSource, type DataSourceOptions } from 'typeorm';
+import { getDataPath, ensureDataDir } from '../utils/data-dir';
 
 /**
  * 数据库连接管理服务
@@ -22,18 +22,14 @@ export class ConnectionService {
   private activeConnections: Map<string, DataSource> = new Map();
 
   constructor() {
-    const dataDir = process.env.DB_TOOL_DATA_DIR || path.join(os.homedir(), '.fdb2');
-    this.configPath = path.join(dataDir, 'connections.json');
+    this.configPath = getDataPath('connections.json');
   }
 
   /**
    * 初始化服务，创建配置目录
    */
   async init() {
-    const configDir = path.dirname(this.configPath);
-    if (!fs.existsSync(configDir)) {
-      fs.mkdirSync(configDir, { recursive: true });
-    }
+    ensureDataDir();
   }
 
   /**
