@@ -1182,17 +1182,18 @@ function showAboutPage() {
 .explorer-layout {
   display: flex;
   height: 100%;
-  background: white;
+  background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  border: 1px solid #cbd5e1;
 }
 
 /* 左侧边栏 */
 .explorer-sidebar {
   width: 350px;
   flex-shrink: 0;
-  border-right: 1px solid #e1e5e9;
+  border-right: 1px solid #cbd5e1;
   display: flex;
   flex-direction: column;
   background: #ffffff;
@@ -1213,7 +1214,7 @@ function showAboutPage() {
 /* 工具信息样式 - 固定在左下角 */
 .sidebar-tool-info {
   padding: 0.75rem;
-  border-top: 1px solid #e1e5e9;
+  border-top: 1px solid #cbd5e1;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   display: flex;
   align-items: center;
@@ -1250,17 +1251,17 @@ function showAboutPage() {
 .tool-name {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #0f172a;
 }
 
 .tool-description {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #334155;
 }
 
 .sidebar-header {
   padding: 1rem 0.875rem;
-  border-bottom: 1px solid #e1e5e9;
+  border-bottom: 1px solid #cbd5e1;
   background: #f8f9fa;
   display: flex;
   justify-content: space-between;
@@ -1278,7 +1279,7 @@ function showAboutPage() {
 }
 
 .sidebar-title i {
-  color: #656d76;
+  color: #374151;
 }
 
 .sidebar-actions {
@@ -1369,7 +1370,7 @@ function showAboutPage() {
 
 .node-expand i {
   font-size: 0.6875rem;
-  color: #656d76;
+  color: #374151;
   transition: transform 0.15s ease;
 }
 
@@ -1445,8 +1446,8 @@ function showAboutPage() {
 .connection-type,
 .table-info {
   font-size: 0.75rem;
-  color: #656d76;
-  background-color: #f6f8fa;
+  color: #374151;
+  background-color: #e2e8f0;
   padding: 0.125rem 0.375rem;
   border-radius: 12px;
   font-weight: 500;
@@ -1489,7 +1490,7 @@ function showAboutPage() {
 
 .btn-icon i {
   font-size: 0.6875rem;
-  color: #656d76;
+  color: #374151;
 }
 
 .tree-node.selected .btn-icon:hover {
@@ -1497,7 +1498,7 @@ function showAboutPage() {
 }
 
 .tree-node.selected .btn-icon i {
-  color: #656d76;
+  color: #475569;
 }
 
 .tree-node.selected .btn-icon:hover i {
@@ -1703,14 +1704,14 @@ function showAboutPage() {
 
 .nav-tabs {
   background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
   padding: 0 1rem;
 }
 
 .nav-link {
   border: none;
   background: transparent;
-  color: #64748b;
+  color: #334155;
   padding: 1rem 1.5rem;
   font-weight: 500;
   transition: all 0.2s ease;
@@ -1752,7 +1753,7 @@ function showAboutPage() {
   display: flex;
   align-items: center;
   gap: 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
 }
 
 .card-icon {
@@ -1769,7 +1770,7 @@ function showAboutPage() {
 
 .card-content h6 {
   margin: 0 0 0.25rem 0;
-  color: #64748b;
+  color: #334155;
   font-size: 0.875rem;
   font-weight: 500;
 }
@@ -1790,7 +1791,7 @@ function showAboutPage() {
 
 .table-card {
   background: white;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   border-radius: 12px;
   padding: 1rem;
   cursor: pointer;
@@ -1840,18 +1841,18 @@ function showAboutPage() {
 
 .stat-label {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #334155;
 }
 
 .stat-value {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #0f172a;
 }
 
 .table-comment {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #334155;
   font-style: italic;
 }
 
@@ -1881,7 +1882,7 @@ function showAboutPage() {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #64748b;
+  color: #334155;
   text-align: center;
 }
 
@@ -1894,7 +1895,7 @@ function showAboutPage() {
 
 .empty-text h5,
 .default-content h5 {
-  color: #64748b;
+  color: #1e293b;
   margin-bottom: 0.5rem;
 }
 
@@ -1908,7 +1909,7 @@ function showAboutPage() {
     width: 100%;
     height: 40vh;
     border-right: none;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #cbd5e1;
   }
   
   .info-cards {

@@ -18,9 +18,9 @@
   /* 中性色彩 */
   --db-light-color: #f8fafc;
   --db-gray-light: #f1f5f9;
-  --db-gray-medium: #e2e8f0;
-  --db-gray-dark: #94a3b8;
-  --db-darker-color: #64748b;
+  --db-gray-medium: #cbd5e1;
+  --db-gray-dark: #475569;
+  --db-darker-color: #334155;
   --db-dark-color: #1e293b;
   --db-black: #0f172a;
   
@@ -498,7 +498,7 @@ body {
 
 .form-label {
   font-weight: 700;
-  color: var(--db-dark-color);
+  color: #1e293b;
   margin-bottom: var(--db-spacing-sm);
   font-size: 0.9rem;
   letter-spacing: 0.025em;
@@ -509,7 +509,7 @@ body {
 
 .form-text {
   font-size: 0.875rem;
-  color: var(--db-gray-dark);
+  color: #334155;
   margin-top: var(--db-spacing-xs);
 }
 
@@ -537,16 +537,16 @@ body {
 
 /* 代码样式 */
 code {
-  background-color: #e9ecef;
-  color: #d63384;
+  background-color: #e2e8f0;
+  color: #be185d;
   padding: 0.2rem 0.4rem;
   border-radius: 3px;
   font-size: 0.875em;
 }
 
 pre {
-  background-color: #f8f9fa;
-  border: 1px solid #e9ecef;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
   border-radius: 6px;
   padding: 1rem;
   margin: 0;
@@ -562,23 +562,23 @@ pre {
 }
 
 .alert-success {
-  background-color: #d4edda;
-  color: #155724;
+  background-color: #dcfce7;
+  color: #166534;
 }
 
 .alert-danger {
-  background-color: #f8d7da;
-  color: #721c24;
+  background-color: #fee2e2;
+  color: #991b1b;
 }
 
 .alert-warning {
-  background-color: #fff3cd;
-  color: #856404;
+  background-color: #fef3c7;
+  color: #92400e;
 }
 
 .alert-info {
-  background-color: #d1ecf1;
-  color: #0c5460;
+  background-color: #dbeafe;
+  color: #1e40af;
 }
 
 /* 工具提示样式 */
@@ -600,7 +600,7 @@ pre {
 }
 
 .dropdown-item:hover {
-  background-color: #f8f9fa;
+  background-color: #e2e8f0;
   transform: translateX(2px);
 }
 
@@ -613,7 +613,7 @@ pre {
 }
 
 .list-group-item:hover {
-  background-color: #f8f9fa;
+  background-color: #e2e8f0;
   transform: translateX(4px);
 }
 
@@ -774,7 +774,7 @@ pre {
 }
 
 .status-offline {
-  color: var(--db-gray-dark);
+  color: #64748b;
   display: flex;
   align-items: center;
   gap: var(--db-spacing-xs);
@@ -915,9 +915,9 @@ pre {
     --db-light-color: #1e293b;
     --db-gray-light: #334155;
     --db-gray-medium: #475569;
-    --db-gray-dark: #64748b;
-    --db-darker-color: #94a3b8;
-    --db-dark-color: #f1f5f9;
+    --db-gray-dark: #94a3b8;
+    --db-darker-color: #cbd5e1;
+    --db-dark-color: #e2e8f0;
     --db-black: #f8fafc;
     
     --db-bg-gradient: linear-gradient(135deg, #1e293b 0%, #334155 100%);

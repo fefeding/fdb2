@@ -384,7 +384,7 @@ function getDbTypeClass(type: string): string {
   border-radius: 24px;
   padding: 3rem;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(226, 232, 240, 0.5);
+  border: 1px solid rgba(203, 213, 225, 0.8);
   position: relative;
   overflow: hidden;
 }
@@ -477,7 +477,7 @@ function getDbTypeClass(type: string): string {
 
 .hero-description {
   font-size: 1.125rem;
-  color: #64748b;
+  color: #334155;
   line-height: 1.6;
   margin-bottom: 2rem;
   max-width: 600px;
@@ -564,8 +564,8 @@ function getDbTypeClass(type: string): string {
 
 .stat-label {
   font-size: 0.875rem;
-  color: #64748b;
-  font-weight: 500;
+  color: #334155;
+  font-weight: 600;
 }
 
 /* 可视化插图 */
@@ -631,7 +631,7 @@ function getDbTypeClass(type: string): string {
   background: white;
   border-radius: 20px;
   padding: 1.5rem;
-  border: 1px solid rgba(226, 232, 240, 0.5);
+  border: 1px solid rgba(203, 213, 225, 0.8);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   position: relative;
@@ -698,7 +698,7 @@ function getDbTypeClass(type: string): string {
 
 .stat-description {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #334155;
 }
 
 /* 功能特性区域 */
@@ -733,7 +733,7 @@ function getDbTypeClass(type: string): string {
 }
 
 .section-subtitle {
-  color: #64748b;
+  color: #334155;
   font-size: 1.125rem;
   max-width: 600px;
   margin: 0 auto;
@@ -749,7 +749,7 @@ function getDbTypeClass(type: string): string {
   background: white;
   border-radius: 20px;
   padding: 2rem;
-  border: 1px solid rgba(226, 232, 240, 0.5);
+  border: 1px solid rgba(203, 213, 225, 0.8);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   position: relative;
@@ -815,7 +815,7 @@ function getDbTypeClass(type: string): string {
 }
 
 .feature-description {
-  color: #64748b;
+  color: #334155;
   line-height: 1.6;
   flex-grow: 1;
 }
@@ -827,8 +827,8 @@ function getDbTypeClass(type: string): string {
 }
 
 .feature-tag {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  color: #64748b;
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  color: #334155;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
   font-size: 0.75rem;
@@ -873,7 +873,7 @@ function getDbTypeClass(type: string): string {
   background: white;
   border-radius: 16px;
   padding: 1.5rem;
-  border: 1px solid rgba(226, 232, 240, 0.5);
+  border: 1px solid rgba(203, 213, 225, 0.8);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   display: flex;
@@ -917,7 +917,7 @@ function getDbTypeClass(type: string): string {
 }
 
 .status-offline {
-  background: #6b7280;
+  background: #475569;
 }
 
 .status-dot {
@@ -944,7 +944,7 @@ function getDbTypeClass(type: string): string {
   flex-direction: column;
   gap: 0.25rem;
   font-size: 0.875rem;
-  color: #64748b;
+  color: #334155;
 }
 
 .db-type {
@@ -953,7 +953,7 @@ function getDbTypeClass(type: string): string {
 }
 
 .connection-host {
-  color: #94a3b8;
+  color: #475569;
 }
 
 .quick-access-footer {
@@ -964,7 +964,7 @@ function getDbTypeClass(type: string): string {
   width: 100%;
   padding: 0.75rem;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   border-radius: 10px;
   color: #667eea;
   font-weight: 500;
@@ -992,9 +992,9 @@ function getDbTypeClass(type: string): string {
   gap: 0.75rem;
   padding: 1rem 2rem;
   background: white;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #cbd5e1;
   border-radius: 12px;
-  color: #64748b;
+  color: #334155;
   text-decoration: none;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -1035,7 +1035,7 @@ function getDbTypeClass(type: string): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
+  color: #475569;
   font-size: 3rem;
   position: relative;
   z-index: 2;
@@ -1087,7 +1087,7 @@ function getDbTypeClass(type: string): string {
 
 .empty-description {
   font-size: 1.125rem;
-  color: #64748b;
+  color: #334155;
   line-height: 1.6;
   margin-bottom: 2rem;
 }

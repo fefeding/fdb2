@@ -979,7 +979,7 @@ function showScheduleModal() {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
 }
 
 .tools-title {
@@ -1033,7 +1033,7 @@ function showScheduleModal() {
 
 .modal-header {
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
 }
 
 .modal-title {
@@ -1043,12 +1043,12 @@ function showScheduleModal() {
 
 .modal-footer {
   background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #cbd5e1;
 }
 
 /* 工具组件区域 */
 .tool-component-area {
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #cbd5e1;
   background: #f8fafc;
 }
 
@@ -1058,7 +1058,7 @@ function showScheduleModal() {
   align-items: center;
   padding: 1rem 1.5rem;
   background: linear-gradient(135deg, #f1f5f9 0%, #f8fafc 100%);
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
 }
 
 .component-title {
@@ -1082,7 +1082,7 @@ function showScheduleModal() {
 
 /* 执行结果区域 */
 .execution-results {
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #cbd5e1;
   background: #f8fafc;
 }
 
@@ -1092,7 +1092,7 @@ function showScheduleModal() {
   align-items: center;
   padding: 1rem 1.5rem;
   background: linear-gradient(135deg, #f1f5f9 0%, #f8fafc 100%);
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
 }
 
 .results-title {
@@ -1117,7 +1117,7 @@ function showScheduleModal() {
   align-items: center;
   justify-content: center;
   padding: 3rem 1rem;
-  color: #94a3b8;
+  color: #475569;
 }
 
 .no-results i {
@@ -1132,7 +1132,7 @@ function showScheduleModal() {
 
 .result-item {
   margin-bottom: 0.75rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
   background: white;
   overflow: hidden;
@@ -1187,14 +1187,14 @@ function showScheduleModal() {
 }
 
 .operation-time {
-  color: #64748b;
+  color: #334155;
   font-size: 0.85rem;
   margin-left: auto;
 }
 
 .toggle-icon {
   transition: transform 0.2s;
-  color: #94a3b8;
+  color: #475569;
   font-size: 0.9rem;
 }
 
@@ -1205,7 +1205,7 @@ function showScheduleModal() {
 .result-body {
   padding: 1rem;
   background: #fafafa;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #cbd5e1;
 }
 
 .result-body pre {

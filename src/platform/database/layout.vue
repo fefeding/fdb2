@@ -35,7 +35,7 @@ import LanguageSwitcher from '@/components/language-switcher/index.vue';
   justify-content: space-between;
   padding: 0.5rem 1.25rem;
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
@@ -95,7 +95,7 @@ import LanguageSwitcher from '@/components/language-switcher/index.vue';
 /* 现代导航栏样式 */
 .navbar-modern {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   padding: 0.75rem 0;
   position: sticky;
@@ -157,7 +157,7 @@ import LanguageSwitcher from '@/components/language-switcher/index.vue';
 
 .brand-subtitle {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #334155;
   font-weight: 500;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -204,7 +204,7 @@ import LanguageSwitcher from '@/components/language-switcher/index.vue';
   gap: 0.75rem;
   padding: 0.75rem 1.25rem;
   border-radius: 12px;
-  color: #64748b;
+  color: #334155;
   text-decoration: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -313,12 +313,12 @@ import LanguageSwitcher from '@/components/language-switcher/index.vue';
 
 .user-role {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #334155;
   font-weight: 500;
 }
 
 .dropdown-arrow {
-  color: #94a3b8;
+  color: #475569;
   font-size: 0.75rem;
   transition: all 0.3s ease;
 }
@@ -331,7 +331,7 @@ import LanguageSwitcher from '@/components/language-switcher/index.vue';
 /* 现代下拉菜单样式 */
 .dropdown-menu-modern {
   background: white;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   border-radius: 16px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05);
   padding: 0.75rem;
@@ -344,7 +344,7 @@ import LanguageSwitcher from '@/components/language-switcher/index.vue';
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: #475569;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 1px solid #f1f5f9;
@@ -388,13 +388,13 @@ import LanguageSwitcher from '@/components/language-switcher/index.vue';
 
 .dropdown-item-desc {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: #475569;
 }
 
 .dropdown-divider-modern {
   margin: 0.75rem -0.75rem;
   border: none;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid #e2e8f0;
 }
 
 /* 主要内容区域 */

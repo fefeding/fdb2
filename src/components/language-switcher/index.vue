@@ -39,7 +39,7 @@ function toggle() {
   font-weight: 600;
   transition: all 0.3s ease;
   user-select: none;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   background: rgba(255, 255, 255, 0.8);
 }
 

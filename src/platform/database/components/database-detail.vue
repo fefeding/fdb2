@@ -804,7 +804,7 @@ function handleExecuteSQL(sql: string) {
   padding: 15px;
   background-color: #f8f9fa;
   border-radius: 4px;
-  border: 1px solid #dee2e6;
+  border: 1px solid #cbd5e6;
   flex: 1;
   display: flex;
 }
@@ -816,7 +816,7 @@ function handleExecuteSQL(sql: string) {
   align-items: center;
   justify-content: center;
   padding: 40px 0;
-  color: #6c757d;
+  color: #475569;
 }
 
 .loading-state .spinner-border {
@@ -832,7 +832,7 @@ function handleExecuteSQL(sql: string) {
 .database-header {
   padding: 1rem;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
 }
 
 .database-header-content {
@@ -881,12 +881,12 @@ function handleExecuteSQL(sql: string) {
 }
 
 .connection-type {
-  background: #f1f5f9;
-  color: #64748b;
+  background: #e2e8f0;
+  color: #334155;
   padding: 0.25rem 0.5rem;
   border-radius: 12px;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .database-stats {
@@ -907,8 +907,8 @@ function handleExecuteSQL(sql: string) {
 
 .stat-label {
   font-size: 0.875rem;
-  color: #64748b;
-  font-weight: 500;
+  color: #334155;
+  font-weight: 600;
 }
 
 
@@ -922,14 +922,14 @@ function handleExecuteSQL(sql: string) {
 
 .nav-tabs {
   background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
   padding: 0 1.5rem;
 }
 
 .nav-link {
   border: none;
   background: transparent;
-  color: #64748b;
+  color: #334155;
   padding: 1rem 1.5rem;
   font-weight: 500;
   transition: all 0.2s ease;
@@ -970,7 +970,7 @@ function handleExecuteSQL(sql: string) {
 
 .table-card {
   background: white;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.2s ease;
@@ -1024,8 +1024,8 @@ function handleExecuteSQL(sql: string) {
 
 .table-engine {
   font-size: 0.75rem;
-  color: #64748b;
-  background: #f1f5f9;
+  color: #334155;
+  background: #e2e8f0;
   padding: 0.125rem 0.375rem;
   border-radius: 8px;
   flex-shrink: 0;
@@ -1033,7 +1033,7 @@ function handleExecuteSQL(sql: string) {
 
 .table-comment-header {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #334155;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1057,7 +1057,7 @@ function handleExecuteSQL(sql: string) {
 
 .table-comment {
   font-size: 0.875rem;
-  color: #64748b;
+  color: #334155;
   font-style: italic;
   margin-bottom: 0.75rem;
   line-height: 1.4;
@@ -1074,7 +1074,7 @@ function handleExecuteSQL(sql: string) {
   align-items: center;
   justify-content: center;
   height: 200px;
-  color: #64748b;
+  color: #475569;
   text-align: center;
   font-size: 1.5rem;
 }
@@ -1093,7 +1093,7 @@ function handleExecuteSQL(sql: string) {
 
 .view-card, .procedure-card {
   background: white;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.2s ease;
@@ -1136,7 +1136,7 @@ function handleExecuteSQL(sql: string) {
 
 .view-comment, .procedure-comment {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #334155;
   margin-bottom: 0.5rem;
   line-height: 1.4;
 }
@@ -1177,7 +1177,7 @@ function handleExecuteSQL(sql: string) {
 }
 
 .modal-header {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
   padding: 1rem 1.5rem;
 }
 
@@ -1192,7 +1192,7 @@ function handleExecuteSQL(sql: string) {
 }
 
 .modal-footer {
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #cbd5e1;
   padding: 1rem 1.5rem;
   display: flex;
   justify-content: flex-end;

@@ -503,7 +503,7 @@
 
 .error-content {
     background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
+    border: 1px solid #cbd5e1;
     border-radius: 0.375rem;
     padding: 1rem;
     margin: 0;
@@ -522,7 +522,7 @@
 
 .error-details-content {
     background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
+    border: 1px solid #cbd5e1;
     border-radius: 0.375rem;
     padding: 1rem;
     margin-top: 0.5rem;
@@ -542,7 +542,7 @@
 }
 
 .error-meta {
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid #cbd5e1;
     padding-bottom: 0.5rem;
     margin-bottom: 0.5rem;
 }

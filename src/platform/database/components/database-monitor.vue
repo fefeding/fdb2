@@ -614,7 +614,7 @@ onUnmounted(() => {
   align-items: center;
   padding: 1rem 1.5rem;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
 }
 
 .monitor-title {
@@ -752,7 +752,7 @@ onUnmounted(() => {
 
 .status-title {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #334155;
   margin-bottom: 0.25rem;
 }
 
@@ -765,7 +765,7 @@ onUnmounted(() => {
 
 .status-detail {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: #475569;
 }
 
 /* 图表区域 */
@@ -963,13 +963,13 @@ onUnmounted(() => {
 .empty-state {
   text-align: center;
   padding: 3rem 2rem;
-  color: #6b7280;
+  color: #334155;
 }
 
 .empty-state i {
   font-size: 3rem;
   margin-bottom: 1rem;
-  color: #d1d5db;
+  color: #9ca3af;
 }
 
 .empty-state h3 {
@@ -985,7 +985,7 @@ onUnmounted(() => {
 
 .empty-state small {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: #475569;
 }
 
 /* 资源使用部分 */
@@ -1010,8 +1010,8 @@ onUnmounted(() => {
 
 .resource-label {
   font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 500;
+  color: #334155;
+  font-weight: 600;
 }
 
 .resource-value {

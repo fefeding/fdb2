@@ -623,7 +623,7 @@ onMounted(() => {
   align-items: center;
   padding: 1rem 1.5rem;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
 }
 
 .header-title {
@@ -650,7 +650,7 @@ onMounted(() => {
 .search-box i {
   position: absolute;
   left: 0.75rem;
-  color: #6b7280;
+  color: #334155;
   font-size: 0.875rem;
 }
 
@@ -750,7 +750,7 @@ onMounted(() => {
 
 .stat-label {
   font-size: 0.875rem;
-  color: #64748b;
+  color: #334155;
 }
 
 /* 快速筛选 */
@@ -769,7 +769,7 @@ onMounted(() => {
   border: 1px solid #d1d5db;
   border-radius: 20px;
   background: white;
-  color: #6b7280;
+  color: #334155;
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -912,7 +912,7 @@ onMounted(() => {
   align-items: center;
   gap: 1rem;
   font-size: 0.75rem;
-  color: #6b7280;
+  color: #334155;
 }
 
 .execution-time {
@@ -988,7 +988,7 @@ onMounted(() => {
   padding: 0.75rem 1.5rem;
   background: none;
   border: none;
-  color: #6b7280;
+  color: #334155;
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1062,7 +1062,7 @@ onMounted(() => {
 
 .stat-label {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #334155;
 }
 
 .stat-value {
@@ -1177,7 +1177,7 @@ onMounted(() => {
 .page-info {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #334155;
 }
 
 /* 模态框 */
@@ -1222,7 +1222,7 @@ onMounted(() => {
   border: none;
   font-size: 1.25rem;
   cursor: pointer;
-  color: #6b7280;
+  color: #334155;
   padding: 0.25rem;
 }
 

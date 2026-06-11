@@ -923,7 +923,7 @@ onMounted(() => {
   align-items: center;
   padding: 1rem 1.5rem;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
 }
 
 .header-title {
@@ -948,7 +948,7 @@ onMounted(() => {
   border: 1px solid #d1d5db;
   border-radius: 8px;
   background: white;
-  color: #6b7280;
+  color: #334155;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1006,7 +1006,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  color: #6b7280;
+  color: #334155;
   margin-bottom: 0.5rem;
   transition: all 0.3s ease;
 }
@@ -1025,7 +1025,7 @@ onMounted(() => {
 
 .step-title {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #334155;
   font-weight: 500;
 }
 
@@ -1072,7 +1072,7 @@ onMounted(() => {
 }
 
 .file-upload-area p {
-  color: #6b7280;
+  color: #334155;
   margin-bottom: 1.5rem;
 }
 
@@ -1137,7 +1137,7 @@ onMounted(() => {
 
 .file-size {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #334155;
 }
 
 .btn-remove-file {
@@ -1286,7 +1286,7 @@ onMounted(() => {
   align-items: center;
   gap: 1rem;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #334155;
 }
 
 .btn-load-more {
@@ -1360,7 +1360,7 @@ onMounted(() => {
 
 .progress-stats {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #334155;
 }
 
 .progress-bar {
@@ -1379,7 +1379,7 @@ onMounted(() => {
 }
 
 .progress-details p {
-  color: #6b7280;
+  color: #334155;
   font-size: 0.875rem;
   margin: 0 0 1rem 0;
 }
@@ -1538,7 +1538,7 @@ onMounted(() => {
 .btn-close-preview {
   background: none;
   border: none;
-  color: #6b7280;
+  color: #334155;
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 4px;

@@ -898,8 +898,8 @@ function downloadSQLFile(content: string, filename: string) {
 }
 
 .table-header {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+  background-color: #f1f5f9;
+  border-bottom: 1px solid #cbd5e1;
   padding: 15px 20px;
 }
 
@@ -917,7 +917,7 @@ function downloadSQLFile(content: string, filename: string) {
 
 .table-icon {
   font-size: 32px;
-  color: #495057;
+  color: #1e293b;
 }
 
 .table-meta {
@@ -937,7 +937,7 @@ function downloadSQLFile(content: string, filename: string) {
   align-items: center;
   gap: 8px;
   font-size: 0.875rem;
-  color: #6c757d;
+  color: #475569;
 }
 
 .table-stats {
@@ -955,12 +955,12 @@ function downloadSQLFile(content: string, filename: string) {
 .stat-value {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #495057;
+  color: #1e293b;
 }
 
 .stat-label {
   font-size: 0.75rem;
-  color: #6c757d;
+  color: #475569;
 }
 
 .table-toolbar {
@@ -968,8 +968,8 @@ function downloadSQLFile(content: string, filename: string) {
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+  background-color: #f1f5f9;
+  border-bottom: 1px solid #cbd5e1;
 }
 
 .toolbar-left {
@@ -992,13 +992,13 @@ function downloadSQLFile(content: string, filename: string) {
 }
 
 .nav-tabs {
-  border-bottom: 1px solid #dee2e6;
-  background-color: #f8f9fa;
+  border-bottom: 1px solid #cbd5e1;
+  background-color: #f1f5f9;
   flex-shrink: 0;
 }
 
 .nav-tabs .nav-link {
-  color: #495057;
+  color: #334155;
   border: none;
   border-bottom: 3px solid transparent;
   border-radius: 0;
@@ -1007,8 +1007,8 @@ function downloadSQLFile(content: string, filename: string) {
 }
 
 .nav-tabs .nav-link:hover {
-  background-color: #e9ecef;
-  border-bottom-color: #adb5bd;
+  background-color: #e2e8f0;
+  border-bottom-color: #94a3b8;
 }
 
 .nav-tabs .nav-link.active {
@@ -1085,7 +1085,7 @@ function downloadSQLFile(content: string, filename: string) {
   justify-content: center;
   height: 300px;
   gap: 15px;
-  color: #6c757d;
+  color: #475569;
 }
 
 .empty-state i {
@@ -1095,7 +1095,7 @@ function downloadSQLFile(content: string, filename: string) {
 
 .pagination-nav {
   margin-top: 20px;
-  border-top: 1px solid #dee2e6;
+  border-top: 1px solid #cbd5e1;
   padding-top: 15px;
 }
 
@@ -1109,7 +1109,7 @@ function downloadSQLFile(content: string, filename: string) {
 
 .pagination-info {
   font-size: 0.875rem;
-  color: #6c757d;
+  color: #475569;
 }
 
 .page-size-selector {

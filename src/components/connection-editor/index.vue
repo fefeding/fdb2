@@ -468,7 +468,7 @@ loadDatabaseTypes();
   align-items: center;
   margin-bottom: 1.5rem;
   padding-bottom: 0.75rem;
-  border-bottom: 2px solid #f0f0f0;
+  border-bottom: 2px solid #cbd5e1;
 }
 
 .section-icon {
@@ -487,7 +487,7 @@ loadDatabaseTypes();
   font-size: 1.1rem;
   font-weight: 600;
   margin: 0;
-  color: #333;
+  color: #1e293b;
 }
 
 .section-content {
@@ -507,8 +507,8 @@ loadDatabaseTypes();
 .form-label-modern {
   display: flex;
   align-items: center;
-  font-weight: 500;
-  color: #555;
+  font-weight: 600;
+  color: #1e293b;
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
 }
@@ -517,10 +517,12 @@ loadDatabaseTypes();
 .form-select-modern {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e9ecef;
+  border: 2px solid #94a3b8;
   border-radius: 8px;
   font-size: 0.95rem;
   transition: all 0.3s ease;
+  color: #1e293b;
+  background-color: #ffffff;
 }
 
 .form-control-modern:focus,
@@ -549,13 +551,13 @@ loadDatabaseTypes();
 
 .check-text {
   font-weight: 500;
-  color: #333;
+  color: #1e293b;
   margin-bottom: 0.25rem;
 }
 
 .check-description {
   font-size: 0.85rem;
-  color: #666;
+  color: #475569;
 }
 
 .required {
@@ -585,7 +587,7 @@ loadDatabaseTypes();
 
 .error-message {
   flex: 1;
-  color: #333;
+  color: #1e293b;
   font-size: 0.95rem;
   line-height: 1.6;
 }
