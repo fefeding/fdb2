@@ -1,13 +1,13 @@
 
-// @ts-ignore  // 在nwjs中
-export const isNWjs = typeof process !== 'undefined' && process.__nwjs !== undefined;
 // @ts-ignore 扩展进程
 export const isVSCode = typeof acquireVsCodeApi !== 'undefined' || (typeof process !== 'undefined' && process.env.VSCODE_PID);
+// @ts-ignore 检查是否是 Electron - 优先通过 preload 暴露的 electronAPI 判断
+export const isElectron = 
+  (typeof window !== 'undefined' && (window as any).electronAPI?.isElectron === true) ||
+  (typeof process === 'object' && process.versions?.electron !== undefined);
 // @ts-ignore 判断是否是 Chrome 扩展环境
-export const isChromeExtension = !isNWjs && !isVSCode && (()=>{try{return typeof chrome !== 'undefined' && Boolean(chrome?.runtime) && Boolean(chrome?.runtime?.id)}catch(e){return false}})();
-// @ts-ignore 检查是否是 Electron
-export const isElectron = typeof process === 'object' && process.versions?.electron !== undefined;
-export const isBrowser = typeof window !== 'undefined' && !isNWjs && !isVSCode && !isChromeExtension && !isElectron;
+export const isChromeExtension = !isVSCode && (()=>{try{return typeof chrome !== 'undefined' && Boolean(chrome?.runtime) && Boolean(chrome?.runtime?.id)}catch(e){return false}})();
+export const isBrowser = typeof window !== 'undefined' && !isVSCode && !isChromeExtension && !isElectron;
 // 在iframe中
 export const isInIframe = isBrowser && window.top !== window;
 // 探测运行环境并标记各个全局环境变量

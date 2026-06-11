@@ -16,10 +16,7 @@ coverage
 /cypress/videos/
 /cypress/screenshots/
 
-# NW.js
-nw-build/
-nw-build-*/
-nw-cache/
+# Electron
 release/
 
 

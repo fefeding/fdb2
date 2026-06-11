@@ -20,6 +20,16 @@ function copyText(text: string) {
     }    
 }
 export async function copy(text: string) {
+    // 优先使用 Electron preload 暴露的剪贴板 API
+    const electronAPI = (window as any).electronAPI;
+    if (electronAPI?.clipboard) {
+        try {
+            electronAPI.clipboard.writeText(text);
+            return true;
+        } catch (err) {
+            console.error('Electron clipboard write failed:', err);
+        }
+    }
     try {
         await navigator.clipboard.writeText(text);
         return true;

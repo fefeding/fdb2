@@ -1,0 +1,67 @@
+{
+  "appId": "com.fdb2.app",
+  "productName": "FDB2",
+  "copyright": "Copyright © 2025",
+  "directories": {
+    "output": "release"
+  },
+  "publish": {
+    "provider": "github",
+    "owner": "fefeding",
+    "repo": "fdb2",
+    "releaseType": "release"
+  },
+  "files": [
+    "electron/**/*",
+    "dist/**/*",
+    "public/*",
+    "server.js",
+    "bootstrap.js",
+    "package.json"
+  ],
+
+  "mac": {
+    "category": "public.app-category.developer-tools",
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["x64", "arm64"]
+      }
+    ],
+    "icon": "public/favicon.icns",
+    "hardenedRuntime": true,
+    "gatekeeperAssess": false,
+    "identity": null,
+    "entitlements": "build/entitlements.mac.plist",
+    "entitlementsInherit": "build/entitlements.mac.plist"
+  },
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "public/favicon.ico"
+  },
+  "linux": {
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64"]
+      }
+    ],
+    "category": "Utility",
+    "icon": "public/favicon.png"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true
+  },
+  "asar": true,
+  "asarUnpack": [
+    "**/*.node",
+    "**/node_modules/better-sqlite3/**/*"
+  ],
+  "npmRebuild": false
+}
