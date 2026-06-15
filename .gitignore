@@ -39,3 +39,4 @@ dist/
 data/*.sqlite
 main
 fdb2.server.pid
+nw-cache/

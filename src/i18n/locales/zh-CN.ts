@@ -742,4 +742,12 @@ export default {
     license: '许可证',
     homepage: '主页',
   },
+  update: {
+    available: '新版本 v{version} 可用，正在下载...',
+    downloading: '正在下载更新... {percent}%',
+    downloaded: 'v{version} 已下载完成，重启即可更新',
+    error: '检查更新失败',
+    restart: '立即重启',
+    later: '稍后',
+  },
 };
