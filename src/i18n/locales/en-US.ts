@@ -737,11 +737,8 @@ export default {
     homepage: 'Homepage',
   },
   update: {
-    available: 'New version v{version} available, downloading...',
-    downloading: 'Downloading update... {percent}%',
-    downloaded: 'v{version} downloaded, restart to install',
-    error: 'Failed to check for updates',
-    restart: 'Restart Now',
+    available: 'New version v{version} is available.',
+    downloadNow: 'Download',
     later: 'Later',
   },
 };
