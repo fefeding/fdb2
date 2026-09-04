@@ -1,6 +1,6 @@
 {
   "name": "fdb2",
-  "version": "1.0.30",
+  "version": "1.0.31",
   "private": false,
   "type": "commonjs",
   "main": "electron/main.js",

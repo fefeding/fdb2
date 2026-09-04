@@ -1,0 +1,179 @@
+{
+  "templateId": "cb_pAjiQKXi5T3MduTSa9xI",
+  "version": 1,
+  "brand": {
+    "title": "brand.title",
+    "logo": "https://codebuddy-platform-1258344699.cos.accelerate.myqcloud.com/public/common/buddy_app_icon/30ec68b9-b3c9-4fc9-a8c8-e5467810ceec/3b8fb3f3-d5d9-4e56-81d7-5b932edb5aa0.png"
+  },
+  "ui": {
+    "nav": {
+      "items": [
+        {
+          "id": "home",
+          "target": "builtin:new_task",
+          "title": "conversation.newTask",
+          "order": 10,
+          "config": {
+            "header": {
+              "visible": true,
+              "title": "home.header.title"
+            },
+            "placeholder": {
+              "zh": "用自然语言告诉我你想对数据库做什么，例如：列出当前库所有表、把 orders 导出为 CSV",
+              "en": "Tell me in plain language what you want to do with your database, e.g. list all tables, export orders to CSV"
+            },
+            "modes": {
+              "defaultSelected": "mode_0",
+              "items": [
+                {
+                  "modeId": "mode_0",
+                  "title": "home.modes.mode_0.title",
+                  "scenes": [
+                    {
+                      "name": "我的连接",
+                      "nameEn": "My Connections",
+                      "icon": "",
+                      "expert": "",
+                      "skills": ["fdb2-connections"],
+                      "systemPrompt": "进入连接管理场景：帮用户列出、新增、测试、切换、修改、删除数据库连接；连接名不明确时先询问，密码始终脱敏显示为 ***。"
+                    },
+                    {
+                      "name": "新建连接",
+                      "nameEn": "New Connection",
+                      "icon": "",
+                      "expert": "",
+                      "skills": ["fdb2-connections"],
+                      "systemPrompt": "引导用户按类型、名称、主机、端口、账号、密码、数据库提供信息，缺哪些问哪些，再调用 fdb2 conn add 新增连接。"
+                    },
+                    {
+                      "name": "测试连接",
+                      "nameEn": "Test Connection",
+                      "icon": "",
+                      "expert": "",
+                      "skills": ["fdb2-connections"],
+                      "systemPrompt": "用 fdb2 conn test 验证默认或指定连接是否可达，按错误码依次排查主机可达性、端口、账号、库名、是否需要 SSL。"
+                    }
+                  ]
+                },
+                {
+                  "modeId": "mode_1",
+                  "title": "home.modes.mode_1.title",
+                  "scenes": [
+                    {
+                      "name": "查所有表",
+                      "nameEn": "List Tables",
+                      "icon": "",
+                      "expert": "",
+                      "skills": ["fdb2-explore"],
+                      "systemPrompt": "只读浏览场景：用 fdb2 db list / fdb2 table list 确认库与表，不确定表属于哪个库时先列库再列表。"
+                    },
+                    {
+                      "name": "看字段",
+                      "nameEn": "Show Columns",
+                      "icon": "",
+                      "expert": "",
+                      "skills": ["fdb2-explore"],
+                      "systemPrompt": "用 fdb2 table columns 查看表结构（类型/主键/自增/默认值）；不确定列名时先查结构再查数据，不猜测。"
+                    },
+                    {
+                      "name": "统计订单",
+                      "nameEn": "Count Orders",
+                      "icon": "",
+                      "expert": "",
+                      "skills": ["fdb2-explore"],
+                      "systemPrompt": "用 Filter DSL 做行数统计，例如按时间范围统计今日订单，输出清晰数字；多表聚合才允许用 sql 逃生舱。"
+                    }
+                  ]
+                },
+                {
+                  "modeId": "mode_2",
+                  "title": "home.modes.mode_2.title",
+                  "scenes": [
+                    {
+                      "name": "新增记录",
+                      "nameEn": "Insert Row",
+                      "icon": "",
+                      "expert": "",
+                      "skills": ["fdb2-write"],
+                      "systemPrompt": "行级写入场景：任何写入先 fdb2 rows insert --dry-run 拿 token，向用户复述影响（表、条件、预计行数、SQL）并取得确认后，带 --confirm 执行。"
+                    },
+                    {
+                      "name": "禁用用户",
+                      "nameEn": "Disable User",
+                      "icon": "",
+                      "expert": "",
+                      "skills": ["fdb2-write"],
+                      "systemPrompt": "用 fdb2 rows update --filter 'id=42' --set 'status=disabled' --dry-run 预演，向用户确认影响行数后 --confirm 执行；update/delete 必须带筛选条件。"
+                    },
+                    {
+                      "name": "批量导入",
+                      "nameEn": "Bulk Import",
+                      "icon": "",
+                      "expert": "",
+                      "skills": ["fdb2-write"],
+                      "systemPrompt": "用 fdb2 rows insert-many / import file --dry-run 预演，确认后执行；说明未知列会被静默丢弃，空串按 NULL 处理。"
+                    }
+                  ]
+                },
+                {
+                  "modeId": "mode_3",
+                  "title": "home.modes.mode_3.title",
+                  "scenes": [
+                    {
+                      "name": "建数据库",
+                      "nameEn": "Create DB",
+                      "icon": "",
+                      "expert": "",
+                      "skills": ["fdb2-admin"],
+                      "systemPrompt": "用 fdb2 db create --dry-run 预演，确认后 --confirm 执行；绝不删除受保护的系统库（mysql/sys/postgres 等）。"
+                    },
+                    {
+                      "name": "加字段",
+                      "nameEn": "Add Column",
+                      "icon": "",
+                      "expert": "",
+                      "skills": ["fdb2-admin"],
+                      "systemPrompt": "用 fdb2 table alter --add-column --dry-run 预演，破坏性操作加 --yes；执行前向用户复述将变更的对象并取得明确同意。"
+                    },
+                    {
+                      "name": "备份库",
+                      "nameEn": "Backup DB",
+                      "icon": "",
+                      "expert": "",
+                      "skills": ["fdb2-admin"],
+                      "systemPrompt": "用 fdb2 backup 全库备份，或用 fdb2 export schema/rows 导出结构与数据；恢复类操作必须 --yes 且先复述风险。"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  "i18n": {
+    "defaultLocale": "zh-CN",
+    "fallbackLocale": "zh-CN",
+    "source": {
+      "zh-CN": {
+        "brand.title": "fdb",
+        "home.header.title": "FDB2 数据库助手",
+        "home.modes.mode_0.title": "连接管理",
+        "home.modes.mode_1.title": "数据探索（只读）",
+        "home.modes.mode_2.title": "数据写入（需确认）",
+        "home.modes.mode_3.title": "库表与运维"
+      }
+    }
+  },
+  "models": {
+    "custom": {
+      "disabled": true
+    }
+  },
+  "authConfig": {
+    "mcpOnly": true,
+    "skipJump": false,
+    "capabilityDescription": ""
+  }
+}

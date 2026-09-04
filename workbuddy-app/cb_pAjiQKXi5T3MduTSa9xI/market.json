@@ -1,0 +1,170 @@
+{
+  "templateId": "cb_pAjiQKXi5T3MduTSa9xI",
+  "version": "0.0.1",
+  "body": {
+    "type": "market",
+    "id": "cb_pAjiQKXi5T3MduTSa9xI",
+    "tagId": "market",
+    "name": {
+      "zh": "fdb"
+    },
+    "children": [
+      {
+        "type": "domain",
+        "subType": "expert",
+        "tagId": "domain-expert",
+        "name": {
+          "zh": "专家",
+          "en": "Experts"
+        },
+        "children": [
+          {
+            "type": "collection",
+            "subType": "expert-featured",
+            "tagId": "expert-featured",
+            "name": {
+              "zh": "精选场景",
+              "en": "Featured scenes"
+            },
+            "visible": false,
+            "children": []
+          },
+          {
+            "type": "collection",
+            "subType": "expert",
+            "tagId": "expert",
+            "name": {
+              "zh": "专家",
+              "en": "Experts"
+            },
+            "visible": true,
+            "children": [
+              {
+                "type": "category",
+                "subType": "all",
+                "id": "all",
+                "tagId": "expert-all",
+                "name": {
+                  "zh": "全部",
+                  "en": "All"
+                },
+                "children": [
+                  {
+                    "type": "unit",
+                    "subType": "expert",
+                    "id": "ex_Oin6u2C99PEl"
+                  },
+                  {
+                    "type": "unit",
+                    "subType": "expert",
+                    "id": "ex_KnzKgl1iZ5Ly"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "collection",
+            "subType": "expert-team",
+            "tagId": "expert-team",
+            "name": {
+              "zh": "专家团",
+              "en": "Expert teams"
+            },
+            "visible": false,
+            "children": [
+              {
+                "type": "category",
+                "subType": "all",
+                "id": "all",
+                "tagId": "expert-team-all",
+                "name": {
+                  "zh": "全部",
+                  "en": "All"
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "domain",
+        "subType": "skill",
+        "tagId": "domain-skill",
+        "name": {
+          "zh": "技能",
+          "en": "Skills"
+        },
+        "children": [
+          {
+            "type": "collection",
+            "subType": "skill-featured",
+            "tagId": "skill-featured",
+            "name": {
+              "zh": "精选技能",
+              "en": "Featured skills"
+            },
+            "visible": true,
+            "children": []
+          },
+          {
+            "type": "collection",
+            "subType": "skill-recommend",
+            "tagId": "skill-recommend",
+            "name": {
+              "zh": "推荐",
+              "en": "Recommend"
+            },
+            "visible": true
+          },
+          {
+            "type": "collection",
+            "subType": "skillhub",
+            "tagId": "skillhub",
+            "name": {
+              "zh": "SkillHub",
+              "en": "SkillHub"
+            },
+            "visible": true
+          },
+          {
+            "type": "collection",
+            "subType": "plugins",
+            "tagId": "plugins",
+            "name": {
+              "zh": "套件",
+              "en": "Plugins"
+            },
+            "visible": true
+          }
+        ]
+      },
+      {
+        "type": "domain",
+        "subType": "connector",
+        "tagId": "domain-connector",
+        "name": {
+          "zh": "连接器",
+          "en": "Connectors"
+        },
+        "children": [
+          {
+            "type": "collection",
+            "subType": "default",
+            "tagId": "connector-list",
+            "name": {
+              "zh": "连接器",
+              "en": "Connectors"
+            },
+            "visible": true,
+            "children": []
+          }
+        ]
+      }
+    ],
+    "description": {
+      "zh": "db管理工具"
+    }
+  }
+}
