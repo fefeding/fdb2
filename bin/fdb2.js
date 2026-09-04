@@ -61,9 +61,25 @@ switch (command) {
   case '--version':
     showVersion();
     break;
-  default:
-    showHelp();
+  default: {
+    // 数据库命令（conn/db/table/rows/...）交给编译后的 CLI
+    const cliMain = path.join(projectRoot, 'dist', 'server', 'cli', 'main.js');
+    if (!fs.existsSync(cliMain)) {
+      console.error('CLI 尚未编译。请在项目根目录先执行: npm run build-server');
+      process.exitCode = 1;
+    } else {
+      const { run } = require(cliMain);
+      run(args)
+        .then((code) => {
+          process.exitCode = code;
+        })
+        .catch((err) => {
+          console.error('CLI 内部错误:', err && err.message ? err.message : err);
+          process.exitCode = 1;
+        });
+    }
     break;
+  }
 }
 
 // 检查端口是否可用

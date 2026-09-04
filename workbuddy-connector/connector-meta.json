@@ -1,0 +1,34 @@
+{
+  "name": "fdb2-db",
+  "name_zh": "FDB2 数据库助手",
+  "name_en": "FDB2 Database Assistant",
+  "description_zh": "用自然语言管理你的数据库：连接管理、浏览表结构与数据、增删改查、导入导出、备份恢复。支持 MySQL、PostgreSQL、SQLite、Oracle、SQL Server、CockroachDB、MongoDB（实验性）、SAP HANA 共 8 种数据库。写操作需 dry-run 预演与确认令牌，全程审计。",
+  "description_en": "Manage your databases in natural language: connections, schema and data browsing, CRUD, import/export, backup & restore. Supports MySQL, PostgreSQL, SQLite, Oracle, SQL Server, CockroachDB, MongoDB (experimental) and SAP HANA. Write operations require dry-run preview and confirm tokens; fully audited.",
+  "source": "fdb2-db",
+  "type": "cli",
+  "version": "1.0.0",
+  "minWorkbuddyVersion": "4.24.0",
+  "icon": "icon.svg",
+  "author": {
+    "name": "FDB2 团队",
+    "email": "your-email@example.com"
+  },
+  "examples_zh": [
+    "我有哪些数据库连接？",
+    "列出测试库 app 里的所有表",
+    "users 表有哪些字段？",
+    "查看 users 表最近注册的 5 个用户",
+    "统计订单表里今天的订单数量",
+    "把 orders 表导出成 CSV",
+    "把 id=42 的用户禁用"
+  ],
+  "examples_en": [
+    "List my database connections",
+    "Show tables in database app",
+    "Show columns of table users",
+    "Show the 5 newest users",
+    "Count today's orders",
+    "Export table orders to CSV",
+    "Disable the user with id 42"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "runtime": {
+    "type": "node",
+    "version": "20"
+  },
+  "init": {
+    "darwin": "npm install -g fdb2",
+    "linux": "npm install -g fdb2",
+    "win32": "npm install -g fdb2"
+  },
+  "status": {
+    "darwin": "fdb2 auth status",
+    "linux": "fdb2 auth status",
+    "win32": "fdb2.cmd auth status"
+  },
+  "statusMatch": "^Connected",
+  "versionCheck": "fdb2 --version"
+}

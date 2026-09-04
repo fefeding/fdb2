@@ -37,7 +37,6 @@ export class ConnectionService {
    */
   async getAllConnections(): Promise<ConnectionEntity[]> {
     try {
-      console.log('configPath', this.configPath);
       if (!fs.existsSync(this.configPath)) {
         return [];
       }
@@ -127,13 +126,11 @@ export class ConnectionService {
    */
   async testConnection(connection: ConnectionEntity): Promise<boolean> {
     try {
-      console.log('test', connection);
       const tempDataSource = await this.createTypeORMDataSource(connection);
       await tempDataSource.query('SELECT 1');
       await tempDataSource.destroy();
       return true;
     } catch (error) {
-      console.error(error);
       return false;
     }
   }
