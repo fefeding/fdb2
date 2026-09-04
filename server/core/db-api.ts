@@ -366,11 +366,9 @@ export class DbToolApi {
           parts.push('AUTO_INCREMENT');
         } else if (kind === 'postgres' || kind === 'cockroachdb') {
           parts[1] = c.baseType.includes('big') ? 'BIGSERIAL' : c.baseType.includes('small') ? 'SMALLSERIAL' : 'SERIAL';
-          parts.pop();
         } else if (kind === 'sqlite') {
           parts[1] = 'INTEGER PRIMARY KEY AUTOINCREMENT';
           pkCols.push(c.name);
-          parts.pop();
         } else if (kind === 'mssql') {
           parts.push('IDENTITY(1,1)');
         } else if (kind === 'oracle') {
@@ -471,8 +469,7 @@ export class DbToolApi {
       statements.push(`ALTER TABLE ${q(table)} ${kw} ${colDef(c)}`);
     }
     if (opts.renameTo) {
-      if (kind === 'mysql') statements.push(`ALTER TABLE ${q(table)} RENAME TO ${q(opts.renameTo)}`);
-      else statements.push(`ALTER TABLE ${q(table)} RENAME TO ${q(opts.renameTo)}`);
+      statements.push(`ALTER TABLE ${q(table)} RENAME TO ${q(opts.renameTo)}`);
     }
     if (statements.length === 0) throw new AppError('PARAM_ERROR', 'alter 需要 --add-column/--drop-column/--modify-column/--rename-to 之一');
     const label = statements.join('; ');
@@ -981,11 +978,20 @@ export class DbToolApi {
 
   // ============ SQL 逃生舱 ============
 
+  /** 粗粒度判断单语句 DELETE/UPDATE 是否无条件（无 WHERE），用于强制 --yes */
+  private isUnconditionalDml(sql: string): boolean {
+    const s = String(sql).trim().replace(/;+\s*$/, '');
+    if (/^delete\b/i.test(s) || /^update\b/i.test(s)) {
+      return !/\bwhere\b/i.test(s);
+    }
+    return false;
+  }
+
   async runSql(ref: string | null | undefined, database: string | null | undefined, sql: string, opts: { write?: boolean; limit?: number; allowMulti?: boolean; yes?: boolean; dryRun?: boolean; confirm?: string }): Promise<any> {
     const conn = await this.resolveConnection(ref);
     if (!sql || !String(sql).trim()) throw new AppError('PARAM_ERROR', 'SQL 不能为空');
     const cls = classifySql(sql);
-    const isWrite = cls.kind === 'write' || cls.kind === 'ddl';
+    const isWrite = cls.kind === 'write' || cls.kind === 'ddl' || !!cls.hasWrite;
 
     if (cls.kind === 'multi' && !opts.allowMulti) {
       throw new AppError('MULTI_STATEMENT_BLOCKED', '默认禁止多语句 SQL', { hint: '确认需要时请附加 --allow-multi' });
@@ -994,8 +1000,9 @@ export class DbToolApi {
       throw new AppError('WRITE_NOT_ALLOWED', '默认只允许只读 SQL', { hint: '确认需要写入时请附加 --write' });
     }
     if (isWrite) {
-      // 写语句必须带过滤限制或明确允许
-      const g = gateWrite({ op: 'sql.write', sql, params: [], destructive: cls.kind === 'ddl', yes: opts.yes, dryRun: opts.dryRun, confirm: opts.confirm, write: true });
+      // 含 DDL 或单语句无条件 DELETE/UPDATE 视为破坏性，需 --yes；写语句需确认令牌
+      const destructive = cls.kind === 'ddl' || !!cls.destructive || (cls.kind === 'write' && this.isUnconditionalDml(sql));
+      const g = gateWrite({ op: 'sql.write', sql, params: [], destructive, yes: opts.yes, dryRun: opts.dryRun, confirm: opts.confirm, write: true });
       if (g.mode === 'dryrun') {
         return { dryRun: true, sql, token: g.token, estimatedRows: null };
       }
@@ -1047,7 +1054,7 @@ export class DbToolApi {
       updateConfig({ confirmThreshold: Math.max(0, Math.floor(Number(parsed) || 100)) });
     } else if (key === 'protectedDatabases') {
       updateConfig({ protectedDatabases: String(value).split(',').map((s) => s.trim()).filter(Boolean) });
-    } else if (key in cfg) {
+    } else if (['readonly', 'defaultConnectionId', 'maxRows', 'confirmThreshold', 'protectedDatabases'].includes(key)) {
       updateConfig({ [key]: parsed } as any);
     } else {
       throw new AppError('PARAM_ERROR', `未知配置项: ${key}`, { hint: '可用: readonly / maxRows / confirmThreshold / protectedDatabases / defaultConnectionId' });

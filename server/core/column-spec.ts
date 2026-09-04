@@ -53,7 +53,7 @@ export function parseColumnSpec(spec: string): ParsedColumn {
   const lenMatch = /\((\d+)(?:,\s*(\d+))?\)/.exec(typeRaw);
   if (lenMatch) {
     col.length = parseInt(lenMatch[1], 10);
-    if (lenMatch[2]) col.precision = parseInt(lenMatch[1], 10);
+    if (lenMatch[2]) col.precision = parseInt(lenMatch[2], 10);
     if (lenMatch[2]) col.scale = parseInt(lenMatch[2], 10);
     col.type = typeRaw; // 保持原样
   } else {

@@ -30,6 +30,8 @@ export function ensureDataDir(): void {
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
   }
+  // Unix 下收紧数据目录权限（仅在创建/已存在时校准）
+  fixPermissions();
 }
 
 /**

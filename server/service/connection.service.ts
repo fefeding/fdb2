@@ -337,6 +337,11 @@ export class ConnectionService {
         fs.mkdirSync(dir, { recursive: true });
       }
       fs.writeFileSync(this.configPath, JSON.stringify(connections, null, 2), 'utf8');
+      try {
+        if (process.platform !== 'win32') fs.chmodSync(this.configPath, 0o600);
+      } catch {
+        /* ignore */
+      }
     } catch (error) {
       console.error('保存连接配置失败:', error);
       throw error;

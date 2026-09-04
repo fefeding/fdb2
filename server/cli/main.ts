@@ -473,7 +473,6 @@ const rootCmds: Record<string, CommandDef> = {
     run: async ({ v }) => api.auditLog(v.limit || 100)
   },
   sql: {
-    pos: 1,
     extra: [F.allowMulti],
     run: async ({ v, pos }) => {
       const sqlText = v.posSql || pos[0];
@@ -593,7 +592,7 @@ async function runCommand(argv: string[]): Promise<{ cmdLabel: string; payload: 
     if (first === 'sql') {
       if (pos.length > 0) {
         values.posSql = pos.join(' ');
-      } else if (!process.stdin.isTTY) {
+      } else if (process.stdin.isTTY === false) {
         values.posSql = await readStdin();
       }
       pos.length = 0;

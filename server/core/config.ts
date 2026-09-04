@@ -66,6 +66,11 @@ export function saveConfig(cfg: CliConfig): CliConfig {
   ensureDataDir();
   const p = getDataPath('config.json');
   fs.writeFileSync(p, JSON.stringify(cfg, null, 2), 'utf8');
+  try {
+    if (process.platform !== 'win32') fs.chmodSync(p, 0o600);
+  } catch {
+    /* ignore */
+  }
   _cache = cfg;
   return cfg;
 }
@@ -93,6 +98,11 @@ export function getSecret(): string {
   }
   const secret = crypto.randomBytes(32).toString('hex');
   fs.writeFileSync(p, secret, 'utf8');
+  try {
+    if (process.platform !== 'win32') fs.chmodSync(p, 0o600);
+  } catch {
+    /* ignore */
+  }
   return secret;
 }
 

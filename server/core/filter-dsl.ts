@@ -43,7 +43,6 @@ export function parseFilterExpr(expr: string): FilterLeaf {
     throw new Error('条件为空');
   }
 
-  const nullOps = ['null', 'notnull', 'isnull', 'notnull'];
   const nullMatch = /^([^\s=<>~^$!]+)\s*(null|notnull|isnull|notnull)$/i.exec(text);
   if (nullMatch) {
     const op = nullMatch[2].toLowerCase();

@@ -290,16 +290,20 @@ export function buildSelect(
   }
 
   if (!opts.countOnly) {
+    const orderParts: string[] = [];
     if (opts.sorts && opts.sorts.length > 0) {
-      const orderParts: string[] = [];
       for (const s of opts.sorts) {
         builder.checkField(s.field);
         orderParts.push(`${quoteIdentifier(dbType, s.field)} ${s.dir === 'desc' ? 'DESC' : 'ASC'}`);
       }
-      sql += ` ORDER BY ${orderParts.join(', ')}`;
     }
     const limit = opts.limit != null ? Math.floor(opts.limit) : null;
     const offset = opts.offset != null ? Math.floor(opts.offset) : 0;
+    // SQL Server / Oracle 的 OFFSET...FETCH 必须配合 ORDER BY，无排序时补 ORDER BY 1
+    if (orderParts.length === 0 && (limit != null || offset > 0) && (dbType === 'mssql' || dbType === 'oracle')) {
+      orderParts.push('1');
+    }
+    if (orderParts.length > 0) sql += ` ORDER BY ${orderParts.join(', ')}`;
     if (limit != null) {
       if (dbType === 'oracle') {
         sql += ` OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY`;
@@ -466,19 +470,33 @@ export function suggestField(input: string, candidates: string[]): string | null
 }
 
 /** SQL 语句类型分类（逃生舱防护） */
-export function classifySql(sql: string): { kind: 'select' | 'write' | 'ddl' | 'multi' | 'other'; statements: string[] } {
+export function classifySql(sql: string): {
+  kind: 'select' | 'write' | 'ddl' | 'multi' | 'other';
+  statements: string[];
+  hasWrite: boolean;
+  destructive: boolean;
+} {
   const trimmed = String(sql).trim().replace(/;+\s*$/, '');
   const statements = trimmed
     .split(/;\s*(?=(?:CREATE|ALTER|DROP|INSERT|UPDATE|DELETE|TRUNCATE|REPLACE|MERGE|GRANT|REVOKE|BEGIN|COMMIT|ROLLBACK|SET|CALL|EXEC)\b)/i)
     .map((s) => s.trim())
     .filter(Boolean);
-  if (statements.length > 1) {
-    return { kind: 'multi', statements };
+  const kinds = statements.map(classifyOneKind);
+  let hasWrite = false;
+  let destructive = false;
+  for (const k of kinds) {
+    if (k === 'write' || k === 'ddl') hasWrite = true;
+    if (k === 'ddl') destructive = true;
   }
-  const first = (statements[0] || trimmed).toUpperCase().replace(/\(.*/, '');
-  if (/^SELECT|^SHOW|^DESCRIBE|^DESC\b|^EXPLAIN|^PRAGMA|^WITH\b/.test(first)) return { kind: 'select', statements };
-  if (/^INSERT|^UPDATE|^DELETE|^REPLACE|^MERGE/.test(first)) return { kind: 'write', statements };
-  if (/^CREATE|^ALTER|^DROP|^TRUNCATE|^RENAME|^GRANT|^REVOKE/.test(first)) return { kind: 'ddl', statements };
-  if (/^CALL|^EXEC/.test(first)) return { kind: 'other', statements };
-  return { kind: 'other', statements };
+  const kind = statements.length > 1 ? 'multi' : kinds[0];
+  return { kind, statements, hasWrite, destructive };
+}
+
+function classifyOneKind(first: string): 'select' | 'write' | 'ddl' | 'other' {
+  const s = (first || '').toUpperCase().replace(/\(.*/, '');
+  if (/^SELECT|^SHOW|^DESCRIBE|^DESC\b|^EXPLAIN|^PRAGMA|^WITH\b/.test(s)) return 'select';
+  if (/^INSERT|^UPDATE|^DELETE|^REPLACE|^MERGE/.test(s)) return 'write';
+  if (/^CREATE|^ALTER|^DROP|^TRUNCATE|^RENAME|^GRANT|^REVOKE/.test(s)) return 'ddl';
+  if (/^CALL|^EXEC/.test(s)) return 'other';
+  return 'other';
 }

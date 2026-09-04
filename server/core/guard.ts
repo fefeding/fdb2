@@ -7,8 +7,10 @@
  *  - token 与 op+sql+params 绑定，5 分钟有效（进程无关，跨调用可验证）
  */
 import * as crypto from 'crypto';
+import * as fs from 'fs';
 import { getSecret, getConfig } from './config';
 import { AppError } from './errors';
+import { getDataPath, ensureDataDir } from '../utils/data-dir';
 
 export interface WriteOpts {
   dryRun?: boolean;
@@ -39,6 +41,55 @@ export function verifyToken(token: string, op: string, sql: string, params: any[
     if (expect === token) return true;
   }
   return false;
+}
+
+// ============ 一次性令牌（防重放） ============
+const USED_TOKENS_FILE = 'used-tokens.json';
+
+function loadUsedTokens(): Record<string, number> {
+  ensureDataDir();
+  const p = getDataPath(USED_TOKENS_FILE);
+  try {
+    if (fs.existsSync(p)) {
+      const raw = JSON.parse(fs.readFileSync(p, 'utf8'));
+      if (raw && typeof raw === 'object') return raw as Record<string, number>;
+    }
+  } catch {
+    /* ignore */
+  }
+  return {};
+}
+
+function saveUsedTokens(store: Record<string, number>): void {
+  const p = getDataPath(USED_TOKENS_FILE);
+  try {
+    fs.writeFileSync(p, JSON.stringify(store), 'utf8');
+    if (process.platform !== 'win32') fs.chmodSync(p, 0o600);
+  } catch {
+    /* ignore */
+  }
+}
+
+function pruneUsedTokens(store: Record<string, number>): Record<string, number> {
+  const now = Date.now();
+  const next: Record<string, number> = {};
+  for (const k of Object.keys(store)) {
+    if ((store[k] || 0) > now) next[k] = store[k];
+  }
+  return next;
+}
+
+/** 令牌是否已使用（一次性，防重放） */
+export function isTokenUsed(token: string): boolean {
+  const store = loadUsedTokens();
+  return !!store[token] && store[token] > Date.now();
+}
+
+/** 标记令牌已使用，保留到时间窗结束以便过期清理 */
+export function markTokenUsed(token: string): void {
+  const store = pruneUsedTokens(loadUsedTokens());
+  store[token] = Date.now() + TOKEN_WINDOW_MS;
+  saveUsedTokens(store);
 }
 
 /** 检查全局只读模式 */
@@ -106,6 +157,12 @@ export function gateWrite(
         hint: '请重新执行 dry-run 获取新令牌'
       });
     }
+    // 一次性令牌：用过即作废，防止同一令牌重复执行写操作
+    if (isTokenUsed(opts.confirm)) {
+      throw new AppError('TOKEN_REPLAYED', '确认令牌已被使用', {
+        hint: '令牌一次性有效，请重新执行 dry-run 获取新令牌'
+      });
+    }
     if (destructive && !opts.yes) {
       throw new AppError('CONFIRM_REQUIRED', '破坏性操作还需 --yes 二次确认', {
         hint: '请附加 --yes 再次执行'
@@ -114,6 +171,7 @@ export function gateWrite(
     if (opts.estimatedRows != null) {
       checkThreshold(opts.estimatedRows, opts.force);
     }
+    markTokenUsed(opts.confirm);
     return { mode: 'execute' };
   }
 
