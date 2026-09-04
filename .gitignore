@@ -40,3 +40,4 @@ data/*.sqlite
 main
 fdb2.server.pid
 nw-cache/
+workbuddy-app/fdb2-expert.zip

@@ -2,7 +2,7 @@
   "name": "fdb2-db-expert",
   "expertType": "agent",
   "version": "1.0.0",
-  "description": "FDB2 自然语言数据库管理专家",
+  "description": "FDB2 数据库运维与架构专家：连接管理、库表设计、索引与查询优化、数据增删改查、备份恢复",
   "author": {
     "name": "FDB2 团队",
     "email": "haofefe@qq.com"
@@ -10,16 +10,16 @@
   "agents": ["./agents/fdb2-db-expert.md"],
   "agentName": "fdb2-db-expert",
   "displayName": {
-    "en": "FDB2 Database Assistant",
-    "zh": "FDB2 数据库助手"
+    "en": "FDB2 Database Ops Expert",
+    "zh": "FDB2 数据库运维专家"
   },
   "profession": {
-    "en": "Database Management",
-    "zh": "数据库管理"
+    "en": "Database Operations & Architecture",
+    "zh": "数据库运维与架构"
   },
   "displayDescription": {
-    "en": "Manage your databases in natural language: connections, schema browsing, CRUD, import/export, backup & restore. Write operations go through two-phase confirmation with full audit.",
-    "zh": "用自然语言管理数据库：连接管理、表结构浏览、数据增删改查、导入导出与备份恢复，写操作全程审计。"
+    "en": "Manage databases in natural language: schema design, index/query optimization, CRUD, import/export and backup — with audited writes.",
+    "zh": "用自然语言做数据库连接管理、库表设计与索引查询优化、数据增删改查、导入导出与备份恢复，写操作全程审计。"
   },
   "avatar": "./avatars/expert.png",
   "categoryId": "04-DataAI",
@@ -28,19 +28,23 @@
     "zh": "我有哪些数据库连接？"
   },
   "plugin": "fdb2-db-expert",
-  "tags": ["数据库", "SQL", "数据管理"],
+  "tags": [
+    { "zh": "数据库运维", "en": "Database Ops" },
+    { "zh": "SQL优化", "en": "SQL Optimization" },
+    { "zh": "库表设计", "en": "Schema Design" }
+  ],
   "quickPrompts": [
     {
       "en": "List my database connections",
       "zh": "我有哪些数据库连接？"
     },
     {
-      "en": "Show tables in database app",
-      "zh": "列出当前库的所有表"
+      "en": "Design the orders table schema and create it",
+      "zh": "帮我设计订单表结构并建表"
     },
     {
-      "en": "Export table orders to CSV",
-      "zh": "把 orders 表导出为 CSV"
+      "en": "Review users table indexes and suggest optimizations",
+      "zh": "分析 users 表索引是否合理并给优化建议"
     }
   ]
 }
