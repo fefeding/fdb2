@@ -1,7 +1,7 @@
 {
   "name": "fdb2-db-expert",
   "expertType": "agent",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "FDB2 数据库运维与架构专家：连接管理、库表设计、索引与查询优化、数据增删改查、备份恢复",
   "author": {
     "name": "FDB2 团队",
@@ -24,16 +24,23 @@
   "avatar": "./avatars/expert.png",
   "categoryId": "04-DataAI",
   "defaultInitPrompt": {
-    "en": "List my database connections",
-    "zh": "我有哪些数据库连接？"
+    "en": "Add a new database connection",
+    "zh": "新建一个数据库连接"
   },
   "plugin": "fdb2-db-expert",
+  "dependencies": {
+    "connectors": ["fdb2-db"]
+  },
   "tags": [
     { "zh": "数据库运维", "en": "Database Ops" },
     { "zh": "SQL优化", "en": "SQL Optimization" },
     { "zh": "库表设计", "en": "Schema Design" }
   ],
   "quickPrompts": [
+    {
+      "en": "Add a new database connection",
+      "zh": "新建一个数据库连接"
+    },
     {
       "en": "List my database connections",
       "zh": "我有哪些数据库连接？"
