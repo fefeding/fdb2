@@ -7,7 +7,7 @@ description_zh: 用自然语言浏览与查询数据库结构与数据（只读�
 description_en: Explore and query database schema and data with natural language (read-only)
 category: data
 version: 1.0.0
-author: FDB2 团队
+author: jiamao
 allowed-tools: Bash
 ---
 

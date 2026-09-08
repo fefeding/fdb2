@@ -7,7 +7,7 @@ description_zh: 用自然语言增删改数据库记录（受双阶段确认保�
 description_en: Insert, update, delete and bulk-import data rows safely
 category: data
 version: 1.0.0
-author: FDB2 团队
+author: jiamao
 allowed-tools: Bash
 ---
 

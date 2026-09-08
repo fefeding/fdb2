@@ -10,8 +10,8 @@
   "minWorkbuddyVersion": "4.24.0",
   "icon": "icon.svg",
   "author": {
-    "name": "FDB2 团队",
-    "email": "your-email@example.com"
+    "name": "jiamao",
+    "email": "haofefe@163.com"
   },
   "examples_zh": [
     "新建一个数据库连接",

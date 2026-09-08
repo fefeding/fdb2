@@ -4,8 +4,8 @@
   "version": "1.0.1",
   "description": "FDB2 数据库运维与架构专家：连接管理、库表设计、索引与查询优化、数据增删改查、备份恢复",
   "author": {
-    "name": "FDB2 团队",
-    "email": "haofefe@qq.com"
+    "name": "jiamao",
+    "email": "haofefe@163.com"
   },
   "agents": ["./agents/fdb2-db-expert.md"],
   "agentName": "fdb2-db-expert",

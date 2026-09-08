@@ -7,7 +7,7 @@ description_zh: 用自然语言执行库表结构变更、导入导出、备份�
 description_en: Schema changes, import/export, backup/restore and ops via natural language
 category: data
 version: 1.0.0
-author: FDB2 团队
+author: jiamao
 allowed-tools: Bash
 ---
 

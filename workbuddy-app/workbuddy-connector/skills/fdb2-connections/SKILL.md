@@ -7,7 +7,7 @@ description_zh: 用自然语言管理数据库连接：列出、新增、测试�
 description_en: Manage database connections in natural language
 category: data
 version: 1.0.0
-author: FDB2 团队
+author: jiamao
 allowed-tools: Bash
 ---
 
