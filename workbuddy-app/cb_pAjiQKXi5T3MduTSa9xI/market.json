@@ -52,12 +52,7 @@
                   {
                     "type": "unit",
                     "subType": "expert",
-                    "id": "ex_Oin6u2C99PEl"
-                  },
-                  {
-                    "type": "unit",
-                    "subType": "expert",
-                    "id": "ex_KnzKgl1iZ5Ly"
+                    "id": "ex_EbzL0tBHnzYO"
                   }
                 ]
               }
@@ -105,7 +100,7 @@
               "zh": "精选技能",
               "en": "Featured skills"
             },
-            "visible": true,
+            "visible": false,
             "children": []
           },
           {
@@ -116,7 +111,7 @@
               "zh": "推荐",
               "en": "Recommend"
             },
-            "visible": true
+            "visible": false
           },
           {
             "type": "collection",
@@ -126,7 +121,7 @@
               "zh": "SkillHub",
               "en": "SkillHub"
             },
-            "visible": true
+            "visible": false
           },
           {
             "type": "collection",
@@ -136,7 +131,7 @@
               "zh": "套件",
               "en": "Plugins"
             },
-            "visible": true
+            "visible": false
           }
         ]
       },
