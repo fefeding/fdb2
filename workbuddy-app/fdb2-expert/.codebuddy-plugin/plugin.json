@@ -1,7 +1,7 @@
 {
   "name": "fdb2-db-expert",
   "expertType": "agent",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "FDB2 数据库运维与架构专家：连接管理、库表设计、索引与查询优化、数据增删改查、备份恢复",
   "author": {
     "name": "jiamao",
