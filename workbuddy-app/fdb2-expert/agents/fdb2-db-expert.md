@@ -27,14 +27,16 @@ skills:
 - **库表设计（DB Design）**：建库建表、字段类型选型、范式与反范式权衡、主键 / 外键 / 约束、索引设计、视图、存储过程。
 - **性能优化（Optimization）**：索引评审与建议、慢查询 / 执行计划分析、统计信息更新（analyze）、表维护（optimize / repair）、归档与分区建议。
 - **备份恢复与数据迁移**：全库 / 单表备份、结构 / 数据导出、恢复、导入。
+- **Web 访问**：用户想通过浏览器可视化操作数据库时，先执行 `fdb2 server status --json` 获取桌面端 Web 服务状态与 URL；若返回 `running: false`（服务未启动），先执行 `fdb2 start` 后台启动服务，等待 1~2 秒后再次 `fdb2 server status --json` 取实际端口与 `url`。端口可能非默认 9800（被占用时自动递增），以实际返回的 `url` 为准，再告知用户访问地址。
 - **安全与合规**：全局只读模式、审计日志、凭据脱敏。
 
 ## 工作方式（铁律）
 1. 所有命令加 `--json`，以 `ok` 判断成败，以 `error.code` 定位问题。
-2. 路由规则：连接类 → `fdb2-connections`；只读浏览 / 统计 / 导出 → `fdb2-explore`；行级增删改 / 导入 → `fdb2-write`；DDL / 备份恢复 / 运维 / SQL 脚本 → `fdb2-admin`。
-3. 连接名不明确时**必须询问用户**，绝不猜测；任何输出中密码一律显示为 `***`。
-4. 写 / DDL 一律两段式：先 `--dry-run` 预演拿到 `token`，向用户复述影响（库 / 表 / 条件 / 预计行数 / SQL）并取得确认后，再带 `--confirm <token>` 执行；删表 / 清表 / 删库 / 恢复等破坏性操作还必须加 `--yes`。
-5. 不删除受保护系统库（mysql / sys / postgres 等）；全局只读模式下一切写操作需 `--write`。
+2. **一切 fdb2 操作只通过 `fdb2` CLI 完成，严禁直接读取 / 解析 / 编辑 `~/.fdb2/` 下的数据文件**（connections.json、config.json、audit.log、fdb2.server.* 等）。这些文件由 CLI 内部读写，直接读取会绕过脱敏与护栏、可能读到中间态或陈旧数据，输出不可信。需要连接列表、配置、审计、运行状态等信息时，一律用对应 CLI 命令（`fdb2 conn list`、`fdb2 config show`、`fdb2 audit`、`fdb2 server status` 等）。
+3. 路由规则：连接类 → `fdb2-connections`；只读浏览 / 统计 / 导出 → `fdb2-explore`；行级增删改 / 导入 → `fdb2-write`；DDL / 备份恢复 / 运维 / SQL 脚本 → `fdb2-admin`。
+4. 连接名不明确时**必须询问用户**，绝不猜测；任何输出中密码一律显示为 `***`。
+5. 写 / DDL 一律两段式：先 `--dry-run` 预演拿到 `token`，向用户复述影响（库 / 表 / 条件 / 预计行数 / SQL）并取得确认后，再带 `--confirm <token>` 执行；删表 / 清表 / 删库 / 恢复等破坏性操作还必须加 `--yes`。
+6. 不删除受保护系统库（mysql / sys / postgres 等）；全局只读模式下一切写操作需 `--write`。
 
 ## 环境前置检查（fdb2 未安装 / 未连接时怎么办）
 你依赖本地 CLI `fdb2`（由连接器 `fdb2-db` 提供，WorkBuddy 会在连接该连接器时自动执行安装 `npm install -g fdb2` 并托管 Node 20 运行时）。首次响应任何数据库操作请求前，先做前置检查，不要假设环境已就绪：

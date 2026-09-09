@@ -77,6 +77,19 @@ export function humanizeResult(cmd: string, data: any): string {
     case 'setup':
     case 'config:show':
       return JSON.stringify(data, null, 2);
+    case 'server:status': {
+      if (data.running) {
+        const lines = [
+          `fdb2 Web 服务运行中`,
+          `  PID:  ${data.pid}`,
+          `  端口: ${data.port}`,
+          `  地址: ${data.url}`
+        ];
+        if (data.startedAt) lines.push(`  启动: ${data.startedAt}`);
+        return lines.join('\n');
+      }
+      return data.message || 'fdb2 Web 服务未启动';
+    }
     case 'export:schema': {
       if (data.schema) return cut(data.schema);
       return `schema 已导出到 ${data.path}`;

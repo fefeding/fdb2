@@ -33,6 +33,7 @@ import {
 import { AppError } from './errors';
 import { gateWrite, audit } from './guard';
 import { loadConfig, updateConfig, getConfig, dataDir, readAudit } from './config';
+import { getDataPath } from '../utils/data-dir';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -1075,6 +1076,37 @@ export class DbToolApi {
       defaultConnectionId: cfg.defaultConnectionId || null,
       readonly: !!cfg.readonly
     };
+  }
+
+  /** 检测 fdb2 桌面端 Web 服务运行状态，返回端口与访问 URL */
+  async serverStatus(): Promise<any> {
+    const infoPath = getDataPath('fdb2.server.info');
+    try {
+      if (!fs.existsSync(infoPath)) {
+        return { running: false, message: 'fdb2 Web 服务未启动', hint: '可在 WorkBuddy 中打开 FDB2 数据库工具桌面端，或手动执行 node server.js 启动' };
+      }
+      const info = JSON.parse(fs.readFileSync(infoPath, 'utf8'));
+      // 检查进程是否存活
+      let alive = false;
+      try {
+        process.kill(info.pid, 0);
+        alive = true;
+      } catch {
+        alive = false;
+      }
+      if (!alive) {
+        return { running: false, message: 'fdb2 Web 服务已停止（进程不存在）', hint: '请重新启动 fdb2 桌面端' };
+      }
+      return {
+        running: true,
+        pid: info.pid,
+        port: info.port,
+        url: info.url,
+        startedAt: info.startedAt || null
+      };
+    } catch (e: any) {
+      return { running: false, message: `无法读取服务状态: ${e?.message || e}` };
+    }
   }
 }
 

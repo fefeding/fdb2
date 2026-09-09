@@ -41,6 +41,15 @@ function deletePid() {
   }
 }
 
+// 删除服务器信息文件
+function deleteServerInfo() {
+  const dataDir = process.env.DB_TOOL_DATA_DIR || path.join(os.homedir(), '.fdb2');
+  const infoPath = path.join(dataDir, 'fdb2.server.info');
+  if (fs.existsSync(infoPath)) {
+    fs.unlinkSync(infoPath);
+  }
+}
+
 // 解析命令行参数
 const args = process.argv.slice(2);
 const command = args[0] || 'help';
@@ -137,6 +146,7 @@ async function startProject() {
       if (error.code === 'ESRCH') {
         console.log('Cleaning up stale PID file...');
         deletePid();
+        deleteServerInfo();
       }
     }
   }
@@ -287,6 +297,7 @@ function stopProject() {
     
     // 删除 PID 文件
     deletePid();
+    deleteServerInfo();
     console.log('Server stopped successfully');
   } catch (error) {
     // 如果进程不存在（ESRCH 错误），也删除 PID 文件

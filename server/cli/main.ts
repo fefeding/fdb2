@@ -489,6 +489,12 @@ const rootCmds: Record<string, CommandDef> = {
   }
 };
 
+const serverCmds: Record<string, CommandDef> = {
+  status: {
+    run: async () => api.serverStatus()
+  }
+};
+
 // 允许在任意子命令尾部追加 SQL（fdb2 sql '...'）
 const groups: Record<string, Record<string, CommandDef>> = {
   conn: connCmds,
@@ -500,7 +506,8 @@ const groups: Record<string, Record<string, CommandDef>> = {
   proc: procCmds,
   export: exportCmds,
   import: importCmds,
-  ops: opsCmds
+  ops: opsCmds,
+  server: serverCmds
 };
 
 const authCmds: Record<string, CommandDef> = {
@@ -675,6 +682,7 @@ function helpText(): string {
 其它:
   sql '<SQL>' [--write] [--limit]       SQL 逃生舱（默认只读、禁多语句）
   config show | get <key> | set <key> <value>
+  server status                         查看 Web 服务运行状态与访问 URL
   audit [--limit N] | setup | auth status | help
 
 写操作安全协议（必须）:
@@ -695,7 +703,8 @@ function helpGroup(group: string): string {
     proc: ['list', 'show', 'drop'],
     export: ['rows', 'schema', 'dump'],
     import: ['file'],
-    ops: ['stats', 'health', 'optimize', 'analyze', 'repair', 'logs']
+    ops: ['stats', 'health', 'optimize', 'analyze', 'repair', 'logs'],
+    server: ['status']
   };
   return `fdb2 ${group} <${(map[group] || []).join('|')}>`;
 }

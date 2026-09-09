@@ -33,6 +33,9 @@ const logFilePath = getDataPath('server.log');
 // PID 文件路径 - 使用统一数据目录
 const pidFilePath = getDataPath('fdb2.server.pid');
 
+// 服务器信息文件路径（端口、PID、启动时间、访问 URL）
+const serverInfoPath = getDataPath('fdb2.server.info');
+
 // 重定向控制台输出到日志文件
 const logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
 
@@ -128,7 +131,16 @@ app.listen(PORT, () => {
   // 将 PID 写入 PID 文件
   fs.writeFileSync(pidFilePath, process.pid.toString());
   console.log(`PID ${process.pid} written to ${pidFilePath}`);
-  
+
+  // 将服务器信息写入 info 文件（供 CLI 读取端口和访问 URL）
+  const serverInfo = {
+    pid: process.pid,
+    port: PORT,
+    url: `http://localhost:${PORT}`,
+    startedAt: new Date().toISOString()
+  };
+  fs.writeFileSync(serverInfoPath, JSON.stringify(serverInfo, null, 2), 'utf8');
+
   console.log(`Server is running on port ${PORT}`);
   console.log(`http://localhost:${PORT}`);
 });
