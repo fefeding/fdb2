@@ -7,7 +7,7 @@
   "description_en": "Manage your databases in natural language: connections, schema and data browsing, CRUD, import/export, backup & restore. Supports MySQL, PostgreSQL, SQLite, Oracle, SQL Server, CockroachDB, MongoDB (experimental) and SAP HANA. Write operations require dry-run preview and confirm tokens; fully audited.",
   "source": "fdb2-db",
   "type": "cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minWorkbuddyVersion": "4.24.0",
   "icon": "icon.svg",
   "author": {
