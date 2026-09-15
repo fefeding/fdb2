@@ -2,6 +2,7 @@
   "name": "fdb2-db",
   "name_zh": "FDB2 数据库助手",
   "name_en": "FDB2 Database Assistant",
+  "description": "用自然语言管理你的数据库：连接管理、浏览表结构与数据、增删改查、导入导出、备份恢复。支持 MySQL、PostgreSQL、SQLite、Oracle、SQL Server、CockroachDB、MongoDB（实验性）、SAP HANA 共 8 种数据库。写操作需 dry-run 预演与确认令牌，全程审计。",
   "description_zh": "用自然语言管理你的数据库：连接管理、浏览表结构与数据、增删改查、导入导出、备份恢复。支持 MySQL、PostgreSQL、SQLite、Oracle、SQL Server、CockroachDB、MongoDB（实验性）、SAP HANA 共 8 种数据库。写操作需 dry-run 预演与确认令牌，全程审计。",
   "description_en": "Manage your databases in natural language: connections, schema and data browsing, CRUD, import/export, backup & restore. Supports MySQL, PostgreSQL, SQLite, Oracle, SQL Server, CockroachDB, MongoDB (experimental) and SAP HANA. Write operations require dry-run preview and confirm tokens; fully audited.",
   "source": "fdb2-db",

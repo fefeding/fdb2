@@ -14,5 +14,9 @@
     "win32": "fdb2.cmd auth status"
   },
   "statusMatch": "^Connected",
-  "versionCheck": "fdb2 --version"
+  "versionCheck": {
+    "darwin": "fdb2 --version",
+    "linux": "fdb2 --version",
+    "win32": "fdb2.cmd --version"
+  }
 }

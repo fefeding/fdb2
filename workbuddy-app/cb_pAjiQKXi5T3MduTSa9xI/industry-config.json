@@ -28,7 +28,7 @@
                     {
                       "id": "conn_list",
                       "title": "home.scenes.conn_list.title",
-                      "systemPromptAppend": "进入连接管理场景：帮用户列出、新增、测试、切换、修改、删除数据库连接；连接名不明确时先询问，密码始终脱敏显示为 ***。",
+                      "systemPromptAppend": "进入连接管理场景：帮用户列出、新增、测试、切换、修改、删除数据库连接。【必须】通过 `fdb2` CLI 完成一切操作——列出连接用 `fdb2 conn list --json`，获取默认连接用 `fdb2 current --json`。【严禁】直接读取、解析或编辑 `~/.fdb2/connections.json` 等数据文件（这些文件由 CLI 内部读写，直接读既绕过脱敏与护栏、也可能读到中间态/陈旧数据，输出不可信）。若 `fdb2` 命令不可用，明确告知用户需先连接 FDB2 连接器安装 CLI，不要转而读文件。连接名不明确时先询问用户，密码始终脱敏显示为 ***。",
                       "expert": {
                         "id": "fdb2-db-expert"
                       },
