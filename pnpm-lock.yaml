@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  mysql2: 3.22.6
+
 importers:
 
   .:
@@ -24,7 +27,7 @@ importers:
         specifier: ^5.2.1
         version: 5.2.1
       mysql2:
-        specifier: ^3.22.6
+        specifier: 3.22.6
         version: 3.22.6(@types/node@24.13.3)
       oracledb:
         specifier: ^6.10.0
@@ -3915,7 +3918,7 @@ packages:
       ioredis: ^5.0.4
       mongodb: ^5.8.0 || ^6.0.0
       mssql: ^9.1.1 || ^10.0.0 || ^11.0.0 || ^12.0.0
-      mysql2: ^2.2.5 || ^3.0.1
+      mysql2: 3.22.6
       oracledb: ^6.3.0 || ^7.0.0
       pg: ^8.5.1
       pg-native: ^3.0.0
