@@ -21,7 +21,7 @@
       <section class="about-section">
         <h3>{{ $t('aboutPage.getMoreInfo') }}</h3>
         <div class="about-links">
-          <a href="https://surl.fit/tools/tools/fdb2" target="_blank" class="about-link">
+          <a href="https://aigcwhere.com/opensource/fdb2" target="_blank" class="about-link">
             <i class="bi bi-globe"></i>
             <span>{{ $t('aboutPage.officialWebsite') }}</span>
           </a>

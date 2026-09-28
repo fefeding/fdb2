@@ -12,6 +12,10 @@
       </div>
       <div class="toolbar-right">
         <span class="app-version" :title="t('app.version')">v{{ appVersion }}</span>
+        <button class="about-trigger" @click="aboutStore.open()" :title="t('common.about')">
+          <i class="bi bi-info-circle"></i>
+          <span class="about-trigger-label">{{ t('common.about') }}</span>
+        </button>
         <LanguageSwitcher />
       </div>
     </div>
@@ -21,14 +25,29 @@
         <router-view />
       </div>
     </main>
+
+    <!-- 关于工具弹窗 -->
+    <transition name="about-fade">
+      <div v-if="aboutStore.visible" class="about-modal-overlay" @click.self="aboutStore.close()">
+        <div class="about-modal">
+          <button class="about-modal-close" @click="aboutStore.close()" :title="t('common.close')">
+            <i class="bi bi-x-lg"></i>
+          </button>
+          <About />
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
 import LanguageSwitcher from '@/components/language-switcher/index.vue';
+import About from './components/about.vue';
+import { useAboutStore } from '@/stores/about';
 
 const { t } = useI18n();
+const aboutStore = useAboutStore();
 
 // 构建时注入的应用版本号（见 vite.config.ts 的 define）
 const appVersion = __APP_VERSION__;
@@ -455,5 +474,87 @@ const appVersion = __APP_VERSION__;
   .content-wrapper {
     padding: 0.25rem;
   }
+}
+
+/* 关于工具触发按钮 */
+.about-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  user-select: none;
+  border: 1px solid #cbd5e1;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.about-trigger:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  border-color: #667eea;
+  transform: translateY(-1px);
+}
+
+/* 关于工具弹窗 */
+.about-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1.5rem;
+  backdrop-filter: blur(4px);
+}
+
+.about-modal {
+  position: relative;
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.about-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.about-modal-close:hover {
+  background: #f1f5f9;
+  color: #667eea;
+  border-color: #667eea;
+}
+
+.about-fade-enter-active,
+.about-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.about-fade-enter-from,
+.about-fade-leave-to {
+  opacity: 0;
 }
 </style>

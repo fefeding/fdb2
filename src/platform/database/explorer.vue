@@ -175,28 +175,14 @@
               </button>
             </div>
           </div>
-          
-          <!-- 工具信息（移到左下角） -->
-          <div class="sidebar-tool-info" @click="showAboutPage">
-            <div class="tool-logo">
-              <i class="bi bi-info-circle"></i>
-            </div>
-            <div class="tool-details">
-              <div class="tool-name">fdb2</div>
-              <div class="tool-description">{{ $t('connection.aboutTool') }}</div>
-            </div>
-          </div>
         </div>        
       </div>
 
       <!-- 右侧内容区域 -->
       <div class="explorer-main">
-        <!-- About 页面组件 -->
-        <About v-if="showAbout" />
-        
         <!-- 连接详情组件 -->
         <ConnectionDetail 
-          v-else-if="selectedConnection && !selectedDatabase && !selectedTable"
+          v-if="selectedConnection && !selectedDatabase && !selectedTable"
           :connection="selectedConnection"
           @test-connection="handleTestConnection"
           @edit-connection="handleEditConnection"
@@ -279,7 +265,6 @@ import Loading from '@/components/loading/index.vue';
 import ConnectionDetail from './components/connection-detail.vue';
 import DatabaseDetail from './components/database-detail.vue';
 import TableDetail from './components/table-detail.vue';
-import About from './components/about.vue';
 import { modal } from '@/utils/modal';
 
 const route = useRoute();
@@ -331,9 +316,6 @@ const loadingMessage = ref('加载中...');
 // 组件引用
 const connectionEditorRef = ref();
 const toastRef = ref();
-
-// about 页面状态
-const showAbout = ref(false);
 
 // 计算属性
 const databaseInfo = computed(() => {
@@ -1166,10 +1148,6 @@ async function handleExecuteSql(sql: string) {
 
 function showToast(title: string, message: string, type: string = 'success') {
   toastRef.value?.addToast(title, message, type);
-}
-
-function showAboutPage() {
-  showAbout.value = true;
 }
 </script>
 
