@@ -11,6 +11,7 @@
         </router-link>
       </div>
       <div class="toolbar-right">
+        <span class="app-version" :title="t('app.version')">v{{ appVersion }}</span>
         <LanguageSwitcher />
       </div>
     </div>
@@ -24,7 +25,13 @@
 </template>
 
 <script lang="ts" setup>
+import { useI18n } from 'vue-i18n';
 import LanguageSwitcher from '@/components/language-switcher/index.vue';
+
+const { t } = useI18n();
+
+// 构建时注入的应用版本号（见 vite.config.ts 的 define）
+const appVersion = __APP_VERSION__;
 </script>
 
 <style scoped>
@@ -82,6 +89,21 @@ import LanguageSwitcher from '@/components/language-switcher/index.vue';
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* 版本号徽标 */
+.app-version {
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 0.28rem 0.6rem;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  cursor: default;
+  user-select: none;
 }
 
 /* 主布局样式 */

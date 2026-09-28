@@ -53,6 +53,9 @@ export default {
     tip: '提示',
     confirmTitle: '确认',
   },
+  app: {
+    version: '当前版本',
+  },
   nav: {
     databaseManagement: '数据库管理',
     databaseHome: '数据库管理首页',

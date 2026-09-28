@@ -53,6 +53,9 @@ export default {
     tip: 'Tip',
     confirmTitle: 'Confirm',
   },
+  app: {
+    version: 'Current Version',
+  },
   nav: {
     databaseManagement: 'Database Management',
     databaseHome: 'Database Home',

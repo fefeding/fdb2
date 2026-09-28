@@ -10,6 +10,8 @@ import ViteNunjucksPlugin from '@fefeding/vite-nunjucks-plugin';
 import * as path from 'path';
 import * as fs from 'fs';
 
+// 读取 package.json 版本号，构建时注入前端（全局安装/打包后也能在界面查看版本）
+const appVersion = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf-8')).version;
 
 const urlPrefix = process.env.PREFIX ? `/${process.env.PREFIX}` : '';
 console.log(urlPrefix);
@@ -32,7 +34,12 @@ const viewDir = path.resolve(__dirname, './view');
 // https://vitejs.dev/config/
 const config = defineConfig({
     publicDir: false,
-    
+
+    // 构建时注入版本号（前端通过全局常量 __APP_VERSION__ 读取）
+    define: {
+        __APP_VERSION__: JSON.stringify(appVersion),
+    },
+
     plugins: [
         vue() as PluginOption, 
         vueJsx() as PluginOption,
