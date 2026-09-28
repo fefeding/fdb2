@@ -2,14 +2,14 @@
 
 [中文](README_zh.md) | English
 
-> 🚀 A lightweight, open-source database management tool supporting 8+ database types, providing a Navicat Premium-like professional experience — completely free and running locally!
+> 🚀 A lightweight, open-source database management tool supporting 9+ database types, providing a Navicat Premium-like professional experience — completely free and running locally!
 
 ![fdb2 Preview](public/fdb2.png)
 
 ## 🔥 Core Features
 
 ### 🌐 Multi-Database Support
-- **8+ Database Types**: MySQL, PostgreSQL, SQLite, SQL Server, Oracle, CockroachDB, MongoDB, SAP HANA
+- **9+ Database Types**: MySQL, PostgreSQL, SQLite, SQL Server, Oracle, CockroachDB, MongoDB, SAP HANA, ClickHouse
 - **Compatibility Extensions**: MariaDB/TiDB/Aurora compatible with MySQL, Aurora PostgreSQL compatible with PostgreSQL
 - **NoSQL Support**: MongoDB document database
 
@@ -90,12 +90,14 @@ http://localhost:9800
 | **CockroachDB** | 26257 | Distributed SQL, strong consistency, automatic sharding |
 | **MongoDB** | 27017 | NoSQL document database, aggregation pipeline, indexing |
 | **SAP HANA** | 39013 | In-memory database, real-time analytics, column store |
+| **ClickHouse** | 8123 | Columnar store, real-time analytics, MergeTree engine, HTTP interface |
 
 ### 🔄 Compatibility Notes
 - **MariaDB/TiDB**: Compatible with MySQL protocol — select MySQL type
 - **Amazon Aurora MySQL**: Compatible with MySQL — select MySQL type
 - **Amazon Aurora PostgreSQL**: Compatible with PostgreSQL — select PostgreSQL type
 - **Better-SQLite3**: Compatible with SQLite — select SQLite type
+- **ClickHouse**: Connect via the HTTP interface (default port 8123) using Basic auth with the default user `default`; supports table/view browsing, schema inspection, data CRUD, SQL queries, backup and restore
 
 ## 🤝 Contribution Guide
 

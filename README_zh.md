@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-> 🚀 一款轻量级、开源的数据库管理工具，支持 8+ 种数据库类型，提供类似 Navicat Premium 的专业体验，完全免费且本地运行！
+> 🚀 一款轻量级、开源的数据库管理工具，支持 9+ 种数据库类型，提供类似 Navicat Premium 的专业体验，完全免费且本地运行！
 
 ![fdb2 界面预览](public/fdb2.png)
 
@@ -59,7 +59,7 @@ http://localhost:9800
 ## 🔥 核心特性
 
 ### 🌐 多数据库支持
-- **8+ 数据库类型**: MySQL、PostgreSQL、SQLite、SQL Server、Oracle、CockroachDB、MongoDB、SAP HANA
+- **9+ 数据库类型**: MySQL、PostgreSQL、SQLite、SQL Server、Oracle、CockroachDB、MongoDB、SAP HANA、ClickHouse
 - **兼容性扩展**: MariaDB/TiDB/Aurora 兼容 MySQL，Aurora PostgreSQL 兼容 PostgreSQL
 - **NoSQL 支持**: MongoDB 文档数据库
 
@@ -166,12 +166,14 @@ DELETE FROM logs WHERE created_at < '2024-01-01';
 | **CockroachDB** | 26257 | 分布式 SQL、强一致性、自动分片 |
 | **MongoDB** | 27017 | NoSQL 文档数据库、聚合管道、索引 |
 | **SAP HANA** | 39013 | 内存数据库、实时分析、列存储 |
+| **ClickHouse** | 8123 | 列式存储、实时分析、MergeTree 引擎、HTTP 接口 |
 
 ### 🔄 兼容性说明
 - **MariaDB/TiDB**: 兼容 MySQL 协议，选择 MySQL 类型即可
 - **Amazon Aurora MySQL**: 兼容 MySQL，选择 MySQL 类型
 - **Amazon Aurora PostgreSQL**: 兼容 PostgreSQL，选择 PostgreSQL 类型
 - **Better-SQLite3**: 兼容 SQLite，选择 SQLite 类型
+- **ClickHouse**: 通过 HTTP 接口（默认端口 8123）连接，使用默认用户 `default` 进行 Basic 认证；支持表/视图浏览、结构查看、数据 CRUD、SQL 查询、备份与恢复
 
 ## 常见问题
 
