@@ -12,6 +12,7 @@ import { SQLServerService } from './mssql.service';
 import { CockroachDBService } from './cockroachdb.service';
 import { MongoDBService } from './mongodb.service';
 import { SAPHANADatabaseService } from './sap.service';
+import { ClickHouseService } from './clickhouse.service';
 
 /**
  * 数据库服务管理类
@@ -28,6 +29,7 @@ export class DatabaseService {
   private cockroachDBService: CockroachDBService;
   private mongoDBService: MongoDBService;
   private sapHANADatabaseService: SAPHANADatabaseService;
+  private clickHouseService: ClickHouseService;
 
   constructor() {
     this.connectionService = new ConnectionService();
@@ -40,6 +42,7 @@ export class DatabaseService {
       this.cockroachDBService = new CockroachDBService();
       this.mongoDBService = new MongoDBService();
       this.sapHANADatabaseService = new SAPHANADatabaseService();
+      this.clickHouseService = new ClickHouseService();
   }
 
   /**
@@ -77,6 +80,9 @@ export class DatabaseService {
       case 'sap-hana':
       case 'saphana':
         return this.sapHANADatabaseService;
+      case 'clickhouse':
+      case 'click-house':
+        return this.clickHouseService;
       default:
         throw new Error(`不支持的数据库类型: ${type}`);
     }
@@ -476,6 +482,24 @@ export class DatabaseService {
           supportInMemory: true,
           supportHighPerformance: true
         }
+      },
+      {
+        value: 'clickhouse',
+        label: 'ClickHouse',
+        icon: 'bi-database',
+        defaultPort: 8123,
+        description: 'ClickHouse列式OLAP数据库',
+        features: {
+          supportSchemas: false,
+          supportProcedures: false,
+          supportTriggers: false,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: true,
+          supportArrays: true,
+          supportDistributed: true,
+          supportHighPerformance: true
+        }
       }
     ];
   }
@@ -767,6 +791,19 @@ export class DatabaseService {
           supportJson: true,
           supportArrays: false,
           supportInMemory: true,
+          supportHighPerformance: true
+        };
+      case 'clickhouse':
+      case 'click-house':
+        return {
+          supportSchemas: false,
+          supportProcedures: false,
+          supportTriggers: false,
+          supportViews: true,
+          supportFullTextSearch: true,
+          supportJson: true,
+          supportArrays: true,
+          supportDistributed: true,
           supportHighPerformance: true
         };
       default:

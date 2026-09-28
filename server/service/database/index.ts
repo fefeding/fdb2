@@ -4,4 +4,5 @@ export { PostgreSQLService } from './postgres.service';
 export { SQLiteService } from './sqlite.service';
 export { OracleService } from './oracle.service';
 export { SQLServerService } from './mssql.service';
+export { ClickHouseService } from './clickhouse.service';
 export { DatabaseService } from './database.service';

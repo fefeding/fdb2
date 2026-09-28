@@ -72,7 +72,8 @@ const databaseTypes = [
   { name: 'Oracle', port: '1521' },
   { name: 'CockroachDB', port: '26257' },
   { name: 'MongoDB', port: '27017' },
-  { name: 'SAP HANA', port: '39013' }
+  { name: 'SAP HANA', port: '39013' },
+  { name: 'ClickHouse', port: '8123' }
 ];
 </script>
 

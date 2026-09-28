@@ -12,7 +12,8 @@ export type DialectKind =
   | 'mssql'
   | 'cockroachdb'
   | 'mongodb'
-  | 'sap';
+  | 'sap'
+  | 'clickhouse';
 
 export interface DialectFeature {
   supportSchemas: boolean;
@@ -173,7 +174,23 @@ const DIALECTS: Record<string, Partial<DialectInfo> & { type: string }> = {
     serviceClass: 'SAPHANADatabaseService'
   },
   'sap-hana': { type: 'sap' },
-  saphana: { type: 'sap' }
+  saphana: { type: 'sap' },
+  clickhouse: {
+    type: 'clickhouse',
+    label: 'ClickHouse',
+    defaultPort: 8123,
+    features: {
+      supportSchemas: false,
+      supportProcedures: false,
+      supportViews: true,
+      supportTriggers: false,
+      supportFullTextSearch: true,
+      supportJson: true
+    },
+    serviceFile: 'clickhouse',
+    serviceClass: 'ClickHouseService'
+  },
+  'click-house': { type: 'clickhouse' }
 };
 
 export function normalizeDialectType(type: string): string | null {
@@ -219,6 +236,7 @@ function kindParamStyle(type: string): '?' | '$' | 'inline' {
     case 'mssql':
     case 'mongodb':
     case 'sap':
+    case 'clickhouse':
       return 'inline';
     default:
       return '?';
@@ -234,6 +252,7 @@ function resolveKind(type: string): DialectKind {
     case 'cockroachdb': return 'cockroachdb';
     case 'mongodb': return 'mongodb';
     case 'sap': return 'sap';
+    case 'clickhouse': return 'clickhouse';
     default: return 'mysql';
   }
 }
@@ -247,6 +266,7 @@ function resolveServiceFile(type: string): string {
     case 'cockroachdb': return 'cockroachdb';
     case 'mongodb': return 'mongodb';
     case 'sap': return 'sap';
+    case 'clickhouse': return 'clickhouse';
     default: return 'mysql';
   }
 }
@@ -260,6 +280,7 @@ function resolveServiceClass(type: string): string {
     case 'cockroachdb': return 'CockroachDBService';
     case 'mongodb': return 'MongoDBService';
     case 'sap': return 'SAPHANADatabaseService';
+    case 'clickhouse': return 'ClickHouseService';
     default: return 'MySQLService';
   }
 }

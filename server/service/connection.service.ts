@@ -233,6 +233,11 @@ export class ConnectionService {
    * 创建TypeORM数据源
    */
   private async createTypeORMDataSource(connectionConfig: ConnectionEntity): Promise<DataSource> {
+    // ClickHouse 没有官方 TypeORM 驱动，使用自带的 HTTP 连接封装
+    if ((connectionConfig.type || '').toLowerCase() === 'clickhouse') {
+      const { ClickHouseConnection } = require('./database/clickhouse-connection');
+      return new ClickHouseConnection(connectionConfig) as unknown as DataSource;
+    }
     const connectionOptions = this.getTypeORMOptions(connectionConfig);
     return new DataSource(connectionOptions).initialize();
   }
@@ -243,7 +248,14 @@ export class ConnectionService {
    */
   async createTemporaryConnection(connectionOptions: DataSourceOptions): Promise<DataSource> {
     try {
-      const dataSource = new DataSource(connectionOptions);
+      // ClickHouse 使用自带连接封装
+      if ((connectionOptions.type as any || '').toLowerCase() === 'clickhouse') {
+        const { ClickHouseConnection } = require('./database/clickhouse-connection');
+        return new ClickHouseConnection(connectionOptions) as unknown as DataSource;
+      }
+      // 显式指定 mysql2 驱动，避免 TypeORM 默认 "mysql"（老包）在全局安装环境下
+      // 解析到遗留 mysql 包导致 caching_sha2_password 认证失败
+      const dataSource = new DataSource({ ...connectionOptions, connectorPackage: 'mysql2' } as any);
       await dataSource.initialize();
       return dataSource;
     } catch (error) {
@@ -265,6 +277,10 @@ export class ConnectionService {
       database: connectionConfig.database,
       synchronize: false,
       logging: false,
+      // 强制使用 mysql2 驱动：TypeORM 默认 connectorPackage 是 "mysql"（老包），
+      // 全局安装时 Node 会解析到系统中全局遗留的 mysql 包，该老包不支持 MySQL 8 的
+      // caching_sha2_password，导致 ER_NOT_SUPPORTED_AUTH_MODE。显式指定 mysql2 可彻底规避。
+      connectorPackage: 'mysql2',
       // 关键配置：开启多语句执行
       extra: {
         multipleStatements: true

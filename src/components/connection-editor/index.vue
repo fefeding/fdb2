@@ -199,7 +199,7 @@ import { useI18n } from 'vue-i18n';
 import { ConnectionService } from '@/service/database';
 import type { ConnectionEntity } from '@/typings/database';
 import Modal from '@/components/modal/index.vue';
-import Toast from '@/components/toast/toast.vue';
+import { toast } from '@/utils/toast';
 
 const { t } = useI18n();
 
@@ -222,7 +222,6 @@ const emit = defineEmits<{
 
 // 组件实例
 const connectionModal = ref();
-const toastRef = ref();
 const errorModal = ref();
 const errorMessage = ref('');
 
@@ -362,38 +361,41 @@ async function saveAndTestConnection() {
     await saveConnection(false);
     
     // 然后测试连接
-    await testConnection(connectionForm.value);
-    
-    // 测试成功后关闭模态框
-    hide();
-    emit('saved', connectionForm.value);
-    showToast('', editingConnection.value ? t('connection.configUpdateAndTestSuccess') : t('connection.configAddAndTestSuccess'));
-  } catch (error) {
-    console.error('保存并测试连接失败:', error);
-    // 如果是保存失败，错误已经在 saveConnection 中处理了
-    // 如果是测试失败，显示警告
-    if (error.message && error.message.includes('连接测试失败')) {
+    const ok = await testConnection(connectionForm.value);
+    if (ok) {
+      // 测试成功后关闭模态框
+      hide();
+      emit('saved', connectionForm.value);
+      showToast('', editingConnection.value ? t('connection.configUpdateAndTestSuccess') : t('connection.configAddAndTestSuccess'));
+    } else {
+      // 保存成功但连接测试失败
       showToast(t('common.warning'), t('connection.configSavedButTestFailed'), 'warning');
       hide();
       emit('saved', connectionForm.value);
     }
+  } catch (error) {
+    console.error('保存并测试连接失败:', error);
+    // 保存失败的错误已在 saveConnection 中处理，这里不再重复提示
   }
 }
 
 // 测试连接
-async function testConnection(connection: ConnectionEntity) {
+async function testConnection(connection: ConnectionEntity): Promise<boolean> {
   try {
     const connectionService = new ConnectionService();
-    const response = await connectionService.testConnection(connection);
-    
-    if (response) {
+    const res = await connectionService.testConnection(connection);
+    // request() 已返回扁平化响应体 { ret, msg, data }；testConnection 的业务结果在 data 字段（布尔值）
+    const body = (res as any) || {};
+    if (body.ret === 0 && body.data === true) {
       showToast('', `"${connection.name}" 连接测试成功`, 'success');
-    } else {
-      showToast('', `"${connection.name}" 连接测试失败`, 'error');
+      return true;
     }
+    showToast('', `"${connection.name}" 连接测试失败`, 'error');
+    return false;
   } catch (error) {
     console.error('测试连接失败:', error);
-    showToast('', `"${connection.name}" 连接测试失败: ${error.message || '未知错误'}`, 'error');
+    showToast('', `"${connection.name}" 连接测试失败: ${(error as any)?.message || '未知错误'}`, 'error');
+    return false;
   }
 }
 
@@ -410,9 +412,11 @@ function onTypeChange() {
   }
 }
 
-// Toast 提示
+// Toast 提示（使用全局 Toast 插件，避免子组件内未挂载 Toast 实例导致不显示）
 function showToast(title: string, message: string, type?: string) {
-  toastRef.value?.show(title, message, type);
+  if (type === 'error') toast.error(message, title);
+  else if (type === 'warning') toast.warning(message, title);
+  else toast.success(message, title);
 }
 
 // 加载数据库类型

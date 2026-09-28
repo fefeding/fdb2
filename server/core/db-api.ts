@@ -1205,6 +1205,11 @@ function formatDdlDefault(v: any): string {
 
 /** 列类型输出（用户 DSL 已含长度时原样大写；没有长度时按基础类型） */
 function typeFor(kind: string, c: ParsedColumn): string {
+  if (kind === 'clickhouse') {
+    // ClickHouse 类型大小写不敏感，但惯用混合大小写（如 DateTime64、Nullable(String)），
+    // 直接返回用户给定的类型，避免被强制大写为 DATETIME64
+    return c.type;
+  }
   return c.type.toUpperCase();
 }
 

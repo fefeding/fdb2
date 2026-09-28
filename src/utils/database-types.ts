@@ -177,6 +177,7 @@ export function getIdentifierQuote(databaseType: string): string {
     case 'oracle': return '"';
     case 'mssql': return '[';
     case 'sqlserver': return '[';
+    case 'clickhouse': return '`';
     default: return '"';
   }
 }
