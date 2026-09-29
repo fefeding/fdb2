@@ -34,7 +34,7 @@
 
 #### 💻 Desktop Client (Recommended)
 Download the pre-built cross-platform desktop application for immediate use:
-- **[Windows / macOS / Linux Client Download](https://github.com/fefeding/fdb2/releases/tag/client)**
+- **[Windows / macOS / Linux Client Download](https://github.com/fefeding/fdb2/releases/)**
 - Unzip and double-click to run, no environment setup required
 
 #### 📦 Command Line Tool

@@ -12,7 +12,7 @@
 
 #### 💻 桌面客户端 (推荐)
 直接下载预构建的跨平台桌面应用，开箱即用：
-- **[Windows / macOS / Linux 客户端下载](https://github.com/fefeding/fdb2/releases/tag/client)**
+- **[Windows / macOS / Linux 客户端下载](https://github.com/fefeding/fdb2/releases/)**
 - 解压后双击运行，无需任何环境配置
 
 #### 📦 命令行工具
