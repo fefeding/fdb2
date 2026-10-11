@@ -72,9 +72,11 @@ export class WebViewProvider {
    * query 形如 { connectionId?, database?, table? }，与桌面端路由 query 一致。
    */
   showExplorerPanel(query: Record<string, string> = {}): void {
-    const viewType = 'dbtool.explorer';
-    const existed = this.panels.has(viewType);
-    const panel = this.createPanel(viewType, 'fdb2 数据库工作台', 'explorer');
+    // 同一连接复用同一 Tab；不同连接用独立 viewType 开新 Tab。
+    const connId = query.connectionId || 'default';
+    const viewType = `dbtool.explorer.${connId}`;
+    const existed = this.panels.has(connId);
+    const panel = this.createPanel(viewType, 'fdb2 数据库工作台', 'explorer', connId);
     if (existed) {
       panel.webview.postMessage({ command: 'navigate', data: query });
     } else {
@@ -109,8 +111,14 @@ export class WebViewProvider {
 
   // ---------------- 面板构建 ----------------
 
-  private createPanel(viewType: string, title: string, panelType: string): vscode.WebviewPanel {
-    const existing = this.panels.get(viewType);
+  private createPanel(
+    viewType: string,
+    title: string,
+    panelType: string,
+    reuseKey?: string
+  ): vscode.WebviewPanel {
+    const key = reuseKey ?? viewType;
+    const existing = this.panels.get(key);
     if (existing) {
       existing.reveal();
       return existing;
@@ -159,12 +167,12 @@ export class WebViewProvider {
     );
 
     panel.onDidDispose(
-      () => this.panels.delete(viewType),
+      () => this.panels.delete(key),
       undefined,
       this.context.subscriptions
     );
 
-    this.panels.set(viewType, panel);
+    this.panels.set(key, panel);
     return panel;
   }
 
