@@ -119,6 +119,18 @@ export function mountExplorer(): void {
       }
       body.vscode-native-nav input::placeholder,
       body.vscode-native-nav textarea::placeholder { color: #94a3b8 !important; }
+      /* 抵消 database.css 深色媒体查询（prefers-color-scheme: dark）对表格的覆盖，
+         webview 内沿用浅色表格：否则表头白字白底、表格底色发黑 */
+      @media (prefers-color-scheme: dark) {
+        body.vscode-native-nav table.table { background-color: #ffffff; }
+        body.vscode-native-nav .table th {
+          background-color: #f8f9fa;
+          color: #1e293b;
+        }
+        body.vscode-native-nav .table th .column-name,
+        body.vscode-native-nav .table th .column-type,
+        body.vscode-native-nav .table th .sort-icon { color: inherit; }
+      }
     `;
     document.head.appendChild(style);
     document.body.classList.add('vscode-native-nav');

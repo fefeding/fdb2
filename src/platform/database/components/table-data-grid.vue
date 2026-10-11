@@ -9,6 +9,7 @@
         :current-page="currentPage"
         :sort-field="sortField"
         :sort-order="sortOrder"
+        :show-pagination="false"
         @page-changed="handlePageChange"
         @sort-changed="handleSortChange"
       >
@@ -66,10 +67,17 @@
       </DataGrid>
     </div>
 
-    <!-- 底部状态栏 -->
+    <!-- 底部状态栏：总记录数 + 翻页 + Page size 合并为一行 -->
     <div class="grid-footer-bar mt-2 d-flex justify-content-between align-items-center px-3">
         <div class="pagination-info text-muted small">
             {{ $t('common.totalRecords', { count: total }) }}
+        </div>
+        <div class="footer-pagination flex-grow-1 d-flex justify-content-center">
+            <Pagination
+                :current-page="currentPage"
+                :total-pages="totalPages"
+                @page-changed="handlePageChange"
+            />
         </div>
         <div class="page-size-selector d-flex align-items-center">
             <label class="small text-muted me-2">{{ $t('common.pageSizeLabel') }}</label>
@@ -87,6 +95,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import DataGrid from '@/components/dataGrid/index.vue';
+import Pagination from '@/components/dataGrid/pagination.vue';
 import type { ConnectionEntity, TableEntity, ColumnEntity } from '@/typings/database';
 import { DatabaseService } from '@/service/database';
 
@@ -328,5 +337,9 @@ onMounted(() => {
     background: #f8f9fa;
     border-top: 1px solid #dee2e6;
     padding: 8px 16px;
+}
+
+.footer-pagination :deep(.pagination) {
+    margin-bottom: 0;
 }
 </style>

@@ -14,7 +14,7 @@
               <i class="bi bi-chevron-right"></i>
               <span class="database">{{ database }}</span>
               <i class="bi bi-chevron-right"></i>
-              <span class="table">{{ table?.name }}</span>
+              <span class="crumb-table">{{ table?.name }}</span>
             </div>
           </div>
         </div>
