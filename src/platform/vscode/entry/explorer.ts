@@ -76,4 +76,15 @@ export function mountExplorer(): void {
     });
 
     app.mount('#app');
+
+    // 纯原生导航：隐藏 webview 内自带的连接/库/表树（.explorer-sidebar），
+    // 左侧导航完全由 VSCode 原生 TreeView（Activity Bar）承担。仅作用于 webview，不影响桌面端。
+    const style = document.createElement('style');
+    style.textContent = `
+      body.vscode-native-nav .explorer-sidebar { display: none !important; }
+      body.vscode-native-nav .explorer-layout { display: block !important; }
+      body.vscode-native-nav .explorer-main { height: 100%; }
+    `;
+    document.head.appendChild(style);
+    document.body.classList.add('vscode-native-nav');
 }
