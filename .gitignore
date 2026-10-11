@@ -43,3 +43,7 @@ fdb2.server.pid
 nw-cache/
 workbuddy-app/fdb2-expert.zip
 workbuddy-app/workbuddy-connector.zip
+
+# Keep the shared VSCode extension debug config tracked (un-ignore specific files)
+!.vscode/launch.json
+!.vscode/tasks.json
