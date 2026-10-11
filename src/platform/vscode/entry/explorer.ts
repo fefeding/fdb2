@@ -82,13 +82,25 @@ export function mountExplorer(): void {
     // 否则新面板首次打开会停在默认空屏（宿主需收到 ready 才 flush pending）。
     getVSCodeBridge().postMessage({ command: 'ready' });
 
-    // 纯原生导航：隐藏 webview 内自带的连接/库/表树（.explorer-sidebar），
+    // 纯原生导航：隐藏 webview 内自带的连接/库/表树（.explorer-sidebar）与顶部大 header（.top-toolbar），
     // 左侧导航完全由 VSCode 原生 TreeView（Activity Bar）承担。仅作用于 webview，不影响桌面端。
+    // 内容区沿用桌面端固定浅色主题；输入控件显式指定浅色，避免深色 webview 下 UA 默认样式渲染成黑块。
     const style = document.createElement('style');
     style.textContent = `
       body.vscode-native-nav .explorer-sidebar { display: none !important; }
+      body.vscode-native-nav .top-toolbar { display: none !important; }
       body.vscode-native-nav .explorer-layout { display: block !important; }
       body.vscode-native-nav .explorer-main { height: 100%; }
+      body.vscode-native-nav input,
+      body.vscode-native-nav textarea,
+      body.vscode-native-nav select {
+        background-color: #ffffff !important;
+        color: #1e293b !important;
+        border-color: #cbd5e1 !important;
+        color-scheme: light !important;
+      }
+      body.vscode-native-nav input::placeholder,
+      body.vscode-native-nav textarea::placeholder { color: #94a3b8 !important; }
     `;
     document.head.appendChild(style);
     document.body.classList.add('vscode-native-nav');
