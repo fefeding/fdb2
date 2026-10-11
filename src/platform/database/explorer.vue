@@ -348,43 +348,54 @@ let isUpdatingFromUrl = false;
 function handleRouteQuery() {
   const connectionId = route.query.connectionId as string;
   const database = route.query.database as string;
-  
+  const tableName = route.query.table as string;
+
   if (connectionId) {
     // 查找对应的连接
     const connection = connections.value.find(conn => conn.id === connectionId);
     if (connection) {
       // 设置标志位，避免触发 URL 更新
       isUpdatingFromUrl = true;
-      
+
       // 选择连接
       selectedConnection.value = connection;
       selectedDatabase.value = '';
       selectedTable.value = null;
       activeTab.value = 'overview';
-      
+
       // 展开连接节点并加载数据库
       if (!expandedConnections.value.has(connectionId)) {
         expandedConnections.value.add(connectionId);
         loadDatabasesForConnection(connection);
       }
-      
+
       // 如果提供了数据库参数，选择数据库
       if (database) {
         setTimeout(() => {
           selectedDatabase.value = database;
           selectedTable.value = null;
           activeTab.value = 'tables';
-          
+
           // 展开数据库节点
           const dbKey = `${connectionId}-${database}`;
-          if (!expandedDatabases.value.has(dbKey)) {
-            expandedDatabases.value.add(dbKey);
-            loadDatabaseInfo(connection, database);
-            loadTablesForDatabase(connection, database);
+          expandedDatabases.value.add(dbKey);
+          loadDatabaseInfo(connection, database);
+          loadTablesForDatabase(connection, database, true);
+
+          // 如果提供了表参数，等表列表加载完后自动选中该表
+          if (tableName) {
+            loadTablesForDatabase(connection, database, true).then(() => {
+              const tables = tableCache.value.get(dbKey) || [];
+              const t = tables.find((x: any) => x.name === tableName);
+              if (t) {
+                selectTable(connection, database, t);
+              }
+              isUpdatingFromUrl = false;
+            });
+          } else {
+            // 重置标志位
+            isUpdatingFromUrl = false;
           }
-          
-          // 重置标志位
-          isUpdatingFromUrl = false;
         }, 100);
       } else {
         // 重置标志位

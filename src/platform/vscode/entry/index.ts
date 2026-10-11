@@ -8,6 +8,7 @@ import QueryPanel from '../components/QueryPanel.vue';
 import DatabasePanel from '../components/DatabasePanel.vue';
 import TableDataPanel from '../components/TableDataPanel.vue';
 import TableStructurePanel from '../components/TableStructurePanel.vue';
+import { mountExplorer } from './explorer';
 import '../style.css';
 
 const type = (window as any).__PANEL_TYPE__ || 'database';
@@ -20,5 +21,10 @@ const registry: Record<string, any> = {
   tableStructure: TableStructurePanel
 };
 
-const component = registry[type] || DatabasePanel;
-createApp(component).mount('#app');
+if (type === 'explorer') {
+  // 完整工作台：复用桌面端视图
+  mountExplorer();
+} else {
+  const component = registry[type] || DatabasePanel;
+  createApp(component).mount('#app');
+}

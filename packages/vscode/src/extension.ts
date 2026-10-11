@@ -20,12 +20,17 @@ export function activate(context: vscode.ExtensionContext): void {
   const treeView = vscode.window.createTreeView('databaseExplorer', { treeDataProvider: treeProvider });
   context.subscriptions.push(treeView);
 
-  // 选中表节点时在右侧打开表数据面板（表节点同时可展开看列，但点击/选中应打开面板，与桌面端一致）
+  // 选中树节点时在右侧打开完整工作台并导航到对应位置（与桌面端一致）
   treeView.onDidChangeSelection(
     (e) => {
       const item = e.selection[0] as any;
-      if (item && item.ctx === 'table' && item.connectionId && item.database && item.table) {
-        webViewProvider.showTableDataPanel(item.connectionId, item.database, item.table);
+      if (!item) return;
+      if (item.ctx === 'connection' && item.connectionId) {
+        webViewProvider.showExplorerPanel({ connectionId: item.connectionId });
+      } else if (item.ctx === 'database' && item.connectionId && item.database) {
+        webViewProvider.showExplorerPanel({ connectionId: item.connectionId, database: item.database });
+      } else if (item.ctx === 'table' && item.connectionId && item.database && item.table) {
+        webViewProvider.showExplorerPanel({ connectionId: item.connectionId, database: item.database, table: item.table });
       }
     },
     undefined,

@@ -4,6 +4,7 @@ import type { AxiosRequestConfig } from 'axios';
 import * as eventBus from '../base/eventBus';
 import config from '../base/config';
 import { isElectron } from '@/base/detect';
+import { vscodeApiRequest } from '@/platform/vscode/rpc';
 
 
 
@@ -14,6 +15,28 @@ export function getRequestUrl(api: string) {
 }
 
 export async function requestServer(url: string, data?: any, option?: AxiosRequestConfig) {
+    // VSCode webview 环境：通过 webview 消息桥调用扩展宿主（宿主内直连 server 路由）
+    if (typeof __VS_CODE_ENV__ !== 'undefined' && __VS_CODE_ENV__) {
+        try {
+            const apiPath = url.replace(/^(http(s)?:)?\/\//, '').replace(/.*?\/api\//, '/api/');
+            const body = await vscodeApiRequest(apiPath, data);
+            return {
+                status: 200,
+                statusText: 'OK',
+                data: body
+            };
+        } catch (error: any) {
+            console.error('VSCode 消息桥调用失败:', error);
+            return {
+                status: 500,
+                statusText: 'Internal Server Error',
+                data: {
+                    ret: 500,
+                    msg: error?.message || '执行失败'
+                }
+            };
+        }
+    }
     // 检查是否在 Electron 环境中运行
     const electronAPI = (window as any).electronAPI;
     if (isElectron && electronAPI?.api && electronAPI?.isPackaged) {

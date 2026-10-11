@@ -67,6 +67,21 @@ export class WebViewProvider {
     }
   }
 
+  /**
+   * 打开完整工作台面板（复用桌面端 platform/database 视图）。
+   * query 形如 { connectionId?, database?, table? }，与桌面端路由 query 一致。
+   */
+  showExplorerPanel(query: Record<string, string> = {}): void {
+    const viewType = 'dbtool.explorer';
+    const existed = this.panels.has(viewType);
+    const panel = this.createPanel(viewType, 'fdb2 数据库工作台', 'explorer');
+    if (existed) {
+      panel.webview.postMessage({ command: 'navigate', data: query });
+    } else {
+      this.pending.set(panel, { command: 'navigate', data: query });
+    }
+  }
+
   // ---------------- 面板构建 ----------------
 
   private createPanel(viewType: string, title: string, panelType: string): vscode.WebviewPanel {
@@ -138,6 +153,17 @@ export class WebViewProvider {
     this.log(`<= ${message.command} ${message.data ? JSON.stringify(message.data).slice(0, 300) : ''}`);
     try {
       switch (message.command) {
+        case 'apiRequest': {
+          // 完整工作台的通用 API 通道：响应格式与桌面端 vite dev server 一致（{ ret, msg, data }）
+          try {
+            const data = await this.bridge.call(message.path, message.data || {});
+            post({ command: 'apiResponse', id: message.id, body: { ret: 0, msg: 'success', data } });
+          } catch (e: any) {
+            this.log(`apiRequest ${message.path} 失败: ${e?.message || e}`);
+            post({ command: 'apiResponse', id: message.id, body: { ret: 500, msg: e?.message || String(e) } });
+          }
+          return;
+        }
         case 'ready': {
           const init = this.pending.get(panel);
           if (init) {
