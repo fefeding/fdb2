@@ -1,15 +1,18 @@
 /**
  * VSCode webview「完整数据库工作台」入口：
  * 直接复用桌面端 platform/database 的视图（explorer.vue 及其全部子组件），
- * 使用 vue-router 内存路由 + 桌面端同一套路由表，视图代码零改动。
+ * 使用 vue-router 内存路由，视图代码零改动。
  * 取数通过 base.ts 的 VSCode 分支（webview 消息桥）完成。
+ *
+ * 注意：
+ *  - vite 产物是 runtime-only Vue（无运行时模板编译器），根组件必须用 render 函数；
+ *  - IIFE 单文件打包下不能用动态 import()，路由组件一律静态导入。
  */
-import { createApp } from 'vue';
-import { createRouter, createMemoryHistory } from 'vue-router';
+import { createApp, h, defineComponent } from 'vue';
+import { createRouter, createMemoryHistory, RouterView } from 'vue-router';
 import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 import i18n from '@/i18n';
-import routes from '@/platform/database/router';
 
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
@@ -20,16 +23,34 @@ import Modal from '@/components/modal/index.vue';
 import DataGrid from '@/components/dataGrid/index.vue';
 import modalPlugin from '@/components/modal/index';
 
+import Layout from '@/platform/database/layout.vue';
+import Explorer from '@/platform/database/explorer.vue';
+
 export function mountExplorer(): void {
+    const routes = [
+        {
+            path: '/database',
+            component: Layout,
+            redirect: '/database/index',
+            children: [
+                { path: 'index', name: 'database-index', component: Explorer },
+                { path: 'explorer', name: 'database-explorer', component: Explorer }
+            ]
+        }
+    ];
+
     const router = createRouter({
         history: createMemoryHistory(),
         routes
     });
     router.push('/database/index');
 
-    const app = createApp({
-        template: '<router-view />'
+    const App = defineComponent({
+        name: 'ExplorerRoot',
+        render: () => h(RouterView)
     });
+
+    const app = createApp(App);
 
     const pinia = createPinia();
     try {
