@@ -6,7 +6,8 @@ import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-// 允许用户通过 settings.json 的 dbtool.dataDir 覆盖；否则落到用户主目录下的 .vscode-db-tool。
+// 允许用户通过 settings.json 的 dbtool.dataDir 覆盖；否则与桌面端 db_tool 共享用户主目录下的 .fdb2，
+// 从而直接复用已在桌面端保存的数据库连接配置（connections.json）。
 function resolveDataDir(): string {
   let cfg = '';
   try {
@@ -16,7 +17,7 @@ function resolveDataDir(): string {
   }
   if (cfg && cfg.trim()) return cfg.trim();
   if (process.env.DB_TOOL_DATA_DIR) return process.env.DB_TOOL_DATA_DIR;
-  return path.join(os.homedir(), '.vscode-db-tool');
+  return path.join(os.homedir(), '.fdb2');
 }
 
 if (!process.env.DB_TOOL_DATA_DIR) {

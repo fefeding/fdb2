@@ -17,8 +17,19 @@ export function activate(context: vscode.ExtensionContext): void {
   treeProvider = new DatabaseTreeProvider(bridge);
   webViewProvider = new WebViewProvider(context, bridge, treeProvider);
 
-  context.subscriptions.push(
-    vscode.window.registerTreeDataProvider('databaseExplorer', treeProvider)
+  const treeView = vscode.window.createTreeView('databaseExplorer', { treeDataProvider: treeProvider });
+  context.subscriptions.push(treeView);
+
+  // 选中表节点时在右侧打开表数据面板（表节点同时可展开看列，但点击/选中应打开面板，与桌面端一致）
+  treeView.onDidChangeSelection(
+    (e) => {
+      const item = e.selection[0] as any;
+      if (item && item.ctx === 'table' && item.connectionId && item.database && item.table) {
+        webViewProvider.showTableDataPanel(item.connectionId, item.database, item.table);
+      }
+    },
+    undefined,
+    context.subscriptions
   );
 
   const register = (id: string, handler: (...args: any[]) => any) =>

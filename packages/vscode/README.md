@@ -4,7 +4,7 @@
 
 ## 功能
 
-- **连接管理**：Activity Bar 中「Database Tool」视图，增 / 删 / 改 / 测试数据库连接（配置持久化在用户主目录 `~/.vscode-db-tool/connections.json`，可在设置 `dbtool.dataDir` 覆盖）。
+- **连接管理**：Activity Bar 中「Database Tool」视图，增 / 删 / 改 / 测试数据库连接（配置默认与桌面端 db_tool 共享用户主目录 `~/.fdb2/connections.json`，可在设置 `dbtool.dataDir` 覆盖）。
 - **对象浏览**：树形视图 连接 → 库 → 表 → 列。
 - **SQL 查询**：独立查询面板，执行任意 SQL 并展示结果表格（支持 Ctrl/Cmd+Enter）。
 - **数据浏览**：表数据分页查看、WHERE 筛选。

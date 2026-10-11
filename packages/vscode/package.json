@@ -150,7 +150,7 @@
         "dbtool.dataDir": {
           "type": "string",
           "default": "",
-          "description": "连接配置与缓存目录（留空则使用用户主目录下的 .vscode-db-tool）。"
+          "description": "连接配置与缓存目录（留空则使用桌面端 db_tool 的 ~/.fdb2，自动复用已有连接）。"
         }
       }
     }
