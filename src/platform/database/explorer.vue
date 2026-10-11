@@ -1171,21 +1171,21 @@ function showToast(title: string, message: string, type: string = 'success') {
 .explorer-layout {
   display: flex;
   height: 100%;
-  background: #ffffff;
+  background: var(--db-surface);
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--db-gray-medium);
 }
 
 /* 左侧边栏 */
 .explorer-sidebar {
   width: 350px;
   flex-shrink: 0;
-  border-right: 1px solid #cbd5e1;
+  border-right: 1px solid var(--db-gray-medium);
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: var(--db-surface);
 }
 
 .sidebar-content {
@@ -1203,8 +1203,8 @@ function showToast(title: string, message: string, type: string = 'success') {
 /* 工具信息样式 - 固定在左下角 */
 .sidebar-tool-info {
   padding: 0.75rem;
-  border-top: 1px solid #cbd5e1;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-top: 1px solid var(--db-gray-medium);
+  background: linear-gradient(135deg, var(--db-light-color) 0%, var(--db-border) 100%);
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -1213,7 +1213,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .sidebar-tool-info:hover {
-  background: linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 100%);
+  background: linear-gradient(135deg, var(--db-primary-bg) 0%, var(--db-primary-bg) 100%);
   transform: translateY(-1px);
 }
 
@@ -1225,7 +1225,7 @@ function showToast(title: string, message: string, type: string = 'success') {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--db-on-accent);
   font-size: 1rem;
   flex-shrink: 0;
 }
@@ -1240,18 +1240,18 @@ function showToast(title: string, message: string, type: string = 'success') {
 .tool-name {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--db-black);
 }
 
 .tool-description {
   font-size: 0.75rem;
-  color: #334155;
+  color: var(--db-darker-color);
 }
 
 .sidebar-header {
   padding: 1rem 0.875rem;
-  border-bottom: 1px solid #cbd5e1;
-  background: #f8f9fa;
+  border-bottom: 1px solid var(--db-gray-medium);
+  background: var(--db-bg-soft2);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1261,14 +1261,14 @@ function showToast(title: string, message: string, type: string = 'success') {
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #24292f;
+  color: var(--db-text-body);
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .sidebar-title i {
-  color: #374151;
+  color: var(--db-text-body);
 }
 
 .sidebar-actions {
@@ -1279,16 +1279,16 @@ function showToast(title: string, message: string, type: string = 'success') {
 .sidebar-actions .btn {
   padding: 0.375rem 0.625rem;
   font-size: 0.75rem;
-  border: 1px solid #d0d7de;
-  background-color: #ffffff;
-  color: #24292f;
+  border: 1px solid var(--db-border);
+  background-color: var(--db-on-accent);
+  color: var(--db-text-body);
   border-radius: 6px;
   transition: all 0.15s ease;
 }
 
 .sidebar-actions .btn:hover {
-  background-color: #f3f4f6;
-  border-color: #d0d7de;
+  background-color: var(--db-bg-soft);
+  border-color: var(--db-border);
 }
 
 .sidebar-actions .btn-outline-primary {
@@ -1299,7 +1299,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 .sidebar-actions .btn-outline-primary:hover {
   background-color: #0969da;
   border-color: #0969da;
-  color: #ffffff;
+  color: var(--db-on-accent);
 }
 
 .sidebar-actions .btn-outline-success {
@@ -1310,7 +1310,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 .sidebar-actions .btn-outline-success:hover {
   background-color: #1a7f37;
   border-color: #1a7f37;
-  color: #ffffff;
+  color: var(--db-on-accent);
 }
 
 .sidebar-content {
@@ -1331,7 +1331,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 
 .tree-children {
   margin-left: 0.75rem;
-  border-left: 1px solid #e1e5e9;
+  border-left: 1px solid var(--db-border);
   padding-left: 0.5rem;
 }
 
@@ -1359,7 +1359,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 
 .node-expand i {
   font-size: 0.6875rem;
-  color: #374151;
+  color: var(--db-text-body);
   transition: transform 0.15s ease;
 }
 
@@ -1375,11 +1375,11 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .node-content:hover {
-  background-color: #f3f4f6;
+  background-color: var(--db-bg-soft);
 }
 
 .tree-node.selected .node-content {
-  background-color: #eff1ff;
+  background-color: var(--db-primary-bg);
   color: #0969da;
   font-weight: 500;
   box-shadow: 0 2px 8px rgba(9, 105, 218, 0.15);
@@ -1435,8 +1435,8 @@ function showToast(title: string, message: string, type: string = 'success') {
 .connection-type,
 .table-info {
   font-size: 0.75rem;
-  color: #374151;
-  background-color: #e2e8f0;
+  color: var(--db-text-body);
+  background-color: var(--db-border);
   padding: 0.125rem 0.375rem;
   border-radius: 12px;
   font-weight: 500;
@@ -1474,12 +1474,12 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .btn-icon:hover {
-  background-color: #e1e4e8;
+  background-color: var(--db-border);
 }
 
 .btn-icon i {
   font-size: 0.6875rem;
-  color: #374151;
+  color: var(--db-text-body);
 }
 
 .tree-node.selected .btn-icon:hover {
@@ -1487,7 +1487,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .tree-node.selected .btn-icon i {
-  color: #475569;
+  color: var(--db-gray-dark);
 }
 
 .tree-node.selected .btn-icon:hover i {
@@ -1495,7 +1495,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .btn-icon-danger:hover {
-  background-color: #fee2e2;
+  background-color: var(--db-danger-bg);
 }
 
 .btn-icon-danger:hover i {
@@ -1517,43 +1517,43 @@ function showToast(title: string, message: string, type: string = 'success') {
 /* 连接节点样式 */
 .connection-content {
   font-weight: 500;
-  color: #24292f;
+  color: var(--db-text-body);
 }
 
 .connection-content:hover {
-  background-color: #f3f4f6;
+  background-color: var(--db-bg-soft);
 }
 
 .tree-node.selected .connection-content {
-  background-color: #eff1ff;
+  background-color: var(--db-primary-bg);
   color: #0969da;
 }
 
 /* 数据库节点样式 */
 .database-content {
-  color: #24292f;
+  color: var(--db-text-body);
 }
 
 .database-content:hover {
-  background-color: #f6f8fa;
+  background-color: var(--db-bg-soft5);
 }
 
 .tree-node.selected .database-content {
-  background-color: #eff1ff;
+  background-color: var(--db-primary-bg);
   color: #0969da;
 }
 
 /* 表节点样式 */
 .table-content {
-  color: #24292f;
+  color: var(--db-text-body);
 }
 
 .table-content:hover {
-  background-color: #f6f8fa;
+  background-color: var(--db-bg-soft5);
 }
 
 .tree-node.selected .table-content {
-  background-color: #eff1ff;
+  background-color: var(--db-primary-bg);
   color: #0969da;
 }
 
@@ -1604,13 +1604,13 @@ function showToast(title: string, message: string, type: string = 'success') {
 .db-oracle-bg { background: linear-gradient(135deg, #f80000, #d40000); }
 
 .db-default { 
-  color: #64748b !important; 
-  background: linear-gradient(135deg, #64748b, #475569);
+  color: var(--db-text-muted) !important; 
+  background: linear-gradient(135deg, var(--db-text-muted), var(--db-gray-dark));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.db-default-bg { background: linear-gradient(135deg, #64748b, #475569); }
+.db-default-bg { background: linear-gradient(135deg, var(--db-text-muted), var(--db-gray-dark)); }
 
 .tree-node.selected .db-mysql,
 .tree-node.selected .db-postgres,
@@ -1618,9 +1618,9 @@ function showToast(title: string, message: string, type: string = 'success') {
 .tree-node.selected .db-mssql,
 .tree-node.selected .db-oracle,
 .tree-node.selected .db-default {
-  color: white !important;
+  color: var(--db-on-accent) !important;
   background: none;
-  -webkit-text-fill-color: white;
+  -webkit-text-fill-color: var(--db-on-accent);
 }
 
 /* 数据库Logo图标 */
@@ -1633,7 +1633,7 @@ function showToast(title: string, message: string, type: string = 'success') {
   justify-content: center;
   font-weight: 700;
   font-size: 0.75rem;
-  color: white;
+  color: var(--db-on-accent);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
@@ -1663,8 +1663,8 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .db-logo-default {
-  background: linear-gradient(135deg, #64748b, #475569);
-  border: 1px solid #334155;
+  background: linear-gradient(135deg, var(--db-text-muted), var(--db-gray-dark));
+  border: 1px solid var(--db-darker-color);
 }
 
 /* 右侧主内容 */
@@ -1692,15 +1692,15 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .nav-tabs {
-  background: #f8fafc;
-  border-bottom: 1px solid #cbd5e1;
+  background: var(--db-light-color);
+  border-bottom: 1px solid var(--db-gray-medium);
   padding: 0 1rem;
 }
 
 .nav-link {
   border: none;
   background: transparent;
-  color: #334155;
+  color: var(--db-darker-color);
   padding: 1rem 1.5rem;
   font-weight: 500;
   transition: all 0.2s ease;
@@ -1713,7 +1713,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 
 .nav-link.active {
   color: #667eea;
-  background: white;
+  background: var(--db-surface);
   border-bottom: 2px solid #667eea;
 }
 
@@ -1736,13 +1736,13 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .info-card {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--db-light-color) 0%, var(--db-border) 100%);
   border-radius: 12px;
   padding: 1.5rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--db-gray-medium);
 }
 
 .card-icon {
@@ -1753,20 +1753,20 @@ function showToast(title: string, message: string, type: string = 'success') {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--db-on-accent);
   font-size: 1.25rem;
 }
 
 .card-content h6 {
   margin: 0 0 0.25rem 0;
-  color: #334155;
+  color: var(--db-darker-color);
   font-size: 0.875rem;
   font-weight: 500;
 }
 
 .card-value {
   margin: 0;
-  color: #1e293b;
+  color: var(--db-dark-color);
   font-weight: 600;
   font-size: 1.1rem;
 }
@@ -1779,8 +1779,8 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .table-card {
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--db-surface);
+  border: 1px solid var(--db-gray-medium);
   border-radius: 12px;
   padding: 1rem;
   cursor: pointer;
@@ -1808,12 +1808,12 @@ function showToast(title: string, message: string, type: string = 'success') {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--db-on-accent);
 }
 
 .table-name {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--db-dark-color);
 }
 
 .table-stats {
@@ -1830,18 +1830,18 @@ function showToast(title: string, message: string, type: string = 'success') {
 
 .stat-label {
   font-size: 0.75rem;
-  color: #334155;
+  color: var(--db-darker-color);
 }
 
 .stat-value {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--db-black);
 }
 
 .table-comment {
   font-size: 0.75rem;
-  color: #334155;
+  color: var(--db-darker-color);
   font-style: italic;
 }
 
@@ -1852,7 +1852,7 @@ function showToast(title: string, message: string, type: string = 'success') {
   align-items: center;
   margin-bottom: 1rem;
   padding: 0.75rem;
-  background: #f8fafc;
+  background: var(--db-light-color);
   border-radius: 8px;
 }
 
@@ -1871,7 +1871,7 @@ function showToast(title: string, message: string, type: string = 'success') {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #334155;
+  color: var(--db-darker-color);
   text-align: center;
 }
 
@@ -1884,7 +1884,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 
 .empty-text h5,
 .default-content h5 {
-  color: #1e293b;
+  color: var(--db-dark-color);
   margin-bottom: 0.5rem;
 }
 
@@ -1898,7 +1898,7 @@ function showToast(title: string, message: string, type: string = 'success') {
     width: 100%;
     height: 40vh;
     border-right: none;
-    border-bottom: 1px solid #cbd5e1;
+    border-bottom: 1px solid var(--db-gray-medium);
   }
   
   .info-cards {

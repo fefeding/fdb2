@@ -619,9 +619,9 @@ function getDbLogoText(type?: string): string {
   align-items: center;
   margin-bottom: 20px;
   padding: 20px;
-  background-color: #f1f5f9;
+  background-color: var(--db-gray-light);
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--db-gray-medium);
 }
 
 .connection-info {
@@ -637,39 +637,39 @@ function getDbLogoText(type?: string): string {
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  background-color: #e2e8f0;
-  border: 1px solid #cbd5e1;
+  background-color: var(--db-border);
+  border: 1px solid var(--db-gray-medium);
 }
 
 .db-logo {
   font-size: 24px;
   font-weight: bold;
-  color: #475569;
+  color: var(--db-gray-dark);
 }
 
 .db-mysql {
   background-color: #4CAF50;
-  color: white;
+  color: var(--db-on-accent);
 }
 
 .db-postgres {
   background-color: #336791;
-  color: white;
+  color: var(--db-on-accent);
 }
 
 .db-mssql {
   background-color: #0078d4;
-  color: white;
+  color: var(--db-on-accent);
 }
 
 .db-sqlite {
   background-color: #003B57;
-  color: white;
+  color: var(--db-on-accent);
 }
 
 .db-oracle {
   background-color: #F80000;
-  color: white;
+  color: var(--db-on-accent);
 }
 
 .connection-meta {
@@ -693,10 +693,10 @@ function getDbLogoText(type?: string): string {
 .db-type {
   padding: 4px 12px;
   border-radius: 12px;
-  background-color: #e2e8f0;
+  background-color: var(--db-border);
   font-size: 12px;
   font-weight: 600;
-  color: #334155;
+  color: var(--db-darker-color);
 }
 
 .connection-status {
@@ -710,7 +710,7 @@ function getDbLogoText(type?: string): string {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #475569;
+  background-color: var(--db-gray-dark);
 }
 
 .status-online .status-dot {
@@ -752,9 +752,9 @@ function getDbLogoText(type?: string): string {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #1e293b;
+  color: var(--db-dark-color);
   padding-bottom: 8px;
-  border-bottom: 1px solid #cbd5e1;
+  border-bottom: 1px solid var(--db-gray-medium);
 }
 
 @keyframes fadeIn {
@@ -769,15 +769,15 @@ function getDbLogoText(type?: string): string {
 }
 
 .detail-card {
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--db-gray-medium);
   border-radius: 8px;
   overflow: hidden;
 }
 
 .card-header {
   padding: 16px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #cbd5e1;
+  background-color: var(--db-bg-soft2);
+  border-bottom: 1px solid var(--db-gray-medium);
 }
 
 .card-title {
@@ -805,21 +805,21 @@ function getDbLogoText(type?: string): string {
   flex-direction: column;
   gap: 4px;
   padding: 10px;
-  background-color: #f1f5f9;
+  background-color: var(--db-gray-light);
   border-radius: 6px;
   transition: all 0.2s ease;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--db-gray-medium);
 }
 
 .info-item:hover {
-  background-color: #e9ecef;
+  background-color: var(--db-border-soft);
   transform: translateY(-1px);
 }
 
 .info-label {
   font-size: 12px;
   font-weight: 600;
-  color: #475569;
+  color: var(--db-gray-dark);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -827,7 +827,7 @@ function getDbLogoText(type?: string): string {
 .info-value {
   font-size: 14px;
   font-weight: 500;
-  color: #1e293b;
+  color: var(--db-dark-color);
 }
 
 .db-type-badge {
@@ -846,14 +846,14 @@ function getDbLogoText(type?: string): string {
 .stat-item {
   text-align: center;
   padding: 12px;
-  background-color: #f1f5f9;
+  background-color: var(--db-gray-light);
   border-radius: 6px;
   transition: all 0.2s ease;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--db-gray-medium);
 }
 
 .stat-item:hover {
-  background-color: #e9ecef;
+  background-color: var(--db-border-soft);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
@@ -861,21 +861,21 @@ function getDbLogoText(type?: string): string {
 .stat-value {
   font-size: 20px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--db-dark-color);
 }
 
 .stat-label {
   font-size: 12px;
-  color: #475569;
+  color: var(--db-gray-dark);
   margin-top: 4px;
 }
 
 .quick-actions {
   margin-bottom: 30px;
   padding: 20px;
-  background-color: #f1f5f9;
+  background-color: var(--db-gray-light);
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--db-gray-medium);
 }
 
 .actions-header {
@@ -903,32 +903,32 @@ function getDbLogoText(type?: string): string {
   align-items: center;
   gap: 8px;
   padding: 16px;
-  background-color: white;
-  border: 1px solid #cbd5e1;
+  background-color: var(--db-surface);
+  border: 1px solid var(--db-gray-medium);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .action-btn:hover {
-  background-color: #e9ecef;
+  background-color: var(--db-border-soft);
   transform: translateY(-2px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .action-icon {
   font-size: 24px;
-  color: #475569;
+  color: var(--db-gray-dark);
 }
 
 .action-text {
   font-size: 14px;
   font-weight: 500;
-  color: #1e293b;
+  color: var(--db-dark-color);
 }
 
 .connection-tabs {
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--db-gray-medium);
   border-radius: 8px;
   flex: 1;
   display: flex;
@@ -936,8 +936,8 @@ function getDbLogoText(type?: string): string {
 }
 
 .nav-tabs {
-  border-bottom: 1px solid #cbd5e1;
-  background-color: #f1f5f9;
+  border-bottom: 1px solid var(--db-gray-medium);
+  background-color: var(--db-gray-light);
 }
 
 .nav-link {
@@ -947,15 +947,15 @@ function getDbLogoText(type?: string): string {
   font-size: 14px;
   font-weight: 500;
   transition: all 0.2s ease;
-  color: #334155;
+  color: var(--db-darker-color);
 }
 
 .nav-link:hover {
-  background-color: #e9ecef;
+  background-color: var(--db-border-soft);
 }
 
 .nav-link.active {
-  background-color: white;
+  background-color: var(--db-surface);
   border-bottom: 2px solid #0d6efd;
 }
 
@@ -1022,12 +1022,12 @@ function getDbLogoText(type?: string): string {
 
 .empty-state i {
   font-size: 48px;
-  color: #ced4da;
+  color: var(--db-border-light);
 }
 
 .empty-state p {
   margin: 0;
-  color: #475569;
+  color: var(--db-gray-dark);
   font-size: 16px;
 }
 
@@ -1043,7 +1043,7 @@ function getDbLogoText(type?: string): string {
   align-items: center;
   gap: 8px;
   padding: 16px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--db-gray-medium);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1053,20 +1053,20 @@ function getDbLogoText(type?: string): string {
 
 .database-item:hover {
   border-color: #0d6efd;
-  background-color: #f8f9fa;
+  background-color: var(--db-bg-soft2);
   transform: translateY(-2px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .database-item-icon {
   font-size: 32px;
-  color: #475569;
+  color: var(--db-gray-dark);
 }
 
 .database-item-name {
   font-size: 14px;
   font-weight: 500;
-  color: #1e293b;
+  color: var(--db-dark-color);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

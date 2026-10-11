@@ -26,7 +26,7 @@
   
   /* 背景渐变 */
   --db-bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  --db-card-gradient: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  --db-card-gradient: linear-gradient(135deg, var(--db-surface) 0%, #f8fafc 100%);
   
   /* 阴影 */
   --db-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -53,6 +53,30 @@
   /* 字体 */
   --db-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --db-font-mono: 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', monospace;
+
+  /* 表面 / 边框 / 文本令牌（VSCode webview 主题跟随用，暗色值见 body.vscode-dark 块） */
+  --db-surface: #ffffff;
+  --db-on-accent: #ffffff;
+  --db-border: #e2e8f0;
+  --db-border-gray: #e5e7eb;
+  --db-border-light: #d1d5db;
+  --db-border-lighter: #dee2e6;
+  --db-border-soft: #e9ecef;
+  --db-bg-soft: #f3f4f6;
+  --db-bg-soft2: #f8f9fa;
+  --db-bg-soft3: #fafbfc;
+  --db-bg-soft4: #fafafa;
+  --db-bg-soft5: #f6f8fa;
+  --db-text-body: #374151;
+  --db-text-muted: #64748b;
+  --db-text-faint: #94a3b8;
+  --db-danger-bg: #fee2e2;
+  --db-success-bg: #d1fae5;
+  --db-warning-bg: #fef3c7;
+  --db-info-bg: #dbeafe;
+  --db-primary-bg: #e0e7ff;
+  --db-code-bg: #282c34;
+  --db-code-fg: #abb2bf;
 }
 
 /* 全局布局 - 现代桌面应用风格 */
@@ -155,7 +179,7 @@ body {
 
 /* 现代表格样式 */
 .table {
-  background: white;
+  background: var(--db-surface);
   border-radius: var(--db-radius-lg);
   overflow: hidden;
   box-shadow: var(--db-shadow-sm);
@@ -235,12 +259,12 @@ body {
 /* 主要按钮 */
 .btn-primary {
   background: var(--db-primary-gradient);
-  color: white;
+  color: var(--db-on-accent);
 }
 
 .btn-primary:hover {
   background: var(--db-primary-dark);
-  color: white;
+  color: var(--db-on-accent);
 }
 
 /* 次要按钮 */
@@ -258,25 +282,25 @@ body {
 /* 成功按钮 */
 .btn-success {
   background: linear-gradient(135deg, var(--db-accent-color) 0%, #059669 100%);
-  color: white;
+  color: var(--db-on-accent);
 }
 
 /* 警告按钮 */
 .btn-warning {
   background: linear-gradient(135deg, var(--db-warning-color) 0%, #d97706 100%);
-  color: white;
+  color: var(--db-on-accent);
 }
 
 /* 危险按钮 */
 .btn-danger {
   background: linear-gradient(135deg, var(--db-danger-color) 0%, #dc2626 100%);
-  color: white;
+  color: var(--db-on-accent);
 }
 
 /* 信息按钮 */
 .btn-info {
   background: linear-gradient(135deg, var(--db-info-color) 0%, #2563eb 100%);
-  color: white;
+  color: var(--db-on-accent);
 }
 
 /* 轮廓按钮 */
@@ -288,7 +312,7 @@ body {
 
 .btn-outline-primary:hover {
   background: var(--db-primary-gradient);
-  color: white;
+  color: var(--db-on-accent);
   border-color: transparent;
 }
 
@@ -386,7 +410,7 @@ body {
 
 .navbar-nav .nav-link.active {
   background: var(--db-primary-gradient);
-  color: white;
+  color: var(--db-on-accent);
   font-weight: 700;
   box-shadow: var(--db-shadow-md);
 }
@@ -456,7 +480,7 @@ body {
 
 .btn-close:hover {
   background: var(--db-danger-color);
-  color: white;
+  color: var(--db-on-accent);
   transform: rotate(90deg);
 }
 
@@ -467,7 +491,7 @@ body {
   padding: 0.75rem var(--db-spacing-md);
   font-size: 0.95rem;
   transition: all 0.3s ease;
-  background: white;
+  background: var(--db-surface);
   font-weight: 500;
 }
 
@@ -484,7 +508,7 @@ body {
   padding: 0.75rem var(--db-spacing-md);
   font-size: 0.95rem;
   transition: all 0.3s ease;
-  background: white;
+  background: var(--db-surface);
   font-weight: 500;
   cursor: pointer;
 }
@@ -498,7 +522,7 @@ body {
 
 .form-label {
   font-weight: 700;
-  color: #1e293b;
+  color: var(--db-dark-color);
   margin-bottom: var(--db-spacing-sm);
   font-size: 0.9rem;
   letter-spacing: 0.025em;
@@ -509,7 +533,7 @@ body {
 
 .form-text {
   font-size: 0.875rem;
-  color: #334155;
+  color: var(--db-darker-color);
   margin-top: var(--db-spacing-xs);
 }
 
@@ -537,7 +561,7 @@ body {
 
 /* 代码样式 */
 code {
-  background-color: #e2e8f0;
+  background-color: var(--db-border);
   color: #be185d;
   padding: 0.2rem 0.4rem;
   border-radius: 3px;
@@ -545,8 +569,8 @@ code {
 }
 
 pre {
-  background-color: #f1f5f9;
-  border: 1px solid #cbd5e1;
+  background-color: var(--db-gray-light);
+  border: 1px solid var(--db-gray-medium);
   border-radius: 6px;
   padding: 1rem;
   margin: 0;
@@ -562,22 +586,22 @@ pre {
 }
 
 .alert-success {
-  background-color: #dcfce7;
+  background-color: var(--db-success-bg);
   color: #166534;
 }
 
 .alert-danger {
-  background-color: #fee2e2;
+  background-color: var(--db-danger-bg);
   color: #991b1b;
 }
 
 .alert-warning {
-  background-color: #fef3c7;
+  background-color: var(--db-warning-bg);
   color: #92400e;
 }
 
 .alert-info {
-  background-color: #dbeafe;
+  background-color: var(--db-info-bg);
   color: #1e40af;
 }
 
@@ -600,7 +624,7 @@ pre {
 }
 
 .dropdown-item:hover {
-  background-color: #e2e8f0;
+  background-color: var(--db-border);
   transform: translateX(2px);
 }
 
@@ -613,14 +637,14 @@ pre {
 }
 
 .list-group-item:hover {
-  background-color: #e2e8f0;
+  background-color: var(--db-border);
   transform: translateX(4px);
 }
 
 /* 页面头部样式 */
 .page-header {
   background: linear-gradient(135deg, var(--db-primary-color) 0%, #0056b3 100%);
-  color: white;
+  color: var(--db-on-accent);
   padding: 2rem 0;
   margin-bottom: 2rem;
 }
@@ -727,17 +751,17 @@ pre {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--db-bg-soft);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: var(--db-border-light);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: var(--db-border-light);
 }
 
 /* 加载状态 */
@@ -754,7 +778,7 @@ pre {
   width: 20px;
   height: 20px;
   margin: -10px 0 0 -10px;
-  border: 2px solid #f3f3f3;
+  border: 2px solid var(--db-bg-soft);
   border-top: 2px solid var(--db-primary-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -774,7 +798,7 @@ pre {
 }
 
 .status-offline {
-  color: #64748b;
+  color: var(--db-text-muted);
   display: flex;
   align-items: center;
   gap: var(--db-spacing-xs);
@@ -909,9 +933,13 @@ pre {
   }
 }
 
-/* 暗色模式支持 */
+/* 暗色模式支持
+ *  - 桌面端（Electron/浏览器）：跟随 OS，via prefers-color-scheme；
+ *    排除 webview（body 带 vscode-* 类），避免 OS 暗色 + 编辑器浅色时错配。
+ *  - VSCode webview：跟随编辑器主题，由宿主维护的 body.vscode-dark / vscode-high-contrast 类驱动。
+ */
 @media (prefers-color-scheme: dark) {
-  :root {
+  body:not(.vscode-light):not(.vscode-dark):not(.vscode-high-contrast) {
     --db-light-color: #1e293b;
     --db-gray-light: #334155;
     --db-gray-medium: #475569;
@@ -919,32 +947,148 @@ pre {
     --db-darker-color: #cbd5e1;
     --db-dark-color: #e2e8f0;
     --db-black: #f8fafc;
-    
+
     --db-bg-gradient: linear-gradient(135deg, #1e293b 0%, #334155 100%);
     --db-card-gradient: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+
+    --db-surface: #1e293b;
+    --db-on-accent: #ffffff;
+    --db-border: #475569;
+    --db-border-gray: #445263;
+    --db-border-light: #4d5b6b;
+    --db-border-lighter: #4d5b6b;
+    --db-border-soft: #3d4a59;
+    --db-bg-soft: #263041;
+    --db-bg-soft2: #263041;
+    --db-bg-soft3: #263041;
+    --db-bg-soft4: #232d3c;
+    --db-bg-soft5: #232d3c;
+    --db-text-body: #cbd5e1;
+    --db-text-muted: #8296ab;
+    --db-text-faint: #64748b;
+    --db-danger-bg: rgba(239, 68, 68, 0.16);
+    --db-success-bg: rgba(16, 185, 129, 0.16);
+    --db-warning-bg: rgba(245, 158, 11, 0.16);
+    --db-info-bg: rgba(59, 130, 246, 0.18);
+    --db-primary-bg: rgba(102, 126, 234, 0.18);
+    --db-code-bg: #1b1f27;
+    --db-code-fg: #abb2bf;
   }
-  
-  .card {
+
+  body:not(.vscode-light):not(.vscode-dark):not(.vscode-high-contrast) .card {
     border-color: #475569;
   }
-  
-  .form-control,
-  .form-select {
+
+  body:not(.vscode-light):not(.vscode-dark):not(.vscode-high-contrast) .form-control,
+  body:not(.vscode-light):not(.vscode-dark):not(.vscode-high-contrast) .form-select {
     background: #1e293b;
     border-color: #475569;
     color: #f1f5f9;
   }
-  
-  .navbar {
+
+  body:not(.vscode-light):not(.vscode-dark):not(.vscode-high-contrast) .navbar {
     background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
   }
-  
-  .table {
+
+  body:not(.vscode-light):not(.vscode-dark):not(.vscode-high-contrast) .table {
     background: #1e293b;
   }
-  
-  .table th {
+
+  body:not(.vscode-light):not(.vscode-dark):not(.vscode-high-contrast) .table th {
     background: #475569;
     color: #f1f5f9;
   }
+}
+
+/* VSCode webview：编辑器暗色 / 高对比主题（变量与上面的 OS 暗色保持一致） */
+body.vscode-dark,
+body.vscode-high-contrast {
+  --db-light-color: #1e293b;
+  --db-gray-light: #334155;
+  --db-gray-medium: #475569;
+  --db-gray-dark: #94a3b8;
+  --db-darker-color: #cbd5e1;
+  --db-dark-color: #e2e8f0;
+  --db-black: #f8fafc;
+
+  --db-bg-gradient: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  --db-card-gradient: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+
+  --db-surface: #1e293b;
+  --db-on-accent: #ffffff;
+  --db-border: #475569;
+  --db-border-gray: #445263;
+  --db-border-light: #4d5b6b;
+  --db-border-lighter: #4d5b6b;
+  --db-border-soft: #3d4a59;
+  --db-bg-soft: #263041;
+  --db-bg-soft2: #263041;
+  --db-bg-soft3: #263041;
+  --db-bg-soft4: #232d3c;
+  --db-bg-soft5: #232d3c;
+  --db-text-body: #cbd5e1;
+  --db-text-muted: #8296ab;
+  --db-text-faint: #64748b;
+  --db-danger-bg: rgba(239, 68, 68, 0.16);
+  --db-success-bg: rgba(16, 185, 129, 0.16);
+  --db-warning-bg: rgba(245, 158, 11, 0.16);
+  --db-info-bg: rgba(59, 130, 246, 0.18);
+  --db-primary-bg: rgba(102, 126, 234, 0.18);
+  --db-code-bg: #1b1f27;
+  --db-code-fg: #abb2bf;
+}
+
+body.vscode-dark .card,
+body.vscode-high-contrast .card {
+  border-color: #475569;
+}
+
+body.vscode-dark .form-control,
+body.vscode-dark .form-select,
+body.vscode-high-contrast .form-control,
+body.vscode-high-contrast .form-select {
+  background: #1e293b;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+body.vscode-dark .navbar,
+body.vscode-high-contrast .navbar {
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+}
+
+body.vscode-dark .table,
+body.vscode-high-contrast .table {
+  background: #1e293b;
+}
+
+body.vscode-dark .table th,
+body.vscode-high-contrast .table th {
+  background: #475569;
+  color: #f1f5f9;
+}
+
+/* Bootstrap 的浅色工具类在暗色下过于刺眼/对比不足，统一改挂主题令牌 */
+body.vscode-dark .border-light,
+body.vscode-high-contrast .border-light,
+body.vscode-dark .bg-light,
+body.vscode-high-contrast .bg-light {
+  border-color: var(--db-border) !important;
+  background-color: var(--db-bg-soft) !important;
+}
+
+body.vscode-dark .btn-outline-secondary,
+body.vscode-high-contrast .btn-outline-secondary,
+body.vscode-dark .btn-outline-light,
+body.vscode-high-contrast .btn-outline-light {
+  color: var(--db-text-body) !important;
+  border-color: var(--db-border-light) !important;
+}
+
+body.vscode-dark .btn-outline-secondary:hover,
+body.vscode-high-contrast .btn-outline-secondary:hover,
+body.vscode-dark .btn-outline-light:hover,
+body.vscode-high-contrast .btn-outline-light:hover {
+  background-color: var(--db-bg-soft) !important;
+  color: var(--db-text-body) !important;
 }

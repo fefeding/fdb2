@@ -907,9 +907,9 @@ onMounted(() => {
 
 <style scoped>
 .section-title {
-  color: #495057;
+  color: var(--db-text-body);
   font-weight: 600;
-  border-bottom: 2px solid #e9ecef;
+  border-bottom: 2px solid var(--db-border-soft);
   padding-bottom: 0.5rem;
   margin-bottom: 1rem;
 }
@@ -919,7 +919,7 @@ onMounted(() => {
   font-size: 0.875rem;
   max-height: 200px;
   overflow-y: auto;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--db-border-lighter);
 }
 
 .table th {
@@ -963,6 +963,6 @@ onMounted(() => {
 }
 
 .text-muted {
-  color: #6c757d !important;
+  color: var(--db-text-muted) !important;
 }
 </style>

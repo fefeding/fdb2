@@ -229,6 +229,7 @@ import { useI18n } from 'vue-i18n';
 import { ConnectionService } from '@/service/database';
 import type { ConnectionEntity } from '@/typings/database';
 import * as echarts from 'echarts';
+import { chartTheme, onThemeChange } from '../utils/theme';
 
 const { t } = useI18n();
 
@@ -407,9 +408,15 @@ function updatePerformanceChart() {
     data.push(Math.floor(Math.random() * 50) + 10);
   }
   
+  const ct = chartTheme();
   const option: echarts.EChartsOption = {
+    // 图表是 canvas 绘制，不吃 CSS 变量：文字/轴线/网格色必须显式注入，否则暗色下几乎不可见
+    textStyle: ct.textStyle,
     tooltip: {
       trigger: 'axis',
+      backgroundColor: ct.tooltip.backgroundColor,
+      borderColor: ct.tooltip.borderColor,
+      textStyle: ct.tooltip.textStyle,
       formatter: (params: any) => {
         const p = params[0];
         return p.name + '<br/>' + t('monitor.seriesResponseTime') + ': ' + p.value + 'ms';
@@ -425,18 +432,18 @@ function updatePerformanceChart() {
       type: 'category',
       boundaryGap: false,
       data: categories,
-      axisLabel: {
-        fontSize: 12
-      }
+      axisLabel: ct.axisLabel,
+      axisLine: ct.axisLine
     },
     yAxis: {
       type: 'value',
       name: t('monitor.yAxisResponseTime'),
+      nameTextStyle: { color: ct.axisLabel.color },
       min: 0,
       max: 60,
-      axisLabel: {
-        fontSize: 12
-      }
+      axisLabel: ct.axisLabel,
+      axisLine: ct.axisLine,
+      splitLine: ct.splitLine
     },
     series: [
       {
@@ -477,9 +484,14 @@ function updateConnectionsChart() {
     data.push(Math.floor(Math.random() * 50) + 10);
   }
   
+  const ct = chartTheme();
   const option: echarts.EChartsOption = {
+    textStyle: ct.textStyle,
     tooltip: {
       trigger: 'axis',
+      backgroundColor: ct.tooltip.backgroundColor,
+      borderColor: ct.tooltip.borderColor,
+      textStyle: ct.tooltip.textStyle,
       formatter: (params: any) => {
         const p = params[0];
         return p.name + '<br/>' + t('monitor.seriesConnectionCount') + ': ' + p.value;
@@ -494,18 +506,18 @@ function updateConnectionsChart() {
     xAxis: {
       type: 'category',
       data: categories,
-      axisLabel: {
-        fontSize: 12
-      }
+      axisLabel: ct.axisLabel,
+      axisLine: ct.axisLine
     },
     yAxis: {
       type: 'value',
       name: t('monitor.yAxisConnectionCount'),
+      nameTextStyle: { color: ct.axisLabel.color },
       min: 0,
       max: 60,
-      axisLabel: {
-        fontSize: 12
-      }
+      axisLabel: ct.axisLabel,
+      axisLine: ct.axisLine,
+      splitLine: ct.splitLine
     },
     series: [
       {
@@ -585,15 +597,23 @@ function truncateSql(sql: string, maxLength = 50): string {
 }
 
 // 生命周期
+let offTheme: (() => void) | null = null;
+
 onMounted(() => {
   loadConnections();
   if (autoRefresh.value) {
     startAutoRefresh();
   }
+  // 主题切换后重画图表（canvas 不会自动跟随 CSS 变量）
+  offTheme = onThemeChange(() => {
+    updatePerformanceChart();
+    updateConnectionsChart();
+  });
 });
 
 onUnmounted(() => {
   stopAutoRefresh();
+  offTheme?.();
 });
 </script>
 
@@ -602,7 +622,7 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--db-surface);
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -613,8 +633,8 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border-bottom: 1px solid #cbd5e1;
+  background: linear-gradient(135deg, var(--db-light-color) 0%, var(--db-border) 100%);
+  border-bottom: 1px solid var(--db-gray-medium);
 }
 
 .monitor-title {
@@ -622,7 +642,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.5rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--db-dark-color);
   font-size: 1.1rem;
 }
 
@@ -634,9 +654,9 @@ onUnmounted(() => {
 
 .connection-select {
   padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--db-border-light);
   border-radius: 8px;
-  background: white;
+  background: var(--db-surface);
   min-width: 200px;
   font-size: 0.875rem;
 }
@@ -646,17 +666,17 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.25rem;
   padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--db-border-light);
   border-radius: 8px;
-  background: white;
-  color: #374151;
+  background: var(--db-surface);
+  color: var(--db-text-body);
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .btn-refresh:hover:not(:disabled) {
-  background: #f3f4f6;
+  background: var(--db-bg-soft);
   transform: translateY(-1px);
 }
 
@@ -679,12 +699,12 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: #374151;
+  color: var(--db-text-body);
 }
 
 .auto-refresh select {
   padding: 0.25rem 0.5rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--db-border-light);
   border-radius: 4px;
   font-size: 0.75rem;
 }
@@ -708,8 +728,8 @@ onUnmounted(() => {
   align-items: center;
   gap: 1rem;
   padding: 1.25rem;
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--db-surface);
+  border: 1px solid var(--db-border-gray);
   border-radius: 12px;
   transition: all 0.2s ease;
 }
@@ -726,7 +746,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--db-on-accent);
   font-size: 1.25rem;
 }
 
@@ -752,20 +772,20 @@ onUnmounted(() => {
 
 .status-title {
   font-size: 0.875rem;
-  color: #334155;
+  color: var(--db-darker-color);
   margin-bottom: 0.25rem;
 }
 
 .status-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--db-dark-color);
   margin-bottom: 0.25rem;
 }
 
 .status-detail {
   font-size: 0.75rem;
-  color: #475569;
+  color: var(--db-gray-dark);
 }
 
 /* 图表区域 */
@@ -777,8 +797,8 @@ onUnmounted(() => {
 }
 
 .chart-container {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--db-surface);
+  border: 1px solid var(--db-border-gray);
   border-radius: 12px;
   padding: 1.5rem;
 }
@@ -793,7 +813,7 @@ onUnmounted(() => {
 .chart-header h3 {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--db-dark-color);
   margin: 0;
 }
 
@@ -804,8 +824,8 @@ onUnmounted(() => {
 
 .range-btn {
   padding: 0.25rem 0.75rem;
-  border: 1px solid #e5e7eb;
-  background: white;
+  border: 1px solid var(--db-border-gray);
+  background: var(--db-surface);
   border-radius: 6px;
   font-size: 0.75rem;
   cursor: pointer;
@@ -813,12 +833,12 @@ onUnmounted(() => {
 }
 
 .range-btn:hover {
-  background: #f3f4f6;
+  background: var(--db-bg-soft);
 }
 
 .range-btn.active {
   background: #667eea;
-  color: white;
+  color: var(--db-on-accent);
   border-color: #667eea;
 }
 
@@ -836,8 +856,8 @@ onUnmounted(() => {
 
 /* 慢查询部分 */
 .slow-queries-section {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--db-surface);
+  border: 1px solid var(--db-border-gray);
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 2rem;
@@ -853,7 +873,7 @@ onUnmounted(() => {
 .section-header h3 {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--db-dark-color);
   margin: 0;
 }
 
@@ -864,7 +884,7 @@ onUnmounted(() => {
   padding: 0.5rem 1rem;
   border: 1px solid #ef4444;
   border-radius: 8px;
-  background: white;
+  background: var(--db-surface);
   color: #ef4444;
   font-size: 0.875rem;
   cursor: pointer;
@@ -873,7 +893,7 @@ onUnmounted(() => {
 
 .btn-clear:hover {
   background: #ef4444;
-  color: white;
+  color: var(--db-on-accent);
 }
 
 .queries-table-wrapper {
@@ -887,17 +907,17 @@ onUnmounted(() => {
 }
 
 .queries-table th {
-  background: #f8fafc;
+  background: var(--db-light-color);
   padding: 0.75rem;
   text-align: left;
   font-weight: 600;
-  color: #374151;
-  border-bottom: 2px solid #e5e7eb;
+  color: var(--db-text-body);
+  border-bottom: 2px solid var(--db-border-gray);
 }
 
 .queries-table td {
   padding: 0.75rem;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--db-bg-soft);
 }
 
 .execution-time {
@@ -908,24 +928,24 @@ onUnmounted(() => {
 
 .execution-time.good {
   color: #10b981;
-  background: #d1fae5;
+  background: var(--db-success-bg);
 }
 
 .execution-time.warning {
   color: #f59e0b;
-  background: #fef3c7;
+  background: var(--db-warning-bg);
 }
 
 .execution-time.critical {
   color: #ef4444;
-  background: #fee2e2;
+  background: var(--db-danger-bg);
 }
 
 .query-type {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-weight: 600;
-  color: white;
+  color: var(--db-on-accent);
   font-size: 0.75rem;
 }
 
@@ -947,7 +967,7 @@ onUnmounted(() => {
   padding: 0.25rem 0.5rem;
   border: 1px solid #667eea;
   border-radius: 4px;
-  background: white;
+  background: var(--db-surface);
   color: #667eea;
   font-size: 0.75rem;
   cursor: pointer;
@@ -956,26 +976,26 @@ onUnmounted(() => {
 
 .btn-analyze:hover {
   background: #667eea;
-  color: white;
+  color: var(--db-on-accent);
 }
 
 /* 空状态 */
 .empty-state {
   text-align: center;
   padding: 3rem 2rem;
-  color: #334155;
+  color: var(--db-darker-color);
 }
 
 .empty-state i {
   font-size: 3rem;
   margin-bottom: 1rem;
-  color: #9ca3af;
+  color: var(--db-text-faint);
 }
 
 .empty-state h3 {
   font-size: 1.25rem;
   margin-bottom: 0.5rem;
-  color: #374151;
+  color: var(--db-text-body);
 }
 
 .empty-state p {
@@ -985,13 +1005,13 @@ onUnmounted(() => {
 
 .empty-state small {
   font-size: 0.75rem;
-  color: #475569;
+  color: var(--db-gray-dark);
 }
 
 /* 资源使用部分 */
 .resources-section {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--db-surface);
+  border: 1px solid var(--db-border-gray);
   border-radius: 12px;
   padding: 1.5rem;
 }
@@ -1010,7 +1030,7 @@ onUnmounted(() => {
 
 .resource-label {
   font-size: 0.875rem;
-  color: #334155;
+  color: var(--db-darker-color);
   font-weight: 600;
 }
 
@@ -1023,7 +1043,7 @@ onUnmounted(() => {
 .resource-bar {
   flex: 1;
   height: 8px;
-  background: #f3f4f6;
+  background: var(--db-bg-soft);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -1040,7 +1060,7 @@ onUnmounted(() => {
 
 .resource-value span {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--db-dark-color);
   min-width: 40px;
   text-align: right;
 }

@@ -90,7 +90,7 @@ const databaseTypes = [
   gap: 1rem;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--db-border);
 }
 
 .about-logo {
@@ -101,7 +101,7 @@ const databaseTypes = [
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--db-on-accent);
   font-size: 2rem;
 }
 
@@ -109,12 +109,12 @@ const databaseTypes = [
   margin: 0;
   font-size: 2rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--db-dark-color);
 }
 
 .about-title p {
   margin: 0.25rem 0 0 0;
-  color: #64748b;
+  color: var(--db-text-muted);
   font-size: 1.125rem;
 }
 
@@ -125,7 +125,7 @@ const databaseTypes = [
 }
 
 .about-section {
-  background: white;
+  background: var(--db-surface);
   padding: 1.5rem;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
@@ -135,12 +135,12 @@ const databaseTypes = [
   margin: 0 0 1rem 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--db-dark-color);
 }
 
 .about-section p {
   margin: 0 0 1rem 0;
-  color: #64748b;
+  color: var(--db-text-muted);
   line-height: 1.6;
 }
 
@@ -155,7 +155,7 @@ const databaseTypes = [
   align-items: flex-start;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
-  color: #64748b;
+  color: var(--db-text-muted);
 }
 
 .feature-list li i {
@@ -175,17 +175,17 @@ const databaseTypes = [
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem;
-  background: #f8fafc;
+  background: var(--db-light-color);
   border-radius: 6px;
 }
 
 .db-name {
   font-weight: 500;
-  color: #374151;
+  color: var(--db-text-body);
 }
 
 .db-port {
-  color: #6b7280;
+  color: var(--db-text-muted);
   font-size: 0.875rem;
 }
 
@@ -200,7 +200,7 @@ const databaseTypes = [
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem;
-  background: #f8fafc;
+  background: var(--db-light-color);
   border-radius: 8px;
   color: #667eea;
   text-decoration: none;
@@ -209,7 +209,7 @@ const databaseTypes = [
 }
 
 .about-link:hover {
-  background: #e0e7ff;
+  background: var(--db-primary-bg);
   transform: translateX(4px);
 }
 

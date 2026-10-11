@@ -929,8 +929,8 @@ async function downloadSQLFile(content: string, filename: string) {
 }
 
 .table-header {
-  background-color: #f1f5f9;
-  border-bottom: 1px solid #cbd5e1;
+  background-color: var(--db-gray-light);
+  border-bottom: 1px solid var(--db-gray-medium);
   padding: 15px 20px;
 }
 
@@ -948,7 +948,7 @@ async function downloadSQLFile(content: string, filename: string) {
 
 .table-icon {
   font-size: 32px;
-  color: #1e293b;
+  color: var(--db-dark-color);
 }
 
 .table-meta {
@@ -968,7 +968,7 @@ async function downloadSQLFile(content: string, filename: string) {
   align-items: center;
   gap: 8px;
   font-size: 0.875rem;
-  color: #475569;
+  color: var(--db-gray-dark);
 }
 
 .table-stats {
@@ -986,12 +986,12 @@ async function downloadSQLFile(content: string, filename: string) {
 .stat-value {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--db-dark-color);
 }
 
 .stat-label {
   font-size: 0.75rem;
-  color: #475569;
+  color: var(--db-gray-dark);
 }
 
 .table-toolbar {
@@ -999,8 +999,8 @@ async function downloadSQLFile(content: string, filename: string) {
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  background-color: #f1f5f9;
-  border-bottom: 1px solid #cbd5e1;
+  background-color: var(--db-gray-light);
+  border-bottom: 1px solid var(--db-gray-medium);
 }
 
 .toolbar-left {
@@ -1023,13 +1023,13 @@ async function downloadSQLFile(content: string, filename: string) {
 }
 
 .nav-tabs {
-  border-bottom: 1px solid #cbd5e1;
-  background-color: #f1f5f9;
+  border-bottom: 1px solid var(--db-gray-medium);
+  background-color: var(--db-gray-light);
   flex-shrink: 0;
 }
 
 .nav-tabs .nav-link {
-  color: #334155;
+  color: var(--db-darker-color);
   border: none;
   border-bottom: 3px solid transparent;
   border-radius: 0;
@@ -1038,12 +1038,12 @@ async function downloadSQLFile(content: string, filename: string) {
 }
 
 .nav-tabs .nav-link:hover {
-  background-color: #e2e8f0;
-  border-bottom-color: #94a3b8;
+  background-color: var(--db-border);
+  border-bottom-color: var(--db-text-faint);
 }
 
 .nav-tabs .nav-link.active {
-  background-color: #fff;
+  background-color: var(--db-on-accent);
   border-bottom-color: #0d6efd;
   color: #0d6efd;
 }
@@ -1052,7 +1052,7 @@ async function downloadSQLFile(content: string, filename: string) {
   flex: 1;
   overflow: auto;
   padding: 20px;
-  background-color: #fff;
+  background-color: var(--db-on-accent);
   display: flex;
   flex-direction: column;
 }
@@ -1116,7 +1116,7 @@ async function downloadSQLFile(content: string, filename: string) {
   justify-content: center;
   height: 300px;
   gap: 15px;
-  color: #475569;
+  color: var(--db-gray-dark);
 }
 
 .empty-state i {
@@ -1126,7 +1126,7 @@ async function downloadSQLFile(content: string, filename: string) {
 
 .pagination-nav {
   margin-top: 20px;
-  border-top: 1px solid #cbd5e1;
+  border-top: 1px solid var(--db-gray-medium);
   padding-top: 15px;
 }
 
@@ -1140,7 +1140,7 @@ async function downloadSQLFile(content: string, filename: string) {
 
 .pagination-info {
   font-size: 0.875rem;
-  color: #475569;
+  color: var(--db-gray-dark);
 }
 
 .page-size-selector {

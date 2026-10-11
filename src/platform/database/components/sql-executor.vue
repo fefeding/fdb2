@@ -79,7 +79,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 // 导入CodeMirror相关模块
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightActiveLine, drawSelection, placeholder } from '@codemirror/view';
@@ -94,6 +94,7 @@ import { useI18n } from 'vue-i18n';
 import { DatabaseService } from '@/service/database';
 import { modal } from '@/utils/modal';
 import { exportDataToCSV, exportDataToJSON, formatFileName } from '../utils/export';
+import { isDarkTheme, onThemeChange } from '../utils/theme';
 
 // Props
 const props = defineProps<{
@@ -359,7 +360,8 @@ function initEditor() {
       drawSelection(),
       placeholder(t('sqlExecutor.inputSQLPlaceholder')),
       sql(),
-      oneDark,
+      // 暗色主题才套 oneDark，浅色主题下保持 CodeMirror 默认亮色，避免编辑器与界面割裂
+      ...(isDarkTheme() ? [oneDark] : []),
       keymap.of(defaultKeymap),
       EditorView.updateListener.of(update => {
         if (update.docChanged) {
@@ -378,15 +380,15 @@ function initEditor() {
           minHeight: '100%'
         },
         '.cm-gutters': {
-          backgroundColor: '#282c34',
-          color: '#abb2bf',
+          backgroundColor: 'var(--db-code-bg)',
+          color: 'var(--db-code-fg)',
           border: 'none'
         },
         '.cm-activeLineGutter': {
-          backgroundColor: '#282c34'
+          backgroundColor: 'var(--db-code-bg)'
         },
         '.cm-activeLine': {
-          backgroundColor: 'rgba(255, 255, 255, 0.1)'
+          backgroundColor: isDarkTheme() ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)'
         }
       })
     ]
@@ -423,33 +425,33 @@ function initResultEditor() {
           height: '100%',
           fontSize: '14px',
           fontFamily: 'Monaco, Menlo, Consolas, "Courier New", monospace',
-          backgroundColor: '#f8f9fa',
-          color: '#212529'
+          backgroundColor: 'var(--db-bg-soft2)',
+          color: 'var(--db-text-body)'
         },
         '.cm-content': {
           padding: '10px',
           minHeight: '100%',
-          backgroundColor: '#ffffff',
-          color: '#212529',
-          border: '1px solid #dee2e6'
+          backgroundColor: 'var(--db-surface)',
+          color: 'var(--db-text-body)',
+          border: '1px solid var(--db-border-lighter)'
         },
         '.cm-gutters': {
-          backgroundColor: '#f8f9fa',
-          color: '#6c757d',
-          border: '1px solid #dee2e6',
+          backgroundColor: 'var(--db-bg-soft2)',
+          color: 'var(--db-text-muted)',
+          border: '1px solid var(--db-border-lighter)',
           borderRight: 'none'
         },
         '.cm-activeLineGutter': {
-          backgroundColor: '#e9ecef'
+          backgroundColor: 'var(--db-border-soft)'
         },
         '.cm-activeLine': {
-          backgroundColor: '#e9ecef'
+          backgroundColor: 'var(--db-border-soft)'
         },
         '.cm-selectionBackground': {
-          backgroundColor: '#cce7ff'
+          backgroundColor: 'var(--db-info-bg)'
         },
         '.cm-line': {
-          color: '#212529'
+          color: 'var(--db-text-body)'
         }
       })
     ]
@@ -539,10 +541,27 @@ function formatJsonResult() {
 }
 
 // 生命周期
+let offTheme: (() => void) | null = null;
+
 onMounted(() => {
   // 初始化编辑器
   initEditor();
   initResultEditor();
+  // 主题切换后重建编辑器以套用/去掉 oneDark
+  offTheme = onThemeChange(() => {
+    editor.value?.destroy();
+    editor.value = null;
+    resultEditor.value?.destroy();
+    resultEditor.value = null;
+    initEditor();
+    initResultEditor();
+  });
+});
+
+onBeforeUnmount(() => {
+  offTheme?.();
+  editor.value?.destroy();
+  resultEditor.value?.destroy();
 });
 
 
@@ -571,7 +590,7 @@ watch(sqlResult, () => {
   align-items: center;
   margin-bottom: 10px;
   padding: 10px;
-  background-color: #f8f9fa;
+  background-color: var(--db-bg-soft2);
   border-radius: 4px;
 }
 
@@ -583,7 +602,7 @@ watch(sqlResult, () => {
 
 .sql-container {
   position: relative;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--db-border-lighter);
   border-radius: 4px;
   overflow: hidden;
   flex: 1;
@@ -601,7 +620,7 @@ watch(sqlResult, () => {
 .sql-result {
   position: relative;
   overflow: auto;
-  border-top: 1px solid #dee2e6;
+  border-top: 1px solid var(--db-border-lighter);
   flex: 1;
 }
 
@@ -612,7 +631,7 @@ watch(sqlResult, () => {
 
 .resizer {
   height: 8px;
-  background-color: #e9ecef;
+  background-color: var(--db-border-soft);
   cursor: ns-resize;
   display: flex;
   align-items: center;
@@ -620,29 +639,29 @@ watch(sqlResult, () => {
 }
 
 .resizer:hover {
-  background-color: #dee2e6;
+  background-color: var(--db-border-lighter);
 }
 
 .resizer::before {
   content: '';
   width: 40px;
   height: 2px;
-  background-color: #adb5bd;
+  background-color: var(--db-border-light);
   border-radius: 1px;
 }
 
 .resizer.resizing {
-  background-color: #dee2e6;
+  background-color: var(--db-border-lighter);
 }
 
 .resizer.resizing::before {
-  background-color: #6c757d;
+  background-color: var(--db-text-muted);
 }
 
 .sql-result {
   position: relative;
   overflow: auto;
-  border-top: 1px solid #dee2e6;
+  border-top: 1px solid var(--db-border-lighter);
 }
 
 .result-content {
@@ -656,8 +675,8 @@ watch(sqlResult, () => {
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+  background-color: var(--db-bg-soft2);
+  border-bottom: 1px solid var(--db-border-lighter);
 }
 
 .result-title {
@@ -685,8 +704,8 @@ watch(sqlResult, () => {
   justify-content: space-between;
   align-items: center;
   padding: 10px 12px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+  background-color: var(--db-bg-soft2);
+  border-bottom: 1px solid var(--db-border-lighter);
 }
 
 .result-actions {
@@ -722,7 +741,7 @@ watch(sqlResult, () => {
 
 .object-container td:first-child {
   font-weight: 500;
-  background-color: #f8f9fa;
+  background-color: var(--db-bg-soft2);
 }
 
 .sql-loading-state {
@@ -745,7 +764,7 @@ watch(sqlResult, () => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #6c757d;
+  color: var(--db-text-muted);
   gap: 10px;
 }
 

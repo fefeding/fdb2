@@ -515,7 +515,7 @@ watch(querySql, () => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: white;
+  background: var(--db-surface);
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -526,8 +526,8 @@ watch(querySql, () => {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, var(--db-light-color) 0%, var(--db-border) 100%);
+  border-bottom: 1px solid var(--db-border);
 }
 
 .query-title {
@@ -535,7 +535,7 @@ watch(querySql, () => {
   align-items: center;
   gap: 0.5rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--db-dark-color);
   font-size: 1.1rem;
 }
 
@@ -547,9 +547,9 @@ watch(querySql, () => {
 
 .connection-select {
   padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--db-border-light);
   border-radius: 8px;
-  background: white;
+  background: var(--db-surface);
   min-width: 200px;
   font-size: 0.875rem;
 }
@@ -559,17 +559,17 @@ watch(querySql, () => {
   align-items: center;
   gap: 0.25rem;
   padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--db-border-light);
   border-radius: 8px;
-  background: white;
-  color: #374151;
+  background: var(--db-surface);
+  color: var(--db-text-body);
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .query-controls button:hover:not(:disabled) {
-  background: #f3f4f6;
+  background: var(--db-bg-soft);
   transform: translateY(-1px);
 }
 
@@ -580,7 +580,7 @@ watch(querySql, () => {
 
 .btn-run {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-  color: white !important;
+  color: var(--db-on-accent) !important;
   border: none !important;
 }
 
@@ -590,13 +590,13 @@ watch(querySql, () => {
 
 .btn-format {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-  color: white !important;
+  color: var(--db-on-accent) !important;
   border: none !important;
 }
 
 .btn-save {
   background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
-  color: white !important;
+  color: var(--db-on-accent) !important;
   border: none !important;
 }
 
@@ -612,8 +612,8 @@ watch(querySql, () => {
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 1rem;
-  background: #f8fafc;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--db-light-color);
+  border-bottom: 1px solid var(--db-border-gray);
   font-size: 0.875rem;
 }
 
@@ -627,8 +627,8 @@ watch(querySql, () => {
   align-items: center;
   gap: 0.25rem;
   padding: 0.25rem 0.5rem;
-  background: white;
-  border: 1px solid #d1d5db;
+  background: var(--db-surface);
+  border: 1px solid var(--db-border-light);
   border-radius: 6px;
   font-size: 0.75rem;
   cursor: pointer;
@@ -637,7 +637,7 @@ watch(querySql, () => {
 
 .snippet-btn:hover {
   background: #667eea;
-  color: white;
+  color: var(--db-on-accent);
   border-color: #667eea;
 }
 
@@ -645,12 +645,12 @@ watch(querySql, () => {
   display: flex;
   gap: 1rem;
   align-items: center;
-  color: #6b7280;
+  color: var(--db-text-muted);
 }
 
 .sql-mode {
   background: #667eea;
-  color: white;
+  color: var(--db-on-accent);
   padding: 0.125rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -674,8 +674,8 @@ watch(querySql, () => {
   font-size: 14px;
   line-height: 1.5;
   resize: none;
-  background: #fafafa;
-  color: #1e293b;
+  background: var(--db-bg-soft4);
+  color: var(--db-dark-color);
   tab-size: 2;
   white-space: pre;
   overflow-wrap: normal;
@@ -688,13 +688,13 @@ watch(querySql, () => {
   top: 0;
   width: 3rem;
   padding: 1rem 0.5rem;
-  background: #f1f5f9;
-  border-right: 1px solid #e2e8f0;
+  background: var(--db-gray-light);
+  border-right: 1px solid var(--db-border);
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.5;
   text-align: right;
-  color: #64748b;
+  color: var(--db-text-muted);
   overflow: hidden;
   pointer-events: none;
 }
@@ -713,8 +713,8 @@ watch(querySql, () => {
 }
 
 .query-results {
-  background: white;
-  border-top: 1px solid #e2e8f0;
+  background: var(--db-surface);
+  border-top: 1px solid var(--db-border);
   max-height: 400px;
   display: flex;
   flex-direction: column;
@@ -725,8 +725,8 @@ watch(querySql, () => {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--db-light-color);
+  border-bottom: 1px solid var(--db-border);
 }
 
 .results-info {
@@ -734,11 +734,11 @@ watch(querySql, () => {
   align-items: center;
   gap: 0.5rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--db-dark-color);
 }
 
 .results-count {
-  color: #64748b;
+  color: var(--db-text-muted);
   font-weight: 400;
 }
 
@@ -752,22 +752,22 @@ watch(querySql, () => {
   align-items: center;
   gap: 0.25rem;
   padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--db-border-light);
   border-radius: 8px;
-  background: white;
-  color: #374151;
+  background: var(--db-surface);
+  color: var(--db-text-body);
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .results-actions button:hover {
-  background: #f3f4f6;
+  background: var(--db-bg-soft);
 }
 
 .btn-export {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-  color: white !important;
+  color: var(--db-on-accent) !important;
   border: none !important;
 }
 
@@ -781,7 +781,7 @@ watch(querySql, () => {
   align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
-  background: #fef2f2;
+  background: var(--db-danger-bg);
   border-left: 4px solid #ef4444;
   color: #991b1b;
 }
@@ -795,7 +795,7 @@ watch(querySql, () => {
 .error-message p {
   margin: 0.5rem 0 0 0;
   font-family: monospace;
-  background: #fee2e2;
+  background: var(--db-danger-bg);
   padding: 0.5rem;
   border-radius: 4px;
 }
@@ -814,24 +814,24 @@ watch(querySql, () => {
 }
 
 .results-table th {
-  background: #f8fafc;
+  background: var(--db-light-color);
   padding: 0.75rem;
   text-align: left;
   font-weight: 600;
-  color: #374151;
-  border-bottom: 2px solid #e5e7eb;
+  color: var(--db-text-body);
+  border-bottom: 2px solid var(--db-border-gray);
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
 }
 
 .results-table th:hover {
-  background: #f1f5f9;
+  background: var(--db-gray-light);
 }
 
 .results-table td {
   padding: 0.75rem;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--db-bg-soft);
   max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -839,7 +839,7 @@ watch(querySql, () => {
 }
 
 .results-table tr:hover {
-  background: #fafbfc;
+  background: var(--db-bg-soft3);
 }
 
 .pagination {
@@ -848,22 +848,22 @@ watch(querySql, () => {
   align-items: center;
   gap: 0.5rem;
   padding: 1rem;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background: var(--db-light-color);
+  border-top: 1px solid var(--db-border);
 }
 
 .pagination button {
   padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--db-border-light);
   border-radius: 6px;
-  background: white;
+  background: var(--db-surface);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .pagination button:hover:not(:disabled) {
   background: #667eea;
-  color: white;
+  color: var(--db-on-accent);
   border-color: #667eea;
 }
 
@@ -875,7 +875,7 @@ watch(querySql, () => {
 .page-info {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--db-text-muted);
 }
 
 /* 模态框样式 */
@@ -893,7 +893,7 @@ watch(querySql, () => {
 }
 
 .modal-content {
-  background: white;
+  background: var(--db-surface);
   border-radius: 12px;
   width: 90%;
   max-width: 500px;
@@ -905,14 +905,14 @@ watch(querySql, () => {
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--db-border-gray);
 }
 
 .modal-header h3 {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--db-dark-color);
 }
 
 .modal-close {
@@ -920,12 +920,12 @@ watch(querySql, () => {
   border: none;
   font-size: 1.25rem;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--db-text-muted);
   padding: 0.25rem;
 }
 
 .modal-close:hover {
-  color: #374151;
+  color: var(--db-text-body);
 }
 
 .modal-body {
@@ -940,14 +940,14 @@ watch(querySql, () => {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--db-text-body);
 }
 
 .form-input,
 .form-textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--db-border-light);
   border-radius: 8px;
   font-size: 0.875rem;
   transition: border-color 0.2s ease;
@@ -965,7 +965,7 @@ watch(querySql, () => {
   justify-content: flex-end;
   gap: 0.5rem;
   padding: 1.5rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--db-border-gray);
 }
 
 .btn-cancel,
@@ -978,19 +978,19 @@ watch(querySql, () => {
 }
 
 .btn-cancel {
-  background: white;
-  border: 1px solid #d1d5db;
-  color: #374151;
+  background: var(--db-surface);
+  border: 1px solid var(--db-border-light);
+  color: var(--db-text-body);
 }
 
 .btn-cancel:hover {
-  background: #f3f4f6;
+  background: var(--db-bg-soft);
 }
 
 .btn-confirm {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
-  color: white;
+  color: var(--db-on-accent);
 }
 
 .btn-confirm:hover:not(:disabled) {

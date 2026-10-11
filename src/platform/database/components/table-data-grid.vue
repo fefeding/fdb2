@@ -334,8 +334,8 @@ onMounted(() => {
 }
 
 .grid-footer-bar {
-    background: #f8f9fa;
-    border-top: 1px solid #dee2e6;
+    background: var(--db-bg-soft2);
+    border-top: 1px solid var(--db-border-lighter);
     padding: 8px 16px;
 }
 

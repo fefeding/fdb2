@@ -368,7 +368,7 @@ function getDbTypeClass(type: string): string {
 /* 主容器 */
 .database-dashboard-modern {
   min-height: calc(100vh - 200px);
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--db-light-color) 0%, var(--db-border) 100%);
   padding: 2rem 0;
 }
 
@@ -380,7 +380,7 @@ function getDbTypeClass(type: string): string {
 }
 
 .hero-content {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, var(--db-surface) 0%, var(--db-light-color) 100%);
   border-radius: 24px;
   padding: 3rem;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -451,7 +451,7 @@ function getDbTypeClass(type: string): string {
   align-items: center;
   gap: 0.5rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  color: var(--db-on-accent);
   padding: 0.5rem 1rem;
   border-radius: 20px;
   font-size: 0.875rem;
@@ -465,7 +465,7 @@ function getDbTypeClass(type: string): string {
   font-weight: 800;
   line-height: 1.1;
   margin-bottom: 1.5rem;
-  color: #1e293b;
+  color: var(--db-dark-color);
 }
 
 .gradient-text {
@@ -477,7 +477,7 @@ function getDbTypeClass(type: string): string {
 
 .hero-description {
   font-size: 1.125rem;
-  color: #334155;
+  color: var(--db-darker-color);
   line-height: 1.6;
   margin-bottom: 2rem;
   max-width: 600px;
@@ -506,7 +506,7 @@ function getDbTypeClass(type: string): string {
 
 .btn-primary-hero {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  color: var(--db-on-accent);
   box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
 }
 
@@ -516,14 +516,14 @@ function getDbTypeClass(type: string): string {
 }
 
 .btn-secondary-hero {
-  background: white;
+  background: var(--db-surface);
   color: #667eea;
   border: 2px solid #667eea;
 }
 
 .btn-secondary-hero:hover {
   background: #667eea;
-  color: white;
+  color: var(--db-on-accent);
   transform: translateY(-2px);
 }
 
@@ -559,12 +559,12 @@ function getDbTypeClass(type: string): string {
 .stat-number {
   font-size: 2rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--db-dark-color);
 }
 
 .stat-label {
   font-size: 0.875rem;
-  color: #334155;
+  color: var(--db-darker-color);
   font-weight: 600;
 }
 
@@ -593,7 +593,7 @@ function getDbTypeClass(type: string): string {
   justify-content: center;
   border-radius: 20px;
   font-size: 4rem;
-  color: white;
+  color: var(--db-on-accent);
   animation: rotate 20s linear infinite;
 }
 
@@ -628,7 +628,7 @@ function getDbTypeClass(type: string): string {
 }
 
 .stat-card-modern {
-  background: white;
+  background: var(--db-surface);
   border-radius: 20px;
   padding: 1.5rem;
   border: 1px solid rgba(203, 213, 225, 0.8);
@@ -657,7 +657,7 @@ function getDbTypeClass(type: string): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--db-on-accent);
   font-size: 1.5rem;
   flex-shrink: 0;
 }
@@ -686,19 +686,19 @@ function getDbTypeClass(type: string): string {
 .stat-card-modern .stat-number {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--db-dark-color);
   line-height: 1;
 }
 
 .stat-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--db-text-body);
 }
 
 .stat-description {
   font-size: 0.875rem;
-  color: #334155;
+  color: var(--db-darker-color);
 }
 
 /* 功能特性区域 */
@@ -719,7 +719,7 @@ function getDbTypeClass(type: string): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--db-on-accent);
   font-size: 1.5rem;
   margin: 0 auto 1rem;
   box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
@@ -728,12 +728,12 @@ function getDbTypeClass(type: string): string {
 .section-title {
   font-size: 2rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--db-dark-color);
   margin-bottom: 0.5rem;
 }
 
 .section-subtitle {
-  color: #334155;
+  color: var(--db-darker-color);
   font-size: 1.125rem;
   max-width: 600px;
   margin: 0 auto;
@@ -746,7 +746,7 @@ function getDbTypeClass(type: string): string {
 }
 
 .feature-card {
-  background: white;
+  background: var(--db-surface);
   border-radius: 20px;
   padding: 2rem;
   border: 1px solid rgba(203, 213, 225, 0.8);
@@ -778,7 +778,7 @@ function getDbTypeClass(type: string): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--db-on-accent);
   font-size: 1.5rem;
   position: relative;
   z-index: 2;
@@ -810,12 +810,12 @@ function getDbTypeClass(type: string): string {
 .feature-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--db-dark-color);
   margin-bottom: 0;
 }
 
 .feature-description {
-  color: #334155;
+  color: var(--db-darker-color);
   line-height: 1.6;
   flex-grow: 1;
 }
@@ -827,8 +827,8 @@ function getDbTypeClass(type: string): string {
 }
 
 .feature-tag {
-  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-  color: #334155;
+  background: linear-gradient(135deg, var(--db-border) 0%, var(--db-gray-medium) 100%);
+  color: var(--db-darker-color);
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
   font-size: 0.75rem;
@@ -845,7 +845,7 @@ function getDbTypeClass(type: string): string {
   height: 40px;
   border-radius: 10px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  color: var(--db-on-accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -870,7 +870,7 @@ function getDbTypeClass(type: string): string {
 }
 
 .quick-access-card {
-  background: white;
+  background: var(--db-surface);
   border-radius: 16px;
   padding: 1.5rem;
   border: 1px solid rgba(203, 213, 225, 0.8);
@@ -899,7 +899,7 @@ function getDbTypeClass(type: string): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--db-on-accent);
   font-size: 1.25rem;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
@@ -917,7 +917,7 @@ function getDbTypeClass(type: string): string {
 }
 
 .status-offline {
-  background: #475569;
+  background: var(--db-gray-dark);
 }
 
 .status-dot {
@@ -935,7 +935,7 @@ function getDbTypeClass(type: string): string {
 .connection-name {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--db-dark-color);
   margin-bottom: 0.5rem;
 }
 
@@ -944,7 +944,7 @@ function getDbTypeClass(type: string): string {
   flex-direction: column;
   gap: 0.25rem;
   font-size: 0.875rem;
-  color: #334155;
+  color: var(--db-darker-color);
 }
 
 .db-type {
@@ -953,7 +953,7 @@ function getDbTypeClass(type: string): string {
 }
 
 .connection-host {
-  color: #475569;
+  color: var(--db-gray-dark);
 }
 
 .quick-access-footer {
@@ -963,8 +963,8 @@ function getDbTypeClass(type: string): string {
 .quick-access-btn {
   width: 100%;
   padding: 0.75rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid #cbd5e1;
+  background: linear-gradient(135deg, var(--db-light-color) 0%, var(--db-gray-light) 100%);
+  border: 1px solid var(--db-gray-medium);
   border-radius: 10px;
   color: #667eea;
   font-weight: 500;
@@ -978,7 +978,7 @@ function getDbTypeClass(type: string): string {
 
 .quick-access-btn:hover {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  color: var(--db-on-accent);
   transform: translateY(-1px);
 }
 
@@ -991,10 +991,10 @@ function getDbTypeClass(type: string): string {
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 2rem;
-  background: white;
-  border: 2px solid #cbd5e1;
+  background: var(--db-surface);
+  border: 2px solid var(--db-gray-medium);
   border-radius: 12px;
-  color: #334155;
+  color: var(--db-darker-color);
   text-decoration: none;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -1002,7 +1002,7 @@ function getDbTypeClass(type: string): string {
 
 .view-all-btn:hover {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  color: var(--db-on-accent);
   border-color: transparent;
   transform: translateY(-2px);
 }
@@ -1030,12 +1030,12 @@ function getDbTypeClass(type: string): string {
 .empty-icon-wrapper {
   width: 100px;
   height: 100px;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--db-gray-light) 0%, var(--db-border) 100%);
   border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #475569;
+  color: var(--db-gray-dark);
   font-size: 3rem;
   position: relative;
   z-index: 2;
@@ -1081,13 +1081,13 @@ function getDbTypeClass(type: string): string {
 .empty-title {
   font-size: 2rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--db-dark-color);
   margin-bottom: 1rem;
 }
 
 .empty-description {
   font-size: 1.125rem;
-  color: #334155;
+  color: var(--db-darker-color);
   line-height: 1.6;
   margin-bottom: 2rem;
 }
@@ -1098,7 +1098,7 @@ function getDbTypeClass(type: string): string {
 .db-sqlite { background: linear-gradient(135deg, #003b57 0%, #002d42 100%); }
 .db-mssql { background: linear-gradient(135deg, #cc2927 0%, #a62220 100%); }
 .db-oracle { background: linear-gradient(135deg, #f80000 0%, #d40000 100%); }
-.db-default { background: linear-gradient(135deg, #64748b 0%, #475569 100%); }
+.db-default { background: linear-gradient(135deg, var(--db-text-muted) 0%, var(--db-gray-dark) 100%); }
 
 /* 响应式设计 */
 @media (max-width: 1024px) {

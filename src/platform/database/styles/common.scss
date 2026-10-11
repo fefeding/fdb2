@@ -10,16 +10,16 @@
   --error-color: #ef4444;
   --info-color: #3b82f6;
   
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
+  --text-primary: var(--db-dark-color);
+  --text-secondary: var(--db-text-muted);
+  --text-muted: var(--db-text-faint);
   
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #f1f5f9;
+  --bg-primary: var(--db-surface);
+  --bg-secondary: var(--db-light-color);
+  --bg-tertiary: var(--db-gray-light);
   
-  --border-color: #e5e7eb;
-  --border-hover: #d1d5db;
+  --border-color: var(--db-border-gray);
+  --border-hover: var(--db-border-light);
   --border-focus: #667eea;
   
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -91,7 +91,7 @@
   
   &.btn-primary {
     @extend .gradient-primary;
-    color: white;
+    color: var(--db-on-accent);
     border: none;
     
     &:hover:not(:disabled) {
@@ -101,25 +101,25 @@
   
   &.btn-success {
     @extend .gradient-success;
-    color: white;
+    color: var(--db-on-accent);
     border: none;
   }
   
   &.btn-warning {
     @extend .gradient-warning;
-    color: white;
+    color: var(--db-on-accent);
     border: none;
   }
   
   &.btn-danger {
     @extend .gradient-error;
-    color: white;
+    color: var(--db-on-accent);
     border: none;
   }
   
   &.btn-info {
     @extend .gradient-info;
-    color: white;
+    color: var(--db-on-accent);
     border: none;
   }
   
@@ -130,7 +130,7 @@
     
     &:hover:not(:disabled) {
       background: var(--primary-color);
-      color: white;
+      color: var(--db-on-accent);
     }
   }
   
@@ -494,7 +494,7 @@
     
     &:hover:not(:disabled) {
       background: var(--primary-color);
-      color: white;
+      color: var(--db-on-accent);
       border-color: var(--primary-color);
     }
     
@@ -505,7 +505,7 @@
     
     &.active {
       background: var(--primary-color);
-      color: white;
+      color: var(--db-on-accent);
       border-color: var(--primary-color);
     }
   }

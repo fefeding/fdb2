@@ -60,8 +60,8 @@ const appVersion = __APP_VERSION__;
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 1.25rem;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-bottom: 1px solid #cbd5e1;
+  background: linear-gradient(135deg, var(--db-surface) 0%, var(--db-light-color) 100%);
+  border-bottom: 1px solid var(--db-gray-medium);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
@@ -78,7 +78,7 @@ const appVersion = __APP_VERSION__;
   align-items: center;
   gap: 0.75rem;
   text-decoration: none;
-  color: #1e293b;
+  color: var(--db-dark-color);
   transition: all 0.3s ease;
 }
 
@@ -94,7 +94,7 @@ const appVersion = __APP_VERSION__;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--db-on-accent);
   font-size: 1.2rem;
 }
 
@@ -115,9 +115,9 @@ const appVersion = __APP_VERSION__;
   font-size: 0.78rem;
   font-weight: 600;
   line-height: 1;
-  color: #64748b;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  color: var(--db-text-muted);
+  background: var(--db-gray-light);
+  border: 1px solid var(--db-border);
   padding: 0.28rem 0.6rem;
   border-radius: 999px;
   letter-spacing: 0.02em;
@@ -130,13 +130,13 @@ const appVersion = __APP_VERSION__;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--db-light-color) 0%, var(--db-border) 100%);
 }
 
 /* 现代导航栏样式 */
 .navbar-modern {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-bottom: 1px solid #cbd5e1;
+  background: linear-gradient(135deg, var(--db-surface) 0%, var(--db-light-color) 100%);
+  border-bottom: 1px solid var(--db-gray-medium);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   padding: 0.75rem 0;
   position: sticky;
@@ -155,7 +155,7 @@ const appVersion = __APP_VERSION__;
   align-items: center;
   gap: 1rem;
   text-decoration: none;
-  color: #1e293b;
+  color: var(--db-dark-color);
   transition: all 0.3s ease;
 }
 
@@ -172,7 +172,7 @@ const appVersion = __APP_VERSION__;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--db-on-accent);
   font-size: 1.5rem;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
   transition: all 0.3s ease;
@@ -192,13 +192,13 @@ const appVersion = __APP_VERSION__;
 .brand-name {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--db-dark-color);
   letter-spacing: -0.025em;
 }
 
 .brand-subtitle {
   font-size: 0.75rem;
-  color: #334155;
+  color: var(--db-darker-color);
   font-weight: 500;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -245,7 +245,7 @@ const appVersion = __APP_VERSION__;
   gap: 0.75rem;
   padding: 0.75rem 1.25rem;
   border-radius: 12px;
-  color: #334155;
+  color: var(--db-darker-color);
   text-decoration: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -261,7 +261,7 @@ const appVersion = __APP_VERSION__;
 
 .nav-link-modern.active {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  color: var(--db-on-accent);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
@@ -286,7 +286,7 @@ const appVersion = __APP_VERSION__;
   transform: translateX(-50%);
   width: 4px;
   height: 4px;
-  background: white;
+  background: var(--db-surface);
   border-radius: 50%;
   opacity: 0;
   transition: all 0.3s ease;
@@ -335,7 +335,7 @@ const appVersion = __APP_VERSION__;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--db-on-accent);
   font-size: 1.25rem;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
@@ -349,17 +349,17 @@ const appVersion = __APP_VERSION__;
 .user-name {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--db-dark-color);
 }
 
 .user-role {
   font-size: 0.75rem;
-  color: #334155;
+  color: var(--db-darker-color);
   font-weight: 500;
 }
 
 .dropdown-arrow {
-  color: #475569;
+  color: var(--db-gray-dark);
   font-size: 0.75rem;
   transition: all 0.3s ease;
 }
@@ -371,8 +371,8 @@ const appVersion = __APP_VERSION__;
 
 /* 现代下拉菜单样式 */
 .dropdown-menu-modern {
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--db-surface);
+  border: 1px solid var(--db-gray-medium);
   border-radius: 16px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05);
   padding: 0.75rem;
@@ -385,10 +385,10 @@ const appVersion = __APP_VERSION__;
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #475569;
+  color: var(--db-gray-dark);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--db-gray-light);
   margin-bottom: 0.5rem;
 }
 
@@ -398,20 +398,20 @@ const appVersion = __APP_VERSION__;
   gap: 0.75rem;
   padding: 0.75rem;
   border-radius: 8px;
-  color: #374151;
+  color: var(--db-text-body);
   text-decoration: none;
   transition: all 0.2s ease;
   margin-bottom: 2px;
 }
 
 .dropdown-item-modern:hover {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--db-light-color) 0%, var(--db-gray-light) 100%);
   color: #667eea;
   transform: translateX(4px);
 }
 
 .dropdown-item-modern.text-danger:hover {
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  background: linear-gradient(135deg, var(--db-danger-bg) 0%, var(--db-danger-bg) 100%);
   color: #dc2626;
 }
 
@@ -429,13 +429,13 @@ const appVersion = __APP_VERSION__;
 
 .dropdown-item-desc {
   font-size: 0.75rem;
-  color: #475569;
+  color: var(--db-gray-dark);
 }
 
 .dropdown-divider-modern {
   margin: 0.75rem -0.75rem;
   border: none;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--db-border);
 }
 
 /* 主要内容区域 */
@@ -484,12 +484,12 @@ const appVersion = __APP_VERSION__;
   padding: 0.4rem 0.75rem;
   border-radius: 8px;
   cursor: pointer;
-  color: #64748b;
+  color: var(--db-text-muted);
   font-size: 0.85rem;
   font-weight: 600;
   transition: all 0.3s ease;
   user-select: none;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--db-gray-medium);
   background: rgba(255, 255, 255, 0.8);
 }
 
@@ -519,7 +519,7 @@ const appVersion = __APP_VERSION__;
   max-width: 860px;
   max-height: 90vh;
   overflow-y: auto;
-  background: #ffffff;
+  background: var(--db-surface);
   border-radius: 16px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
 }
@@ -534,16 +534,16 @@ const appVersion = __APP_VERSION__;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--db-gray-medium);
   border-radius: 8px;
-  background: #ffffff;
-  color: #64748b;
+  background: var(--db-surface);
+  color: var(--db-text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .about-modal-close:hover {
-  background: #f1f5f9;
+  background: var(--db-gray-light);
   color: #667eea;
   border-color: #667eea;
 }

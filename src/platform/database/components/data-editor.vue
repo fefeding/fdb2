@@ -91,7 +91,7 @@
                 </select>
                 <!-- JSON类型 -->
                 <div v-else-if="isJsonInput(column.type, 'input') || isArrayInput(column.type)" class="json-editor">
-                  <div class="json-editor-container" :ref="(el) => setJsonEditorRef(el, column.name)" style="border: 1px solid #dee2e6; border-radius: 0.375rem; overflow: hidden; height: 200px;">
+                  <div class="json-editor-container" :ref="(el) => setJsonEditorRef(el, column.name)" style="border: 1px solid var(--db-border-lighter); border-radius: 0.375rem; overflow: hidden; height: 200px;">
                   </div>
                   <div class="d-flex justify-content-between mt-1">
                     <small :class="jsonError[column.name] ? 'text-danger' : 'text-success'">
@@ -229,23 +229,23 @@ function initJsonEditors() {
               height: '100%',
               fontSize: '14px',
               fontFamily: 'Monaco, Menlo, Consolas, "Courier New", monospace',
-              backgroundColor: '#f8f9fa'
+              backgroundColor: 'var(--db-bg-soft2)'
             },
             '.cm-content': {
               padding: '10px',
               minHeight: '100%',
-              backgroundColor: '#ffffff'
+              backgroundColor: 'var(--db-surface)'
             },
             '.cm-gutters': {
-              backgroundColor: '#f8f9fa',
-              color: '#6c757d',
-              borderRight: '1px solid #dee2e6'
+              backgroundColor: 'var(--db-bg-soft2)',
+              color: 'var(--db-text-muted)',
+              borderRight: '1px solid var(--db-border-lighter)'
             },
             '.cm-activeLineGutter': {
-              backgroundColor: '#e9ecef'
+              backgroundColor: 'var(--db-border-soft)'
             },
             '.cm-activeLine': {
-              backgroundColor: '#e9ecef'
+              backgroundColor: 'var(--db-border-soft)'
             }
           })
         ]
@@ -555,11 +555,11 @@ function getPrimaryKeyWhere() {
 
 .form-label {
   font-weight: 500;
-  color: #374151;
+  color: var(--db-text-body);
 }
 
 .form-control, .form-select {
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--db-border-light);
   border-radius: 6px;
 }
 
@@ -569,18 +569,18 @@ function getPrimaryKeyWhere() {
 }
 
 .modal-header {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, var(--db-light-color) 0%, var(--db-gray-light) 100%);
+  border-bottom: 1px solid var(--db-border);
 }
 
 .modal-title {
-  color: #1e293b;
+  color: var(--db-dark-color);
   font-weight: 600;
 }
 
 .modal-footer {
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background: var(--db-light-color);
+  border-top: 1px solid var(--db-border);
 }
 
 .text-danger {
@@ -588,7 +588,7 @@ function getPrimaryKeyWhere() {
 }
 
 .text-muted {
-  color: #6b7280;
+  color: var(--db-text-muted);
   font-size: 0.875rem;
 }
 
