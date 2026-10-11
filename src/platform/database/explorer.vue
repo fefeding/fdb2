@@ -1280,7 +1280,7 @@ function showToast(title: string, message: string, type: string = 'success') {
   padding: 0.375rem 0.625rem;
   font-size: 0.75rem;
   border: 1px solid var(--db-border);
-  background-color: var(--db-on-accent);
+  background-color: var(--db-surface);
   color: var(--db-text-body);
   border-radius: 6px;
   transition: all 0.15s ease;

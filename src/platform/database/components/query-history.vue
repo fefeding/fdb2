@@ -1015,7 +1015,8 @@ onMounted(() => {
 
 .sql-editor {
   position: relative;
-  background: var(--db-dark-color);
+  /* 深色代码块：两个主题下都应保持深底（原为 --db-dark-color，暗色下会反转为亮块） */
+  background: var(--db-code-bg);
   border-radius: 8px;
   padding: 1rem;
   overflow-x: auto;

@@ -1043,7 +1043,7 @@ async function downloadSQLFile(content: string, filename: string) {
 }
 
 .nav-tabs .nav-link.active {
-  background-color: var(--db-on-accent);
+  background-color: var(--db-surface);
   border-bottom-color: #0d6efd;
   color: #0d6efd;
 }
@@ -1052,7 +1052,7 @@ async function downloadSQLFile(content: string, filename: string) {
   flex: 1;
   overflow: auto;
   padding: 20px;
-  background-color: var(--db-on-accent);
+  background-color: var(--db-surface);
   display: flex;
   flex-direction: column;
 }
