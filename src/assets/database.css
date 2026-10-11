@@ -1125,3 +1125,56 @@ body.vscode-high-contrast .btn-outline-light:hover {
   background-color: var(--db-bg-soft) !important;
   color: var(--db-text-body) !important;
 }
+/* ------------------------------------------------------------------
+ * webview：显式接管 Bootstrap 的基础文本/背景色与标题色。
+ * 之前只靠 data-bs-theme 间接切换，一旦宿主变量未按预期生效，
+ * 表名/标题等继承链上的文字就会保持黑色（--bs-body-color 默认 #212529）。
+ * 这里按主题类直接给出取值，两个方向都锁死。
+ * ------------------------------------------------------------------ */
+body.vscode-light {
+  color: var(--db-dark-color);
+  --bs-body-bg: var(--db-light-color);
+  --bs-body-color: var(--db-dark-color);
+  --bs-secondary-bg: var(--db-bg-soft);
+  --bs-secondary-color: var(--db-text-muted);
+  --bs-tertiary-bg: var(--db-bg-soft2);
+  --bs-tertiary-color: var(--db-text-muted);
+  --bs-emphasis-color: var(--db-black);
+  --bs-border-color: var(--db-border);
+  --bs-heading-color: var(--db-dark-color);
+}
+
+body.vscode-dark,
+body.vscode-high-contrast {
+  color: var(--db-dark-color);
+  --bs-body-bg: var(--db-light-color);
+  --bs-body-color: var(--db-dark-color);
+  --bs-secondary-bg: var(--db-bg-soft);
+  --bs-secondary-color: var(--db-text-muted);
+  --bs-tertiary-bg: var(--db-bg-soft2);
+  --bs-tertiary-color: var(--db-text-muted);
+  --bs-emphasis-color: var(--db-black);
+  --bs-border-color: var(--db-border);
+  --bs-heading-color: var(--db-dark-color);
+}
+
+/* 标题与表格文本兜底：Bootstrap 的 heading / table 走 --bs-*-color，
+   上面已覆盖变量，这里再兜一层避免个别版本变量缺失 */
+body.vscode-dark h1,
+body.vscode-dark h2,
+body.vscode-dark h3,
+body.vscode-dark h4,
+body.vscode-dark h5,
+body.vscode-dark h6,
+body.vscode-high-contrast h1,
+body.vscode-high-contrast h2,
+body.vscode-high-contrast h3,
+body.vscode-high-contrast h4,
+body.vscode-high-contrast h5,
+body.vscode-high-contrast h6,
+body.vscode-dark .table,
+body.vscode-high-contrast .table,
+body.vscode-dark .table-name,
+body.vscode-high-contrast .table-name {
+  color: var(--db-dark-color);
+}
