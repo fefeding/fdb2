@@ -1,89 +1,227 @@
-# Database Tool (fdb2) — VSCode 扩展
+# Database Tool (fdb2) — VSCode Extension
 
-把 `fdb2` 数据库管理工具完整搬进 VSCode。复用 `db_tool/server` 的后端（`TypeORM` + 各数据库方言服务），UI 复用 `src/platform/vscode` 的 Vue 面板，通过 Webview `postMessage` 与扩展宿主通信。
+> A full-featured database management extension for Visual Studio Code, bringing the `fdb2` desktop tool right into your editor. Manage connections, browse schemas, run SQL, and edit table data **without ever leaving VSCode**.
 
-## 功能
+The extension embeds the `fdb2` web UI inside a VSCode Webview. The native **Activity Bar tree** is used for navigation, while the rich content (connection overview, database detail, table data/structure) is rendered by the same Vue UI reused from the desktop app. The host (`TypeScript`) talks to the webview through `postMessage`, and reuses the `db_tool/server` backend (`TypeORM` + per-database dialects).
 
-- **连接管理**：Activity Bar 中「Database Tool」视图，增 / 删 / 改 / 测试数据库连接（配置默认与桌面端 db_tool 共享用户主目录 `~/.fdb2/connections.json`，可在设置 `dbtool.dataDir` 覆盖）。
-- **对象浏览**：树形视图 连接 → 库 → 表 → 列。
-- **SQL 查询**：独立查询面板，执行任意 SQL 并展示结果表格（支持 Ctrl/Cmd+Enter）。
-- **数据浏览**：表数据分页查看、WHERE 筛选。
-- **表结构**：列 / 索引 / 外键查看。
-- **支持数据库**：MySQL、PostgreSQL、SQL Server、SQLite、Oracle、CockroachDB、MongoDB、SAP HANA、ClickHouse（Oracle/SQLite/SAP 需要原生驱动，见下文）。
+---
 
-## 目录结构
+## ✨ Features
+
+- **Connection management** — Add / edit / delete / test connections from the Activity Bar's **Database Tool** view. Connection config is shared with the desktop `fdb2` app under `~/.fdb2/connections.json` (overridable via the `dbtool.dataDir` setting).
+- **Object explorer tree** — A native VSCode tree: **Connection → Database → Table → Column**. Click any node to open the related panel.
+- **Per-connection tabs** — Clicking the *same* connection (or its databases/tables) reuses the same editor tab; clicking a *different* connection opens a brand-new tab, so you can compare multiple databases side by side.
+- **SQL query** — A dedicated query panel that executes arbitrary SQL and renders results as a sortable, paginated table (`Ctrl/Cmd+Enter` to run).
+- **Data browsing & editing** — Paginated table data with WHERE filtering, row insert/edit/delete, and CSV export.
+- **Table structure** — Inspect columns, types, primary keys, indexes, foreign keys and relationships.
+- **Supported databases** — MySQL, PostgreSQL, SQL Server, SQLite, Oracle, CockroachDB, MongoDB, SAP HANA, ClickHouse. (Oracle / SQLite / SAP HANA require native drivers — see *Native drivers* below.)
+
+---
+
+## 📥 Installation
+
+### From the Marketplace (recommended)
+Search for **"Database Tool (fdb2)"** in the VSCode Extensions view (`Ctrl/Cmd+Shift+X`) and click **Install**.
+
+### From source (for development)
+```bash
+# 1. Install extension dependencies (esbuild, typescript, native drivers…)
+cd packages/vscode && npm install
+
+# 2. Build host + webview
+cd packages/vscode && npm run build      # equals esbuild + root vite build
+
+# 3. Press F5 in VSCode to launch the "Extension Development Host"
+```
+
+Equivalent scripts from the repo root:
+- `npm run build:vscode` — webview only
+- `npm run build:vscode:extension` — host only
+- `npm run vscode:dev` — host in watch mode
+- `npm run vscode:package` — package a `.vsix`
+
+---
+
+## 🚀 Getting Started
+
+### 1. Open the Database Tool view
+Click the **Database Tool** icon in the Activity Bar (left side). If you don't see it, open the Command Palette (`Ctrl/Cmd+Shift+P`) and run **`Database Tool: Add Connection`** — that will reveal the view automatically.
+
+The tree starts empty with a hint: *"No connections, click + to add"*.
+
+### 2. Add a connection
+There are three ways to open the **Add Connection** form:
+- Click the **`+`** button at the top of the Database Tool view.
+- Right-click empty space in the tree and choose **Add Connection**.
+- Run the command **`Database Tool: Add Connection`** from the Command Palette.
+
+Fill in:
+| Field | Description |
+| --- | --- |
+| Name | A friendly label (shown in the tree and tab title). |
+| Type | `mysql`, `postgres`, `sqlserver`, `sqlite`, `oracle`, `mongodb`, `clickhouse`, `cockroachdb`, `sap` … |
+| Host / Port | Server address (ignored for SQLite file-based databases). |
+| User / Password | Credentials. |
+| Database | Optional default database. |
+| (SQLite) File | Absolute path to the `.db` / `.sqlite` file. |
+| (ClickHouse) Auth | Uses the HTTP interface (default port `8123`) with Basic auth and the default user `default`. |
+
+Then click **Save**. The connection appears in the tree and the form panel closes.
+
+> 💡 Connections are stored at `~/.fdb2/connections.json` and are **shared** with the desktop `fdb2` app by default.
+
+### 3. Test a connection
+Right-click a connection → **Test Connection** (or use the inline `✓` action). A success/error toast appears.
+
+### 4. Browse the schema
+Expand a connection to see its **databases**, expand a database to see its **tables**, expand a table to see its **columns**. Each level is loaded lazily from the live database.
+
+### 5. Open the workbench (content area)
+Click a **connection / database / table** node (or use the inline `$(database)` / `$(table)` actions) to open the **workbench** webview on the right:
+- **Connection node** → connection overview: quick actions, database list, and tabs for *Databases / SQL Query*.
+- **Database node** → database detail: tables, views, stored procedures, and structure tabs.
+- **Table node** → table detail with *Data / Structure / Indexes / Relationships / SQL* tabs.
+
+The webview's left sidebar tree is hidden inside the editor — all navigation is driven by the **native Activity Bar tree**, which is the single source of truth.
+
+### 6. Tab behavior (important)
+- Clicking the **same connection** (or any of its databases/tables) keeps you in the **same editor tab**; the tab title updates to reflect the current object, e.g. `server.jm47.com · db_account · users`.
+- Clicking a **different connection** opens a **new editor tab**. Close a tab anytime; reopening that connection creates a fresh tab (no conflict).
+
+### 7. Work with table data
+Open a table → **Data** tab:
+- **Pagination** — the bottom bar shows `total records · < prev 1 2 3 … next > · page size` all on **one line**. Change page size via the dropdown (10/20/50/100).
+- **Sorting** — click a column header to cycle `ASC → DESC → none`.
+- **Filtering** — use the filter controls to add `WHERE` conditions.
+- **Edit / Delete** — use the row action buttons (`✏️` / `🗑️`); `✏️` opens an inline editor.
+- **Insert** — the **Insert Data** toolbar button adds a new row.
+- **Export** — the **Export** dropdown supports CSV (and other formats).
+
+Column headers use a fixed light theme so names are always readable regardless of your VSCode color theme.
+
+### 8. Inspect table structure
+The **Structure** tab lists columns (name, type, nullable, default, primary key, comment). Additional tabs show **Indexes**, **Foreign Keys / Relationships**, and the generated **SQL** DDL.
+
+### 9. Run SQL
+From a connection's inline `$(terminal)` action (or the command **`Database Tool: New Query`**), open the **SQL Query** panel:
+- Write SQL in the editor (syntax highlighting + snippets).
+- Press `Ctrl/Cmd+Enter` to execute.
+- Results render in a sortable, paginated grid.
+
+### 10. Context menu quick actions
+Right-click tree items for context actions:
+
+| Node | Actions |
+| --- | --- |
+| Connection | Open Database Browser, New Query, Test Connection, Delete |
+| Table | View Data, View Structure |
+
+---
+
+## ⚙️ Settings
+
+Open **Settings → Extensions → Database Tool** (or add to `settings.json`):
+
+| Setting | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dbtool.queryLimit` | number | `200` | Max rows returned per page for queries and table data. |
+| `dbtool.dataDir` | string | `""` (empty) | Directory for connection config & cache. Empty = reuse the desktop `db_tool` `~/.fdb2` (so existing connections are shared). |
+
+Example:
+```json
+{
+  "dbtool.queryLimit": 100,
+  "dbtool.dataDir": "/custom/path/.fdb2"
+}
+```
+
+---
+
+## 🧩 Native drivers
+
+The host marks `oracledb`, `better-sqlite3`, `sqlite3`, and `@sap/hana-client` as **external** and loads them from this extension's `node_modules` at runtime. To use **Oracle / SQLite / SAP HANA**, these native modules must be compiled against the Node ABI that VSCode's host uses. From the `packages/vscode` directory:
+
+```bash
+npm rebuild            # recompile native modules for the current Node ABI
+# or reinstall under VSCode's Node:
+npm install --runtime=electron --target=<vscode-node-version>
+```
+
+**MySQL / PostgreSQL / SQL Server / ClickHouse / MongoDB / CockroachDB** use pure-JS drivers and work out of the box.
+
+---
+
+## 🏗️ Architecture
 
 ```
 packages/vscode/
-├── package.json            # 扩展清单（viewsContainers/views/commands/menus/configuration）
-├── esbuild.js             # 宿主构建（打包 server + 驱动，外部化原生模块）
+├── package.json            # extension manifest (viewsContainers/views/commands/menus/configuration)
+├── esbuild.js             # host bundler (bundles server + drivers, externalizes native modules)
 ├── tsconfig.json
 ├── src/
-│   ├── extension.ts        # 入口：注册树视图、命令、Webview 提供者
-│   ├── prelude.ts          # 在加载 server 前设置数据目录与 reflect-metadata
-│   ├── protocol.ts         # 宿主<->Webview 消息协议 + 结果规范化
-│   ├── service/DatabaseBridge.ts     # 桥接 handleDatabaseRoutes
+│   ├── extension.ts        # entry: registers tree view, commands, webview providers
+│   ├── prelude.ts          # sets data dir + reflect-metadata before loading server
+│   ├── protocol.ts         # host <-> webview message protocol + result normalization
+│   ├── service/DatabaseBridge.ts     # bridges handleDatabaseRoutes
 │   └── providers/
-│       ├── DatabaseTreeProvider.ts   # 侧边栏树形视图
-│       └── WebViewProvider.ts        # 各类面板与消息路由
+│       ├── DatabaseTreeProvider.ts   # Activity Bar tree (native navigation)
+│       └── WebViewProvider.ts        # panels + message routing
 └── resources/
     ├── activity-icon.svg
-    └── webview/            # 由 vite.config.vscode.ts 构建（main.js）
+    └── webview/            # built by vite.config.vscode.ts (main.js)
 ```
 
-## 构建与调试
+**Communication** — Host and webview exchange `postMessage`s. The protocol lives in `src/protocol.ts`; the webview bridge layer is `src/platform/vscode/bridge.ts`. A `ready` handshake flushes the first navigation so the panel never opens blank.
 
-扩展宿主与 Webview 分别构建：
+---
+
+## 🔧 Build & Debug
+
+The host and the webview are built separately:
 
 ```bash
-# 1. 安装扩展依赖（esbuild / typescript / 原生驱动等）
+# 1. Install extension deps
 cd packages/vscode && npm install
 
-# 2A. 单次构建（宿主 + Webview）
-cd packages/vscode && npm run build          # 等价于 esbuild + 根目录 vite build
+# 2A. One-shot build (host + webview)
+cd packages/vscode && npm run build          # esbuild + root vite build
 
-# 2B. 监听模式（开发）
-cd packages/vscode && npm run watch          # 仅宿主；Webview 改完跑 npm run build:webview
+# 2B. Watch mode (dev) — host only; rebuild webview with npm run build:webview
+cd packages/vscode && npm run watch
 
-# 3. 在 VSCode 中按 F5 启动「Extension Development Host」调试
+# 3. Press F5 in VSCode -> "Extension Development Host"
 ```
 
-根目录 `db_tool` 也提供了等价脚本：`npm run build:vscode`（仅 Webview）、`npm run build:vscode:extension`（仅宿主）、`npm run vscode:dev`（宿主 watch）、`npm run vscode:package`（打包 vsix）。
+---
 
-## 发布
+## 📦 Publishing
 
-### 本地手动发布
-
+### Manual
 ```bash
 cd packages/vscode && npm install
-cd packages/vscode && npm run vscode:prepublish   # 生产构建（宿主 esbuild + Webview vite）
-../../node_modules/.bin/vsce package              # 生成 .vsix
-../../node_modules/.bin/vsce publish -p <PAT>    # 发布到 VS Code Marketplace
-../../node_modules/.bin/ovsx publish *.vsix -p <OVSX_TOKEN>   # 发布到 Open VSX
+cd packages/vscode && npm run vscode:prepublish   # production build (esbuild + vite)
+../../node_modules/.bin/vsce package               # produce .vsix
+../../node_modules/.bin/vsce publish -p <PAT>      # VS Code Marketplace
+../../node_modules/.bin/ovsx publish *.vsix -p <OVSX_TOKEN>   # Open VSX
 ```
 
-### 通过 GitHub Actions 自动发布
+### Automated via GitHub Actions
+`.github/workflows/build-vsix.yml` (aligned with `vscode-pptx`):
+- **Every push/PR to `main`** — builds the `.vsix` and uploads it as a CI artifact.
+- **Tagging `dbtool-v*` (e.g. `dbtool-v1.0.1`)** — creates a GitHub Release (with the `.vsix`) and publishes to **VS Code Marketplace** *and* **Open VSX** independently.
 
-仓库已配置 `.github/workflows/build-vsix.yml`，行为对齐 `vscode-pptx`：
+Required repository secrets (`Settings → Secrets and variables → Actions`):
 
-- **每次 push / PR 到 `main`**：自动构建 `.vsix` 并作为 CI 产物上传（便于下载验证）。
-- **打 `dbtool-v*` 标签（如 `dbtool-v1.0.1`）时**：自动创建 GitHub Release（附带 `.vsix`），并分别发布到 **VS Code Marketplace** 与 **Open VSX**。两个发布任务相互独立，一个失败不影响另一个。
-
-前提（在仓库 `Settings → Secrets and variables → Actions` 中配置）：
-
-| 名称 | 类型 | 用途 |
+| Name | Type | Purpose |
 | --- | --- | --- |
-| `VSCODE_TOKEN` | Secret | Azure DevOps PAT，权限 `Marketplace > Manage`，属于 `package.json` 中的 `publisher` |
-| `OVSX_TOKEN` | Secret（或 Variable） | Open VSX 访问令牌 |
+| `VSCODE_TOKEN` | Secret | Azure DevOps PAT with `Marketplace > Manage`, owned by the `publisher` in `package.json`. |
+| `OVSX_TOKEN` | Secret / Variable | Open VSX access token. |
 
-> 标签必须与 `packages/vscode/package.json` 的 `version` 一致（脚本会自动校验），否则发布步骤会报错。发布前先在该 `package.json` 中 `version` 字段递增。
+> The tag must match the `version` field in `packages/vscode/package.json` (auto-validated). Bump `version` before releasing.
+> `dbtool-v*` tags are independent from the Electron app's `v*` release tags to avoid cross-triggering.
 
-> 注意：`dbtool-v*` 标签与 Electron 应用的 `v*` 发布标签相互独立，避免两个发布流程相互干扰。
+---
 
-## 原生驱动说明
+## 📄 License
 
-宿主将 `oracledb` / `better-sqlite3` / `sqlite3` / `@sap/hana-client` 设为 **external**，运行时从本扩展的 `node_modules` 加载。为使 Oracle / SQLite / SAP HANA 连接可用，需在本机针对 VSCode 宿主的 Node ABI 编译这些原生模块（例如 `npm rebuild` 或在 Electron/VSCode 环境下重新安装）。MySQL / PostgreSQL / SQL Server / ClickHouse / MongoDB / CockroachDB 为纯 JS 驱动，开箱即用。
-
-## 协议
-
-宿主与 Webview 通过 `postMessage` 通信，消息协议见 `src/protocol.ts`。Webview 侧桥接层为 `src/platform/vscode/bridge.ts`。
+MIT — fully open source and free to use.

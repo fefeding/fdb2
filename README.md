@@ -78,6 +78,25 @@ http://localhost:9800
 
 > 💡 **Tip**: Default port is 9800, but if occupied, it will automatically select another available port
 
+## 🔌 VSCode Extension
+
+Prefer staying inside the editor? `fdb2` also ships as a **VSCode extension** — "Database Tool (fdb2)" — that embeds the same UI directly in VSCode.
+
+- **Native tree navigation** — a dedicated **Database Tool** view in the Activity Bar (Connection → Database → Table → Column). Click any node to open the related panel.
+- **Per-connection tabs** — the same connection reuses one editor tab while different connections open new tabs, so you can compare databases side by side.
+- **Rich content area** — connection overview, database detail, paginated table data (with a one-line pagination + page-size bar), table structure (columns/indexes/foreign keys/SQL), and a full SQL query panel (`Ctrl/Cmd+Enter` to run).
+- **Shared config** — connections are stored at `~/.fdb2/connections.json` and reused by both the desktop app and the extension (override with the `dbtool.dataDir` setting).
+- **Supported databases** — MySQL, PostgreSQL, SQL Server, SQLite, Oracle, CockroachDB, MongoDB, SAP HANA, ClickHouse (Oracle/SQLite/SAP HANA need native drivers compiled for VSCode's Node ABI).
+
+Install from the Marketplace (`Ctrl/Cmd+Shift+X` → search **"Database Tool (fdb2)"**), or build from source:
+
+```bash
+cd packages/vscode && npm install && npm run build
+# then press F5 in VSCode to launch the Extension Development Host
+```
+
+> For full setup, operations, settings, native-driver notes, and publishing, see [**packages/vscode/README.md**](packages/vscode/README.md).
+
 ## 📊 Supported Database Types
 
 | Database Type | Default Port | Key Features |
