@@ -91,6 +91,11 @@ export function mountExplorer(): void {
       body.vscode-native-nav .top-toolbar { display: none !important; }
       body.vscode-native-nav .explorer-layout { display: block !important; }
       body.vscode-native-nav .explorer-main { height: 100%; }
+      /* 外层框架跟随 VSCode 主题背景；内部卡片沿用桌面端浅色设计 */
+      body.vscode-native-nav,
+      body.vscode-native-nav .database-layout,
+      body.vscode-native-nav .database-explorer { background: transparent !important; }
+      body.vscode-native-nav { background-color: var(--vscode-editor-background, #1e1e1e) !important; }
       body.vscode-native-nav input,
       body.vscode-native-nav textarea,
       body.vscode-native-nav select {

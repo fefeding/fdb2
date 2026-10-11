@@ -26,6 +26,8 @@ export default defineConfig({
     target: 'es2020',
     minify: false,
     sourcemap: true,
+    // 把字体等静态资源内联为 data URI，避免 VSCode webview 下外部资源路径无法解析（图标 404）
+    assetsInlineLimit: 100000000,
     rollupOptions: {
       input: {
         index: path.resolve(__dirname, 'src/platform/vscode/entry/index.ts')

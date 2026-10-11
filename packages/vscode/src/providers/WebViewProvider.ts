@@ -101,9 +101,6 @@ export class WebViewProvider {
     const scriptUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.context.extensionUri, WEBVIEW_DIR, 'main.js')
     );
-    // 资源目录的 webview URI：作为 <base href>，让 CSS 内的相对资源（字体/图片）能正确解析，
-    // 否则 bootstrap-icons 等字体 404（图标全部缺失）
-    const baseUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, WEBVIEW_DIR));
     const nonce = getNonce();
 
     const csp = [
@@ -119,7 +116,6 @@ export class WebViewProvider {
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8" />
-<base href="${baseUri}/" />
 <meta http-equiv="Content-Security-Policy" content="${csp}" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${title}</title>
