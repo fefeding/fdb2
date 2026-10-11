@@ -1,8 +1,8 @@
 <template>
 <div class="datagrid-container">
   <div class="datagrid-inner">
-    <table class="table table-light table-striped table-hover">
-        <thead class="table-light">
+    <table class="table table-striped table-hover">
+        <thead>
             <tr>
                 <th v-for="column in props.columns" :key="column.name" scope="col" class="datagrid-th" :style="column.headerStyle||''" 
                     @click="column.sortable !== false && handleSort(column.name)"
@@ -144,14 +144,15 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    background-color: #f8f9fa;
+    /* sticky 表头必须有不透明背景，令牌在暗色下自动切换 */
+    background-color: var(--db-bg-soft2, #f8f9fa);
   }
   .datagrid-th.sortable {
     cursor: pointer;
     user-select: none;
   }
   .datagrid-th.sortable:hover {
-    background-color: #e9ecef;
+    background-color: var(--db-border-soft, #e9ecef);
   }
   .header-content {
     display: flex;

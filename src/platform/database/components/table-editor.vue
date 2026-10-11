@@ -52,7 +52,7 @@
             
             <div class="table-responsive">
               <table class="table table-sm table-bordered">
-                <thead class="table-light">
+                <thead>
                   <tr>
                     <th width="120">{{ $t('tableEditor.columnNameHeader') }}</th>
                     <th width="140">{{ $t('tableEditor.dataTypeHeader') }}</th>

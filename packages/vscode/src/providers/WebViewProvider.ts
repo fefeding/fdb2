@@ -18,11 +18,27 @@ export class WebViewProvider {
     private context: vscode.ExtensionContext,
     private bridge: DatabaseBridge,
     private tree: DatabaseTreeProvider
-  ) {}
+  ) {
+    this.watchThemeChanges();
+  }
 
   private out = vscode.window.createOutputChannel('Database Tool');
   private log(msg: string): void {
     this.out.appendLine(`[${new Date().toISOString()}] ${msg}`);
+  }
+
+  /**
+   * 通知所有面板"主题已变化"。
+   * 深色主题之间切换时 body 的 vscode-dark 类不变（MutationObserver 不会触发），
+   * 而 ECharts / CodeMirror 是 canvas+JS 配色，必须显式重绘才能跟上新主题。
+   */
+  private watchThemeChanges(): void {
+    const disposable = vscode.window.onDidChangeActiveColorTheme(() => {
+      for (const panel of this.panels.values()) {
+        panel.webview.postMessage({ command: 'themeChanged' }).then(undefined, () => undefined);
+      }
+    });
+    this.context.subscriptions.push(disposable);
   }
 
   // ---------------- 面板入口 ----------------

@@ -37,6 +37,14 @@ export function onThemeChange(cb: () => void): () => void {
     off.push(() => mq.removeEventListener('change', handler));
   }
 
+  // 宿主主动通知：同为深色（或同为浅色）的两个主题之间切换时 body 类名不变，
+  // 只有这条消息能触发重绘（扩展宿主监听 onDidChangeActiveColorTheme 下发）
+  const onMsg = (event: MessageEvent) => {
+    if (!disposed && event.data?.command === 'themeChanged') cb();
+  };
+  window.addEventListener('message', onMsg);
+  off.push(() => window.removeEventListener('message', onMsg));
+
   return () => {
     disposed = true;
     off.forEach((fn) => fn());

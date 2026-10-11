@@ -39,7 +39,9 @@ export type HostMessage =
   | { command: 'init'; data: any }
   | { command: 'pickSaveFolderResult'; id: number; data: { path: string | null } }
   | { command: 'saveFileResult'; id: number; data: { path: string | null; cancelled?: boolean; error?: string } }
-  | { command: 'navigate'; data: Record<string, string> };
+  | { command: 'navigate'; data: Record<string, string> }
+  // 主题变化通知（同为深色/浅色的两个主题互相切换时 body 类名不变，需显式通知重绘）
+  | { command: 'themeChanged' };
 
 /**
  * 将后端返回的结果（数组对象 / 数组数组 / 标量）统一规范化为 { columns, rows } 结构。

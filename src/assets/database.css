@@ -1003,69 +1003,102 @@ pre {
 /* VSCode webview：编辑器暗色 / 高对比主题（变量与上面的 OS 暗色保持一致） */
 body.vscode-dark,
 body.vscode-high-contrast {
-  --db-light-color: #1e293b;
-  --db-gray-light: #334155;
-  --db-gray-medium: #475569;
-  --db-gray-dark: #94a3b8;
-  --db-darker-color: #cbd5e1;
-  --db-dark-color: #e2e8f0;
-  --db-black: #f8fafc;
+  --db-light-color: var(--vscode-editor-background, #1e293b);
+  --db-gray-light: var(--vscode-sideBar-background, #334155);
+  --db-gray-medium: var(--vscode-panel-border, #475569);
+  --db-gray-dark: var(--vscode-descriptionForeground, #94a3b8);
+  --db-darker-color: var(--vscode-editor-foreground, #cbd5e1);
+  --db-dark-color: var(--vscode-foreground, #e2e8f0);
+  --db-black: var(--vscode-editor-foreground, #f8fafc);
 
-  --db-bg-gradient: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  --db-card-gradient: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+  --db-bg-gradient: linear-gradient(135deg, var(--vscode-editor-background, #1e293b) 0%, var(--vscode-sideBar-background, #334155) 100%);
+  --db-card-gradient: linear-gradient(135deg, var(--vscode-sideBar-background, #334155) 0%, var(--vscode-editor-background, #1e293b) 100%);
 
-  --db-surface: #1e293b;
-  --db-on-accent: #ffffff;
-  --db-border: #475569;
-  --db-border-gray: #445263;
-  --db-border-light: #4d5b6b;
-  --db-border-lighter: #4d5b6b;
-  --db-border-soft: #3d4a59;
-  --db-bg-soft: #263041;
-  --db-bg-soft2: #263041;
-  --db-bg-soft3: #263041;
-  --db-bg-soft4: #232d3c;
-  --db-bg-soft5: #232d3c;
-  --db-text-body: #cbd5e1;
-  --db-text-muted: #8296ab;
-  --db-text-faint: #64748b;
+  --db-surface: var(--vscode-editorWidget-background, #1e293b);
+  --db-on-accent: var(--vscode-button-foreground, #ffffff);
+  --db-border: var(--vscode-panel-border, #475569);
+  --db-border-gray: var(--vscode-editorWidget-border, var(--vscode-panel-border, #445263));
+  --db-border-light: var(--vscode-input-border, #4d5b6b);
+  --db-border-lighter: var(--vscode-input-border, #4d5b6b);
+  --db-border-soft: var(--vscode-list-hoverBackground, #3d4a59);
+  --db-bg-soft: var(--vscode-editorWidget-background, #263041);
+  --db-bg-soft2: var(--vscode-sideBar-background, #263041);
+  --db-bg-soft3: var(--vscode-editorWidget-background, #263041);
+  --db-bg-soft4: var(--vscode-editor-background, #232d3c);
+  --db-bg-soft5: var(--vscode-editor-background, #232d3c);
+  --db-text-body: var(--vscode-editor-foreground, #cbd5e1);
+  --db-text-muted: var(--vscode-descriptionForeground, #8296ab);
+  --db-text-faint: var(--vscode-disabledForeground, #64748b);
   --db-danger-bg: rgba(239, 68, 68, 0.16);
   --db-success-bg: rgba(16, 185, 129, 0.16);
   --db-warning-bg: rgba(245, 158, 11, 0.16);
   --db-info-bg: rgba(59, 130, 246, 0.18);
   --db-primary-bg: rgba(102, 126, 234, 0.18);
-  --db-code-bg: #1b1f27;
-  --db-code-fg: #abb2bf;
+  --db-code-bg: var(--vscode-textCodeBlock-background, #1b1f27);
+  --db-code-fg: var(--vscode-editor-foreground, #abb2bf);
 }
 
+/* 浅色主题：同样桥接到宿主令牌，跟随任意浅色主题（GitHub Light / Quiet Light / Solarized Light…） */
+body.vscode-light {
+  --db-light-color: var(--vscode-editor-background, #f8fafc);
+  --db-gray-light: var(--vscode-sideBar-background, #f1f5f9);
+  --db-gray-medium: var(--vscode-panel-border, #cbd5e1);
+  --db-gray-dark: var(--vscode-descriptionForeground, #475569);
+  --db-darker-color: var(--vscode-editor-foreground, #334155);
+  --db-dark-color: var(--vscode-foreground, #1e293b);
+  --db-black: var(--vscode-editor-foreground, #0f172a);
+
+  --db-bg-gradient: linear-gradient(135deg, var(--vscode-editor-background, #f8fafc) 0%, var(--vscode-sideBar-background, #e2e8f0) 100%);
+  --db-card-gradient: linear-gradient(135deg, var(--vscode-editorWidget-background, #ffffff) 0%, var(--vscode-editor-background, #f8fafc) 100%);
+
+  --db-surface: var(--vscode-editorWidget-background, #ffffff);
+  --db-on-accent: var(--vscode-button-foreground, #ffffff);
+  --db-border: var(--vscode-panel-border, #e2e8f0);
+  --db-border-gray: var(--vscode-editorWidget-border, var(--vscode-panel-border, #e5e7eb));
+  --db-border-light: var(--vscode-input-border, #d1d5db);
+  --db-border-lighter: var(--vscode-input-border, #dee2e6);
+  --db-border-soft: var(--vscode-list-hoverBackground, #e9ecef);
+  --db-bg-soft: var(--vscode-editorWidget-background, #f3f4f6);
+  --db-bg-soft2: var(--vscode-sideBar-background, #f8f9fa);
+  --db-bg-soft3: var(--vscode-editorWidget-background, #fafbfc);
+  --db-bg-soft4: var(--vscode-editor-background, #fafafa);
+  --db-bg-soft5: var(--vscode-editor-background, #f6f8fa);
+  --db-text-body: var(--vscode-editor-foreground, #374151);
+  --db-text-muted: var(--vscode-descriptionForeground, #64748b);
+  --db-text-faint: var(--vscode-disabledForeground, #94a3b8);
+  --db-code-bg: var(--vscode-textCodeBlock-background, #282c34);
+  --db-code-fg: var(--vscode-editor-foreground, #abb2bf);
+}
+
+/* 暗色下的 Bootstrap 默认浅色控件兜底（同样走令牌，跟随任意主题） */
 body.vscode-dark .card,
 body.vscode-high-contrast .card {
-  border-color: #475569;
+  border-color: var(--db-gray-medium);
 }
 
 body.vscode-dark .form-control,
 body.vscode-dark .form-select,
 body.vscode-high-contrast .form-control,
 body.vscode-high-contrast .form-select {
-  background: #1e293b;
-  border-color: #475569;
-  color: #f1f5f9;
+  background: var(--db-surface);
+  border-color: var(--db-border);
+  color: var(--db-text-body);
 }
 
 body.vscode-dark .navbar,
 body.vscode-high-contrast .navbar {
-  background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+  background: var(--db-bg-gradient);
 }
 
 body.vscode-dark .table,
 body.vscode-high-contrast .table {
-  background: #1e293b;
+  background: var(--db-surface);
 }
 
 body.vscode-dark .table th,
 body.vscode-high-contrast .table th {
-  background: #475569;
-  color: #f1f5f9;
+  background: var(--db-bg-soft);
+  color: var(--db-text-body);
 }
 
 /* Bootstrap 的浅色工具类在暗色下过于刺眼/对比不足，统一改挂主题令牌 */

@@ -502,8 +502,8 @@
 }
 
 .error-content {
-    background-color: #f8f9fa;
-    border: 1px solid #cbd5e1;
+    background-color: var(--db-bg-soft2);
+    border: 1px solid var(--db-gray-medium);
     border-radius: 0.375rem;
     padding: 1rem;
     margin: 0;
@@ -521,16 +521,16 @@
 }
 
 .error-details-content {
-    background-color: #f8f9fa;
-    border: 1px solid #cbd5e1;
+    background-color: var(--db-bg-soft2);
+    border: 1px solid var(--db-gray-medium);
     border-radius: 0.375rem;
     padding: 1rem;
     margin-top: 0.5rem;
 }
 
 .error-json {
-    background-color: #212529;
-    color: #f8f9fa;
+    background-color: var(--db-text-body);
+    color: var(--db-bg-soft2);
     border-radius: 0.25rem;
     padding: 0.75rem;
     font-size: 0.8rem;
@@ -542,7 +542,7 @@
 }
 
 .error-meta {
-    border-bottom: 1px solid #cbd5e1;
+    border-bottom: 1px solid var(--db-gray-medium);
     padding-bottom: 0.5rem;
     margin-bottom: 0.5rem;
 }
