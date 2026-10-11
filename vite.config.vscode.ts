@@ -1,10 +1,13 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// 与 vite.config.ts 一致：从 package.json 注入版本号（layout.vue 等组件直接读取 __APP_VERSION__）
+const appVersion = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf-8')).version;
 
 /**
  * VSCode WebView 构建配置（单入口 IIFE）。
@@ -44,6 +47,7 @@ export default defineConfig({
 
   define: {
     __VS_CODE_ENV__: 'true',
+    __APP_VERSION__: JSON.stringify(appVersion),
     'process.env.NODE_ENV': '"production"'
   }
 });
