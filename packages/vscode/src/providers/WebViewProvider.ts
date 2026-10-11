@@ -20,6 +20,11 @@ export class WebViewProvider {
     private tree: DatabaseTreeProvider
   ) {}
 
+  private out = vscode.window.createOutputChannel('Database Tool');
+  private log(msg: string): void {
+    this.out.appendLine(`[${new Date().toISOString()}] ${msg}`);
+  }
+
   // ---------------- 面板入口 ----------------
 
   showConnectionPanel(editConn?: any): void {
@@ -38,13 +43,28 @@ export class WebViewProvider {
   }
 
   showTableDataPanel(connectionId: string, database: string, table: string): void {
-    const panel = this.createPanel('dbtool.tableData', `数据: ${table}`, 'tableData');
-    this.pending.set(panel, { command: 'init', data: { connectionId, database, table } });
+    const viewType = 'dbtool.tableData';
+    const existed = this.panels.has(viewType);
+    const panel = this.createPanel(viewType, `数据: ${table}`, 'tableData');
+    const init = { command: 'init', data: { connectionId, database, table } };
+    if (existed) {
+      // 面板已就绪，不会再发 'ready'，直接下发新 init
+      panel.webview.postMessage(init);
+    } else {
+      this.pending.set(panel, init);
+    }
   }
 
   showTableStructurePanel(connectionId: string, database: string, table: string): void {
-    const panel = this.createPanel('dbtool.tableStructure', `结构: ${table}`, 'tableStructure');
-    this.pending.set(panel, { command: 'init', data: { connectionId, database, table } });
+    const viewType = 'dbtool.tableStructure';
+    const existed = this.panels.has(viewType);
+    const panel = this.createPanel(viewType, `结构: ${table}`, 'tableStructure');
+    const init = { command: 'init', data: { connectionId, database, table } };
+    if (existed) {
+      panel.webview.postMessage(init);
+    } else {
+      this.pending.set(panel, init);
+    }
   }
 
   // ---------------- 面板构建 ----------------
@@ -111,7 +131,11 @@ export class WebViewProvider {
   // ---------------- 消息路由 ----------------
 
   private async handleMessage(message: any, panel: vscode.WebviewPanel): Promise<void> {
-    const post = (m: any) => panel.webview.postMessage(m);
+    const post = (m: any) => {
+      this.log(`=> ${m.command} ${m.command === 'tableData' || m.command === 'tableInfo' ? JSON.stringify(m.data).slice(0, 300) : ''}`);
+      panel.webview.postMessage(m);
+    };
+    this.log(`<= ${message.command} ${message.data ? JSON.stringify(message.data).slice(0, 300) : ''}`);
     try {
       switch (message.command) {
         case 'ready': {
@@ -211,6 +235,7 @@ export class WebViewProvider {
           post({ command: 'error', data: `未知命令: ${message.command}` });
       }
     } catch (e: any) {
+      this.log(`ERROR ${message.command}: ${e && (e.stack || e.message) || e}`);
       post({ command: 'error', data: e?.message || String(e) });
     }
   }

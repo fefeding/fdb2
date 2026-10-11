@@ -31,7 +31,8 @@
       </div>
 
       <template v-else-if="tab === 'data'">
-        <div v-if="columns.length === 0" class="empty">暂无数据</div>
+        <div v-if="loadError" class="error">{{ loadError }}</div>
+        <div v-else-if="columns.length === 0" class="empty">暂无数据</div>
         <div v-else class="table-wrap">
           <table class="data-table">
             <thead>
@@ -139,6 +140,8 @@ const columns2 = ref<any[]>([]);
 const indexes = ref<any[]>([]);
 const foreignKeys = ref<any[]>([]);
 const structError = ref('');
+// 数据加载错误（与结构错误分开，避免吞错）
+const loadError = ref('');
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)));
 
@@ -158,6 +161,7 @@ onMounted(() => {
       total.value = d.total || 0;
       page.value = d.page || 1;
       pageSize.value = d.pageSize || 100;
+      loadError.value = '';
       loading.value = false;
     } else if (message.command === 'tableInfo') {
       const info = message.data || {};
@@ -166,7 +170,9 @@ onMounted(() => {
       foreignKeys.value = info.foreignKeys || [];
     } else if (message.command === 'error') {
       loading.value = false;
-      structError.value = '加载失败: ' + message.data;
+      const msg = '加载失败: ' + message.data;
+      structError.value = msg;
+      loadError.value = msg;
     }
   });
 });
@@ -174,6 +180,7 @@ onMounted(() => {
 function loadData(p: number) {
   if (!connectionId.value) return;
   loading.value = true;
+  loadError.value = '';
   vscode.postMessage({
     command: 'getTableData',
     data: {
