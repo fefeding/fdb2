@@ -1,0 +1,34 @@
+/* VSCode WebView 基础样式（通过 var(--vscode-*) 继承宿主主题） */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+#app {
+  height: 100%;
+}
+
+body {
+  font-family: var(--vscode-font-family, -apple-system, 'Segoe UI', sans-serif);
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-foreground);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button {
+  font-family: inherit;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 13px;
+}

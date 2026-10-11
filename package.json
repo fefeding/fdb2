@@ -108,7 +108,10 @@
     "vue-router": "^4.6.4",
     "vue-tsc": "^3.3.7",
     "vuex": "^4.1.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "esbuild": "^0.23.1",
+    "@vscode/vsce": "^4.0.0",
+    "ovsx": "^0.10.0"
   },
   "bin": {
     "fdb2": "bin/fdb2.js"

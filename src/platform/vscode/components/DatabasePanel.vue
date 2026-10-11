@@ -1,17 +1,18 @@
 <template>
   <div class="database-panel">
     <div class="panel-header">
-      <h1 class="panel-title">数据库管理</h1>
+      <h1 class="panel-title">数据库浏览器</h1>
       <div class="panel-actions">
-        <button @click="handleAddConnection" class="btn btn-secondary">添加连接</button>
+        <button class="btn btn-secondary" @click="handleAddConnection">添加连接</button>
+        <button class="btn btn-secondary" @click="refresh">刷新</button>
       </div>
     </div>
 
-    <div style="margin-bottom: 20px;">
-      <select v-model="selectedConnectionId" class="connection-selector" @change="handleConnectionChange">
+    <div class="conn-row">
+      <select v-model="selectedConnectionId" class="connection-selector" @change="onConnectionChange">
         <option value="">选择数据库连接</option>
         <option v-for="conn in connections" :key="conn.id" :value="conn.id">
-          {{ conn.name }} ({{ conn.host }}:{{ conn.port }})
+          {{ conn.name }} ({{ conn.type }})
         </option>
       </select>
     </div>
@@ -21,11 +22,13 @@
         <div class="spinner"></div>
         <div>加载中...</div>
       </div>
+
       <div v-else-if="!selectedConnectionId" class="empty-state">
         <div class="empty-icon">🗄️</div>
         <div class="empty-title">未选择连接</div>
-        <div class="empty-text">请从下拉列表中选择一个数据库连接</div>
+        <div class="empty-text">请从上方下拉列表选择一个数据库连接</div>
       </div>
+
       <div v-else>
         <div class="tabs">
           <button
@@ -38,73 +41,47 @@
           </button>
         </div>
 
-        <div v-show="currentTab === 'overview'" class="tab-content active">
-          <h3 class="section-title">数据库概览</h3>
-          <div class="database-grid">
-            <div
-              v-for="db in databases"
-              :key="db.name"
-              class="database-card"
-              @click="selectDatabase(db)"
-            >
-              <div class="database-header">
-                <div class="database-icon">🗄️</div>
-                <div class="database-name">{{ db.name }}</div>
-              </div>
-              <div class="database-info">
-                <span class="database-stat">📊 {{ db.tables }} 表</span>
-                <span class="database-stat">💾 {{ db.size }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div v-show="currentTab === 'databases'" class="tab-content">
           <h3 class="section-title">数据库列表</h3>
           <div class="database-grid">
-            <div
-              v-for="db in databases"
-              :key="db.name"
-              class="database-card"
-              @click="selectDatabase(db)"
-            >
-              <div class="database-header">
-                <div class="database-icon">🗄️</div>
-                <div class="database-name">{{ db.name }}</div>
-              </div>
-              <div class="database-info">
-                <span class="database-stat">📊 {{ db.tables }} 表</span>
-                <span class="database-stat">💾 {{ db.size }}</span>
-              </div>
+            <div v-for="db in databases" :key="db" class="database-card" @click="selectDatabase(db)">
+              <div class="database-icon">🗄️</div>
+              <div class="database-name">{{ db }}</div>
             </div>
+            <div v-if="databases.length === 0" class="empty-text">该连接下没有可用数据库</div>
           </div>
         </div>
 
         <div v-show="currentTab === 'tables'" class="tab-content">
-          <h3 class="section-title">表列表</h3>
+          <div class="section-subtitle">
+            当前数据库：<strong>{{ currentDatabase }}</strong>
+            <button class="btn btn-link" @click="currentTab = 'databases'">切换</button>
+          </div>
+          <h3 class="section-title">表 / 视图</h3>
           <div class="table-list">
-            <div
-              v-for="table in tables"
-              :key="table.name"
-              class="table-item"
-            >
-              <div class="table-icon">{{ table.type === 'table' ? '📋' : '👁️' }}</div>
+            <div v-for="table in tables" :key="table.name" class="table-item">
+              <div class="table-icon">{{ table.type === 'view' ? '👁️' : '📋' }}</div>
               <div class="table-info">
                 <div class="table-name">{{ table.name }}</div>
                 <div v-if="table.comment" class="table-comment">{{ table.comment }}</div>
-                <div v-if="table.rows !== null" class="table-meta">
-                  <span>{{ table.rows.toLocaleString() }} 行</span>
-                  <span>{{ table.engine || '' }}</span>
-                  <span>{{ table.size || '' }}</span>
+                <div v-if="table.rows !== null && table.rows !== undefined" class="table-meta">
+                  <span>{{ formatNumber(table.rows) }} 行</span>
+                  <span v-if="table.engine">{{ table.engine }}</span>
                 </div>
               </div>
-              <span :class="['table-type', table.type]">{{ table.type === 'table' ? 'TABLE' : 'VIEW' }}</span>
+              <span :class="['table-type', table.type]">{{ table.type === 'view' ? 'VIEW' : 'TABLE' }}</span>
               <div class="table-actions">
-                <button class="action-btn" @click.stop="handleViewData(table)">数据</button>
-                <button class="action-btn" @click.stop="handleViewStructure(table)">结构</button>
+                <button class="action-btn" @click.stop="viewData(table)">数据</button>
+                <button class="action-btn" @click.stop="viewStructure(table)">结构</button>
               </div>
             </div>
+            <div v-if="tables.length === 0" class="empty-text">该数据库下没有表</div>
           </div>
+        </div>
+
+        <div v-show="currentTab === 'sqleditor'" class="tab-content">
+          <div class="section-subtitle">为当前连接新建查询</div>
+          <button class="btn btn-primary" @click="openQuery">打开 SQL 查询面板</button>
         </div>
       </div>
     </div>
@@ -112,115 +89,105 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { getVSCodeBridge } from '../bridge';
 
 const vscode = getVSCodeBridge();
 
 const connections = ref<any[]>([]);
 const selectedConnectionId = ref('');
-const databases = ref<any[]>([]);
+const databases = ref<string[]>([]);
 const tables = ref<any[]>([]);
 const loading = ref(false);
-const currentTab = ref('overview');
-
-const selectedConnection = computed(() => {
-  return connections.value.find(c => c.id === selectedConnectionId.value);
-});
+const currentTab = ref('databases');
+const currentDatabase = ref('');
 
 const tabs = [
-  { id: 'overview', name: '概览' },
   { id: 'databases', name: '数据库' },
-  { id: 'tables', name: '表' }
+  { id: 'tables', name: '表' },
+  { id: 'sqleditor', name: 'SQL' }
 ];
 
 onMounted(() => {
-  // 请求连接列表
+  vscode.postMessage({ command: 'ready' });
   vscode.postMessage({ command: 'getConnections' });
-
-  // 监听来自扩展的消息
   vscode.onMessage((message: any) => {
     if (message.command === 'connections') {
-      connections.value = message.data;
+      connections.value = message.data || [];
     } else if (message.command === 'selectConnection') {
-      selectConnection(message.data);
+      const id = message.data?.id;
+      if (id) {
+        selectedConnectionId.value = id;
+        loadDatabases(id);
+      }
     } else if (message.command === 'databases') {
-      databases.value = message.data;
+      databases.value = message.data || [];
       loading.value = false;
+      currentTab.value = 'databases';
     } else if (message.command === 'tables') {
-      tables.value = message.data;
+      tables.value = message.data || [];
       loading.value = false;
+      currentTab.value = 'tables';
     } else if (message.command === 'error') {
-      handleError(message.data);
+      loading.value = false;
+      alert('操作失败: ' + message.data);
     }
   });
 });
 
 function handleAddConnection() {
-  vscode.postMessage({ command: 'addConnection' });
+  vscode.postMessage({ command: 'openConnectionPanel' });
 }
 
-function handleConnectionChange() {
+function refresh() {
+  vscode.postMessage({ command: 'getConnections' });
+}
+
+function onConnectionChange() {
   if (selectedConnectionId.value) {
-    const connection = connections.value.find(c => c.id === selectedConnectionId.value);
-    selectConnection(connection);
+    loadDatabases(selectedConnectionId.value);
   } else {
     databases.value = [];
     tables.value = [];
   }
 }
 
-function selectConnection(connection: any) {
-  if (!connection) return;
-
-  selectedConnectionId.value = connection.id;
+function loadDatabases(id: string) {
   loading.value = true;
-
-  // 请求数据库列表
-  vscode.postMessage({
-    command: 'getDatabases',
-    data: { connectionId: connection.id }
-  });
+  currentDatabase.value = '';
+  vscode.postMessage({ command: 'getDatabases', data: { id } });
 }
 
-function selectDatabase(database: any) {
+function selectDatabase(db: string) {
+  if (!selectedConnectionId.value) return;
+  currentDatabase.value = db;
   loading.value = true;
-  currentTab.value = 'tables';
-
-  // 请求表列表
   vscode.postMessage({
     command: 'getTables',
-    data: {
-      connectionId: selectedConnectionId.value,
-      databaseName: database.name
-    }
+    data: { id: selectedConnectionId.value, database: db }
   });
 }
 
-function handleViewData(table: any) {
+function viewData(table: any) {
   vscode.postMessage({
     command: 'openTableData',
-    data: {
-      connectionId: selectedConnectionId.value,
-      tableName: table.name
-    }
+    data: { connectionId: selectedConnectionId.value, database: currentDatabase.value, table: table.name }
   });
 }
 
-function handleViewStructure(table: any) {
+function viewStructure(table: any) {
   vscode.postMessage({
     command: 'openTableStructure',
-    data: {
-      connectionId: selectedConnectionId.value,
-      tableName: table.name
-    }
+    data: { connectionId: selectedConnectionId.value, database: currentDatabase.value, table: table.name }
   });
 }
 
-function handleError(error: string) {
-  loading.value = false;
-  console.error('Error:', error);
-  alert(`操作失败: ${error}`);
+function openQuery() {
+  vscode.postMessage({ command: 'openQuery', data: { id: selectedConnectionId.value } });
+}
+
+function formatNumber(n: number): string {
+  return n.toLocaleString();
 }
 </script>
 
@@ -235,8 +202,8 @@ function handleError(error: string) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--vscode-panel-border);
 }
 
@@ -244,7 +211,6 @@ function handleError(error: string) {
   font-size: 18px;
   font-weight: 600;
   margin: 0;
-  color: var(--vscode-foreground);
 }
 
 .panel-actions {
@@ -252,8 +218,12 @@ function handleError(error: string) {
   gap: 8px;
 }
 
+.conn-row {
+  margin-bottom: 16px;
+}
+
 .connection-selector {
-  width: 300px;
+  width: 100%;
   padding: 6px 10px;
   border: 1px solid var(--vscode-input-border);
   background-color: var(--vscode-input-background);
@@ -263,12 +233,11 @@ function handleError(error: string) {
 }
 
 .btn {
-  padding: 6px 14px;
+  padding: 5px 14px;
   border: none;
   border-radius: 4px;
   font-size: 13px;
   cursor: pointer;
-  transition: background-color 0.2s;
 }
 
 .btn-primary {
@@ -276,101 +245,49 @@ function handleError(error: string) {
   color: var(--vscode-button-foreground);
 }
 
-.btn-primary:hover {
-  background-color: var(--vscode-button-hoverBackground);
-}
-
 .btn-secondary {
   background-color: var(--vscode-button-secondaryBackground);
   color: var(--vscode-button-secondaryForeground);
 }
 
-.btn-secondary:hover {
-  background-color: var(--vscode-button-secondaryHoverBackground);
-}
-
-.database-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-}
-
-.database-card {
-  padding: 16px;
-  background-color: var(--vscode-editor-background);
-  border: 1px solid var(--vscode-panel-border);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.database-card:hover {
-  border-color: var(--vscode-focusBorder);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.database-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.database-icon {
-  font-size: 28px;
+.btn-link {
+  background: none;
+  border: none;
   color: var(--vscode-textLink-foreground);
-}
-
-.database-name {
-  flex: 1;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--vscode-foreground);
-}
-
-.database-info {
-  display: flex;
-  gap: 16px;
+  cursor: pointer;
+  padding: 0 6px;
   font-size: 12px;
-  color: var(--vscode-descriptionForeground);
-}
-
-.database-stat {
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
 .section-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  margin: 24px 0 16px 0;
-  padding-bottom: 8px;
+  margin: 18px 0 12px;
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--vscode-panel-border);
-  color: var(--vscode-foreground);
+}
+
+.section-subtitle {
+  font-size: 13px;
+  margin: 8px 0;
+  color: var(--vscode-descriptionForeground);
 }
 
 .tabs {
   display: flex;
   gap: 4px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   border-bottom: 1px solid var(--vscode-panel-border);
 }
 
 .tab {
-  padding: 8px 16px;
+  padding: 7px 16px;
   border: none;
   background-color: transparent;
   color: var(--vscode-foreground);
   font-size: 13px;
   cursor: pointer;
   border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-}
-
-.tab:hover {
-  background-color: var(--vscode-list-hoverBackground);
 }
 
 .tab.active {
@@ -378,12 +295,34 @@ function handleError(error: string) {
   color: var(--vscode-textLink-foreground);
 }
 
-.tab-content {
-  display: none;
+.database-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
 }
 
-.tab-content.active {
-  display: block;
+.database-card {
+  padding: 14px;
+  background-color: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: border-color 0.2s;
+}
+
+.database-card:hover {
+  border-color: var(--vscode-focusBorder);
+}
+
+.database-icon {
+  font-size: 24px;
+}
+
+.database-name {
+  font-weight: 600;
 }
 
 .table-list {
@@ -396,10 +335,9 @@ function handleError(error: string) {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 10px 12px;
   border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.2s;
 }
 
 .table-item:hover {
@@ -407,9 +345,8 @@ function handleError(error: string) {
 }
 
 .table-icon {
-  font-size: 20px;
-  color: var(--vscode-textLink-foreground);
-  width: 24px;
+  font-size: 18px;
+  width: 22px;
   text-align: center;
 }
 
@@ -418,10 +355,7 @@ function handleError(error: string) {
 }
 
 .table-name {
-  font-size: 14px;
   font-weight: 500;
-  margin-bottom: 2px;
-  color: var(--vscode-foreground);
 }
 
 .table-comment {
@@ -431,28 +365,22 @@ function handleError(error: string) {
 
 .table-meta {
   display: flex;
-  align-items: center;
   gap: 12px;
   font-size: 12px;
   color: var(--vscode-descriptionForeground);
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .table-type {
   padding: 2px 8px;
   border-radius: 12px;
   background-color: var(--vscode-badge-background);
-  font-weight: 500;
-  font-size: 12px;
-}
-
-.table-type.table {
-  background-color: var(--vscode-badge-background);
+  font-size: 11px;
 }
 
 .table-type.view {
-  background-color: var(--vscode-gitDecorationModifiedResourceForeground);
-  color: white;
+  background-color: var(--vscode-gitDecoration-modifiedResourceForeground);
+  color: #fff;
 }
 
 .table-actions {
@@ -467,7 +395,7 @@ function handleError(error: string) {
 }
 
 .action-btn {
-  padding: 4px 8px;
+  padding: 3px 8px;
   font-size: 12px;
   background-color: var(--vscode-button-secondaryBackground);
   color: var(--vscode-button-secondaryForeground);
@@ -485,25 +413,24 @@ function handleError(error: string) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
+  padding: 70px 20px;
   text-align: center;
 }
 
 .empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
+  font-size: 56px;
+  margin-bottom: 14px;
   opacity: 0.3;
 }
 
 .empty-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  margin-bottom: 8px;
-  color: var(--vscode-foreground);
+  margin-bottom: 6px;
 }
 
 .empty-text {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--vscode-descriptionForeground);
 }
 
@@ -513,15 +440,17 @@ function handleError(error: string) {
   align-items: center;
   justify-content: center;
   padding: 40px;
+  color: var(--vscode-descriptionForeground);
 }
 
 .spinner {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border: 3px solid var(--vscode-progressBar-background);
   border-top-color: var(--vscode-progressBar-foreground);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
+  margin-bottom: 10px;
 }
 
 @keyframes spin {

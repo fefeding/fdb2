@@ -36,6 +36,7 @@ server/backups
 server/exports
 data/exports/
 dist/
+packages/vscode/resources/webview/
 data/*.sqlite
 main
 fdb2.server.pid

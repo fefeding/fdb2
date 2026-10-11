@@ -1,0 +1,181 @@
+{
+  "name": "vscode-fdb2",
+  "displayName": "Database Tool (fdb2)",
+  "description": "强大的数据库管理工具：连接管理、SQL 查询、数据浏览与表结构查看，支持 MySQL / PostgreSQL / SQL Server / SQLite / Oracle / MongoDB / ClickHouse 等多种数据库。",
+  "version": "1.0.0",
+  "publisher": "ycnull",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other",
+    "Data Science"
+  ],
+  "keywords": [
+    "database",
+    "sql",
+    "mysql",
+    "postgres",
+    "sqlite",
+    "mongodb"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onView:databaseExplorer",
+    "onCommand:dbtool.openQueryPanel"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "dbtool",
+          "title": "Database Tool",
+          "icon": "resources/activity-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "dbtool": [
+        {
+          "id": "databaseExplorer",
+          "name": "数据库连接"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "dbtool.addConnection",
+        "title": "添加连接",
+        "icon": "$(add)",
+        "category": "Database Tool"
+      },
+      {
+        "command": "dbtool.refreshConnections",
+        "title": "刷新连接",
+        "icon": "$(refresh)",
+        "category": "Database Tool"
+      },
+      {
+        "command": "dbtool.openQueryPanel",
+        "title": "新建查询",
+        "icon": "$(terminal)",
+        "category": "Database Tool"
+      },
+      {
+        "command": "dbtool.openDatabasePanel",
+        "title": "数据库浏览器",
+        "icon": "$(database)",
+        "category": "Database Tool"
+      },
+      {
+        "command": "dbtool.testConnection",
+        "title": "测试连接",
+        "icon": "$(check)",
+        "category": "Database Tool"
+      },
+      {
+        "command": "dbtool.deleteConnection",
+        "title": "删除连接",
+        "icon": "$(trash)",
+        "category": "Database Tool"
+      },
+      {
+        "command": "dbtool.viewTableData",
+        "title": "查看数据",
+        "icon": "$(table)",
+        "category": "Database Tool"
+      },
+      {
+        "command": "dbtool.viewTableStructure",
+        "title": "查看结构",
+        "icon": "$(list-unordered)",
+        "category": "Database Tool"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "dbtool.addConnection",
+          "when": "view == databaseExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "dbtool.refreshConnections",
+          "when": "view == databaseExplorer",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "dbtool.openDatabasePanel",
+          "when": "view == databaseExplorer && viewItem == connection",
+          "group": "inline"
+        },
+        {
+          "command": "dbtool.openQueryPanel",
+          "when": "view == databaseExplorer && viewItem == connection",
+          "group": "inline"
+        },
+        {
+          "command": "dbtool.testConnection",
+          "when": "view == databaseExplorer && viewItem == connection",
+          "group": "connection@1"
+        },
+        {
+          "command": "dbtool.deleteConnection",
+          "when": "view == databaseExplorer && viewItem == connection",
+          "group": "connection@2"
+        },
+        {
+          "command": "dbtool.viewTableData",
+          "when": "view == databaseExplorer && viewItem == table",
+          "group": "table@1"
+        },
+        {
+          "command": "dbtool.viewTableStructure",
+          "when": "view == databaseExplorer && viewItem == table",
+          "group": "table@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Database Tool",
+      "properties": {
+        "dbtool.queryLimit": {
+          "type": "number",
+          "default": 200,
+          "description": "查询与表数据分页的每页行数上限。"
+        },
+        "dbtool.dataDir": {
+          "type": "string",
+          "default": "",
+          "description": "连接配置与缓存目录（留空则使用用户主目录下的 .vscode-db-tool）。"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "node esbuild.js --production && cd ../.. && npm run build:vscode",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "build:webview": "cd ../.. && npm run build:vscode",
+    "build": "node esbuild.js && cd ../.. && npm run build:vscode",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "^11.10.0",
+    "@sap/hana-client": "^2.23.18",
+    "oracledb": "^6.10.0",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "@types/vscode": "^1.75.0",
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.23.1",
+    "ovsx": "^0.10.0",
+    "typescript": "^5.9.3"
+  }
+}

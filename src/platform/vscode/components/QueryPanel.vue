@@ -1,18 +1,14 @@
 <template>
   <div class="query-panel">
     <div class="query-toolbar">
-      <select v-model="selectedConnectionId" class="query-selector" @change="handleConnectionChange">
+      <select v-model="selectedConnectionId" class="query-selector" @change="onConnectionChange">
         <option value="">选择数据库连接</option>
         <option v-for="conn in connections" :key="conn.id" :value="conn.id">
-          {{ conn.name }} ({{ conn.host }}:{{ conn.port }})
+          {{ conn.name }} ({{ conn.type }})
         </option>
       </select>
-      <button @click="executeQuery" class="btn btn-primary">
-        执行 (Ctrl+Enter)
-      </button>
-      <button @click="clearQuery" class="btn btn-secondary">
-        清空
-      </button>
+      <button class="btn btn-primary" @click="executeQuery">执行 (Ctrl+Enter)</button>
+      <button class="btn btn-secondary" @click="clearQuery">清空</button>
     </div>
 
     <div class="query-editor">
@@ -30,28 +26,25 @@
         <div class="spinner"></div>
         <span>执行中...</span>
       </div>
-      <div v-else-if="queryResults" class="results">
+      <div v-else-if="results" class="results">
         <div class="results-header">
           <div class="results-title">查询结果</div>
-          <div class="results-meta">
-            {{ queryResults.rowCount }} 行 · {{ queryResults.executionTime }}ms
-          </div>
+          <div class="results-meta">{{ results.rowCount }} 行 · {{ results.executionTime }}ms</div>
         </div>
-
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th v-for="col in queryResults.columns" :key="col">{{ col }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(row, index) in queryResults.rows" :key="index">
-              <td v-for="(cell, cellIndex) in row" :key="cellIndex">
-                {{ formatCell(cell) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th v-for="col in results.columns" :key="col">{{ col }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, index) in results.rows" :key="index">
+                <td v-for="(cell, ci) in row" :key="ci">{{ formatCell(cell) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <div v-else class="empty-state">
         <div class="empty-icon">📊</div>
@@ -61,18 +54,15 @@
 
     <div class="status-bar">
       <div class="status-item">
-        <span class="status-icon">🔗</span>
         <span>{{ selectedConnection?.name || '未选择连接' }}</span>
       </div>
-      <div class="status-item">
-        <span id="statusTime">{{ queryResults ? `执行时间: ${queryResults.executionTime}ms` : '' }}</span>
-      </div>
+      <div class="status-item" v-if="results?.message">{{ results.message }}</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { getVSCodeBridge } from '../bridge';
 
 const vscode = getVSCodeBridge();
@@ -80,50 +70,47 @@ const vscode = getVSCodeBridge();
 const connections = ref<any[]>([]);
 const selectedConnectionId = ref('');
 const queryText = ref('');
-const queryResults = ref<any>(null);
+const results = ref<any>(null);
 const loading = ref(false);
 const queryTextarea = ref<HTMLTextAreaElement | null>(null);
 
-const selectedConnection = computed(() => {
-  return connections.value.find(c => c.id === selectedConnectionId.value);
-});
+const selectedConnection = computed(() => connections.value.find((c) => c.id === selectedConnectionId.value));
 
 onMounted(() => {
-  // 请求连接列表
+  vscode.postMessage({ command: 'ready' });
   vscode.postMessage({ command: 'getConnections' });
-
-  // 监听来自扩展的消息
   vscode.onMessage((message: any) => {
     if (message.command === 'connections') {
-      connections.value = message.data;
+      connections.value = message.data || [];
+    } else if (message.command === 'selectConnection') {
+      selectedConnectionId.value = message.data?.id || '';
     } else if (message.command === 'queryResult') {
-      displayQueryResult(message.data);
+      results.value = message.data;
+      loading.value = false;
     } else if (message.command === 'error') {
-      handleError(message.data);
+      loading.value = false;
+      alert('查询错误: ' + message.data);
     }
   });
 });
 
-function handleConnectionChange() {
-  // 连接变化时的处理
+function onConnectionChange() {
+  /* 仅更新选中态 */
 }
 
 function handleKeydown(e: KeyboardEvent) {
-  // Ctrl+Enter 或 Cmd+Enter 执行查询
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
     e.preventDefault();
     executeQuery();
   }
-
-  // Tab 键插入2个空格
   if (e.key === 'Tab') {
     e.preventDefault();
-    const textarea = queryTextarea.value;
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
+    const ta = queryTextarea.value;
+    if (ta) {
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
       queryText.value = queryText.value.substring(0, start) + '  ' + queryText.value.substring(end);
-      textarea.selectionStart = textarea.selectionEnd = start + 2;
+      ta.selectionStart = ta.selectionEnd = start + 2;
     }
   }
 }
@@ -133,48 +120,26 @@ function executeQuery() {
     alert('请先选择数据库连接');
     return;
   }
-
   if (!queryText.value.trim()) {
-    alert('请输入 SQL 查询语句');
+    alert('请输入 SQL 语句');
     return;
   }
-
   loading.value = true;
-
   vscode.postMessage({
     command: 'executeQuery',
-    data: {
-      connectionId: selectedConnectionId.value,
-      sql: queryText.value
-    }
+    data: { connectionId: selectedConnectionId.value, sql: queryText.value }
   });
 }
 
 function clearQuery() {
   queryText.value = '';
-  queryResults.value = null;
-}
-
-function displayQueryResult(data: any) {
-  queryResults.value = data;
-  loading.value = false;
-}
-
-function handleError(error: string) {
-  loading.value = false;
-  alert(`查询错误: ${error}`);
+  results.value = null;
 }
 
 function formatCell(cell: any) {
-  if (cell === null || cell === undefined) {
-    return 'NULL';
-  }
-  if (typeof cell === 'boolean') {
-    return cell ? '✓' : '✗';
-  }
-  if (typeof cell === 'object') {
-    return JSON.stringify(cell);
-  }
+  if (cell === null || cell === undefined) return 'NULL';
+  if (typeof cell === 'boolean') return cell ? 'true' : 'false';
+  if (typeof cell === 'object') return JSON.stringify(cell);
   return String(cell);
 }
 </script>
@@ -191,14 +156,14 @@ function formatCell(cell: any) {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 10px 12px;
   background-color: var(--vscode-editorGroupHeader-tabsBackground);
   border-bottom: 1px solid var(--vscode-panel-border);
 }
 
 .query-selector {
-  min-width: 200px;
-  padding: 6px 10px;
+  min-width: 220px;
+  padding: 5px 8px;
   border: 1px solid var(--vscode-input-border);
   background-color: var(--vscode-input-background);
   color: var(--vscode-input-foreground);
@@ -206,12 +171,11 @@ function formatCell(cell: any) {
 }
 
 .btn {
-  padding: 6px 14px;
+  padding: 5px 14px;
   border: none;
   border-radius: 4px;
   font-size: 13px;
   cursor: pointer;
-  transition: background-color 0.2s;
 }
 
 .btn-primary {
@@ -233,18 +197,18 @@ function formatCell(cell: any) {
 }
 
 .query-editor {
-  flex: 1;
+  flex: 0 0 40%;
   display: flex;
   flex-direction: column;
   border-bottom: 1px solid var(--vscode-panel-border);
-  min-height: 200px;
+  min-height: 120px;
 }
 
 .query-textarea {
   flex: 1;
-  padding: 16px;
+  padding: 12px;
   font-family: var(--vscode-editor-font-family, 'Consolas', 'Monaco', monospace);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.6;
   border: none;
   resize: none;
@@ -262,21 +226,31 @@ function formatCell(cell: any) {
   padding: 12px;
 }
 
-.loading-state {
+.loading-state,
+.empty-state {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px;
-  gap: 12px;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--vscode-descriptionForeground);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
 }
 
 .spinner {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border: 2px solid var(--vscode-progressBar-background);
   border-top-color: var(--vscode-progressBar-foreground);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
+  margin-bottom: 8px;
 }
 
 @keyframes spin {
@@ -289,14 +263,13 @@ function formatCell(cell: any) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding: 8px 12px;
+  margin-bottom: 10px;
+  padding: 6px 10px;
   background-color: var(--vscode-editorGroupHeader-tabsBackground);
   border-radius: 4px;
 }
 
 .results-title {
-  font-size: 14px;
   font-weight: 600;
 }
 
@@ -305,17 +278,25 @@ function formatCell(cell: any) {
   color: var(--vscode-descriptionForeground);
 }
 
+.table-wrap {
+  overflow: auto;
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .data-table th,
 .data-table td {
-  padding: 8px 12px;
+  padding: 6px 10px;
   text-align: left;
   border-bottom: 1px solid var(--vscode-panel-border);
+  white-space: nowrap;
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .data-table th {
@@ -329,31 +310,11 @@ function formatCell(cell: any) {
   background-color: var(--vscode-list-hoverBackground);
 }
 
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  text-align: center;
-}
-
-.empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.5;
-}
-
-.empty-text {
-  font-size: 14px;
-  color: var(--vscode-descriptionForeground);
-}
-
 .status-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
+  padding: 6px 12px;
   background-color: var(--vscode-statusBar-background);
   color: var(--vscode-statusBar-foreground);
   font-size: 12px;
@@ -363,9 +324,5 @@ function formatCell(cell: any) {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.status-icon {
-  color: var(--vscode-textLink-foreground);
 }
 </style>

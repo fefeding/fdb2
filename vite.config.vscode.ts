@@ -7,30 +7,33 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * VSCode WebView 构建配置
+ * VSCode WebView 构建配置（单入口 IIFE）。
+ * 所有面板（连接 / 查询 / 浏览器 / 表数据 / 表结构）打包为同一份 main.js，
+ * 由宿主注入的 window.__PANEL_TYPE__ 决定挂载哪个 Vue 组件。
  */
 export default defineConfig({
   plugins: [vue()],
 
+  // 不把根目录 public/（Electron 资源）拷贝进 WebView 产物
+  publicDir: false,
+
   build: {
     outDir: 'packages/vscode/resources/webview',
     emptyOutDir: true,
+    target: 'es2020',
+    minify: false,
+    sourcemap: true,
     rollupOptions: {
       input: {
-        connection: path.resolve(__dirname, 'src/platform/vscode/entry/connection.ts'),
-        query: path.resolve(__dirname, 'src/platform/vscode/entry/query.ts'),
-        database: path.resolve(__dirname, 'src/platform/vscode/entry/database.ts')
+        index: path.resolve(__dirname, 'src/platform/vscode/entry/index.ts')
       },
       output: {
-        entryFileNames: '[name].js',
-        chunkFileNames: '[name].js',
-        assetFileNames: '[name][extname]',
-        formats: ['iife']
+        entryFileNames: 'main.js',
+        chunkFileNames: 'main.[hash].js',
+        assetFileNames: 'main.[ext]',
+        format: 'iife'
       }
-    },
-    target: 'es2020',
-    minify: false, // 不压缩以便调试
-    sourcemap: true
+    }
   },
 
   resolve: {
@@ -39,7 +42,6 @@ export default defineConfig({
     }
   },
 
-  // 环境变量
   define: {
     __VS_CODE_ENV__: 'true',
     'process.env.NODE_ENV': '"production"'
