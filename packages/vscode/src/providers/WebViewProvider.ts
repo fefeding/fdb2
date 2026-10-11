@@ -274,6 +274,26 @@ export class WebViewProvider {
         case 'close':
           panel.dispose();
           return;
+        case 'pickSaveFolder': {
+          // 在 VSCode 中弹出系统文件夹选择器，让用户决定导出文件保存位置
+          const opts: vscode.OpenDialogOptions = {
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false,
+            openLabel: '选择保存位置'
+          };
+          if (message.data?.defaultUri) {
+            try {
+              opts.defaultUri = vscode.Uri.file(message.data.defaultUri);
+            } catch {
+              /* ignore */
+            }
+          }
+          const uris = await vscode.window.showOpenDialog(opts);
+          const folderPath = uris && uris[0] ? uris[0].fsPath : null;
+          post({ command: 'pickSaveFolderResult', id: message.id, data: { path: folderPath } });
+          return;
+        }
         case 'openConnectionPanel':
           this.showConnectionPanel();
           return;

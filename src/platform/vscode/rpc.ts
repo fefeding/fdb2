@@ -52,3 +52,51 @@ export function vscodeApiRequest(path: string, data?: any): Promise<any> {
         }, 60000);
     });
 }
+
+// ---------------- 选择保存文件夹 ----------------
+
+let saveFolderSeq = 0;
+const saveFolderPending = new Map<number, { resolve: (v: string | null) => void }>();
+let saveFolderInstalled = false;
+
+function installSaveFolderListener(): void {
+    if (saveFolderInstalled || typeof window === 'undefined') return;
+    saveFolderInstalled = true;
+    window.addEventListener('message', (event) => {
+        const m = event.data;
+        if (!m || m.command !== 'pickSaveFolderResult' || typeof m.id !== 'number') return;
+        const p = saveFolderPending.get(m.id);
+        if (!p) return;
+        saveFolderPending.delete(m.id);
+        p.resolve(m.data?.path ?? null);
+    });
+}
+
+/**
+ * 在 VSCode 环境中弹出系统文件夹选择器，返回用户选中的目录路径（绝对路径）。
+ * 非 VSCode 环境直接 resolve(null)，调用方据此跳过（沿用后端默认目录）。
+ * 用户取消选择也返回 null。
+ */
+export function vscodePickSaveFolder(defaultUri?: string): Promise<string | null> {
+    installSaveFolderListener();
+    const bridge = getVSCodeBridge();
+    if (!bridge.isVSCodeEnvironment()) {
+        return Promise.resolve(null);
+    }
+    const id = ++saveFolderSeq;
+    return new Promise((resolve) => {
+        saveFolderPending.set(id, { resolve });
+        bridge.postMessage({
+            command: 'pickSaveFolder',
+            id,
+            data: defaultUri ? { defaultUri } : {}
+        });
+        // 超时兜底（120s）
+        setTimeout(() => {
+            if (saveFolderPending.has(id)) {
+                saveFolderPending.delete(id);
+                resolve(null);
+            }
+        }, 120000);
+    });
+}

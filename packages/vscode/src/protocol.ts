@@ -15,7 +15,8 @@ export type WebviewMessage =
   | { command: 'getTableInfo'; data: { id: string; database: string; table: string } }
   | { command: 'executeQuery'; data: { id: string; sql: string; database?: string } }
   | { command: 'refreshTree' }
-  | { command: 'close' };
+  | { command: 'close' }
+  | { command: 'pickSaveFolder'; id: number; data?: { defaultUri?: string } };
 
 /** 宿主发送给 Webview 的消息 */
 export type HostMessage =
@@ -31,7 +32,8 @@ export type HostMessage =
   | { command: 'error'; data: string }
   | { command: 'editConnection'; data: any }
   | { command: 'selectConnection'; data: { id: string } }
-  | { command: 'init'; data: any };
+  | { command: 'init'; data: any }
+  | { command: 'pickSaveFolderResult'; id: number; data: { path: string | null } };
 
 /**
  * 将后端返回的结果（数组对象 / 数组数组 / 标量）统一规范化为 { columns, rows } 结构。

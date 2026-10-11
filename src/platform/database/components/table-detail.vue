@@ -349,6 +349,8 @@ import SqlExecutor from './sql-executor.vue';
 import { exportDataToCSV, exportDataToJSON, exportDataToExcel, formatFileName } from '../utils/export';
 import { modal } from '@/utils/modal';
 import { isNumericType, isBooleanType } from '@/utils/database-types';
+import { isVSCode } from '@/base/detect';
+import { vscodePickSaveFolder } from '@/platform/vscode/rpc';
 
 
 // Props
@@ -744,7 +746,15 @@ async function exportTableData(format: 'csv' | 'json' | 'excel') {
       await modal.warning(t('tableDetail.missingConnectionInfo'));
       return;
     }
-    
+
+    // VSCode 环境：先让用户选择文件保存位置（目录），再传给后端
+    let options: { path: string } | undefined;
+    if (isVSCode) {
+      const dir = await vscodePickSaveFolder();
+      if (dir === null) return; // 用户取消选择
+      options = { path: dir };
+    }
+
     // 调用后端API导出表数据
     let response;
     switch (format) {
@@ -752,21 +762,24 @@ async function exportTableData(format: 'csv' | 'json' | 'excel') {
         response = await databaseService.exportTableDataToCSV(
           props.connection.id,
           props.database,
-          props.table.name
+          props.table.name,
+          options
         );
         break;
       case 'json':
         response = await databaseService.exportTableDataToJSON(
           props.connection.id,
           props.database,
-          props.table.name
+          props.table.name,
+          options
         );
         break;
       case 'excel':
         response = await databaseService.exportTableDataToExcel(
           props.connection.id,
           props.database,
-          props.table.name
+          props.table.name,
+          options
         );
         break;
       default:
@@ -854,12 +867,21 @@ async function exportTableDataSQL() {
       await modal.warning(t('tableDetail.missingConnectionInfo'));
       return;
     }
-    
+
+    // VSCode 环境：先让用户选择文件保存位置（目录），再传给后端
+    let options: { path: string } | undefined;
+    if (isVSCode) {
+      const dir = await vscodePickSaveFolder();
+      if (dir === null) return; // 用户取消选择
+      options = { path: dir };
+    }
+
     // 调用后端API导出表数据
     const response = await databaseService.exportTableDataToSQL(
       props.connection.id,
       props.database,
-      props.table.name
+      props.table.name,
+      options
     );
     
     if (response.ret === 0) {
