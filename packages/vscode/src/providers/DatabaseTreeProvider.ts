@@ -90,9 +90,9 @@ export class DbTreeItem extends vscode.TreeItem {
     const typeLabel = (c.type || '').toUpperCase();
     item.description = `${typeLabel} · ${c.host || ''}${c.port ? ':' + c.port : ''}${c.database ? '/' + c.database : ''}`;
     item.command = {
-      command: 'dbtool.openDatabasePanel',
-      title: '打开数据库浏览器',
-      arguments: [c.id]
+      command: 'dbtool.openExplorer',
+      title: '打开数据库工作台',
+      arguments: [{ connectionId: c.id }]
     };
     item.tooltip = `${c.name}\n${typeLabel} @ ${c.host || ''}:${c.port || ''}`;
     return item;
@@ -101,6 +101,11 @@ export class DbTreeItem extends vscode.TreeItem {
   static database(name: string, connId: string): DbTreeItem {
     const item = new DbTreeItem(name, 'database', vscode.TreeItemCollapsibleState.Collapsed, connId, name);
     item.iconPath = new vscode.ThemeIcon('folder');
+    item.command = {
+      command: 'dbtool.openExplorer',
+      title: '打开数据库工作台',
+      arguments: [{ connectionId: connId, database: name }]
+    };
     return item;
   }
 
@@ -109,9 +114,9 @@ export class DbTreeItem extends vscode.TreeItem {
     const item = new DbTreeItem(name, 'table', vscode.TreeItemCollapsibleState.Collapsed, connId, db, name);
     item.iconPath = new vscode.ThemeIcon(isView ? 'eye' : 'table');
     item.command = {
-      command: 'dbtool.viewTableData',
-      title: '查看数据',
-      arguments: [connId, db, name]
+      command: 'dbtool.openExplorer',
+      title: '打开数据库工作台',
+      arguments: [{ connectionId: connId, database: db, table: name }]
     };
     return item;
   }

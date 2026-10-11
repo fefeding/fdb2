@@ -20,30 +20,17 @@ export function activate(context: vscode.ExtensionContext): void {
   const treeView = vscode.window.createTreeView('databaseExplorer', { treeDataProvider: treeProvider });
   context.subscriptions.push(treeView);
 
-  // 选中树节点时在右侧打开完整工作台并导航到对应位置（与桌面端一致）
-  treeView.onDidChangeSelection(
-    (e) => {
-      const item = e.selection[0] as any;
-      if (!item) return;
-      if (item.ctx === 'connection' && item.connectionId) {
-        webViewProvider.showExplorerPanel({ connectionId: item.connectionId });
-      } else if (item.ctx === 'database' && item.connectionId && item.database) {
-        webViewProvider.showExplorerPanel({ connectionId: item.connectionId, database: item.database });
-      } else if (item.ctx === 'table' && item.connectionId && item.database && item.table) {
-        webViewProvider.showExplorerPanel({ connectionId: item.connectionId, database: item.database, table: item.table });
-      }
-    },
-    undefined,
-    context.subscriptions
-  );
-
   const register = (id: string, handler: (...args: any[]) => any) =>
     context.subscriptions.push(vscode.commands.registerCommand(id, handler));
+
+  // 树节点点击命令：打开完整工作台并导航到对应位置（与桌面端一致）
+  register('dbtool.openExplorer', (query: Record<string, string> = {}) => {
+    webViewProvider.showExplorerPanel(query);
+  });
 
   register('dbtool.addConnection', () => webViewProvider.showConnectionPanel());
   register('dbtool.refreshConnections', () => treeProvider.refresh());
   register('dbtool.openQueryPanel', (connectionId?: string) => webViewProvider.showQueryPanel(connectionId));
-  register('dbtool.openDatabasePanel', (connectionId?: string) => webViewProvider.showDatabasePanel(connectionId));
 
   register('dbtool.testConnection', async (conn?: any) => {
     try {
