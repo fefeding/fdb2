@@ -168,6 +168,7 @@ packages/vscode/
 │       └── WebViewProvider.ts        # panels + message routing
 └── resources/
     ├── activity-icon.svg
+    ├── icon.png            # Marketplace icon (256x256)
     └── webview/            # built by vite.config.vscode.ts (main.js)
 ```
 
