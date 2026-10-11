@@ -14,8 +14,9 @@ export class DatabaseTreeProvider implements vscode.TreeDataProvider<DbTreeItem>
 
   constructor(private bridge: DatabaseBridge) {}
 
-  refresh(): void {
-    this._onDidChangeTreeData.fire();
+  /** 刷新整棵树，或刷新单个节点（传 element） */
+  refresh(element?: DbTreeItem): void {
+    this._onDidChangeTreeData.fire(element);
   }
 
   getTreeItem(element: DbTreeItem): vscode.TreeItem {
@@ -25,12 +26,8 @@ export class DatabaseTreeProvider implements vscode.TreeDataProvider<DbTreeItem>
   async getChildren(element?: DbTreeItem): Promise<DbTreeItem[]> {
     try {
       if (!element) {
+        // 空列表返回 []，由 package.json 的 viewsWelcome 负责展示引导
         const conns = (await this.bridge.call<any[]>('/api/database/getConnections')) || [];
-        if (conns.length === 0) {
-          const tip = new DbTreeItem('暂无连接，点击 + 添加', 'error', vscode.TreeItemCollapsibleState.None);
-          tip.iconPath = new vscode.ThemeIcon('info');
-          return [tip];
-        }
         return conns.map((c) => DbTreeItem.connection(c));
       }
 
@@ -67,6 +64,9 @@ export class DatabaseTreeProvider implements vscode.TreeDataProvider<DbTreeItem>
 }
 
 export class DbTreeItem extends vscode.TreeItem {
+  /** 原始连接配置（仅连接节点有值），右键命令需要完整的 type/host/port… 才能测试连接 */
+  public connection?: any;
+
   constructor(
     public readonly label: string,
     public readonly ctx: TreeCtx,
@@ -86,6 +86,8 @@ export class DbTreeItem extends vscode.TreeItem {
       vscode.TreeItemCollapsibleState.Collapsed,
       c.id
     );
+    item.connection = c;
+    item.id = c.id; // 供 TreeView 稳定复用展开状态
     item.iconPath = new vscode.ThemeIcon('database');
     const typeLabel = (c.type || '').toUpperCase();
     item.description = `${typeLabel} · ${c.host || ''}${c.port ? ':' + c.port : ''}${c.database ? '/' + c.database : ''}`;

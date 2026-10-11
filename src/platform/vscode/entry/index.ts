@@ -9,7 +9,11 @@ import DatabasePanel from '../components/DatabasePanel.vue';
 import TableDataPanel from '../components/TableDataPanel.vue';
 import TableStructurePanel from '../components/TableStructurePanel.vue';
 import { mountExplorer } from './explorer';
+import { installVscodeShellStyle } from '../theme';
 import '../style.css';
+
+// 必须在挂载前注入，避免首帧闪烁
+installVscodeShellStyle();
 
 const type = (window as any).__PANEL_TYPE__ || 'database';
 

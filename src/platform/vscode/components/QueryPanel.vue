@@ -127,7 +127,8 @@ function executeQuery() {
   loading.value = true;
   vscode.postMessage({
     command: 'executeQuery',
-    data: { connectionId: selectedConnectionId.value, sql: queryText.value }
+    // 后端路由只认 id（宿主也会做 connectionId -> id 归一化，这里保持契约一致）
+    data: { id: selectedConnectionId.value, sql: queryText.value }
   });
 }
 
@@ -157,16 +158,16 @@ function formatCell(cell: any) {
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  background-color: var(--vscode-editorGroupHeader-tabsBackground);
-  border-bottom: 1px solid var(--vscode-panel-border);
+  background-color: var(--dbt-editorGroupHeader-tabsBackground);
+  border-bottom: 1px solid var(--dbt-panel-border);
 }
 
 .query-selector {
   min-width: 220px;
   padding: 5px 8px;
-  border: 1px solid var(--vscode-input-border);
-  background-color: var(--vscode-input-background);
-  color: var(--vscode-input-foreground);
+  border: 1px solid var(--dbt-input-border);
+  background-color: var(--dbt-input-background);
+  color: var(--dbt-input-foreground);
   border-radius: 4px;
 }
 
@@ -179,41 +180,41 @@ function formatCell(cell: any) {
 }
 
 .btn-primary {
-  background-color: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
+  background-color: var(--dbt-button-background);
+  color: var(--dbt-button-foreground);
 }
 
 .btn-primary:hover {
-  background-color: var(--vscode-button-hoverBackground);
+  background-color: var(--dbt-button-hoverBackground);
 }
 
 .btn-secondary {
-  background-color: var(--vscode-button-secondaryBackground);
-  color: var(--vscode-button-secondaryForeground);
+  background-color: var(--dbt-button-secondaryBackground);
+  color: var(--dbt-button-secondaryForeground);
 }
 
 .btn-secondary:hover {
-  background-color: var(--vscode-button-secondaryHoverBackground);
+  background-color: var(--dbt-button-secondaryHoverBackground);
 }
 
 .query-editor {
   flex: 0 0 40%;
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid var(--vscode-panel-border);
+  border-bottom: 1px solid var(--dbt-panel-border);
   min-height: 120px;
 }
 
 .query-textarea {
   flex: 1;
   padding: 12px;
-  font-family: var(--vscode-editor-font-family, 'Consolas', 'Monaco', monospace);
+  font-family: var(--dbt-editor-font-family, 'Consolas', 'Monaco', monospace);
   font-size: 13px;
   line-height: 1.6;
   border: none;
   resize: none;
-  background-color: var(--vscode-editor-background);
-  color: var(--vscode-editor-foreground);
+  background-color: var(--dbt-editor-background);
+  color: var(--dbt-editor-foreground);
 }
 
 .query-textarea:focus {
@@ -234,7 +235,7 @@ function formatCell(cell: any) {
   justify-content: center;
   padding: 60px 20px;
   text-align: center;
-  color: var(--vscode-descriptionForeground);
+  color: var(--dbt-descriptionForeground);
 }
 
 .empty-icon {
@@ -246,8 +247,8 @@ function formatCell(cell: any) {
 .spinner {
   width: 22px;
   height: 22px;
-  border: 2px solid var(--vscode-progressBar-background);
-  border-top-color: var(--vscode-progressBar-foreground);
+  border: 2px solid var(--dbt-progressBar-background);
+  border-top-color: var(--dbt-progressBar-foreground);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
   margin-bottom: 8px;
@@ -265,7 +266,7 @@ function formatCell(cell: any) {
   align-items: center;
   margin-bottom: 10px;
   padding: 6px 10px;
-  background-color: var(--vscode-editorGroupHeader-tabsBackground);
+  background-color: var(--dbt-editorGroupHeader-tabsBackground);
   border-radius: 4px;
 }
 
@@ -275,7 +276,7 @@ function formatCell(cell: any) {
 
 .results-meta {
   font-size: 12px;
-  color: var(--vscode-descriptionForeground);
+  color: var(--dbt-descriptionForeground);
 }
 
 .table-wrap {
@@ -292,7 +293,7 @@ function formatCell(cell: any) {
 .data-table td {
   padding: 6px 10px;
   text-align: left;
-  border-bottom: 1px solid var(--vscode-panel-border);
+  border-bottom: 1px solid var(--dbt-panel-border);
   white-space: nowrap;
   max-width: 360px;
   overflow: hidden;
@@ -300,14 +301,14 @@ function formatCell(cell: any) {
 }
 
 .data-table th {
-  background-color: var(--vscode-editorGroupHeader-tabsBackground);
+  background-color: var(--dbt-editorGroupHeader-tabsBackground);
   font-weight: 600;
   position: sticky;
   top: 0;
 }
 
 .data-table tbody tr:hover {
-  background-color: var(--vscode-list-hoverBackground);
+  background-color: var(--dbt-list-hoverBackground);
 }
 
 .status-bar {
@@ -315,8 +316,8 @@ function formatCell(cell: any) {
   justify-content: space-between;
   align-items: center;
   padding: 6px 12px;
-  background-color: var(--vscode-statusBar-background);
-  color: var(--vscode-statusBar-foreground);
+  background-color: var(--dbt-statusBar-background);
+  color: var(--dbt-statusBar-foreground);
   font-size: 12px;
 }
 

@@ -350,7 +350,7 @@ import { exportDataToCSV, exportDataToJSON, exportDataToExcel, formatFileName } 
 import { modal } from '@/utils/modal';
 import { isNumericType, isBooleanType } from '@/utils/database-types';
 import { isVSCode } from '@/base/detect';
-import { vscodePickSaveFolder } from '@/platform/vscode/rpc';
+import { isVscodeWebview, vscodePickSaveFolder, vscodeSaveFile, vscodeNotifyExported } from '@/platform/vscode/rpc';
 
 
 // Props
@@ -787,7 +787,9 @@ async function exportTableData(format: 'csv' | 'json' | 'excel') {
     }
     
     if (response.ret === 0) {
-      await modal.success(t('tableDetail.exportSuccess', { path: response.data }));
+      // webview 内用宿主提示（可直接在资源管理器中定位文件），其余环境沿用弹窗
+      if (isVscodeWebview() && response.data) vscodeNotifyExported(response.data);
+      else await modal.success(t('tableDetail.exportSuccess', { path: response.data }));
     } else {
       await modal.error(t('tableDetail.exportFailed') + ': ' + response.msg);
     }
@@ -885,7 +887,8 @@ async function exportTableDataSQL() {
     );
     
     if (response.ret === 0) {
-      await modal.success(t('tableDetail.exportSuccess', { path: response.data }));
+      if (isVscodeWebview() && response.data) vscodeNotifyExported(response.data);
+      else await modal.success(t('tableDetail.exportSuccess', { path: response.data }));
     } else {
       await modal.error(t('tableDetail.exportFailed') + ': ' + response.msg);
     }
@@ -895,10 +898,16 @@ async function exportTableDataSQL() {
   }
 }
 
-function downloadSQLFile(content: string, filename: string) {
+async function downloadSQLFile(content: string, filename: string) {
+  // VSCode webview 内 <a download> 不落盘，交给宿主保存
+  if (isVscodeWebview()) {
+    const saved = await vscodeSaveFile({ filename, content, filters: { 'SQL 文件': ['sql'] } });
+    if (saved) vscodeNotifyExported(saved);
+    return;
+  }
   const blob = new Blob([content], { type: 'text/sql;charset=utf-8;' });
   const link = document.createElement('a');
-  
+
   if (link.download !== undefined) {
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);

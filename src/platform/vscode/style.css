@@ -1,4 +1,76 @@
-/* VSCode WebView 基础样式（通过 var(--vscode-*) 继承宿主主题） */
+/* VSCode WebView 基础样式 */
+
+/*
+ * 主题变量兜底：
+ * 部分宿主（VSCode 分支/旧版本）不会把全套 --vscode-* 变量注入 webview，
+ * 导致深色主题下输入框白底黑字、label 继承默认黑色而不可读。
+ * 这里把面板用到的变量统一映射为 --dbt-*（后缀与 --vscode-* 一致）：
+ * 宿主有变量时跟随宿主主题，没有时按 body 上的
+ * vscode-light / vscode-dark / vscode-high-contrast 类取兜底值。
+ */
+body {
+  color-scheme: dark;
+
+  --dbt-font-family: var(--vscode-font-family, -apple-system, 'Segoe UI', sans-serif);
+  --dbt-editor-font-family: var(--vscode-editor-font-family, Menlo, Consolas, 'Courier New', monospace);
+  --dbt-foreground: var(--vscode-foreground, #cccccc);
+  --dbt-descriptionForeground: var(--vscode-descriptionForeground, #9d9d9d);
+  --dbt-errorForeground: var(--vscode-errorForeground, #f14c4c);
+  --dbt-textLink-foreground: var(--vscode-textLink-foreground, #4daafc);
+  --dbt-panel-border: var(--vscode-panel-border, #2b2b2b);
+  --dbt-focusBorder: var(--vscode-focusBorder, #0078d4);
+  --dbt-editor-background: var(--vscode-editor-background, #1f1f1f);
+  --dbt-editor-foreground: var(--vscode-editor-foreground, #cccccc);
+  --dbt-editorGroupHeader-tabsBackground: var(--vscode-editorGroupHeader-tabsBackground, #181818);
+  --dbt-input-background: var(--vscode-input-background, #313131);
+  --dbt-input-foreground: var(--vscode-input-foreground, #cccccc);
+  --dbt-input-border: var(--vscode-input-border, #3c3c3c);
+  --dbt-button-background: var(--vscode-button-background, #0078d4);
+  --dbt-button-foreground: var(--vscode-button-foreground, #ffffff);
+  --dbt-button-hoverBackground: var(--vscode-button-hoverBackground, #026ec1);
+  --dbt-button-secondaryBackground: var(--vscode-button-secondaryBackground, #313131);
+  --dbt-button-secondaryForeground: var(--vscode-button-secondaryForeground, #cccccc);
+  --dbt-button-secondaryHoverBackground: var(--vscode-button-secondaryHoverBackground, #3c3c3c);
+  --dbt-list-hoverBackground: var(--vscode-list-hoverBackground, #2a2d2e);
+  --dbt-progressBar-background: var(--vscode-progressBar-background, #0078d4);
+  --dbt-progressBar-foreground: var(--vscode-progressBar-foreground, #cccccc);
+  --dbt-statusBar-background: var(--vscode-statusBar-background, #181818);
+  --dbt-statusBar-foreground: var(--vscode-statusBar-foreground, #cccccc);
+  --dbt-badge-background: var(--vscode-badge-background, #4d4d4d);
+  --dbt-gitDecoration-modifiedResourceForeground: var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d);
+}
+
+/* 浅色宿主主题：仅替换兜底值，宿主变量存在时仍以宿主为准 */
+body.vscode-light {
+  color-scheme: light;
+
+  --dbt-foreground: var(--vscode-foreground, #3b3b3b);
+  --dbt-descriptionForeground: var(--vscode-descriptionForeground, #616161);
+  --dbt-errorForeground: var(--vscode-errorForeground, #e51400);
+  --dbt-textLink-foreground: var(--vscode-textLink-foreground, #005fb8);
+  --dbt-panel-border: var(--vscode-panel-border, #e5e5e5);
+  --dbt-focusBorder: var(--vscode-focusBorder, #005fb8);
+  --dbt-editor-background: var(--vscode-editor-background, #ffffff);
+  --dbt-editor-foreground: var(--vscode-editor-foreground, #3b3b3b);
+  --dbt-editorGroupHeader-tabsBackground: var(--vscode-editorGroupHeader-tabsBackground, #f8f8f8);
+  --dbt-input-background: var(--vscode-input-background, #ffffff);
+  --dbt-input-foreground: var(--vscode-input-foreground, #3b3b3b);
+  --dbt-input-border: var(--vscode-input-border, #d4d4d4);
+  --dbt-button-background: var(--vscode-button-background, #005fb8);
+  --dbt-button-foreground: var(--vscode-button-foreground, #ffffff);
+  --dbt-button-hoverBackground: var(--vscode-button-hoverBackground, #0258a8);
+  --dbt-button-secondaryBackground: var(--vscode-button-secondaryBackground, #f2f2f2);
+  --dbt-button-secondaryForeground: var(--vscode-button-secondaryForeground, #3b3b3b);
+  --dbt-button-secondaryHoverBackground: var(--vscode-button-secondaryHoverBackground, #e8e8e8);
+  --dbt-list-hoverBackground: var(--vscode-list-hoverBackground, #e8e8e8);
+  --dbt-progressBar-background: var(--vscode-progressBar-background, #005fb8);
+  --dbt-progressBar-foreground: var(--vscode-progressBar-foreground, #ffffff);
+  --dbt-statusBar-background: var(--vscode-statusBar-background, #f8f8f8);
+  --dbt-statusBar-foreground: var(--vscode-statusBar-foreground, #3b3b3b);
+  --dbt-badge-background: var(--vscode-badge-background, #c4c4c4);
+  --dbt-gitDecoration-modifiedResourceForeground: var(--vscode-gitDecoration-modifiedResourceForeground, #895503);
+}
+
 html,
 body {
   margin: 0;
@@ -11,9 +83,9 @@ body {
 }
 
 body {
-  font-family: var(--vscode-font-family, -apple-system, 'Segoe UI', sans-serif);
-  background-color: var(--vscode-editor-background);
-  color: var(--vscode-foreground);
+  font-family: var(--dbt-font-family);
+  background-color: var(--dbt-editor-background);
+  color: var(--dbt-foreground);
   font-size: 13px;
   line-height: 1.5;
 }

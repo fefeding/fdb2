@@ -244,8 +244,8 @@ function formatValue(v: any) {
   flex-direction: column;
   gap: 8px;
   padding: 10px 12px;
-  background-color: var(--vscode-editorGroupHeader-tabsBackground);
-  border-bottom: 1px solid var(--vscode-panel-border);
+  background-color: var(--dbt-editorGroupHeader-tabsBackground);
+  border-bottom: 1px solid var(--dbt-panel-border);
 }
 
 .toolbar-title {
@@ -253,7 +253,7 @@ function formatValue(v: any) {
 }
 
 .muted {
-  color: var(--vscode-descriptionForeground);
+  color: var(--dbt-descriptionForeground);
   font-weight: 400;
 }
 
@@ -264,18 +264,18 @@ function formatValue(v: any) {
 
 .tab {
   padding: 4px 14px;
-  border: 1px solid var(--vscode-panel-border);
+  border: 1px solid var(--dbt-panel-border);
   border-radius: 4px;
   background: transparent;
-  color: var(--vscode-foreground);
+  color: var(--dbt-foreground);
   font-size: 12px;
   cursor: pointer;
 }
 
 .tab.active {
-  background-color: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
-  border-color: var(--vscode-button-background);
+  background-color: var(--dbt-button-background);
+  color: var(--dbt-button-foreground);
+  border-color: var(--dbt-button-background);
 }
 
 .toolbar-actions {
@@ -289,9 +289,9 @@ function formatValue(v: any) {
   flex: 1;
   min-width: 180px;
   padding: 5px 8px;
-  border: 1px solid var(--vscode-input-border);
-  background-color: var(--vscode-input-background);
-  color: var(--vscode-input-foreground);
+  border: 1px solid var(--dbt-input-border);
+  background-color: var(--dbt-input-background);
+  color: var(--dbt-input-foreground);
   border-radius: 4px;
 }
 
@@ -304,8 +304,8 @@ function formatValue(v: any) {
 }
 
 .btn-secondary {
-  background-color: var(--vscode-button-secondaryBackground);
-  color: var(--vscode-button-secondaryForeground);
+  background-color: var(--dbt-button-secondaryBackground);
+  color: var(--dbt-button-secondaryForeground);
 }
 
 .btn:disabled {
@@ -315,7 +315,7 @@ function formatValue(v: any) {
 
 .page-info {
   font-size: 12px;
-  color: var(--vscode-descriptionForeground);
+  color: var(--dbt-descriptionForeground);
 }
 
 .content {
@@ -338,7 +338,7 @@ function formatValue(v: any) {
 .data-table td {
   padding: 6px 10px;
   text-align: left;
-  border-bottom: 1px solid var(--vscode-panel-border);
+  border-bottom: 1px solid var(--dbt-panel-border);
   white-space: nowrap;
   max-width: 360px;
   overflow: hidden;
@@ -346,14 +346,14 @@ function formatValue(v: any) {
 }
 
 .data-table th {
-  background-color: var(--vscode-editorGroupHeader-tabsBackground);
+  background-color: var(--dbt-editorGroupHeader-tabsBackground);
   font-weight: 600;
   position: sticky;
   top: 0;
 }
 
 .data-table tbody tr:hover {
-  background-color: var(--vscode-list-hoverBackground);
+  background-color: var(--dbt-list-hoverBackground);
 }
 
 .section-title {
@@ -361,7 +361,7 @@ function formatValue(v: any) {
   font-weight: 600;
   margin: 18px 0 10px;
   padding-bottom: 6px;
-  border-bottom: 1px solid var(--vscode-panel-border);
+  border-bottom: 1px solid var(--dbt-panel-border);
 }
 
 .loading,
@@ -371,19 +371,19 @@ function formatValue(v: any) {
   align-items: center;
   justify-content: center;
   padding: 50px;
-  color: var(--vscode-descriptionForeground);
+  color: var(--dbt-descriptionForeground);
 }
 
 .error {
-  color: var(--vscode-errorForeground);
+  color: var(--dbt-errorForeground);
   padding: 12px;
 }
 
 .spinner {
   width: 26px;
   height: 26px;
-  border: 3px solid var(--vscode-progressBar-background);
-  border-top-color: var(--vscode-progressBar-foreground);
+  border: 3px solid var(--dbt-progressBar-background);
+  border-top-color: var(--dbt-progressBar-foreground);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
   margin-bottom: 8px;

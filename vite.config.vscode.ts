@@ -9,6 +9,9 @@ const __dirname = path.dirname(__filename);
 // 与 vite.config.ts 一致：从 package.json 注入版本号（layout.vue 等组件直接读取 __APP_VERSION__）
 const appVersion = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf-8')).version;
 
+// 开发调试保留未压缩 + sourcemap；发布（vsce package）前用 `vite build --config vite.config.vscode.ts --minify`
+const minify = process.argv.includes('--minify') || process.env.VSCODE_WEBVIEW_MINIFY === '1';
+
 /**
  * VSCode WebView 构建配置（单入口 IIFE）。
  * 所有面板（连接 / 查询 / 浏览器 / 表数据 / 表结构）打包为同一份 main.js，
@@ -24,8 +27,8 @@ export default defineConfig({
     outDir: 'packages/vscode/resources/webview',
     emptyOutDir: true,
     target: 'es2020',
-    minify: false,
-    sourcemap: true,
+    minify,
+    sourcemap: !minify,
     // 把字体等静态资源内联为 data URI，避免 VSCode webview 下外部资源路径无法解析（图标 404）
     assetsInlineLimit: 100000000,
     rollupOptions: {

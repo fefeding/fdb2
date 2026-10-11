@@ -204,7 +204,7 @@ function formatNumber(n: number): string {
   align-items: center;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--vscode-panel-border);
+  border-bottom: 1px solid var(--dbt-panel-border);
 }
 
 .panel-title {
@@ -225,9 +225,9 @@ function formatNumber(n: number): string {
 .connection-selector {
   width: 100%;
   padding: 6px 10px;
-  border: 1px solid var(--vscode-input-border);
-  background-color: var(--vscode-input-background);
-  color: var(--vscode-input-foreground);
+  border: 1px solid var(--dbt-input-border);
+  background-color: var(--dbt-input-background);
+  color: var(--dbt-input-foreground);
   border-radius: 4px;
   font-size: 13px;
 }
@@ -241,19 +241,19 @@ function formatNumber(n: number): string {
 }
 
 .btn-primary {
-  background-color: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
+  background-color: var(--dbt-button-background);
+  color: var(--dbt-button-foreground);
 }
 
 .btn-secondary {
-  background-color: var(--vscode-button-secondaryBackground);
-  color: var(--vscode-button-secondaryForeground);
+  background-color: var(--dbt-button-secondaryBackground);
+  color: var(--dbt-button-secondaryForeground);
 }
 
 .btn-link {
   background: none;
   border: none;
-  color: var(--vscode-textLink-foreground);
+  color: var(--dbt-textLink-foreground);
   cursor: pointer;
   padding: 0 6px;
   font-size: 12px;
@@ -264,35 +264,35 @@ function formatNumber(n: number): string {
   font-weight: 600;
   margin: 18px 0 12px;
   padding-bottom: 6px;
-  border-bottom: 1px solid var(--vscode-panel-border);
+  border-bottom: 1px solid var(--dbt-panel-border);
 }
 
 .section-subtitle {
   font-size: 13px;
   margin: 8px 0;
-  color: var(--vscode-descriptionForeground);
+  color: var(--dbt-descriptionForeground);
 }
 
 .tabs {
   display: flex;
   gap: 4px;
   margin-bottom: 12px;
-  border-bottom: 1px solid var(--vscode-panel-border);
+  border-bottom: 1px solid var(--dbt-panel-border);
 }
 
 .tab {
   padding: 7px 16px;
   border: none;
   background-color: transparent;
-  color: var(--vscode-foreground);
+  color: var(--dbt-foreground);
   font-size: 13px;
   cursor: pointer;
   border-bottom: 2px solid transparent;
 }
 
 .tab.active {
-  border-bottom-color: var(--vscode-focusBorder);
-  color: var(--vscode-textLink-foreground);
+  border-bottom-color: var(--dbt-focusBorder);
+  color: var(--dbt-textLink-foreground);
 }
 
 .database-grid {
@@ -303,8 +303,8 @@ function formatNumber(n: number): string {
 
 .database-card {
   padding: 14px;
-  background-color: var(--vscode-editor-background);
-  border: 1px solid var(--vscode-panel-border);
+  background-color: var(--dbt-editor-background);
+  border: 1px solid var(--dbt-panel-border);
   border-radius: 8px;
   cursor: pointer;
   display: flex;
@@ -314,7 +314,7 @@ function formatNumber(n: number): string {
 }
 
 .database-card:hover {
-  border-color: var(--vscode-focusBorder);
+  border-color: var(--dbt-focusBorder);
 }
 
 .database-icon {
@@ -341,7 +341,7 @@ function formatNumber(n: number): string {
 }
 
 .table-item:hover {
-  background-color: var(--vscode-list-hoverBackground);
+  background-color: var(--dbt-list-hoverBackground);
 }
 
 .table-icon {
@@ -360,26 +360,26 @@ function formatNumber(n: number): string {
 
 .table-comment {
   font-size: 12px;
-  color: var(--vscode-descriptionForeground);
+  color: var(--dbt-descriptionForeground);
 }
 
 .table-meta {
   display: flex;
   gap: 12px;
   font-size: 12px;
-  color: var(--vscode-descriptionForeground);
+  color: var(--dbt-descriptionForeground);
   margin-top: 2px;
 }
 
 .table-type {
   padding: 2px 8px;
   border-radius: 12px;
-  background-color: var(--vscode-badge-background);
+  background-color: var(--dbt-badge-background);
   font-size: 11px;
 }
 
 .table-type.view {
-  background-color: var(--vscode-gitDecoration-modifiedResourceForeground);
+  background-color: var(--dbt-gitDecoration-modifiedResourceForeground);
   color: #fff;
 }
 
@@ -397,15 +397,15 @@ function formatNumber(n: number): string {
 .action-btn {
   padding: 3px 8px;
   font-size: 12px;
-  background-color: var(--vscode-button-secondaryBackground);
-  color: var(--vscode-button-secondaryForeground);
+  background-color: var(--dbt-button-secondaryBackground);
+  color: var(--dbt-button-secondaryForeground);
   border: none;
   border-radius: 4px;
   cursor: pointer;
 }
 
 .action-btn:hover {
-  background-color: var(--vscode-button-secondaryHoverBackground);
+  background-color: var(--dbt-button-secondaryHoverBackground);
 }
 
 .empty-state {
@@ -431,7 +431,7 @@ function formatNumber(n: number): string {
 
 .empty-text {
   font-size: 13px;
-  color: var(--vscode-descriptionForeground);
+  color: var(--dbt-descriptionForeground);
 }
 
 .loading {
@@ -440,14 +440,14 @@ function formatNumber(n: number): string {
   align-items: center;
   justify-content: center;
   padding: 40px;
-  color: var(--vscode-descriptionForeground);
+  color: var(--dbt-descriptionForeground);
 }
 
 .spinner {
   width: 30px;
   height: 30px;
-  border: 3px solid var(--vscode-progressBar-background);
-  border-top-color: var(--vscode-progressBar-foreground);
+  border: 3px solid var(--dbt-progressBar-background);
+  border-top-color: var(--dbt-progressBar-foreground);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
   margin-bottom: 10px;

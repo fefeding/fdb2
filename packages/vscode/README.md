@@ -47,7 +47,8 @@ Equivalent scripts from the repo root:
 ### 1. Open the Database Tool view
 Click the **Database Tool** icon in the Activity Bar (left side). If you don't see it, open the Command Palette (`Ctrl/Cmd+Shift+P`) and run **`Database Tool: Add Connection`** — that will reveal the view automatically.
 
-The tree starts empty with a hint: *"No connections, click + to add"*.
+The tree starts empty with a welcome view: *"No database connections yet."* plus an **Add Connection** button.
+You can also collapse/expand everything with the tree's **Collapse All** action.
 
 ### 2. Add a connection
 There are three ways to open the **Add Connection** form:
@@ -96,6 +97,7 @@ Open a table → **Data** tab:
 - **Edit / Delete** — use the row action buttons (`✏️` / `🗑️`); `✏️` opens an inline editor.
 - **Insert** — the **Insert Data** toolbar button adds a new row.
 - **Export** — the **Export** dropdown supports CSV (and other formats).
+Inside VSCode a native **Save** dialog opens (the webview itself cannot write files); once the export finishes, a notification offers **Open File** / **Reveal in Explorer**.
 
 Column headers use a fixed light theme so names are always readable regardless of your VSCode color theme.
 
@@ -113,8 +115,10 @@ Right-click tree items for context actions:
 
 | Node | Actions |
 | --- | --- |
-| Connection | Open Database Browser, New Query, Test Connection, Delete |
-| Table | View Data, View Structure |
+| Connection | Open Database Browser, New Query, Edit, Test Connection, Delete |
+| Table | Copy Table Name, Copy SELECT, View Data, View Structure |
+
+> 💡 All commands are also available from the Command Palette; if the argument is not a tree node, a **quick pick** lets you choose the connection.
 
 ---
 
@@ -124,7 +128,7 @@ Open **Settings → Extensions → Database Tool** (or add to `settings.json`):
 
 | Setting | Type | Default | Description |
 | --- | --- | --- | --- |
-| `dbtool.queryLimit` | number | `200` | Max rows returned per page for queries and table data. |
+| `dbtool.queryLimit` | number | `200` | Default page size for table data (used when the page does not specify one). |
 | `dbtool.dataDir` | string | `""` (empty) | Directory for connection config & cache. Empty = reuse the desktop `db_tool` `~/.fdb2` (so existing connections are shared). |
 
 Example:

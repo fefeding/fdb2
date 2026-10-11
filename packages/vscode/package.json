@@ -2,7 +2,7 @@
   "name": "vscode-fdb2",
   "displayName": "Database Tool (fdb2)",
   "description": "强大的数据库管理工具：连接管理、SQL 查询、数据浏览与表结构查看，支持 MySQL / PostgreSQL / SQL Server / SQLite / Oracle / MongoDB / ClickHouse 等多种数据库。",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "publisher": "fefeding",
   "license": "MIT",
   "icon": "resources/icon.png",
@@ -28,7 +28,17 @@
   "main": "./dist/extension.js",
   "activationEvents": [
     "onView:databaseExplorer",
-    "onCommand:dbtool.openQueryPanel"
+    "onCommand:dbtool.addConnection",
+    "onCommand:dbtool.editConnection",
+    "onCommand:dbtool.refreshConnections",
+    "onCommand:dbtool.openQueryPanel",
+    "onCommand:dbtool.openDatabasePanel",
+    "onCommand:dbtool.testConnection",
+    "onCommand:dbtool.deleteConnection",
+    "onCommand:dbtool.viewTableData",
+    "onCommand:dbtool.viewTableStructure",
+    "onCommand:dbtool.copyTableName",
+    "onCommand:dbtool.copySelectSQL"
   ],
   "contributes": {
     "viewsContainers": {
@@ -96,6 +106,24 @@
         "title": "查看结构",
         "icon": "$(list-unordered)",
         "category": "Database Tool"
+      },
+      {
+        "command": "dbtool.editConnection",
+        "title": "编辑连接",
+        "icon": "$(pencil)",
+        "category": "Database Tool"
+      },
+      {
+        "command": "dbtool.copyTableName",
+        "title": "复制表名",
+        "icon": "$(clippy)",
+        "category": "Database Tool"
+      },
+      {
+        "command": "dbtool.copySelectSQL",
+        "title": "复制 SELECT 语句",
+        "icon": "$(code)",
+        "category": "Database Tool"
       }
     ],
     "menus": {
@@ -123,34 +151,55 @@
           "group": "inline"
         },
         {
-          "command": "dbtool.testConnection",
+          "command": "dbtool.editConnection",
           "when": "view == databaseExplorer && viewItem == connection",
           "group": "connection@1"
         },
         {
-          "command": "dbtool.deleteConnection",
+          "command": "dbtool.testConnection",
           "when": "view == databaseExplorer && viewItem == connection",
           "group": "connection@2"
         },
         {
-          "command": "dbtool.viewTableData",
+          "command": "dbtool.deleteConnection",
+          "when": "view == databaseExplorer && viewItem == connection",
+          "group": "connection@3"
+        },
+        {
+          "command": "dbtool.copyTableName",
           "when": "view == databaseExplorer && viewItem == table",
           "group": "table@1"
         },
         {
-          "command": "dbtool.viewTableStructure",
+          "command": "dbtool.copySelectSQL",
           "when": "view == databaseExplorer && viewItem == table",
           "group": "table@2"
+        },
+        {
+          "command": "dbtool.viewTableData",
+          "when": "view == databaseExplorer && viewItem == table",
+          "group": "table@3"
+        },
+        {
+          "command": "dbtool.viewTableStructure",
+          "when": "view == databaseExplorer && viewItem == table",
+          "group": "table@4"
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "databaseExplorer",
+        "contents": "暂无数据库连接。\n[添加连接](command:dbtool.addConnection)\n连接配置默认与桌面端 fdb2 共享（~/.fdb2）。"
+      }
+    ],
     "configuration": {
       "title": "Database Tool",
       "properties": {
         "dbtool.queryLimit": {
           "type": "number",
           "default": 200,
-          "description": "查询与表数据分页的每页行数上限。"
+          "description": "表数据分页的默认每页行数（页面未显式指定分页大小时生效）。"
         },
         "dbtool.dataDir": {
           "type": "string",
@@ -161,7 +210,7 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "node esbuild.js --production && cd ../.. && npm run build:vscode",
+    "vscode:prepublish": "node esbuild.js --production && cd ../.. && npm run build:vscode -- --minify",
     "compile": "node esbuild.js",
     "watch": "node esbuild.js --watch",
     "build:webview": "cd ../.. && npm run build:vscode",

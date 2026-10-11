@@ -16,7 +16,11 @@ export type WebviewMessage =
   | { command: 'executeQuery'; data: { id: string; sql: string; database?: string } }
   | { command: 'refreshTree' }
   | { command: 'close' }
-  | { command: 'pickSaveFolder'; id: number; data?: { defaultUri?: string } };
+  | { command: 'pickSaveFolder'; id: number; data?: { defaultUri?: string } }
+  // 文件通道：webview 内 <a download> 不落盘，统一由宿主 showSaveDialog + workspace.fs 写文件
+  | { command: 'saveFile'; id: number; data: { filename: string; content?: string; base64?: string; filters?: Record<string, string[]> } }
+  | { command: 'openPath'; data: { path: string; reveal?: boolean } }
+  | { command: 'showExportedFile'; data: { path: string } };
 
 /** 宿主发送给 Webview 的消息 */
 export type HostMessage =
@@ -33,7 +37,9 @@ export type HostMessage =
   | { command: 'editConnection'; data: any }
   | { command: 'selectConnection'; data: { id: string } }
   | { command: 'init'; data: any }
-  | { command: 'pickSaveFolderResult'; id: number; data: { path: string | null } };
+  | { command: 'pickSaveFolderResult'; id: number; data: { path: string | null } }
+  | { command: 'saveFileResult'; id: number; data: { path: string | null; cancelled?: boolean; error?: string } }
+  | { command: 'navigate'; data: Record<string, string> };
 
 /**
  * 将后端返回的结果（数组对象 / 数组数组 / 标量）统一规范化为 { columns, rows } 结构。

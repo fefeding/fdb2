@@ -188,7 +188,7 @@ function handleCancel() {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 24px;
-  color: var(--vscode-foreground);
+  color: var(--dbt-foreground);
 }
 
 .form-group {
@@ -199,20 +199,26 @@ function handleCancel() {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
+  color: var(--dbt-foreground);
 }
 
 .form-control {
   width: 100%;
   padding: 7px 10px;
-  border: 1px solid var(--vscode-input-border);
-  background-color: var(--vscode-input-background);
-  color: var(--vscode-input-foreground);
+  border: 1px solid var(--dbt-input-border);
+  background-color: var(--dbt-input-background);
+  color: var(--dbt-input-foreground);
   border-radius: 4px;
+}
+
+.form-control::placeholder {
+  color: var(--dbt-descriptionForeground);
+  opacity: 1;
 }
 
 .form-control:focus {
   outline: none;
-  border-color: var(--vscode-focusBorder);
+  border-color: var(--dbt-focusBorder);
 }
 
 .form-row {
@@ -247,20 +253,20 @@ function handleCancel() {
 }
 
 .btn-primary {
-  background-color: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
+  background-color: var(--dbt-button-background);
+  color: var(--dbt-button-foreground);
 }
 
 .btn-primary:hover {
-  background-color: var(--vscode-button-hoverBackground);
+  background-color: var(--dbt-button-hoverBackground);
 }
 
 .btn-secondary {
-  background-color: var(--vscode-button-secondaryBackground);
-  color: var(--vscode-button-secondaryForeground);
+  background-color: var(--dbt-button-secondaryBackground);
+  color: var(--dbt-button-secondaryForeground);
 }
 
 .btn-secondary:hover {
-  background-color: var(--vscode-button-secondaryHoverBackground);
+  background-color: var(--dbt-button-secondaryHoverBackground);
 }
 </style>

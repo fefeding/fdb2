@@ -1,4 +1,5 @@
 // 数据库平台通用工具函数
+import { isVscodeWebview, vscodeSaveFile } from '@/platform/vscode/rpc';
 
 // 格式化文件大小
 export function formatFileSize(bytes: number): string {
@@ -188,8 +189,17 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-// 下载文件
+// 下载文件（VSCode webview 内走宿主保存对话框）
 export function downloadFile(content: string, filename: string, contentType = 'text/plain') {
+  if (isVscodeWebview()) {
+    const ext = (filename.split('.').pop() || '').toLowerCase();
+    vscodeSaveFile({
+      filename,
+      content,
+      filters: ext ? { [`${ext.toUpperCase()} 文件`]: [ext] } : undefined
+    }).catch((e) => console.error('[vscode] 保存文件失败:', e));
+    return;
+  }
   const blob = new Blob([content], { type: contentType });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

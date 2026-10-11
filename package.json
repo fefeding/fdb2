@@ -27,6 +27,7 @@
     "build-only": "vite build && npm run build-server",
     "build-server": "tsc -p tsconfig.server.json",
     "build:vscode": "vite build --config vite.config.vscode.ts",
+    "build:vscode:prod": "vite build --config vite.config.vscode.ts --minify",
     "build:vscode:extension": "cd packages/vscode && npm run compile",
     "build:all": "npm run build && npm run build:vscode && npm run build:vscode:extension",
     "move-assets": "node move-assets.cjs",

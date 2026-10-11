@@ -1,6 +1,5 @@
 import { fileURLToPath, URL } from 'node:url';
 import * as http from "node:http";
-import * as url from "node:url";
 import { defineConfig, type Connect, type PluginOption } from 'vite';
 
 import vue from '@vitejs/plugin-vue';
@@ -367,7 +366,8 @@ async function serverRoute(req: Connect.IncomingMessage, res: http.ServerRespons
       return next();
     }
 
-    const parsedUrl = url.parse(req.url, true);
+    // 用 WHATWG URL 解析（url.parse 已废弃）
+    const parsedUrl = new URL(req.url || '/', 'http://localhost');
     const pathname = parsedUrl.pathname || '';
     const method = req.method?.toLowerCase();
 

@@ -1,6 +1,5 @@
 import * as http from 'http';
 import * as https from 'https';
-import * as url from 'url';
 
 /**
  * ClickHouse 连接封装
@@ -108,7 +107,8 @@ export class ClickHouseConnection {
 
   private post(body: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      const parsed = url.parse(this.baseUrl);
+      // 用 WHATWG URL：url.parse() 已废弃（DEP0169），且会连带触发 punycode 弃用告警（DEP0040）
+      const parsed = new URL(this.baseUrl);
       const data = Buffer.from(body, 'utf8');
       const headers: Record<string, any> = {
         'Content-Type': 'text/plain; charset=utf-8',
@@ -120,7 +120,7 @@ export class ClickHouseConnection {
       const req = lib.request(
         {
           hostname: parsed.hostname,
-          port: parsed.port,
+          port: parsed.port || undefined,
           path: this.databasePath(),
           method: 'POST',
           headers

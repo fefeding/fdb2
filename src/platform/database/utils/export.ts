@@ -1,5 +1,6 @@
 // 数据导出工具函数
 import { exportToExcel } from '@/utils/xlsx';
+import { isVscodeWebview, vscodeSaveFile, blobToBase64 } from '@/platform/vscode/rpc';
 
 // 导出为Excel
 export async function exportDataToExcel(
@@ -130,7 +131,21 @@ export function exportDataToSQL(
 }
 
 // 通用的文件下载函数
-function downloadFile(blob: Blob, filename: string) {
+// VSCode webview 下 <a download> 不会落盘（且不会报错），改为经宿主 showSaveDialog + fs.writeFile 保存
+async function downloadFile(blob: Blob, filename: string): Promise<void> {
+  if (isVscodeWebview()) {
+    const ext = (filename.split('.').pop() || '').toLowerCase();
+    try {
+      await vscodeSaveFile({
+        filename,
+        base64: await blobToBase64(blob),
+        filters: ext ? { [`${ext.toUpperCase()} 文件`]: [ext] } : undefined
+      });
+    } catch (e) {
+      console.error('[vscode] 保存文件失败:', e);
+    }
+    return;
+  }
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

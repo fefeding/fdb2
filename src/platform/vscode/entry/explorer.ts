@@ -82,56 +82,5 @@ export function mountExplorer(): void {
     // 否则新面板首次打开会停在默认空屏（宿主需收到 ready 才 flush pending）。
     getVSCodeBridge().postMessage({ command: 'ready' });
 
-    // 纯原生导航：隐藏 webview 内自带的连接/库/表树（.explorer-sidebar）与顶部大 header（.top-toolbar），
-    // 左侧导航完全由 VSCode 原生 TreeView（Activity Bar）承担。仅作用于 webview，不影响桌面端。
-    // 内容区沿用桌面端固定浅色主题；输入控件显式指定浅色，避免深色 webview 下 UA 默认样式渲染成黑块。
-    const style = document.createElement('style');
-    style.textContent = `
-      body.vscode-native-nav .explorer-sidebar { display: none !important; }
-      body.vscode-native-nav .top-toolbar { display: none !important; }
-      body.vscode-native-nav .explorer-layout { display: block !important; }
-      body.vscode-native-nav .explorer-main { height: 100%; }
-      /* 外层框架跟随 VSCode 主题背景；内部卡片沿用桌面端浅色设计 */
-      body.vscode-native-nav,
-      body.vscode-native-nav .database-layout,
-      body.vscode-native-nav .database-explorer { background: transparent !important; }
-      body.vscode-native-nav { background-color: var(--vscode-editor-background, #1e1e1e) !important; }
-      /* 压缩入口尺寸：webview 面板较窄，连接头卡片与快捷操作改为紧凑布局 */
-      body.vscode-native-nav .connection-detail { gap: 12px !important; }
-      body.vscode-native-nav .connection-header { margin-bottom: 0 !important; padding: 10px 14px !important; }
-      body.vscode-native-nav .connection-info { gap: 10px !important; }
-      body.vscode-native-nav .quick-actions { margin-bottom: 0 !important; padding: 10px 14px !important; }
-      body.vscode-native-nav .actions-grid { gap: 8px !important; }
-      body.vscode-native-nav .action-btn {
-        flex-direction: row !important;
-        justify-content: flex-start !important;
-        gap: 8px !important;
-        padding: 8px 10px !important;
-      }
-      body.vscode-native-nav .action-icon { font-size: 14px !important; }
-      body.vscode-native-nav input,
-      body.vscode-native-nav textarea,
-      body.vscode-native-nav select {
-        background-color: #ffffff !important;
-        color: #1e293b !important;
-        border-color: #cbd5e1 !important;
-        color-scheme: light !important;
-      }
-      body.vscode-native-nav input::placeholder,
-      body.vscode-native-nav textarea::placeholder { color: #94a3b8 !important; }
-      /* 抵消 database.css 深色媒体查询（prefers-color-scheme: dark）对表格的覆盖，
-         webview 内沿用浅色表格：否则表头白字白底、表格底色发黑 */
-      @media (prefers-color-scheme: dark) {
-        body.vscode-native-nav table.table { background-color: #ffffff; }
-        body.vscode-native-nav .table th {
-          background-color: #f8f9fa;
-          color: #1e293b;
-        }
-        body.vscode-native-nav .table th .column-name,
-        body.vscode-native-nav .table th .column-type,
-        body.vscode-native-nav .table th .sort-icon { color: inherit; }
-      }
-    `;
-    document.head.appendChild(style);
-    document.body.classList.add('vscode-native-nav');
-}
+    // 外壳样式（隐藏自带侧边栏、主题适配）已在 entry/index.ts 挂载前注入，见 platform/vscode/theme.ts
+    }

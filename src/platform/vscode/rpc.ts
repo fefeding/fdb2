@@ -13,6 +13,14 @@ let seq = 0;
 const pending = new Map<number, { resolve: (v: any) => void; reject: (e: Error) => void }>();
 let installed = false;
 
+/**
+ * 是否运行在 VSCode webview 构建中。
+ * 注意：不能用 base/detect 的 isVSCode——桌面端若从 VSCode 终端启动会带上 VSCODE_PID 而误判。
+ */
+export function isVscodeWebview(): boolean {
+  return typeof __VS_CODE_ENV__ !== 'undefined' && !!__VS_CODE_ENV__;
+}
+
 function installListener(): void {
     if (installed || typeof window === 'undefined') return;
     installed = true;
@@ -51,6 +59,79 @@ export function vscodeApiRequest(path: string, data?: any): Promise<any> {
             }
         }, 60000);
     });
+}
+
+// ---------------- 保存文件（webview 内 <a download> 不生效，改由宿主写盘） ----------------
+
+let saveFileSeq = 0;
+const saveFilePending = new Map<number, { resolve: (v: string | null) => void }>();
+let saveFileInstalled = false;
+
+function installSaveFileListener(): void {
+  if (saveFileInstalled || typeof window === 'undefined') return;
+  saveFileInstalled = true;
+  window.addEventListener('message', (event) => {
+    const m = event.data;
+    if (!m || m.command !== 'saveFileResult' || typeof m.id !== 'number') return;
+    const p = saveFilePending.get(m.id);
+    if (!p) return;
+    saveFilePending.delete(m.id);
+    p.resolve(m.data?.path ?? null);
+  });
+}
+
+export interface VscodeSaveFileOptions {
+  filename: string;
+  /** 文本内容（与 base64 二选一） */
+  content?: string;
+  /** 二进制内容的 base64（xlsx 等） */
+  base64?: string;
+  /** 保存对话框的文件类型过滤，如 { 'CSV 文件': ['csv'] } */
+  filters?: Record<string, string[]>;
+}
+
+/** 弹出保存对话框并由宿主写文件，返回最终路径；用户取消或失败返回 null。 */
+export function vscodeSaveFile(opts: VscodeSaveFileOptions): Promise<string | null> {
+  installSaveFileListener();
+  const bridge = getVSCodeBridge();
+  if (!bridge.isVSCodeEnvironment()) return Promise.resolve(null);
+  const id = ++saveFileSeq;
+  return new Promise((resolve) => {
+    saveFilePending.set(id, { resolve });
+    bridge.postMessage({ command: 'saveFile', id, data: opts });
+    // 用户可能长时间停留在保存对话框，超时给 5 分钟
+    setTimeout(() => {
+      if (saveFilePending.has(id)) {
+        saveFilePending.delete(id);
+        resolve(null);
+      }
+    }, 300000);
+  });
+}
+
+/** 用宿主打开已导出的文件；reveal=true 时在文件管理器中定位 */
+export function vscodeOpenPath(path: string, reveal = false): void {
+  if (!path) return;
+  getVSCodeBridge().postMessage({ command: 'openPath', data: { path, reveal } });
+}
+
+/** 通知宿主"导出完成"，由宿主弹出带「打开 / 在资源管理器中显示」的提示 */
+export function vscodeNotifyExported(path: string): void {
+  if (!path) return;
+  getVSCodeBridge().postMessage({ command: 'showExportedFile', data: { path } });
+}
+
+/** Blob -> base64（二进制导出需要） */
+export function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || '');
+      resolve(result.slice(result.indexOf(',') + 1));
+    };
+    reader.onerror = () => reject(reader.error || new Error('read blob failed'));
+    reader.readAsDataURL(blob);
+  });
 }
 
 // ---------------- 选择保存文件夹 ----------------
