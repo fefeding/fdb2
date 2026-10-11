@@ -32,6 +32,33 @@ const SHELL_CSS = `
     padding: 8px 10px !important;
   }
   body.vscode-native-nav .action-icon { font-size: 14px !important; }
+
+  /* 表详情页：webview 面板较窄，顶部信息条 / 工具栏 / 页签整体收紧，
+     按钮改为更紧凑的尺寸（桌面端不受影响） */
+  body.vscode-native-nav .table-header { padding: 10px 14px !important; }
+  body.vscode-native-nav .table-icon { font-size: 22px !important; }
+  body.vscode-native-nav .table-name { font-size: 1.05rem !important; }
+  body.vscode-native-nav .table-breadcrumb { font-size: 0.78rem !important; }
+  body.vscode-native-nav .table-stats { gap: 12px !important; }
+  body.vscode-native-nav .table-toolbar { padding: 8px 12px !important; gap: 8px !important; flex-wrap: wrap !important; }
+  body.vscode-native-nav .toolbar-left,
+  body.vscode-native-nav .toolbar-right { gap: 6px !important; flex-wrap: wrap !important; }
+  body.vscode-native-nav .table-toolbar .btn {
+    padding: 3px 8px !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    border-radius: 4px !important;
+  }
+  body.vscode-native-nav .table-toolbar .btn i { font-size: 12px !important; }
+  body.vscode-native-nav .table-toolbar .dropdown-menu { font-size: 12px !important; }
+  body.vscode-native-nav .table-toolbar .dropdown-item { padding: 4px 10px !important; font-size: 12px !important; }
+  body.vscode-native-nav .nav-tabs { padding: 0 0.5rem !important; }
+  body.vscode-native-nav .nav-tabs .nav-link {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+  }
+  body.vscode-native-nav .nav-tabs .nav-link .badge { font-size: 10px !important; padding: 2px 5px !important; }
+  body.vscode-native-nav .tab-content { padding: 12px !important; }
 `;
 
 export function installVscodeShellStyle(): void {
