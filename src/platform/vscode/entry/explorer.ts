@@ -96,6 +96,19 @@ export function mountExplorer(): void {
       body.vscode-native-nav .database-layout,
       body.vscode-native-nav .database-explorer { background: transparent !important; }
       body.vscode-native-nav { background-color: var(--vscode-editor-background, #1e1e1e) !important; }
+      /* 压缩入口尺寸：webview 面板较窄，连接头卡片与快捷操作改为紧凑布局 */
+      body.vscode-native-nav .connection-detail { gap: 12px !important; }
+      body.vscode-native-nav .connection-header { margin-bottom: 0 !important; padding: 10px 14px !important; }
+      body.vscode-native-nav .connection-info { gap: 10px !important; }
+      body.vscode-native-nav .quick-actions { margin-bottom: 0 !important; padding: 10px 14px !important; }
+      body.vscode-native-nav .actions-grid { gap: 8px !important; }
+      body.vscode-native-nav .action-btn {
+        flex-direction: row !important;
+        justify-content: flex-start !important;
+        gap: 8px !important;
+        padding: 8px 10px !important;
+      }
+      body.vscode-native-nav .action-icon { font-size: 14px !important; }
       body.vscode-native-nav input,
       body.vscode-native-nav textarea,
       body.vscode-native-nav select {

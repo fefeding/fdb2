@@ -80,6 +80,31 @@ export class WebViewProvider {
     } else {
       this.pending.set(panel, { command: 'navigate', data: query });
     }
+    this.updateExplorerTitle(panel, query);
+  }
+
+  /**
+   * 让 Tab 标题反映当前选中对象，如「server.jm47.com · db_account · users」。
+   */
+  private async updateExplorerTitle(
+    panel: vscode.WebviewPanel,
+    query: Record<string, string>
+  ): Promise<void> {
+    const parts: string[] = [];
+    if (query.connectionId) {
+      try {
+        const conns = (await this.bridge.call<any[]>('/api/database/getConnections')) || [];
+        const conn = conns.find((c) => c.id === query.connectionId);
+        parts.push(conn?.name || query.connectionId);
+      } catch {
+        parts.push(query.connectionId);
+      }
+    } else {
+      parts.push('fdb2 数据库工作台');
+    }
+    if (query.database) parts.push(query.database);
+    if (query.table) parts.push(query.table);
+    panel.title = parts.join(' · ');
   }
 
   // ---------------- 面板构建 ----------------
