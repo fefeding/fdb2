@@ -25,6 +25,7 @@ import modalPlugin from '@/components/modal/index';
 
 import Layout from '@/platform/database/layout.vue';
 import Explorer from '@/platform/database/explorer.vue';
+import { getVSCodeBridge } from '@/platform/vscode/bridge';
 
 export function mountExplorer(): void {
     const routes = [
@@ -76,6 +77,10 @@ export function mountExplorer(): void {
     });
 
     app.mount('#app');
+
+    // 通知宿主 webview 已就绪，使其下发首开时缓存在 pending 中的 navigate 消息。
+    // 否则新面板首次打开会停在默认空屏（宿主需收到 ready 才 flush pending）。
+    getVSCodeBridge().postMessage({ command: 'ready' });
 
     // 纯原生导航：隐藏 webview 内自带的连接/库/表树（.explorer-sidebar），
     // 左侧导航完全由 VSCode 原生 TreeView（Activity Bar）承担。仅作用于 webview，不影响桌面端。
