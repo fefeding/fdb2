@@ -152,9 +152,7 @@ export class WebViewProvider {
 
   /** 释放全部面板与输出通道（扩展停用时调用） */
   dispose(): void {
-    this.log(`[dispose all] 即将销毁 ${this.panels.size} 个面板`);
-    for (const [key, panel] of this.panels.entries()) {
-      this.log(`[dispose all] disposing key=${key}`);
+    for (const panel of this.panels.values()) {
       try {
         panel.dispose();
       } catch {
@@ -223,16 +221,12 @@ export class WebViewProvider {
     );
 
     panel.onDidDispose(
-      () => {
-        this.log(`[panel disposed] key=${key} viewType=${viewType}`);
-        this.panels.delete(key);
-      },
+      () => this.panels.delete(key),
       undefined,
       this.context.subscriptions
     );
 
     this.panels.set(key, panel);
-    this.log(`[panel create] key=${key} viewType=${viewType} title=${title}`);
     return panel;
   }
 
@@ -270,11 +264,6 @@ export class WebViewProvider {
             this.log(`apiRequest ${message.path} 失败: ${e?.message || e}`);
             post({ command: 'apiResponse', id: message.id, body: { ret: 500, msg: e?.message || String(e) } });
           }
-          return;
-        }
-        case 'log': {
-          // webview 全局错误捕获转发过来的日志，直接落到 “Database Tool” 输出通道
-          this.out.appendLine(`[webview ${message.level || 'log'}] ${message.message || ''}`);
           return;
         }
         case 'ready': {
