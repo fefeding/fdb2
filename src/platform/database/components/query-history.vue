@@ -728,7 +728,7 @@ onMounted(() => {
 .stat-icon {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -781,7 +781,7 @@ onMounted(() => {
 }
 
 .filter-tag.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   color: var(--db-on-accent);
   border-color: transparent;
 }

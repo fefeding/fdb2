@@ -2,6 +2,9 @@
  * VSCode WebView 统一入口。
  * 宿主在 HTML 中注入 window.__PANEL_TYPE__，据此挂载对应的 Vue 面板组件。
  */
+// 必须作为第一个 import：先安装全局错误捕获，才能捕获后续模块求值阶段的错误
+import '../error-capture';
+import { setVueErrorHandler } from '../error-capture';
 import { createApp } from 'vue';
 import ConnectionPanel from '../components/ConnectionPanel.vue';
 import QueryPanel from '../components/QueryPanel.vue';
@@ -30,5 +33,7 @@ if (type === 'explorer') {
   mountExplorer();
 } else {
   const component = registry[type] || DatabasePanel;
-  createApp(component).mount('#app');
+  const app = createApp(component);
+  setVueErrorHandler(app);
+  app.mount('#app');
 }

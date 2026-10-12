@@ -8,6 +8,9 @@
  *  - vite 产物是 runtime-only Vue（无运行时模板编译器），根组件必须用 render 函数；
  *  - IIFE 单文件打包下不能用动态 import()，路由组件一律静态导入。
  */
+// 必须作为第一个 import：先安装全局错误捕获，才能捕获后续模块求值阶段的错误
+import '../error-capture';
+import { setVueErrorHandler } from '../error-capture';
 import { createApp, h, defineComponent } from 'vue';
 import { createRouter, createMemoryHistory, RouterView } from 'vue-router';
 import { createPinia } from 'pinia';
@@ -52,6 +55,7 @@ export function mountExplorer(): void {
     });
 
     const app = createApp(App);
+    setVueErrorHandler(app);
 
     const pinia = createPinia();
     try {

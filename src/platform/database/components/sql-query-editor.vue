@@ -579,23 +579,23 @@ watch(querySql, () => {
 }
 
 .btn-run {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  background: var(--db-accent-color) !important;
   color: var(--db-on-accent) !important;
   border: none !important;
 }
 
 .btn-run:hover:not(:disabled) {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  background: #059669 !important;
 }
 
 .btn-format {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  background: var(--db-info-color) !important;
   color: var(--db-on-accent) !important;
   border: none !important;
 }
 
 .btn-save {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  background: #8b5cf6 !important;
   color: var(--db-on-accent) !important;
   border: none !important;
 }
@@ -766,7 +766,7 @@ watch(querySql, () => {
 }
 
 .btn-export {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  background: var(--db-accent-color) !important;
   color: var(--db-on-accent) !important;
   border: none !important;
 }
@@ -988,13 +988,13 @@ watch(querySql, () => {
 }
 
 .btn-confirm {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   border: none;
   color: var(--db-on-accent);
 }
 
 .btn-confirm:hover:not(:disabled) {
-  background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%);
+  background: var(--db-primary-dark);
 }
 
 .btn-confirm:disabled {

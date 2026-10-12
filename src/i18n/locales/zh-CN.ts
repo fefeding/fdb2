@@ -220,6 +220,7 @@ export default {
   },
   databaseDetail: {
     tables: '数据表',
+    backToConnection: '返回连接概览',
     views: '视图',
     procedures: '存储过程',
     functions: '函数',
@@ -274,6 +275,8 @@ export default {
   tableDetail: {
     rowData: '行数据',
     refreshData: '刷新数据',
+    backToConnection: '返回连接概览',
+    backToDatabase: '返回数据库视图',
     modifyStructure: '修改表结构',
     insertData: '插入数据',
     exportMenu: '导出',

@@ -10,11 +10,15 @@
           <div class="table-meta">
             <h4 class="table-name">{{ table?.name }}</h4>
             <div class="table-breadcrumb">
-              <span class="connection">{{ connection?.name }}</span>
+              <span class="crumb crumb-link" @click="emit('navigate-connection')" :title="$t('tableDetail.backToConnection')">
+                <i class="bi bi-hdd-network me-1"></i>{{ connection?.name }}
+              </span>
               <i class="bi bi-chevron-right"></i>
-              <span class="database">{{ database }}</span>
+              <span class="crumb crumb-link" @click="emit('navigate-database')" :title="$t('tableDetail.backToDatabase')">
+                <i class="bi bi-database me-1"></i>{{ database }}
+              </span>
               <i class="bi bi-chevron-right"></i>
-              <span class="crumb-table">{{ table?.name }}</span>
+              <span class="crumb crumb-current">{{ table?.name }}</span>
             </div>
           </div>
         </div>
@@ -386,6 +390,8 @@ const emit = defineEmits<{
   'export-table': [];
   'edit-row': [row: any];
   'execute-sql': [sql: string];
+  'navigate-connection': [];
+  'navigate-database': [];
 }>();
 
 const databaseService = new DatabaseService();
@@ -969,6 +975,30 @@ async function downloadSQLFile(content: string, filename: string) {
   gap: 8px;
   font-size: 0.875rem;
   color: var(--db-gray-dark);
+}
+
+.table-breadcrumb .crumb {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.table-breadcrumb .crumb-link {
+  cursor: pointer;
+  color: var(--db-gray-dark);
+}
+
+.table-breadcrumb .crumb-link:hover {
+  background-color: var(--db-primary-bg);
+  color: #0969da;
+  text-decoration: underline;
+}
+
+.table-breadcrumb .crumb-current {
+  font-weight: 600;
+  color: var(--db-dark-color);
 }
 
 .table-stats {

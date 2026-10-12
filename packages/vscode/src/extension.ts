@@ -11,6 +11,38 @@ let treeProvider: DatabaseTreeProvider;
 let webViewProvider: WebViewProvider;
 
 /**
+ * 扩展宿主全局错误捕获：
+ * 连接列表等逻辑都已兜底，但扩展宿主进程仍可能出现未捕获异常 / unhandledRejection
+ * （VSCode 会以 __errorMarker 形式记到 DevTools，却不在“输出”面板，难以阅读）。
+ * 这里统一把完整堆栈写进 “Database Tool” 输出通道，并接管 console.error。
+ */
+function installHostErrorCapture(): void {
+  const hostOut = vscode.window.createOutputChannel('Database Tool');
+
+  const fmt = (a: any): string => {
+    if (a instanceof Error) return a.stack || `${a.name}: ${a.message}`;
+    if (typeof a === 'object' && a !== null) {
+      try { return JSON.stringify(a); } catch { return String(a); }
+    }
+    return String(a);
+  };
+
+  const origError = console.error.bind(console);
+  console.error = (...args: any[]) => {
+    try { hostOut.appendLine('[console.error] ' + args.map(fmt).join(' ')); } catch { /* ignore */ }
+    origError(...args);
+  };
+
+  process.on('uncaughtException', (e: any) => {
+    hostOut.appendLine(`[uncaughtException] ${fmt(e)}`);
+  });
+  process.on('unhandledRejection', (e: any) => {
+    hostOut.appendLine(`[unhandledRejection] ${fmt(e)}`);
+  });
+}
+installHostErrorCapture();
+
+/**
  * 右键菜单 / 命令行传入的参数可能是：
  *  - DbTreeItem（view/item/context 一律传 TreeItem 本身）
  *  - 原始连接对象（从 webview 或其它命令调用）

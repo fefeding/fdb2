@@ -751,19 +751,19 @@ onUnmounted(() => {
 }
 
 .status-icon.online {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: var(--db-accent-color);
 }
 
 .status-icon.offline {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: var(--db-danger-color);
 }
 
 .status-icon.warning {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  background: var(--db-warning-color);
 }
 
 .status-icon:not([class*="online"]):not([class*="offline"]):not([class*="warning"]) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
 }
 
 .status-info {
@@ -1053,10 +1053,10 @@ onUnmounted(() => {
   transition: width 0.3s ease;
 }
 
-.resource-fill.cpu { background: linear-gradient(90deg, #3b82f6, #1d4ed8); }
-.resource-fill.memory { background: linear-gradient(90deg, #10b981, #059669); }
-.resource-fill.disk { background: linear-gradient(90deg, #f59e0b, #d97706); }
-.resource-fill.network { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+.resource-fill.cpu { background: var(--db-info-color); }
+.resource-fill.memory { background: var(--db-accent-color); }
+.resource-fill.disk { background: var(--db-warning-color); }
+.resource-fill.network { background: #8b5cf6; }
 
 .resource-value span {
   font-weight: 600;

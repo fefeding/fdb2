@@ -958,7 +958,7 @@ onMounted(() => {
 }
 
 .tab-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   color: var(--db-on-accent);
   border-color: transparent;
 }
@@ -1018,7 +1018,7 @@ onMounted(() => {
 }
 
 .step.completed .step-number {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: var(--db-accent-color);
   border-color: #10b981;
   color: var(--db-on-accent);
 }
@@ -1081,7 +1081,7 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   color: var(--db-on-accent);
   border: none;
   border-radius: 8px;
@@ -1258,7 +1258,7 @@ onMounted(() => {
 }
 
 .btn-next:not(:disabled) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   color: var(--db-on-accent);
   border: none;
 }
@@ -1374,7 +1374,7 @@ onMounted(() => {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea, #764ba2);
+  background: var(--db-primary-color);
   transition: width 0.3s ease;
 }
 
@@ -1395,7 +1395,7 @@ onMounted(() => {
 .result-icon {
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: var(--db-accent-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1433,7 +1433,7 @@ onMounted(() => {
 
 .btn-new-import {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   color: var(--db-on-accent);
   border: none;
   border-radius: 8px;
@@ -1510,7 +1510,7 @@ onMounted(() => {
 }
 
 .btn-export {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: var(--db-accent-color);
   color: var(--db-on-accent);
   border: none;
 }

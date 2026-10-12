@@ -89,7 +89,7 @@ const appVersion = __APP_VERSION__;
 .brand-icon {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -167,7 +167,7 @@ const appVersion = __APP_VERSION__;
 .brand-icon {
   width: 45px;
   height: 45px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -218,7 +218,7 @@ const appVersion = __APP_VERSION__;
 .navbar-toggler-line {
   width: 25px;
   height: 3px;
-  background: linear-gradient(90deg, #667eea, #764ba2);
+  background: var(--db-primary-color);
   border-radius: 2px;
   transition: all 0.3s ease;
 }
@@ -260,7 +260,7 @@ const appVersion = __APP_VERSION__;
 }
 
 .nav-link-modern.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   color: var(--db-on-accent);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
@@ -330,7 +330,7 @@ const appVersion = __APP_VERSION__;
 .user-avatar {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   border-radius: 50%;
   display: flex;
   align-items: center;

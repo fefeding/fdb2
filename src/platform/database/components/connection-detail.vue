@@ -933,6 +933,9 @@ function getDbLogoText(type?: string): string {
   flex: 1;
   display: flex;
   flex-direction: column;
+  /* flex 子项默认 min-height:auto 会拒绝收缩，内容撑破后被外层
+     overflow:hidden 裁掉且不出现滚动条，必须显式允许收缩 */
+  min-height: 0;
 }
 
 .nav-tabs {
@@ -964,6 +967,7 @@ function getDbLogoText(type?: string): string {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
 }
 
 .tab-panel {
@@ -972,6 +976,7 @@ function getDbLogoText(type?: string): string {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
 }
 
 .databases-section {
@@ -980,6 +985,7 @@ function getDbLogoText(type?: string): string {
   gap: 16px;
   flex: 1;
   overflow: hidden;
+  min-height: 0;
 }
 
 .section-header {
@@ -995,8 +1001,8 @@ function getDbLogoText(type?: string): string {
 }
 
 .databases-list {
-  min-height: 300px;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding-right: 8px;
 }
@@ -1033,50 +1039,57 @@ function getDbLogoText(type?: string): string {
 
 .databases-list-simple {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 8px;
 }
 
 .database-item {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: 8px;
-  padding: 16px;
+  padding: 7px 10px;
   border: 1px solid var(--db-gray-medium);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
-  text-align: center;
-  min-height: 100px;
+  text-align: left;
 }
 
 .database-item:hover {
   border-color: #0d6efd;
   background-color: var(--db-bg-soft2);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .database-item-icon {
-  font-size: 32px;
+  font-size: 15px;
   color: var(--db-gray-dark);
+  flex-shrink: 0;
 }
 
 .database-item-name {
-  font-size: 14px;
+  flex: 1;
+  font-size: 13px;
   font-weight: 500;
   color: var(--db-dark-color);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 100%;
+  min-width: 0;
 }
 
 .database-item-actions {
   display: flex;
   gap: 4px;
-  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.database-item-actions .btn {
+  padding: 2px 6px;
+  font-size: 12px;
+  line-height: 1.3;
 }
 
 .sql-section {
@@ -1085,6 +1098,7 @@ function getDbLogoText(type?: string): string {
   gap: 16px;
   flex: 1;
   overflow: hidden;
+  min-height: 0;
 }
 
 .sql-header {
@@ -1137,17 +1151,16 @@ function getDbLogoText(type?: string): string {
   }
   
   .databases-list-simple {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 6px;
   }
   
   .database-item {
-    padding: 12px;
-    min-height: 80px;
+    padding: 6px 8px;
   }
   
   .database-item-icon {
-    font-size: 24px;
+    font-size: 14px;
   }
   
   .database-item-name {

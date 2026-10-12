@@ -205,6 +205,7 @@
           @refresh-database="handleRefreshDatabase"
           @create-table="handleCreateTable"
           @execute-sql="handleExecuteSql"
+          @navigate-connection="goToConnection"
         />
 
         <!-- 表详情组件 -->
@@ -228,6 +229,8 @@
           @edit-row="handleEditRow"
           @delete-row="handleDeleteRow"
           @execute-sql="handleExecuteSql"
+          @navigate-connection="goToConnection"
+          @navigate-database="goToDatabase"
         />
 
         <!-- 默认空状态 -->
@@ -598,6 +601,35 @@ function selectTable(connection: ConnectionEntity, database: string, table: Tabl
   
   loadTableData(connection, database, table.name);
   loadTableStructure(connection, database, table.name);
+}
+
+/**
+ * 面包屑导航：点击「连接」返回连接概览（清除数据库与表选择）。
+ * 同时同步 URL query，保证宿主侧标题与前进/后退一致。
+ */
+function goToConnection() {
+  selectedDatabase.value = '';
+  selectedTable.value = null;
+  activeTab.value = 'overview';
+  if (!isUpdatingFromUrl) {
+    router.push({ query: { connectionId: selectedConnection.value?.id } });
+  }
+}
+
+/**
+ * 面包屑导航：点击「数据库」返回数据库详情（清除表选择）。
+ */
+function goToDatabase() {
+  selectedTable.value = null;
+  activeTab.value = 'tables';
+  if (!isUpdatingFromUrl) {
+    router.push({
+      query: {
+        connectionId: selectedConnection.value?.id,
+        database: selectedDatabase.value
+      }
+    });
+  }
 }
 
 async function loadTableData(connection: ConnectionEntity, database: string, tableName: string, page: number = 1, pageSize: number = 50, searchQuery?: string) {
@@ -1221,7 +1253,7 @@ function showToast(title: string, message: string, type: string = 'success') {
   width: 32px;
   height: 32px;
   border-radius: 6px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1392,7 +1424,7 @@ function showToast(title: string, message: string, type: string = 'success') {
   top: 0;
   bottom: 0;
   width: 3px;
-  background: linear-gradient(135deg, #0969da, #0550ae);
+  background: #0969da;
   border-radius: 3px 0 0 3px;
 }
 
@@ -1560,48 +1592,48 @@ function showToast(title: string, message: string, type: string = 'success') {
 /* 数据库品牌色彩 */
 .db-mysql { 
   color: #00758f !important; 
-  background: linear-gradient(135deg, #00758f, #005a70);
+  background: #00758f;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.db-mysql-bg { background: linear-gradient(135deg, #00758f, #005a70); }
+.db-mysql-bg { background: #00758f; }
 
 .db-postgres { 
   color: #336791 !important; 
-  background: linear-gradient(135deg, #336791, #2a5278);
+  background: #336791;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.db-postgres-bg { background: linear-gradient(135deg, #336791, #2a5278); }
+.db-postgres-bg { background: #336791; }
 
 .db-sqlite { 
   color: #003b57 !important; 
-  background: linear-gradient(135deg, #003b57, #002d42);
+  background: #003b57;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.db-sqlite-bg { background: linear-gradient(135deg, #003b57, #002d42); }
+.db-sqlite-bg { background: #003b57; }
 
 .db-mssql { 
   color: #cc2927 !important; 
-  background: linear-gradient(135deg, #cc2927, #a62220);
+  background: #cc2927;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.db-mssql-bg { background: linear-gradient(135deg, #cc2927, #a62220); }
+.db-mssql-bg { background: #cc2927; }
 
 .db-oracle { 
   color: #f80000 !important; 
-  background: linear-gradient(135deg, #f80000, #d40000);
+  background: #f80000;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.db-oracle-bg { background: linear-gradient(135deg, #f80000, #d40000); }
+.db-oracle-bg { background: #f80000; }
 
 .db-default { 
   color: var(--db-text-muted) !important; 
@@ -1638,27 +1670,27 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .db-logo-mysql {
-  background: linear-gradient(135deg, #00758f, #005a70);
+  background: #00758f;
   border: 1px solid #004d61;
 }
 
 .db-logo-postgres {
-  background: linear-gradient(135deg, #336791, #2a5278);
+  background: #336791;
   border: 1px solid #244566;
 }
 
 .db-logo-sqlite {
-  background: linear-gradient(135deg, #003b57, #002d42);
+  background: #003b57;
   border: 1px solid #002939;
 }
 
 .db-logo-mssql {
-  background: linear-gradient(135deg, #cc2927, #a62220);
+  background: #cc2927;
   border: 1px solid #8b1f1d;
 }
 
 .db-logo-oracle {
-  background: linear-gradient(135deg, #f80000, #d40000);
+  background: #f80000;
   border: 1px solid #b30000;
 }
 
@@ -1748,7 +1780,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 .card-icon {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -1803,7 +1835,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 .table-icon {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: var(--db-accent-color);
   border-radius: 8px;
   display: flex;
   align-items: center;

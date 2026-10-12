@@ -407,7 +407,7 @@ function getDbTypeClass(type: string): string {
 
 .hero-shape {
   position: absolute;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.05));
+  background: var(--db-primary-bg);
   border-radius: 50%;
   animation: float 6s ease-in-out infinite;
 }
@@ -450,7 +450,7 @@ function getDbTypeClass(type: string): string {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   color: var(--db-on-accent);
   padding: 0.5rem 1rem;
   border-radius: 20px;
@@ -469,7 +469,7 @@ function getDbTypeClass(type: string): string {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -505,7 +505,7 @@ function getDbTypeClass(type: string): string {
 }
 
 .btn-primary-hero {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   color: var(--db-on-accent);
   box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
 }
@@ -598,20 +598,20 @@ function getDbTypeClass(type: string): string {
 }
 
 .layer-1 {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   animation-delay: 0s;
   z-index: 3;
 }
 
 .layer-2 {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: var(--db-accent-color);
   animation-delay: 6s;
   transform: scale(0.8) rotate(45deg);
   z-index: 2;
 }
 
 .layer-3 {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  background: var(--db-warning-color);
   animation-delay: 12s;
   transform: scale(0.6) rotate(90deg);
   z-index: 1;
@@ -672,10 +672,10 @@ function getDbTypeClass(type: string): string {
   color: #10b981;
 }
 
-.stat-gradient-1 .stat-icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-.stat-gradient-2 .stat-icon { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-.stat-gradient-3 .stat-icon { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-.stat-gradient-4 .stat-icon { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+.stat-gradient-1 .stat-icon { background: var(--db-primary-color); }
+.stat-gradient-2 .stat-icon { background: var(--db-accent-color); }
+.stat-gradient-3 .stat-icon { background: var(--db-warning-color); }
+.stat-gradient-4 .stat-icon { background: var(--db-danger-color); }
 
 .stat-content {
   display: flex;
@@ -714,7 +714,7 @@ function getDbTypeClass(type: string): string {
 .section-icon {
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -784,10 +784,10 @@ function getDbTypeClass(type: string): string {
   z-index: 2;
 }
 
-.feature-1 { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
-.feature-2 { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-.feature-3 { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-.feature-4 { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+.feature-1 { background: var(--db-info-color); }
+.feature-2 { background: var(--db-accent-color); }
+.feature-3 { background: var(--db-warning-color); }
+.feature-4 { background: #8b5cf6; }
 
 .feature-number {
   font-size: 3rem;
@@ -844,7 +844,7 @@ function getDbTypeClass(type: string): string {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   color: var(--db-on-accent);
   display: flex;
   align-items: center;
@@ -977,7 +977,7 @@ function getDbTypeClass(type: string): string {
 }
 
 .quick-access-btn:hover {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   color: var(--db-on-accent);
   transform: translateY(-1px);
 }
@@ -1001,7 +1001,7 @@ function getDbTypeClass(type: string): string {
 }
 
 .view-all-btn:hover {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   color: var(--db-on-accent);
   border-color: transparent;
   transform: translateY(-2px);
@@ -1049,7 +1049,7 @@ function getDbTypeClass(type: string): string {
 
 .empty-shape {
   position: absolute;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.05));
+  background: var(--db-primary-bg);
   border-radius: 50%;
   animation: float 6s ease-in-out infinite;
 }
@@ -1093,11 +1093,11 @@ function getDbTypeClass(type: string): string {
 }
 
 /* 数据库类型颜色 */
-.db-mysql { background: linear-gradient(135deg, #00758f 0%, #005a70 100%); }
-.db-postgres { background: linear-gradient(135deg, #336791 0%, #2a5278 100%); }
-.db-sqlite { background: linear-gradient(135deg, #003b57 0%, #002d42 100%); }
-.db-mssql { background: linear-gradient(135deg, #cc2927 0%, #a62220 100%); }
-.db-oracle { background: linear-gradient(135deg, #f80000 0%, #d40000 100%); }
+.db-mysql { background: #00758f; }
+.db-postgres { background: #336791; }
+.db-sqlite { background: #003b57; }
+.db-mssql { background: #cc2927; }
+.db-oracle { background: #f80000; }
 .db-default { background: linear-gradient(135deg, var(--db-text-muted) 0%, var(--db-gray-dark) 100%); }
 
 /* 响应式设计 */

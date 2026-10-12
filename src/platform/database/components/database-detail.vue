@@ -10,8 +10,12 @@
           <div class="database-meta">
             <h4 class="database-name">{{ database }}</h4>
             <div class="connection-info">
-              <span class="connection-name">{{ connection?.name }}</span>
-              <span class="connection-type">{{ getDbTypeLabel(connection?.type) }}</span>
+              <span class="crumb crumb-link" @click="emit('navigate-connection')" :title="$t('databaseDetail.backToConnection')">
+                <i class="bi bi-hdd-network me-1"></i>{{ connection?.name }}
+              </span>
+              <i class="bi bi-chevron-right"></i>
+              <span class="crumb crumb-current">{{ database }}</span>
+              <span class="connection-type ms-2">{{ getDbTypeLabel(connection?.type) }}</span>
             </div>
           </div>
         </div>
@@ -433,6 +437,7 @@ const emit = defineEmits<{
   'refresh-database': [];
   'create-table': [table: { name: string; comment: string }];
   'execute-sql': [sql: string];
+  'navigate-connection': [];
 }>();
 
 const databaseService = new DatabaseService();
@@ -851,12 +856,13 @@ function handleExecuteSQL(sql: string) {
 .database-icon {
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-bg);
+  border: 1px solid var(--db-border);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--db-on-accent);
+  color: var(--db-primary-color);
   font-size: 1.5rem;
 }
 
@@ -868,7 +874,33 @@ function handleExecuteSQL(sql: string) {
 
 .connection-info {
   display: flex;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.connection-info .crumb {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.connection-info .crumb-link {
+  cursor: pointer;
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+.connection-info .crumb-link:hover {
+  background: rgba(102, 126, 234, 0.22);
+  text-decoration: underline;
+}
+
+.connection-info .crumb-current {
+  font-weight: 600;
+  color: var(--db-dark-color);
 }
 
 .connection-name {
@@ -918,6 +950,7 @@ function handleExecuteSQL(sql: string) {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .nav-tabs {
@@ -951,7 +984,7 @@ function handleExecuteSQL(sql: string) {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 0;
 }
 
 .tab-panel {
@@ -959,7 +992,7 @@ function handleExecuteSQL(sql: string) {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 0;
 }
 
 .table-grid {
@@ -994,12 +1027,12 @@ function handleExecuteSQL(sql: string) {
 .table-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: rgba(16, 185, 129, 0.12);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--db-on-accent);
+  color: var(--db-accent-color);
 }
 
 .table-info {
@@ -1116,16 +1149,17 @@ function handleExecuteSQL(sql: string) {
 .view-icon, .procedure-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: rgba(59, 130, 246, 0.12);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--db-on-accent);
+  color: var(--db-info-color);
 }
 
 .procedure-icon {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--db-warning-color);
 }
 
 .view-name, .procedure-name {

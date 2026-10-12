@@ -976,7 +976,7 @@ function showScheduleModal() {
 }
 
 .tools-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--db-primary-color);
   color: var(--db-on-accent);
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--db-gray-medium);
