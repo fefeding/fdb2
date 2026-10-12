@@ -59,6 +59,67 @@ const SHELL_CSS = `
   }
   body.vscode-native-nav .nav-tabs .nav-link .badge { font-size: 10px !important; padding: 2px 5px !important; }
   body.vscode-native-nav .tab-content { padding: 12px !important; }
+
+  /* ---------------- 配色降噪 ----------------
+   * 桌面端 UI 用的是「语义色按钮 + 数据库品牌渐变块」，在编辑器面板里过于花哨。
+   * webview 内统一收敛为中性观感：操作按钮改为主题色描边，仅破坏性操作保留红色，
+   * 数据库卡片的大色块改为中性面，品牌色只保留 32px 的 logo 小方块。
+   */
+  body.vscode-native-nav .btn-primary,
+  body.vscode-native-nav .btn-info,
+  body.vscode-native-nav .btn-success,
+  body.vscode-native-nav .btn-secondary {
+    background-color: var(--db-bg-soft) !important;
+    border-color: var(--db-border-light) !important;
+    color: var(--db-text-body) !important;
+  }
+  body.vscode-native-nav .btn-primary:hover,
+  body.vscode-native-nav .btn-info:hover,
+  body.vscode-native-nav .btn-success:hover,
+  body.vscode-native-nav .btn-secondary:hover,
+  body.vscode-native-nav .btn-primary:focus,
+  body.vscode-native-nav .btn-info:focus,
+  body.vscode-native-nav .btn-success:focus,
+  body.vscode-native-nav .btn-secondary:focus {
+    background-color: var(--db-border-soft) !important;
+    border-color: var(--db-border-light) !important;
+    color: var(--db-text-body) !important;
+  }
+  /* 破坏性操作保留语义色，但降低饱和度 */
+  body.vscode-native-nav .btn-danger,
+  body.vscode-native-nav .btn-outline-danger {
+    background-color: transparent !important;
+    border-color: rgba(239, 68, 68, 0.55) !important;
+    color: #ef4444 !important;
+  }
+  body.vscode-native-nav .btn-warning,
+  body.vscode-native-nav .btn-outline-warning {
+    background-color: transparent !important;
+    border-color: rgba(245, 158, 11, 0.5) !important;
+    color: #f59e0b !important;
+  }
+  /* 徽章统一中性（主键 / 行数 / 类型） */
+  body.vscode-native-nav .badge {
+    background-color: var(--db-bg-soft) !important;
+    color: var(--db-text-muted) !important;
+    font-weight: 500 !important;
+  }
+  /* 数据库卡片的大块品牌渐变改为中性面 */
+  body.vscode-native-nav .db-mysql-bg,
+  body.vscode-native-nav .db-postgres-bg,
+  body.vscode-native-nav .db-sqlite-bg,
+  body.vscode-native-nav .db-mssql-bg,
+  body.vscode-native-nav .db-oracle-bg,
+  body.vscode-native-nav .db-default-bg {
+    background: var(--db-bg-soft) !important;
+    color: var(--db-text-body) !important;
+    border: 1px solid var(--db-border) !important;
+  }
+  /* 进度/加载指示器也收敛为主题色 */
+  body.vscode-native-nav .spinner-border.text-primary,
+  body.vscode-native-nav .text-primary.spinner-border {
+    color: var(--db-text-muted) !important;
+  }
 `;
 
 export function installVscodeShellStyle(): void {
