@@ -1178,3 +1178,116 @@ body.vscode-dark .table-name,
 body.vscode-high-contrast .table-name {
   color: var(--db-dark-color);
 }
+
+/* =================================================================
+ * 桌面端（Electron / Web）「紧凑 + 降噪」观感
+ * 开发者工具不需要太花哨：操作按钮收敛为主题色描边、徽章中性、
+ * 数据库卡片大色块改为中性面、各工具栏整体收紧。
+ * 仅作用于 body.platform-desktop，不影响 VSCode webview（走 theme.ts）。
+ * ================================================================= */
+/* 连接详情：信息条与快捷操作紧凑化 */
+body.platform-desktop .connection-detail { gap: 12px !important; }
+body.platform-desktop .connection-header { margin-bottom: 0 !important; padding: 10px 14px !important; }
+body.platform-desktop .connection-info { gap: 10px !important; }
+body.platform-desktop .quick-actions { margin-bottom: 0 !important; padding: 10px 14px !important; }
+body.platform-desktop .actions-grid { gap: 8px !important; }
+body.platform-desktop .action-btn {
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  padding: 8px 10px !important;
+}
+body.platform-desktop .action-icon { font-size: 14px !important; }
+
+/* 表详情页：信息条 / 工具栏 / 页签整体收紧 */
+body.platform-desktop .table-header { padding: 10px 14px !important; }
+body.platform-desktop .table-icon { font-size: 22px !important; }
+body.platform-desktop .table-name { font-size: 1.05rem !important; }
+body.platform-desktop .table-breadcrumb { font-size: 0.78rem !important; }
+body.platform-desktop .table-stats { gap: 12px !important; }
+body.platform-desktop .table-toolbar { padding: 8px 12px !important; gap: 8px !important; flex-wrap: wrap !important; }
+body.platform-desktop .toolbar-left,
+body.platform-desktop .toolbar-right { gap: 6px !important; flex-wrap: wrap !important; }
+body.platform-desktop .table-toolbar .btn,
+body.platform-desktop .data-toolbar .btn {
+  padding: 3px 8px !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  border-radius: 4px !important;
+}
+body.platform-desktop .table-toolbar .btn i,
+body.platform-desktop .data-toolbar .btn i { font-size: 12px !important; }
+body.platform-desktop .table-toolbar .dropdown-menu { font-size: 12px !important; }
+body.platform-desktop .table-toolbar .dropdown-item { padding: 4px 10px !important; font-size: 12px !important; }
+body.platform-desktop .nav-tabs { padding: 0 0.5rem !important; }
+body.platform-desktop .nav-tabs .nav-link { padding: 6px 12px !important; font-size: 12px !important; }
+body.platform-desktop .nav-tabs .nav-link .badge { font-size: 10px !important; padding: 2px 5px !important; }
+body.platform-desktop .tab-content { padding: 12px !important; }
+
+/* SQL 编辑器工具栏（桌面端独立存在） */
+body.platform-desktop .sql-toolbar,
+body.platform-desktop .editor-toolbar { padding: 6px 10px !important; gap: 6px !important; flex-wrap: wrap !important; }
+body.platform-desktop .sql-toolbar .btn,
+body.platform-desktop .editor-toolbar .btn {
+  padding: 3px 8px !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  border-radius: 4px !important;
+}
+
+/* ---------------- 配色降噪 ---------------- */
+body.platform-desktop .btn-primary,
+body.platform-desktop .btn-info,
+body.platform-desktop .btn-success,
+body.platform-desktop .btn-secondary {
+  background-color: var(--db-bg-soft) !important;
+  border-color: var(--db-border-light) !important;
+  color: var(--db-text-body) !important;
+}
+body.platform-desktop .btn-primary:hover,
+body.platform-desktop .btn-info:hover,
+body.platform-desktop .btn-success:hover,
+body.platform-desktop .btn-secondary:hover,
+body.platform-desktop .btn-primary:focus,
+body.platform-desktop .btn-info:focus,
+body.platform-desktop .btn-success:focus,
+body.platform-desktop .btn-secondary:focus {
+  background-color: var(--db-border-soft) !important;
+  border-color: var(--db-border-light) !important;
+  color: var(--db-text-body) !important;
+}
+/* 破坏性 / 警告操作保留语义色，但降饱和 */
+body.platform-desktop .btn-danger,
+body.platform-desktop .btn-outline-danger {
+  background-color: transparent !important;
+  border-color: rgba(239, 68, 68, 0.55) !important;
+  color: #ef4444 !important;
+}
+body.platform-desktop .btn-warning,
+body.platform-desktop .btn-outline-warning {
+  background-color: transparent !important;
+  border-color: rgba(245, 158, 11, 0.5) !important;
+  color: #f59e0b !important;
+}
+/* 徽章统一中性 */
+body.platform-desktop .badge {
+  background-color: var(--db-bg-soft) !important;
+  color: var(--db-text-muted) !important;
+  font-weight: 500 !important;
+}
+/* 数据库卡片的大块品牌渐变改为中性面，品牌色只保留 logo 小方块 */
+body.platform-desktop .db-mysql-bg,
+body.platform-desktop .db-postgres-bg,
+body.platform-desktop .db-sqlite-bg,
+body.platform-desktop .db-mssql-bg,
+body.platform-desktop .db-oracle-bg,
+body.platform-desktop .db-default-bg {
+  background: var(--db-bg-soft) !important;
+  color: var(--db-text-body) !important;
+  border: 1px solid var(--db-border) !important;
+}
+/* 进度指示器收敛为主题色 */
+body.platform-desktop .spinner-border.text-primary,
+body.platform-desktop .text-primary.spinner-border {
+  color: var(--db-text-muted) !important;
+}
