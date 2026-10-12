@@ -15,13 +15,13 @@
           {{ $t('dbTools.dataBackup') }}
         </h6>
         <div class="tool-actions">
-          <button class="btn btn-outline-primary btn-sm" @click="backupDatabase">
+          <button class="btn btn-outline-secondary btn-sm" @click="backupDatabase">
             <i class="bi bi-download"></i> {{ $t('dbTools.backupDatabase') }}
           </button>
           <button class="btn btn-outline-secondary btn-sm" @click="showRestoreModal">
             <i class="bi bi-upload"></i> {{ $t('dbTools.restoreDatabase') }}
           </button>
-          <button class="btn btn-outline-info btn-sm" @click="showScheduleModal">
+          <button class="btn btn-outline-secondary btn-sm" @click="showScheduleModal">
             <i class="bi bi-clock"></i> {{ $t('dbTools.scheduledBackup') }}
           </button>
         </div>
@@ -34,13 +34,13 @@
           {{ $t('dbTools.userManagement') }}
         </h6>
         <div class="tool-actions">
-          <button class="btn btn-outline-success btn-sm" @click="showUsersList">
+          <button class="btn btn-outline-secondary btn-sm" @click="showUsersList">
             <i class="bi bi-person-lines-fill"></i> {{ $t('dbTools.userList') }}
           </button>
-          <button class="btn btn-outline-primary btn-sm" @click="showCreateUserModal">
+          <button class="btn btn-outline-secondary btn-sm" @click="showCreateUserModal">
             <i class="bi bi-person-plus"></i> {{ $t('dbTools.createUser') }}
           </button>
-          <button class="btn btn-outline-warning btn-sm" @click="showPermissionsModal">
+          <button class="btn btn-outline-secondary btn-sm" @click="showPermissionsModal">
             <i class="bi bi-key"></i> {{ $t('dbTools.permissionMgmt') }}
           </button>
         </div>
@@ -53,13 +53,13 @@
           {{ $t('dbTools.perfMonitor') }}
         </h6>
         <div class="tool-actions">
-          <button class="btn btn-outline-info btn-sm" @click="showProcessList">
+          <button class="btn btn-outline-secondary btn-sm" @click="showProcessList">
             <i class="bi bi-activity"></i> {{ $t('dbTools.processList') }}
           </button>
-          <button class="btn btn-outline-warning btn-sm" @click="showSlowQueries">
+          <button class="btn btn-outline-secondary btn-sm" @click="showSlowQueries">
             <i class="bi bi-hourglass-split"></i> {{ $t('dbTools.slowQueries') }}
           </button>
-          <button class="btn btn-outline-danger btn-sm" @click="showConnectionsList">
+          <button class="btn btn-outline-secondary btn-sm" @click="showConnectionsList">
             <i class="bi bi-diagram-3"></i> {{ $t('dbTools.connectionCount') }}
           </button>
         </div>
@@ -72,16 +72,16 @@
           {{ $t('dbTools.dbOptimization') }}
         </h6>
         <div class="tool-actions">
-          <button class="btn btn-outline-success btn-sm" @click="optimizeDatabase">
+          <button class="btn btn-outline-secondary btn-sm" @click="optimizeDatabase">
             <i class="bi bi-lightning-charge"></i> {{ $t('dbTools.optimizeDatabase') }}
           </button>
-          <button class="btn btn-outline-primary btn-sm" @click="analyzeTables">
+          <button class="btn btn-outline-secondary btn-sm" @click="analyzeTables">
             <i class="bi bi-search"></i> {{ $t('dbTools.analyzeTables') }}
           </button>
           <button class="btn btn-outline-secondary btn-sm" @click="repairTables">
             <i class="bi bi-tools"></i> {{ $t('dbTools.repairTables') }}
           </button>
-          <button class="btn btn-outline-info btn-sm" @click="clearLogs">
+          <button class="btn btn-outline-secondary btn-sm" @click="clearLogs">
             <i class="bi bi-trash"></i> {{ $t('dbTools.clearLogs') }}
           </button>
         </div>
@@ -94,13 +94,13 @@
           {{ $t('dbTools.dataMigration') }}
         </h6>
         <div class="tool-actions">
-          <button class="btn btn-outline-primary btn-sm" @click="showExportModal">
+          <button class="btn btn-outline-secondary btn-sm" @click="showExportModal">
             <i class="bi bi-box-arrow-up-right"></i> {{ $t('dbTools.exportStructure') }}
           </button>
-          <button class="btn btn-outline-success btn-sm" @click="showImportModal">
+          <button class="btn btn-outline-secondary btn-sm" @click="showImportModal">
             <i class="bi bi-box-arrow-in-down"></i> {{ $t('dbTools.importStructure') }}
           </button>
-          <button class="btn btn-outline-warning btn-sm" @click="selectTool('sync')">
+          <button class="btn btn-outline-secondary btn-sm" @click="selectTool('sync')">
             <i class="bi bi-arrow-repeat"></i> {{ $t('dbTools.dataSync') }}
           </button>
         </div>
@@ -113,13 +113,13 @@
           {{ $t('dbTools.healthCheck') }}
         </h6>
         <div class="tool-actions">
-          <button class="btn btn-outline-info btn-sm" @click="runHealthCheck">
+          <button class="btn btn-outline-secondary btn-sm" @click="runHealthCheck">
             <i class="bi bi-clipboard-check"></i> {{ $t('dbTools.healthCheck') }}
           </button>
           <button class="btn btn-outline-secondary btn-sm" @click="showStatistics">
             <i class="bi bi-bar-chart"></i> {{ $t('dbTools.dataStatistics') }}
           </button>
-          <button class="btn btn-outline-warning btn-sm" @click="showAuditLog">
+          <button class="btn btn-outline-secondary btn-sm" @click="showAuditLog">
             <i class="bi bi-journal-text"></i> {{ $t('dbTools.auditLog') }}
           </button>
         </div>
@@ -971,40 +971,42 @@ function showScheduleModal() {
 <style scoped>
 .db-tools {
   background: var(--db-surface);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
 }
 
 .tools-header {
-  background: var(--db-primary-color);
-  color: var(--db-on-accent);
-  padding: 1rem 1.5rem;
+  padding: 0.85rem 1.25rem;
   border-bottom: 1px solid var(--db-gray-medium);
 }
 
 .tools-title {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 600;
+  color: var(--db-text-body);
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .tools-content {
-  padding: 1.5rem;
+  padding: 1.25rem;
   overflow-y: auto;
 }
 
 .tool-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.tool-section:last-child {
+  margin-bottom: 0;
 }
 
 .section-title {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--db-text-body);
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1032,7 +1034,7 @@ function showScheduleModal() {
 }
 
 .modal-header {
-  background: linear-gradient(135deg, var(--db-light-color) 0%, var(--db-gray-light) 100%);
+  background: var(--db-light-color);
   border-bottom: 1px solid var(--db-gray-medium);
 }
 
@@ -1056,8 +1058,8 @@ function showScheduleModal() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, var(--db-gray-light) 0%, var(--db-light-color) 100%);
+  padding: 0.85rem 1.25rem;
+  background: var(--db-light-color);
   border-bottom: 1px solid var(--db-gray-medium);
 }
 
@@ -1090,8 +1092,8 @@ function showScheduleModal() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, var(--db-gray-light) 0%, var(--db-light-color) 100%);
+  padding: 0.85rem 1.25rem;
+  background: var(--db-light-color);
   border-bottom: 1px solid var(--db-gray-medium);
 }
 

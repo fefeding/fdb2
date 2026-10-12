@@ -1,6 +1,9 @@
 // 必须最先导入：在任何 server 模块被加载前设置 DB_TOOL_DATA_DIR。
 import './prelude';
 
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { DatabaseBridge } from './service/DatabaseBridge';
 import { DatabaseTreeProvider, DbTreeItem } from './providers/DatabaseTreeProvider';
@@ -12,12 +15,24 @@ let webViewProvider: WebViewProvider;
 
 /**
  * 扩展宿主全局错误捕获：
- * 连接列表等逻辑都已兜底，但扩展宿主进程仍可能出现未捕获异常 / unhandledRejection
- * （VSCode 会以 __errorMarker 形式记到 DevTools，却不在“输出”面板，难以阅读）。
- * 这里统一把完整堆栈写进 “Database Tool” 输出通道，并接管 console.error。
+ * 把未捕获异常 / unhandledRejection / console.error 同时写进 “Database Tool” 输出通道
+ * 和【磁盘文件】。因为调试时扩展宿主进程崩溃会导致“调试宿主”窗口直接关闭，
+ * 内存里的输出通道会随之消失，只有落盘的文件能在主窗口里打开查看。
+ * 另加心跳：若文件末尾没有 [EXIT] 行却不再有 [heartbeat]，说明是宿主进程硬崩
+ * （原生崩溃 / OOM / 被 VSCode 强杀），而非普通 JS 异常。
  */
 function installHostErrorCapture(): void {
   const hostOut = vscode.window.createOutputChannel('Database Tool');
+  // 固定到用户主目录，便于 EDH 关闭后在主窗口直接打开查看
+  const logFile = path.join(os.homedir(), 'dbtool-host-crash.log');
+
+  const ts = () => new Date().toISOString();
+  const writeFile = (line: string) => {
+    try { fs.appendFileSync(logFile, line + '\n'); } catch { /* ignore */ }
+  };
+
+  writeFile(`\n================ SESSION START ${ts()} pid=${process.pid} ================`);
+  hostOut.appendLine(`[crash log 文件] ${logFile}（EDH 关闭后可在主窗口 File > Open 打开查看）`);
 
   const fmt = (a: any): string => {
     if (a instanceof Error) return a.stack || `${a.name}: ${a.message}`;
@@ -27,18 +42,34 @@ function installHostErrorCapture(): void {
     return String(a);
   };
 
+  const emit = (tag: string, args: any[]) => {
+    const text = `[${tag}] ${args.map(fmt).join(' ')}`;
+    try { hostOut.appendLine(text); } catch { /* ignore */ }
+    writeFile(`${ts()} ${text}`);
+  };
+
   const origError = console.error.bind(console);
   console.error = (...args: any[]) => {
-    try { hostOut.appendLine('[console.error] ' + args.map(fmt).join(' ')); } catch { /* ignore */ }
+    emit('console.error', args);
     origError(...args);
   };
 
   process.on('uncaughtException', (e: any) => {
-    hostOut.appendLine(`[uncaughtException] ${fmt(e)}`);
+    emit('uncaughtException', [e]);
+    // 注意：不重新抛出，避免宿主进程因单个异常直接退出（同时已落盘）。
   });
   process.on('unhandledRejection', (e: any) => {
-    hostOut.appendLine(`[unhandledRejection] ${fmt(e)}`);
+    emit('unhandledRejection', [e]);
   });
+  process.on('exit', (code) => {
+    writeFile(`${ts()} [EXIT] code=${code} pid=${process.pid}`);
+  });
+
+  // 心跳：用于区分“优雅退出”与“硬崩溃（无 EXIT 行）”
+  const hb = setInterval(() => {
+    writeFile(`${ts()} [heartbeat] alive pid=${process.pid}`);
+  }, 5000);
+  if (typeof hb.unref === 'function') hb.unref();
 }
 installHostErrorCapture();
 
