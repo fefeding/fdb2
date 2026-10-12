@@ -168,21 +168,24 @@
         <div v-show="activeTab === 'databases'" class="tab-panel">
           <div class="databases-section">
             <div class="section-header">
-              <div class="section-actions">
-                <div class="search-box">
-                  <input 
-                    type="text" 
-                    class="form-control form-control-sm" 
-                    v-model="searchKeyword" 
-                    :placeholder="$t('connection.searchDatabase')"
-                    style="width: 200px;"
-                  >
-                </div>
-                <button class="btn btn-sm btn-outline-primary ms-2" @click="loadDatabases" :disabled="loadingDatabases">
-                  <span v-if="loadingDatabases" class="spinner-border spinner-border-sm me-1"></span>
-                  <i class="bi bi-arrow-clockwise"></i> {{ $t('common.refresh') }}
-                </button>
+              <div class="db-search">
+                <i class="bi bi-search"></i>
+                <input
+                  type="text"
+                  class="db-search-input"
+                  v-model="searchKeyword"
+                  :placeholder="$t('connection.searchDatabase')"
+                >
               </div>
+              <button
+                class="db-refresh-btn"
+                @click="loadDatabases"
+                :disabled="loadingDatabases"
+                :title="$t('common.refresh')"
+              >
+                <span v-if="loadingDatabases" class="spinner-border spinner-border-sm"></span>
+                <i v-else class="bi bi-arrow-clockwise"></i>
+              </button>
             </div>
             
             <div class="databases-list">
@@ -992,12 +995,72 @@ function getDbLogoText(type?: string): string {
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  gap: 8px;
 }
 
-.section-actions {
+.db-search {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--db-gray-medium);
+  border-radius: 15px;
+  background: var(--db-surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.db-search:focus-within {
+  border-color: var(--db-primary-color);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);
+}
+
+.db-search > i {
+  font-size: 12px;
+  color: var(--db-gray-dark);
+  flex-shrink: 0;
+}
+
+.db-search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--db-dark-color);
+  font-size: 12px;
+  line-height: 1;
+  width: 150px;
+  padding: 0;
+}
+
+.db-search-input::placeholder {
+  color: var(--db-gray-dark);
+  opacity: 0.8;
+}
+
+.db-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--db-gray-medium);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--db-darker-color);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.db-refresh-btn:hover:not(:disabled) {
+  color: var(--db-primary-color);
+  border-color: var(--db-primary-color);
+  background: var(--db-primary-bg);
+}
+
+.db-refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .databases-list {
@@ -1039,7 +1102,7 @@ function getDbLogoText(type?: string): string {
 
 .databases-list-simple {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 8px;
 }
 
@@ -1048,22 +1111,23 @@ function getDbLogoText(type?: string): string {
   flex-direction: row;
   align-items: center;
   gap: 8px;
-  padding: 7px 10px;
-  border: 1px solid var(--db-gray-medium);
-  border-radius: 6px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--db-bg-soft2);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
   text-align: left;
 }
 
 .database-item:hover {
-  border-color: #0d6efd;
-  background-color: var(--db-bg-soft2);
+  background: var(--db-primary-bg);
+  border-color: var(--db-primary-color);
 }
 
 .database-item-icon {
-  font-size: 15px;
-  color: var(--db-gray-dark);
+  font-size: 14px;
+  color: var(--db-info-color);
   flex-shrink: 0;
 }
 
@@ -1082,12 +1146,26 @@ function getDbLogoText(type?: string): string {
   display: flex;
   gap: 4px;
   flex-shrink: 0;
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+
+.database-item:hover .database-item-actions {
+  opacity: 1;
 }
 
 .database-item-actions .btn {
-  padding: 2px 6px;
+  padding: 1px 5px;
   font-size: 12px;
   line-height: 1.3;
+  border: none;
+  background: transparent;
+  color: var(--db-darker-color);
+}
+
+.database-item-actions .btn:hover {
+  color: var(--db-primary-color);
+  background: var(--db-surface);
 }
 
 .sql-section {
