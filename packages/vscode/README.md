@@ -2,6 +2,8 @@
 
 > A full-featured database management extension for Visual Studio Code, bringing the `fdb2` desktop tool right into your editor. Manage connections, browse schemas, run SQL, and edit table data **without ever leaving VSCode**.
 
+![Database Tool (fdb2) running in VSCode](public/fdb2.png)
+
 The extension embeds the `fdb2` web UI inside a VSCode Webview. The native **Activity Bar tree** is used for navigation, while the rich content (connection overview, database detail, table data/structure) is rendered by the same Vue UI reused from the desktop app. The host (`TypeScript`) talks to the webview through `postMessage`, and reuses the `db_tool/server` backend (`TypeORM` + per-database dialects).
 
 ---
