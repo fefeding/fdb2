@@ -997,8 +997,8 @@ function handleExecuteSQL(sql: string) {
 
 .table-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.75rem;
 }
 
 .table-card {
@@ -1017,21 +1017,23 @@ function handleExecuteSQL(sql: string) {
 
 .card-header {
   background: var(--db-light-color);
-  padding: 1rem;
+  padding: 0.5rem 0.75rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .table-icon {
-  width: 40px;
-  height: 40px;
+  width: 28px;
+  height: 28px;
+  font-size: 0.9rem;
   background: rgba(16, 185, 129, 0.12);
-  border-radius: 8px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--db-accent-color);
+  flex-shrink: 0;
 }
 
 .table-info {
@@ -1047,24 +1049,26 @@ function handleExecuteSQL(sql: string) {
 }
 
 .table-name {
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--db-dark-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .table-engine {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   color: var(--db-darker-color);
   background: var(--db-border);
-  padding: 0.125rem 0.375rem;
-  border-radius: 8px;
+  padding: 0.0625rem 0.3125rem;
+  border-radius: 6px;
   flex-shrink: 0;
 }
 
 .table-comment-header {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   color: var(--db-darker-color);
   white-space: nowrap;
   overflow: hidden;
@@ -1072,19 +1076,37 @@ function handleExecuteSQL(sql: string) {
 }
 
 .card-body {
-  padding: 1rem;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .table-stats {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
+  align-items: baseline;
+  gap: 0.875rem;
+  margin-bottom: 0;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .stat {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: baseline;
   gap: 0.25rem;
+}
+
+/* 卡片内的统计字号覆盖（不影响顶部数据库统计的大号数字） */
+.table-card .stat-label {
+  font-size: 0.6875rem;
+}
+
+.table-card .stat-value {
+  font-size: 0.9375rem;
+  font-weight: 600;
 }
 
 .table-comment {
@@ -1098,6 +1120,13 @@ function handleExecuteSQL(sql: string) {
 .table-actions {
   display: flex;
   gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.table-actions .btn {
+  padding: 0.125rem 0.375rem;
+  font-size: 0.8125rem;
+  line-height: 1.2;
 }
 
 .empty-state {
