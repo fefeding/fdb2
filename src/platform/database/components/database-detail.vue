@@ -1013,7 +1013,6 @@ function handleExecuteSQL(sql: string) {
 .table-card:hover {
   border-color: #667eea;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-  transform: translateY(-2px);
 }
 
 .card-header {

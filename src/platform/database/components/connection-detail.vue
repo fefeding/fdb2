@@ -1059,8 +1059,6 @@ function getDbLogoText(type?: string): string {
 .database-item:hover {
   border-color: #0d6efd;
   background-color: var(--db-bg-soft2);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .database-item-icon {
