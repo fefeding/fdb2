@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+      - 'dbtool-v*'
   workflow_dispatch:
     inputs:
       platforms:
@@ -61,6 +62,7 @@ jobs:
             release/*.blockmap
             release/latest*.yml
           draft: false
+          force: true
           prerelease: ${{ contains(github.ref, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -124,6 +126,7 @@ jobs:
             release/*.blockmap
             release/latest*.yml
           draft: false
+          force: true
           prerelease: ${{ contains(github.ref, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -191,6 +194,7 @@ jobs:
             release/*.blockmap
             release/latest*.yml
           draft: false
+          force: true
           prerelease: ${{ contains(github.ref, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
