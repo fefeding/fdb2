@@ -966,7 +966,7 @@ onMounted(() => {
 .import-export-content {
   flex: 1;
   overflow-y: auto;
-  padding: 2rem;
+  padding: 1.5rem;
 }
 
 /* 步骤指示器 */
@@ -1046,8 +1046,8 @@ onMounted(() => {
 /* 文件上传区域 */
 .file-upload-area {
   border: 2px dashed var(--db-border-light);
-  border-radius: 12px;
-  padding: 3rem 2rem;
+  border-radius: 8px;
+  padding: 2rem 1.5rem;
   text-align: center;
   transition: all 0.3s ease;
   cursor: pointer;
@@ -1385,11 +1385,11 @@ onMounted(() => {
 }
 
 .import-result {
-  padding: 2rem;
+  padding: 1.5rem;
   background: linear-gradient(135deg, var(--db-success-bg) 0%, var(--db-success-bg) 100%);
   border: 1px solid var(--db-success-bg);
-  border-radius: 12px;
-  margin-top: 2rem;
+  border-radius: 8px;
+  margin-top: 1.5rem;
 }
 
 .result-icon {

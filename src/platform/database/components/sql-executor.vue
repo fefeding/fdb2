@@ -581,15 +581,15 @@ watch(sqlResult, () => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .sql-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-  padding: 10px;
+  margin-bottom: 8px;
+  padding: 6px 8px;
   background-color: var(--db-bg-soft2);
   border-radius: 4px;
 }
@@ -597,12 +597,12 @@ watch(sqlResult, () => {
 .toolbar-left,
 .toolbar-right {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .sql-container {
   position: relative;
-  border: 1px solid var(--db-border-lighter);
+  border: 1px solid var(--db-border);
   border-radius: 4px;
   overflow: hidden;
   flex: 1;
@@ -613,8 +613,8 @@ watch(sqlResult, () => {
 .sql-editor {
   position: relative;
   overflow: auto;
-  flex: 0 1 300px;
-  min-height: 200px;
+  flex: 0 1 260px;
+  min-height: 160px;
 }
 
 .sql-result {
@@ -674,14 +674,14 @@ watch(sqlResult, () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
+  padding: 6px 10px;
   background-color: var(--db-bg-soft2);
-  border-bottom: 1px solid var(--db-border-lighter);
+  border-bottom: 1px solid var(--db-border);
 }
 
 .result-title {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -703,14 +703,14 @@ watch(sqlResult, () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px;
+  padding: 6px 10px;
   background-color: var(--db-bg-soft2);
-  border-bottom: 1px solid var(--db-border-lighter);
+  border-bottom: 1px solid var(--db-border);
 }
 
 .result-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .result-table-container {
@@ -769,8 +769,8 @@ watch(sqlResult, () => {
 }
 
 .result-empty i {
-  font-size: 48px;
-  opacity: 0.5;
+  font-size: 24px;
+  opacity: 0.4;
 }
 
 .json-result {

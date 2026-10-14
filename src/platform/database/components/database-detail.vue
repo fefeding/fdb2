@@ -804,12 +804,13 @@ function handleExecuteSQL(sql: string) {
   flex-direction: column;
 }
 
+/* SQL 面板直接铺满 tab 内容区（内边距由 .tab-content 统一提供） */
 .sql-executor-section {
-  margin: 15px 0;
-  padding: 15px;
-  background-color: var(--db-bg-soft2);
-  border-radius: 4px;
-  border: 1px solid var(--db-gray-medium);
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
   flex: 1;
   display: flex;
 }
@@ -820,54 +821,56 @@ function handleExecuteSQL(sql: string) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 0;
-  color: var(--db-gray-dark);
+  padding: 24px 0;
+  color: var(--db-text-muted);
 }
 
 .loading-state .spinner-border {
-  margin-bottom: 15px;
-  color: #0d6efd;
+  margin-bottom: 10px;
+  color: var(--db-primary-color);
 }
 
 .loading-state p {
   margin: 0;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .database-header {
-  padding: 1rem;
-  background: linear-gradient(135deg, var(--db-light-color) 0%, var(--db-border) 100%);
-  border-bottom: 1px solid var(--db-gray-medium);
+  padding: 8px 12px;
+  background: var(--db-bg-soft2);
+  border-bottom: 1px solid var(--db-border);
 }
 
 .database-header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .database-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.625rem;
 }
 
 .database-icon {
-  width: 60px;
-  height: 60px;
+  width: 34px;
+  height: 34px;
   background: var(--db-primary-bg);
   border: 1px solid var(--db-border);
-  border-radius: 12px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--db-primary-color);
-  font-size: 1.5rem;
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
 .database-meta h4 {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.25rem 0;
+  font-size: 0.9375rem;
   color: var(--db-dark-color);
   font-weight: 600;
 }
@@ -875,72 +878,74 @@ function handleExecuteSQL(sql: string) {
 .connection-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
+  font-size: 0.75rem;
 }
 
 .connection-info .crumb {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.875rem;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.75rem;
+  transition: color 0.15s ease;
 }
 
 .connection-info .crumb-link {
   cursor: pointer;
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
+  background: transparent;
+  color: var(--db-primary-color);
 }
 
 .connection-info .crumb-link:hover {
-  background: rgba(102, 126, 234, 0.22);
+  color: var(--db-primary-light);
   text-decoration: underline;
 }
 
 .connection-info .crumb-current {
-  font-weight: 600;
-  color: var(--db-dark-color);
+  font-weight: 500;
+  color: var(--db-text-muted);
 }
 
 .connection-name {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.875rem;
+  background: transparent;
+  color: var(--db-primary-color);
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.75rem;
   font-weight: 500;
 }
 
 .connection-type {
-  background: var(--db-border);
-  color: var(--db-darker-color);
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.875rem;
-  font-weight: 600;
+  background: var(--db-primary-bg);
+  color: var(--db-primary-color);
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
 }
 
 .database-stats {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .stat-item {
-  text-align: center;
+  text-align: right;
 }
 
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 700;
+  line-height: 1.2;
   color: var(--db-dark-color);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0;
 }
 
 .stat-label {
-  font-size: 0.875rem;
-  color: var(--db-darker-color);
-  font-weight: 600;
+  font-size: 0.6875rem;
+  color: var(--db-text-muted);
+  font-weight: 400;
 }
 
 
@@ -954,29 +959,31 @@ function handleExecuteSQL(sql: string) {
 }
 
 .nav-tabs {
-  background: var(--db-light-color);
-  border-bottom: 1px solid var(--db-gray-medium);
-  padding: 0 1.5rem;
+  background: var(--db-gray-light);
+  border-bottom: 1px solid var(--db-border);
+  padding: 0 0.5rem;
+  gap: 0;
 }
 
 .nav-link {
   border: none;
   background: transparent;
-  color: var(--db-darker-color);
-  padding: 1rem 1.5rem;
+  color: var(--db-text-muted);
+  padding: 6px 12px;
+  font-size: 12px;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 .nav-link:hover {
-  color: #667eea;
-  background: rgba(102, 126, 234, 0.1);
+  color: var(--db-dark-color);
+  background: var(--db-bg-soft);
 }
 
 .nav-link.active {
-  color: #667eea;
-  background: var(--db-surface);
-  border-bottom: 2px solid #667eea;
+  color: var(--db-primary-color);
+  background: transparent;
+  border-bottom: 2px solid var(--db-primary-color);
 }
 
 .tab-content {
@@ -997,38 +1004,39 @@ function handleExecuteSQL(sql: string) {
 
 .table-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
 }
 
 .table-card {
-  background: var(--db-surface);
-  border: 1px solid var(--db-gray-medium);
-  border-radius: 12px;
+  background: var(--db-bg-soft2);
+  border: 1px solid var(--db-border);
+  border-radius: 6px;
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
   cursor: pointer;
 }
 
 .table-card:hover {
-  border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  border-color: var(--db-primary-color);
+  background: var(--db-bg-soft);
+  box-shadow: none;
 }
 
 .card-header {
-  background: var(--db-light-color);
-  padding: 0.5rem 0.75rem;
+  background: var(--db-bg-soft);
+  padding: 6px 8px;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .table-icon {
-  width: 28px;
-  height: 28px;
-  font-size: 0.9rem;
-  background: rgba(16, 185, 129, 0.12);
-  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  font-size: 0.75rem;
+  background: var(--db-success-bg);
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1044,13 +1052,13 @@ function handleExecuteSQL(sql: string) {
 .table-name-wrapper {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
+  gap: 0.375rem;
+  margin-bottom: 0;
 }
 
 .table-name {
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 0.8125rem;
+  font-weight: 500;
   color: var(--db-dark-color);
   white-space: nowrap;
   overflow: hidden;
@@ -1059,34 +1067,35 @@ function handleExecuteSQL(sql: string) {
 }
 
 .table-engine {
-  font-size: 0.6875rem;
-  color: var(--db-darker-color);
-  background: var(--db-border);
-  padding: 0.0625rem 0.3125rem;
-  border-radius: 6px;
+  font-size: 0.625rem;
+  color: var(--db-primary-color);
+  background: var(--db-primary-bg);
+  padding: 0 0.375rem;
+  border-radius: 999px;
   flex-shrink: 0;
 }
 
 .table-comment-header {
   font-size: 0.6875rem;
-  color: var(--db-darker-color);
+  color: var(--db-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* 卡片正文：标签在上、数值在下，右下角编辑按钮（对齐 VSCode 数据库插件的表格卡片） */
 .card-body {
-  padding: 0.5rem 0.75rem;
+  padding: 8px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
 }
 
 .table-stats {
   display: flex;
-  align-items: baseline;
-  gap: 0.875rem;
+  align-items: flex-start;
+  gap: 1.25rem;
   margin-bottom: 0;
   flex-wrap: wrap;
   min-width: 0;
@@ -1094,39 +1103,56 @@ function handleExecuteSQL(sql: string) {
 
 .stat {
   display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  gap: 0.25rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
 }
 
 /* 卡片内的统计字号覆盖（不影响顶部数据库统计的大号数字） */
 .table-card .stat-label {
   font-size: 0.6875rem;
+  color: var(--db-text-muted);
 }
 
 .table-card .stat-value {
   font-size: 0.9375rem;
   font-weight: 600;
+  color: var(--db-dark-color);
 }
 
 .table-comment {
-  font-size: 0.875rem;
-  color: var(--db-darker-color);
+  font-size: 0.8125rem;
+  color: var(--db-text-muted);
   font-style: italic;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
   line-height: 1.4;
 }
 
 .table-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.375rem;
   flex-shrink: 0;
 }
 
 .table-actions .btn {
-  padding: 0.125rem 0.375rem;
-  font-size: 0.8125rem;
-  line-height: 1.2;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  line-height: 1;
+  border: 1px solid var(--db-primary-color);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--db-primary-color);
+}
+
+.table-actions .btn:hover {
+  background: var(--db-primary-bg);
+  color: var(--db-primary-color);
+  border-color: var(--db-primary-color);
 }
 
 .empty-state {
@@ -1134,72 +1160,78 @@ function handleExecuteSQL(sql: string) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 200px;
-  color: var(--db-gray-dark);
+  gap: 0.5rem;
+  height: 140px;
+  color: var(--db-text-muted);
   text-align: center;
-  font-size: 1.5rem;
+  font-size: 0.8125rem;
 }
 
 .empty-state i {
-  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  margin-bottom: 0;
   opacity: 0.5;
 }
 
 /* 视图和存储过程卡片样式 */
 .views-grid, .procedures-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
 }
 
 .view-card, .procedure-card {
-  background: var(--db-surface);
-  border: 1px solid var(--db-gray-medium);
-  border-radius: 12px;
+  background: var(--db-bg-soft2);
+  border: 1px solid var(--db-border);
+  border-radius: 6px;
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .view-card:hover, .procedure-card:hover {
-  border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-  transform: translateY(-2px);
+  border-color: var(--db-primary-color);
+  background: var(--db-bg-soft);
+  box-shadow: none;
+  transform: none;
 }
 
 .view-card .card-header, .procedure-card .card-header {
-  background: var(--db-light-color);
-  padding: 1rem;
+  background: var(--db-bg-soft);
+  padding: 8px 10px;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .view-icon, .procedure-icon {
-  width: 40px;
-  height: 40px;
-  background: rgba(59, 130, 246, 0.12);
-  border-radius: 8px;
+  width: 26px;
+  height: 26px;
+  font-size: 0.8125rem;
+  background: var(--db-info-bg);
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--db-info-color);
+  flex-shrink: 0;
 }
 
 .procedure-icon {
-  background: rgba(245, 158, 11, 0.12);
+  background: var(--db-warning-bg);
   color: var(--db-warning-color);
 }
 
 .view-name, .procedure-name {
-  font-weight: 600;
+  font-size: 0.8125rem;
+  font-weight: 500;
   color: var(--db-dark-color);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.125rem;
 }
 
 .view-comment, .procedure-comment {
-  font-size: 0.75rem;
-  color: var(--db-darker-color);
-  margin-bottom: 0.5rem;
+  font-size: 0.6875rem;
+  color: var(--db-text-muted);
+  margin-bottom: 0.375rem;
   line-height: 1.4;
 }
 
@@ -1210,21 +1242,22 @@ function handleExecuteSQL(sql: string) {
 }
 
 .view-card .card-body, .procedure-card .card-body {
-  padding: 1rem;
+  padding: 8px 10px;
 }
 
 .view-actions, .procedure-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
+/* 操作栏：无底色无边框，只是一行工具按钮（对齐 VSCode 插件的 Create Table / Refresh） */
 .views-actions, .procedures-actions, .tables-actions {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  background: var(--db-light-color);
-  border-radius: 8px;
+  gap: 0.375rem;
+  margin-bottom: 10px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
 }
 
 /* 模态框样式 */

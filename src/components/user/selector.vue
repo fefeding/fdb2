@@ -385,8 +385,8 @@ defineExpose({
 }
 
 .dropdown-item.active {
-  background-color: #0d6efd;
-  color: white;
+  background-color: var(--db-primary-color);
+  color: var(--db-on-accent);
 }
 
 .dropdown-menu.show {

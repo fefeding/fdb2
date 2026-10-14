@@ -79,7 +79,7 @@ const databaseTypes = [
 
 <style scoped>
 .about-page {
-  padding: 2rem;
+  padding: 1.5rem;
   max-width: 800px;
   margin: 0 auto;
 }
@@ -126,8 +126,8 @@ const databaseTypes = [
 
 .about-section {
   background: var(--db-surface);
-  padding: 1.5rem;
-  border-radius: 12px;
+  padding: 1.25rem;
+  border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 

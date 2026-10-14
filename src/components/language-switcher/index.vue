@@ -30,24 +30,23 @@ function toggle() {
 .language-switcher {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.75rem;
-  border-radius: 8px;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
   cursor: pointer;
-  color: #64748b;
-  font-size: 0.85rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
+  color: var(--db-text-muted, #64748b);
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
   user-select: none;
-  border: 1px solid #cbd5e1;
-  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--db-border, #cbd5e1);
+  background: transparent;
 }
 
 .language-switcher:hover {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
-  border-color: #667eea;
-  transform: translateY(-1px);
+  background: var(--db-bg-soft, rgba(102, 126, 234, 0.1));
+  color: var(--db-dark-color, #667eea);
+  border-color: var(--db-border-light, #667eea);
 }
 
 .lang-label {

@@ -975,27 +975,27 @@ function showScheduleModal() {
 }
 
 .tools-header {
-  padding: 0.85rem 1.25rem;
-  border-bottom: 1px solid var(--db-gray-medium);
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--db-border);
 }
 
 .tools-title {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: var(--db-text-body);
+  color: var(--db-dark-color);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .tools-content {
-  padding: 1.25rem;
+  padding: 12px;
   overflow-y: auto;
 }
 
 .tool-section {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .tool-section:last-child {
@@ -1003,26 +1003,28 @@ function showScheduleModal() {
 }
 
 .section-title {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--db-text-body);
-  margin-bottom: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--db-text-muted);
+  margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .tool-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .tool-actions .btn {
-  min-width: 120px;
+  min-width: 108px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .modal {
@@ -1058,59 +1060,59 @@ function showScheduleModal() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.85rem 1.25rem;
-  background: var(--db-light-color);
-  border-bottom: 1px solid var(--db-gray-medium);
+  padding: 6px 12px;
+  background: var(--db-bg-soft);
+  border-bottom: 1px solid var(--db-border);
 }
 
 .component-title {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--db-dark-color);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .tool-component {
-  padding: 1.5rem;
+  padding: 12px;
 }
 
 .sync-component {
   background: var(--db-surface);
-  border-radius: 0.375rem;
+  border-radius: 4px;
 }
 
 /* 执行结果区域 */
 .execution-results {
-  border-top: 1px solid var(--db-gray-medium);
-  background: var(--db-light-color);
+  border-top: 1px solid var(--db-border);
+  background: var(--db-bg-soft);
 }
 
 .results-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.85rem 1.25rem;
-  background: var(--db-light-color);
-  border-bottom: 1px solid var(--db-gray-medium);
+  padding: 6px 12px;
+  background: var(--db-bg-soft);
+  border-bottom: 1px solid var(--db-border);
 }
 
 .results-title {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--db-dark-color);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .results-content {
   max-height: 400px;
   overflow-y: auto;
-  padding: 1rem;
+  padding: 8px;
 }
 
 .no-results {
@@ -1118,24 +1120,26 @@ function showScheduleModal() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1rem;
-  color: var(--db-gray-dark);
+  gap: 0.5rem;
+  padding: 32px 16px;
+  color: var(--db-text-muted);
 }
 
 .no-results i {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  margin-bottom: 0;
+  opacity: 0.5;
 }
 
 .no-results p {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.8125rem;
 }
 
 .result-item {
-  margin-bottom: 0.75rem;
-  border: 1px solid var(--db-gray-medium);
-  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--db-border);
+  border-radius: 6px;
   background: var(--db-surface);
   overflow: hidden;
   transition: box-shadow 0.2s;

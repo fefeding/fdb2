@@ -369,20 +369,20 @@ function getDbTypeClass(type: string): string {
 .database-dashboard-modern {
   min-height: calc(100vh - 200px);
   background: linear-gradient(135deg, var(--db-light-color) 0%, var(--db-border) 100%);
-  padding: 2rem 0;
+  padding: 1.5rem 0;
 }
 
 /* Hero 区域 */
 .hero-section {
   position: relative;
-  margin-bottom: 4rem;
+  margin-bottom: 3rem;
   overflow: hidden;
 }
 
 .hero-content {
   background: linear-gradient(135deg, var(--db-surface) 0%, var(--db-light-color) 100%);
-  border-radius: 24px;
-  padding: 3rem;
+  border-radius: 16px;
+  padding: 2rem;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(203, 213, 225, 0.8);
   position: relative;
@@ -629,8 +629,8 @@ function getDbTypeClass(type: string): string {
 
 .stat-card-modern {
   background: var(--db-surface);
-  border-radius: 20px;
-  padding: 1.5rem;
+  border-radius: 16px;
+  padding: 1.25rem;
   border: 1px solid rgba(203, 213, 225, 0.8);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
@@ -747,8 +747,8 @@ function getDbTypeClass(type: string): string {
 
 .feature-card {
   background: var(--db-surface);
-  border-radius: 20px;
-  padding: 2rem;
+  border-radius: 16px;
+  padding: 1.5rem;
   border: 1px solid rgba(203, 213, 225, 0.8);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
@@ -871,8 +871,8 @@ function getDbTypeClass(type: string): string {
 
 .quick-access-card {
   background: var(--db-surface);
-  border-radius: 16px;
-  padding: 1.5rem;
+  border-radius: 12px;
+  padding: 1.25rem;
   border: 1px solid rgba(203, 213, 225, 0.8);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;

@@ -1204,20 +1204,17 @@ function showToast(title: string, message: string, type: string = 'success') {
   display: flex;
   height: 100%;
   background: var(--db-surface);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  border: 1px solid var(--db-gray-medium);
 }
 
 /* 左侧边栏 */
 .explorer-sidebar {
-  width: 350px;
+  width: 264px;
   flex-shrink: 0;
-  border-right: 1px solid var(--db-gray-medium);
+  border-right: 1px solid var(--db-border);
   display: flex;
   flex-direction: column;
-  background: var(--db-surface);
+  background: var(--db-gray-light);
 }
 
 .sidebar-content {
@@ -1234,31 +1231,30 @@ function showToast(title: string, message: string, type: string = 'success') {
 
 /* 工具信息样式 - 固定在左下角 */
 .sidebar-tool-info {
-  padding: 0.75rem;
-  border-top: 1px solid var(--db-gray-medium);
-  background: linear-gradient(135deg, var(--db-light-color) 0%, var(--db-border) 100%);
+  padding: 0.5rem 0.625rem;
+  border-top: 1px solid var(--db-border);
+  background: transparent;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.15s ease;
 }
 
 .sidebar-tool-info:hover {
-  background: linear-gradient(135deg, var(--db-primary-bg) 0%, var(--db-primary-bg) 100%);
-  transform: translateY(-1px);
+  background: var(--db-bg-soft);
 }
 
 .tool-logo {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
   background: var(--db-primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--db-on-accent);
-  font-size: 1rem;
+  font-size: 0.8125rem;
   flex-shrink: 0;
 }
 
@@ -1281,9 +1277,9 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .sidebar-header {
-  padding: 1rem 0.875rem;
-  border-bottom: 1px solid var(--db-gray-medium);
-  background: var(--db-bg-soft2);
+  padding: 0.5rem 0.625rem;
+  border-bottom: 1px solid var(--db-border);
+  background: transparent;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1291,16 +1287,18 @@ function showToast(title: string, message: string, type: string = 'success') {
 
 .sidebar-title {
   margin: 0;
-  font-size: 0.9375rem;
+  font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--db-text-body);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--db-text-muted);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .sidebar-title i {
-  color: var(--db-text-body);
+  color: var(--db-text-muted);
 }
 
 .sidebar-actions {
@@ -1309,51 +1307,52 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .sidebar-actions .btn {
-  padding: 0.375rem 0.625rem;
+  padding: 0.15rem 0.4rem;
   font-size: 0.75rem;
   border: 1px solid var(--db-border);
-  background-color: var(--db-surface);
-  color: var(--db-text-body);
-  border-radius: 6px;
+  background-color: transparent;
+  color: var(--db-text-muted);
+  border-radius: 4px;
   transition: all 0.15s ease;
 }
 
 .sidebar-actions .btn:hover {
   background-color: var(--db-bg-soft);
-  border-color: var(--db-border);
+  border-color: var(--db-border-light);
+  color: var(--db-dark-color);
 }
 
 .sidebar-actions .btn-outline-primary {
-  border-color: #0969da;
-  color: #0969da;
+  border-color: var(--db-border);
+  color: var(--db-text-muted);
 }
 
 .sidebar-actions .btn-outline-primary:hover {
-  background-color: #0969da;
-  border-color: #0969da;
-  color: var(--db-on-accent);
+  background-color: var(--db-primary-bg);
+  border-color: var(--db-primary-color);
+  color: var(--db-primary-color);
 }
 
 .sidebar-actions .btn-outline-success {
-  border-color: #1a7f37;
-  color: #1a7f37;
+  border-color: var(--db-border);
+  color: var(--db-text-muted);
 }
 
 .sidebar-actions .btn-outline-success:hover {
-  background-color: #1a7f37;
-  border-color: #1a7f37;
-  color: var(--db-on-accent);
+  background-color: var(--db-success-bg);
+  border-color: var(--db-accent-color);
+  color: var(--db-accent-color);
 }
 
 .sidebar-content {
   flex: 1;
   overflow-y: auto;
-  padding: 0.5rem 0;
+  padding: 0.25rem 0;
 }
 
 /* 树形结构 */
 .tree-container {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   user-select: none;
 }
 
@@ -1362,36 +1361,36 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .tree-children {
-  margin-left: 0.75rem;
+  margin-left: 0.5rem;
   border-left: 1px solid var(--db-border);
-  padding-left: 0.5rem;
+  padding-left: 0.375rem;
 }
 
 .node-content {
   display: flex;
   align-items: center;
-  padding: 0.375rem 0.75rem;
+  padding: 0.175rem 0.5rem;
   cursor: pointer;
   transition: background-color 0.15s ease;
   position: relative;
-  margin-right: 0.5rem;
-  border-radius: 6px;
-  gap: 0.25rem;
+  margin-right: 0.25rem;
+  border-radius: 4px;
+  gap: 0.125rem;
 }
 
 .node-expand {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-right: 0.25rem;
+  margin-right: 0.125rem;
 }
 
 .node-expand i {
-  font-size: 0.6875rem;
-  color: var(--db-text-body);
+  font-size: 0.625rem;
+  color: var(--db-text-muted);
   transition: transform 0.15s ease;
 }
 
@@ -1412,9 +1411,8 @@ function showToast(title: string, message: string, type: string = 'success') {
 
 .tree-node.selected .node-content {
   background-color: var(--db-primary-bg);
-  color: #0969da;
-  font-weight: 500;
-  box-shadow: 0 2px 8px rgba(9, 105, 218, 0.15);
+  color: var(--db-dark-color);
+  box-shadow: none;
 }
 
 .tree-node.selected .node-content::before {
@@ -1423,21 +1421,22 @@ function showToast(title: string, message: string, type: string = 'success') {
   left: 0;
   top: 0;
   bottom: 0;
-  width: 3px;
-  background: #0969da;
-  border-radius: 3px 0 0 3px;
+  width: 2px;
+  background: var(--db-primary-color);
+  border-radius: 2px 0 0 2px;
 }
 
 .node-icon {
-  width: 20px;
+  width: 16px;
   display: flex;
   justify-content: center;
   flex-shrink: 0;
-  margin-right: 0.5rem;
+  margin-right: 0.375rem;
 }
 
 .node-icon i {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  color: var(--db-text-muted);
 }
 
 .node-label {
@@ -1451,34 +1450,35 @@ function showToast(title: string, message: string, type: string = 'success') {
 .connection-name,
 .database-name,
 .table-name {
-  font-weight: 500;
+  font-weight: 400;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.25;
+  line-height: 1.4;
 }
 
 .tree-node.selected .connection-name,
 .tree-node.selected .database-name,
 .tree-node.selected .table-name {
-  font-weight: 600;
+  font-weight: 500;
 }
 
+/* 类型 / 行数说明：走 VSCode 树的「描述文字」样式，浅灰无底色，减少噪声 */
 .connection-type,
 .table-info {
-  font-size: 0.75rem;
-  color: var(--db-text-body);
-  background-color: var(--db-border);
-  padding: 0.125rem 0.375rem;
-  border-radius: 12px;
-  font-weight: 500;
+  font-size: 0.6875rem;
+  color: var(--db-text-faint);
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-weight: 400;
   white-space: nowrap;
 }
 
 .tree-node.selected .connection-type,
 .tree-node.selected .table-info {
-  background-color: rgba(9, 105, 218, 0.1);
-  color: #0969da;
+  background-color: transparent;
+  color: var(--db-text-muted);
 }
 
 .node-actions {
@@ -1493,7 +1493,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .btn-icon {
-  padding: 0.25rem;
+  padding: 0;
   background: transparent;
   border: none;
   border-radius: 4px;
@@ -1501,29 +1501,29 @@ function showToast(title: string, message: string, type: string = 'success') {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .btn-icon:hover {
-  background-color: var(--db-border);
+  background-color: var(--db-bg-soft);
 }
 
 .btn-icon i {
   font-size: 0.6875rem;
-  color: var(--db-text-body);
+  color: var(--db-text-muted);
 }
 
 .tree-node.selected .btn-icon:hover {
-  background-color: rgba(9, 105, 218, 0.1);
+  background-color: var(--db-bg-soft);
 }
 
 .tree-node.selected .btn-icon i {
-  color: var(--db-gray-dark);
+  color: var(--db-text-muted);
 }
 
 .tree-node.selected .btn-icon:hover i {
-  color: #0969da;
+  color: var(--db-dark-color);
 }
 
 .btn-icon-danger:hover {
@@ -1558,7 +1558,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 
 .tree-node.selected .connection-content {
   background-color: var(--db-primary-bg);
-  color: #0969da;
+  color: var(--db-dark-color);
 }
 
 /* 数据库节点样式 */
@@ -1567,12 +1567,12 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .database-content:hover {
-  background-color: var(--db-bg-soft5);
+  background-color: var(--db-bg-soft);
 }
 
 .tree-node.selected .database-content {
   background-color: var(--db-primary-bg);
-  color: #0969da;
+  color: var(--db-dark-color);
 }
 
 /* 表节点样式 */
@@ -1581,12 +1581,12 @@ function showToast(title: string, message: string, type: string = 'success') {
 }
 
 .table-content:hover {
-  background-color: var(--db-bg-soft5);
+  background-color: var(--db-bg-soft);
 }
 
 .tree-node.selected .table-content {
   background-color: var(--db-primary-bg);
-  color: #0969da;
+  color: var(--db-dark-color);
 }
 
 /* 数据库品牌色彩 */
@@ -1657,16 +1657,16 @@ function showToast(title: string, message: string, type: string = 'success') {
 
 /* 数据库Logo图标 */
 .db-logo {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: 0.625rem;
+  line-height: 1;
   color: var(--db-on-accent);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .db-logo-mysql {
@@ -1752,7 +1752,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 .tab-content {
   flex: 1;
   overflow-y: auto;
-  padding: 1.5rem;
+  padding: 1.25rem;
   height: calc(100% - 60px); /* 减去导航栏高度 */
 }
 
@@ -1764,35 +1764,35 @@ function showToast(title: string, message: string, type: string = 'success') {
 .info-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .info-card {
   background: linear-gradient(135deg, var(--db-light-color) 0%, var(--db-border) 100%);
-  border-radius: 12px;
-  padding: 1.5rem;
+  border-radius: 8px;
+  padding: 0.875rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   border: 1px solid var(--db-gray-medium);
 }
 
 .card-icon {
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   background: var(--db-primary-color);
-  border-radius: 12px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--db-on-accent);
-  font-size: 1.25rem;
+  font-size: 1rem;
 }
 
 .card-content h6 {
   margin: 0 0 0.25rem 0;
   color: var(--db-darker-color);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
 }
 
@@ -1800,27 +1800,27 @@ function showToast(title: string, message: string, type: string = 'success') {
   margin: 0;
   color: var(--db-dark-color);
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 /* 表格网格 */
 .table-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.75rem;
 }
 
 .table-card {
   background: var(--db-surface);
   border: 1px solid var(--db-gray-medium);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 8px;
+  padding: 0.75rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .table-card:hover {
-  border-color: #667eea;
+  border-color: var(--db-primary-color);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
   transform: translateY(-2px);
 }
@@ -1828,15 +1828,15 @@ function showToast(title: string, message: string, type: string = 'success') {
 .table-card .card-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .table-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   background: var(--db-accent-color);
-  border-radius: 8px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1850,7 +1850,7 @@ function showToast(title: string, message: string, type: string = 'success') {
 
 .table-stats {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   margin-bottom: 0.5rem;
 }
 
@@ -1909,9 +1909,9 @@ function showToast(title: string, message: string, type: string = 'success') {
 
 .empty-icon,
 .default-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.4;
 }
 
 .empty-text h5,

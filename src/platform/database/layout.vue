@@ -59,10 +59,10 @@ const appVersion = __APP_VERSION__;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 1.25rem;
-  background: linear-gradient(135deg, var(--db-surface) 0%, var(--db-light-color) 100%);
-  border-bottom: 1px solid var(--db-gray-medium);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 0.375rem 0.75rem;
+  background: var(--db-gray-light);
+  border-bottom: 1px solid var(--db-border);
+  box-shadow: none;
   position: sticky;
   top: 0;
   z-index: 1030;
@@ -76,49 +76,49 @@ const appVersion = __APP_VERSION__;
 .brand-link {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   text-decoration: none;
   color: var(--db-dark-color);
-  transition: all 0.3s ease;
+  transition: color 0.15s ease;
 }
 
 .brand-link:hover {
-  color: #667eea;
+  color: var(--db-primary-color);
 }
 
 .brand-icon {
-  width: 36px;
-  height: 36px;
+  width: 24px;
+  height: 24px;
   background: var(--db-primary-color);
-  border-radius: 10px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--db-on-accent);
-  font-size: 1.2rem;
+  font-size: 0.8125rem;
 }
 
 .brand-name {
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .toolbar-right {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 /* 版本号徽标 */
 .app-version {
-  font-size: 0.78rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   line-height: 1;
   color: var(--db-text-muted);
-  background: var(--db-gray-light);
+  background: var(--db-bg-soft);
   border: 1px solid var(--db-border);
-  padding: 0.28rem 0.6rem;
+  padding: 0.2rem 0.45rem;
   border-radius: 999px;
   letter-spacing: 0.02em;
   cursor: default;
@@ -130,7 +130,7 @@ const appVersion = __APP_VERSION__;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, var(--db-light-color) 0%, var(--db-border) 100%);
+  background: var(--db-surface);
 }
 
 /* 现代导航栏样式 */
@@ -164,7 +164,8 @@ const appVersion = __APP_VERSION__;
   transform: translateX(2px);
 }
 
-.brand-icon {
+/* 旧 navbar 组的品牌图标（当前模板未使用，限定作用域避免覆盖顶部工具栏的 .brand-icon） */
+.navbar-brand-modern .brand-icon {
   width: 45px;
   height: 45px;
   background: var(--db-primary-color);
@@ -178,7 +179,7 @@ const appVersion = __APP_VERSION__;
   transition: all 0.3s ease;
 }
 
-.brand-icon:hover {
+.navbar-brand-modern .brand-icon:hover {
   transform: rotate(5deg) scale(1.05);
   box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
 }
@@ -308,9 +309,9 @@ const appVersion = __APP_VERSION__;
   right: 8px;
   width: 8px;
   height: 8px;
-  background: #ef4444;
+  background: var(--db-danger-color);
   border-radius: 50%;
-  border: 2px solid white;
+  border: 2px solid var(--db-surface);
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -449,8 +450,7 @@ const appVersion = __APP_VERSION__;
 
 .content-wrapper {
   flex: 1;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(8px);
+  background: var(--db-surface);
   overflow-y: auto;
   height: 100%;
 }
@@ -480,37 +480,35 @@ const appVersion = __APP_VERSION__;
 .about-trigger {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.75rem;
-  border-radius: 8px;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
   cursor: pointer;
   color: var(--db-text-muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
   user-select: none;
-  border: 1px solid var(--db-gray-medium);
-  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--db-border);
+  background: transparent;
 }
 
 .about-trigger:hover {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
-  border-color: #667eea;
-  transform: translateY(-1px);
+  background: var(--db-bg-soft);
+  color: var(--db-dark-color);
+  border-color: var(--db-border-light);
 }
 
 /* 关于工具弹窗 */
 .about-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
   padding: 1.5rem;
-  backdrop-filter: blur(4px);
 }
 
 .about-modal {
@@ -519,33 +517,34 @@ const appVersion = __APP_VERSION__;
   max-width: 860px;
   max-height: 90vh;
   overflow-y: auto;
-  background: var(--db-surface);
-  border-radius: 16px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  background: var(--db-bg-soft2);
+  border: 1px solid var(--db-border-light);
+  border-radius: 8px;
+  box-shadow: var(--db-shadow-2xl);
 }
 
 .about-modal-close {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
+  top: 0.75rem;
+  right: 0.75rem;
   z-index: 2;
-  width: 34px;
-  height: 34px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--db-gray-medium);
-  border-radius: 8px;
-  background: var(--db-surface);
+  border: 1px solid var(--db-border);
+  border-radius: 4px;
+  background: transparent;
   color: var(--db-text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .about-modal-close:hover {
-  background: var(--db-gray-light);
-  color: #667eea;
-  border-color: #667eea;
+  background: var(--db-bg-soft);
+  color: var(--db-dark-color);
+  border-color: var(--db-border-light);
 }
 
 .about-fade-enter-active,

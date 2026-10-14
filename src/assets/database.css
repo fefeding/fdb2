@@ -1159,32 +1159,286 @@ body.vscode-high-contrast .table-name {
 }
 
 /* =================================================================
- * 桌面端（Electron / Web）「紧凑 + 降噪」观感
- * 开发者工具不需要太花哨：操作按钮收敛为主题色描边、徽章中性、
- * 数据库卡片大色块改为中性面、各工具栏整体收紧。
- * 仅作用于 body.platform-desktop，不影响 VSCode webview（走 theme.ts）。
+ * 桌面端（Electron / Web）「编辑器深色」主题
+ *
+ * 对齐 VSCode 插件面板的观感：深色面板、1px 细边框、无渐变、无浮起阴影，
+ * 中性色阶只留三层（内容面 / 面板面 / 悬停面），品牌色只用于图标与选中态，
+ * 同时把按钮、表单、表格、工具栏的尺寸整体收缩一档。
+ *
+ * 选择器刻意写成一串 :not()：特异性 (0,4,1) 高于上方
+ * prefers-color-scheme: dark 的 (0,3,1)，保证系统切浅色时不会回落到浅色令牌。
+ * 仅作用于 body.platform-desktop，不影响 VSCode webview（走 theme.ts + 宿主主题）。
  * ================================================================= */
+body.platform-desktop:not(.vscode-dark):not(.vscode-light):not(.vscode-high-contrast) {
+  color-scheme: dark;
+
+  /* 中性色阶（VSCode Dark Modern 的面板层次） */
+  --db-surface: #1f1f1f;
+  --db-light-color: #1f1f1f;
+  --db-gray-light: #181818;
+  --db-gray-medium: #2f2f2f;
+  --db-gray-dark: #9d9d9d;
+  --db-darker-color: #b8b8b8;
+  --db-dark-color: #e6e6e6;
+  --db-black: #ffffff;
+
+  /* 背景一律压平 */
+  --db-bg-gradient: #1f1f1f;
+  --db-card-gradient: #202020;
+
+  /* 边框 */
+  --db-border: #2f2f2f;
+  --db-border-gray: #2f2f2f;
+  --db-border-light: #3c3c3c;
+  --db-border-lighter: #333333;
+  --db-border-soft: #2a2d2e;
+
+  /* 面 */
+  --db-bg-soft: #252526;
+  --db-bg-soft2: #202020;
+  --db-bg-soft3: #1f1f1f;
+  --db-bg-soft4: #1a1a1a;
+  --db-bg-soft5: #1a1a1a;
+
+  /* 文本 */
+  --db-text-body: #cccccc;
+  --db-text-muted: #9d9d9d;
+  --db-text-faint: #6e6e6e;
+
+  /* 语义底色 */
+  --db-danger-bg: rgba(239, 68, 68, 0.16);
+  --db-success-bg: rgba(16, 185, 129, 0.16);
+  --db-warning-bg: rgba(245, 158, 11, 0.16);
+  --db-info-bg: rgba(59, 130, 246, 0.18);
+  --db-primary-bg: rgba(102, 126, 234, 0.2);
+
+  --db-code-bg: #1b1f27;
+  --db-code-fg: #abb2bf;
+
+  /* 深色下投影几乎不可见，层级改由边框与面色表达 */
+  --db-shadow-sm: none;
+  --db-shadow-md: none;
+  --db-shadow-lg: none;
+  --db-shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --db-shadow-2xl: 0 16px 40px rgba(0, 0, 0, 0.6);
+
+  /* 圆角收紧：编辑器面板不用大圆角 */
+  --db-radius-sm: 4px;
+  --db-radius-md: 6px;
+  --db-radius-lg: 8px;
+  --db-radius-xl: 10px;
+  --db-radius-2xl: 12px;
+
+  /* 间距整体收缩一档（全局 .card / .modal / .table 等共用这套令牌） */
+  --db-spacing-xs: 0.375rem;
+  --db-spacing-sm: 0.5rem;
+  --db-spacing-md: 0.75rem;
+  --db-spacing-lg: 1rem;
+  --db-spacing-xl: 1.25rem;
+  --db-spacing-2xl: 2rem;
+
+  /* Bootstrap 令牌桥接：下拉 / 弹窗 / 分页等组件一并转入深色 */
+  --bs-body-bg: var(--db-surface);
+  --bs-body-color: var(--db-text-body);
+  --bs-secondary-bg: var(--db-bg-soft);
+  --bs-secondary-color: var(--db-text-muted);
+  --bs-tertiary-bg: var(--db-bg-soft2);
+  --bs-tertiary-color: var(--db-text-muted);
+  --bs-emphasis-color: var(--db-black);
+  --bs-border-color: var(--db-border);
+  --bs-heading-color: var(--db-dark-color);
+}
+
+/* ---------------- 滚动条 / 选中 / 代码块 ---------------- */
+body.platform-desktop ::-webkit-scrollbar { width: 10px; height: 10px; }
+body.platform-desktop ::-webkit-scrollbar-track { background: transparent; border-radius: 0; }
+body.platform-desktop ::-webkit-scrollbar-thumb {
+  background-color: #424242;
+  background-clip: content-box;
+  border: 2px solid transparent;
+  border-radius: 5px;
+}
+body.platform-desktop ::-webkit-scrollbar-thumb:hover { background-color: #4f4f4f; background-clip: content-box; }
+body.platform-desktop ::selection { background: rgba(102, 126, 234, 0.35); color: #ffffff; }
+body.platform-desktop code { background-color: var(--db-bg-soft); color: #ce9178; padding: 0.1rem 0.3rem; }
+body.platform-desktop pre {
+  background-color: var(--db-code-bg);
+  border: 1px solid var(--db-border);
+  color: var(--db-code-fg);
+  padding: 0.625rem;
+  font-size: 12px;
+}
+
+/* ---------------- 基础组件密度 ---------------- */
+body.platform-desktop .btn {
+  padding: 0.25rem 0.6rem;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 500;
+  border-radius: 4px;
+  box-shadow: none;
+}
+body.platform-desktop .btn-sm { padding: 0.2rem 0.5rem; font-size: 12px; border-radius: 4px; }
+body.platform-desktop .btn-group-sm > .btn { padding: 0.15rem 0.4rem; font-size: 12px; }
+/* 树 / 列表里的纯图标按钮：不能在 .btn 密度下被撑开 */
+body.platform-desktop .btn-icon {
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+}
+
+body.platform-desktop .form-control,
+body.platform-desktop .form-select {
+  padding: 0.3rem 0.5rem;
+  font-size: 12px;
+  border: 1px solid var(--db-border-light);
+  border-radius: 4px;
+  background-color: var(--db-bg-soft);
+  color: var(--db-text-body);
+}
+body.platform-desktop .form-control:focus,
+body.platform-desktop .form-select:focus {
+  border-color: var(--db-primary-color);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.25);
+  transform: none;
+}
+body.platform-desktop .form-control-sm,
+body.platform-desktop .form-select-sm { padding: 0.15rem 0.4rem; font-size: 12px; }
+body.platform-desktop .form-select-sm { padding-right: 1.4rem; }
+body.platform-desktop .form-label { margin-bottom: 0.25rem; font-size: 12px; font-weight: 600; color: var(--db-text-muted); }
+body.platform-desktop .form-text { font-size: 11px; color: var(--db-text-muted); }
+body.platform-desktop .form-check-input { width: 14px; height: 14px; margin-top: 0.2rem; border-width: 1px; border-radius: 3px; }
+body.platform-desktop .form-check-label { margin-left: 0.375rem; font-size: 12px; }
+
+body.platform-desktop .table {
+  border-radius: 0;
+  box-shadow: none;
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--db-text-body);
+  --bs-table-border-color: var(--db-border);
+  --bs-table-striped-bg: var(--db-bg-soft2);
+  --bs-table-striped-color: var(--db-text-body);
+  --bs-table-hover-bg: var(--db-bg-soft);
+  --bs-table-hover-color: var(--db-black);
+}
+body.platform-desktop .table th {
+  padding: 0.375rem 0.625rem;
+  background-color: var(--db-bg-soft);
+  border-color: var(--db-border);
+  color: var(--db-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+body.platform-desktop .table td { padding: 0.3rem 0.625rem; border-color: var(--db-border); font-size: 12px; }
+body.platform-desktop .table-dark { --bs-table-bg: var(--db-bg-soft); --bs-table-color: var(--db-text-muted); }
+body.platform-desktop .table-striped tbody tr:nth-of-type(odd) { background-color: transparent; }
+body.platform-desktop .table-hover tbody tr:hover { background-color: var(--db-bg-soft); transform: none; }
+body.platform-desktop .table-responsive { border-radius: 0; box-shadow: none; }
+
+body.platform-desktop .dropdown-menu {
+  padding: 0.25rem;
+  background-color: var(--db-bg-soft);
+  border: 1px solid var(--db-border-light);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  font-size: 12px;
+}
+body.platform-desktop .dropdown-item { padding: 0.3rem 0.5rem; border-radius: 4px; font-size: 12px; color: var(--db-text-body); }
+body.platform-desktop .dropdown-item:hover,
+body.platform-desktop .dropdown-item:focus { background-color: var(--db-primary-bg); color: var(--db-dark-color); transform: none; }
+body.platform-desktop .dropdown-divider { margin: 0.25rem 0; border-color: var(--db-border); }
+body.platform-desktop .dropdown-header { padding: 0.25rem 0.5rem; font-size: 11px; color: var(--db-text-faint); }
+
+body.platform-desktop .modal-content {
+  background-color: var(--db-bg-soft2);
+  border: 1px solid var(--db-border-light);
+  border-radius: 8px;
+  box-shadow: var(--db-shadow-2xl);
+}
+body.platform-desktop .modal-header {
+  padding: 0.625rem 0.875rem;
+  background-color: var(--db-bg-soft);
+  border-bottom: 1px solid var(--db-border);
+}
+body.platform-desktop .modal-header::before { height: 0; }
+body.platform-desktop .modal-title { font-size: 14px; font-weight: 600; color: var(--db-dark-color); }
+body.platform-desktop .modal-body { padding: 0.875rem; max-height: 72vh; color: var(--db-text-body); }
+body.platform-desktop .modal-footer {
+  padding: 0.625rem 0.875rem;
+  background-color: var(--db-bg-soft);
+  border-top: 1px solid var(--db-border);
+}
+body.platform-desktop .btn-close {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background-color: transparent;
+  background-image: var(--bs-btn-close-bg);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 0.8em auto;
+  border-radius: 4px;
+  opacity: 0.7;
+}
+body.platform-desktop .btn-close:hover { background-color: var(--db-bg-soft); opacity: 1; transform: none; }
+
+body.platform-desktop .alert { padding: 0.5rem 0.75rem; border: 1px solid transparent; border-radius: 4px; font-size: 12px; }
+body.platform-desktop .alert-success { background-color: var(--db-success-bg); border-color: rgba(16, 185, 129, 0.35); color: #4ade80; }
+body.platform-desktop .alert-danger { background-color: var(--db-danger-bg); border-color: rgba(239, 68, 68, 0.35); color: #f87171; }
+body.platform-desktop .alert-warning { background-color: var(--db-warning-bg); border-color: rgba(245, 158, 11, 0.35); color: #fbbf24; }
+body.platform-desktop .alert-info { background-color: var(--db-info-bg); border-color: rgba(59, 130, 246, 0.35); color: #60a5fa; }
+
+body.platform-desktop .card { background-color: var(--db-bg-soft2); border: 1px solid var(--db-border); box-shadow: none; }
+body.platform-desktop .card:hover { transform: none; box-shadow: none; border-color: var(--db-border-light); }
+body.platform-desktop .card-header { background-color: var(--db-bg-soft); border-bottom: 1px solid var(--db-border); }
+body.platform-desktop .card-header::before { display: none; }
+body.platform-desktop .card-footer { background-color: var(--db-bg-soft); border-top: 1px solid var(--db-border); }
+
+body.platform-desktop .loading-overlay { background-color: rgba(31, 31, 31, 0.75); }
+body.platform-desktop .loading-spinner { border-color: var(--db-bg-soft); border-top-color: var(--db-primary-color); }
+body.platform-desktop .bg-glass { background-color: rgba(31, 31, 31, 0.85); border-color: var(--db-border); }
+body.platform-desktop .list-group-item { background-color: transparent; color: var(--db-text-body); }
+body.platform-desktop .list-group-item:hover { background-color: var(--db-bg-soft); transform: none; }
+body.platform-desktop .page-link {
+  padding: 0.2rem 0.5rem;
+  background-color: transparent;
+  border-color: var(--db-border);
+  color: var(--db-text-body);
+  font-size: 12px;
+}
+body.platform-desktop .page-link:hover { background-color: var(--db-bg-soft); border-color: var(--db-border-light); color: var(--db-dark-color); }
+body.platform-desktop .page-item.active .page-link { background-color: var(--db-primary-color); border-color: var(--db-primary-color); color: var(--db-on-accent); }
+
+/* ---------------- 布局紧凑化 ---------------- */
 /* 连接详情：信息条与快捷操作紧凑化 */
-body.platform-desktop .connection-detail { gap: 12px !important; }
-body.platform-desktop .connection-header { margin-bottom: 0 !important; padding: 10px 14px !important; }
+body.platform-desktop .connection-detail { gap: 10px !important; padding: 10px !important; }
+body.platform-desktop .connection-header { margin-bottom: 0 !important; padding: 8px 12px !important; }
 body.platform-desktop .connection-info { gap: 10px !important; }
-body.platform-desktop .quick-actions { margin-bottom: 0 !important; padding: 10px 14px !important; }
-body.platform-desktop .actions-grid { gap: 8px !important; }
+body.platform-desktop .quick-actions { margin-bottom: 0 !important; padding: 10px 12px !important; }
+body.platform-desktop .actions-grid { gap: 6px !important; }
 body.platform-desktop .action-btn {
   flex-direction: row !important;
   justify-content: flex-start !important;
   gap: 8px !important;
-  padding: 8px 10px !important;
+  padding: 6px 10px !important;
 }
 body.platform-desktop .action-icon { font-size: 14px !important; }
 
 /* 表详情页：信息条 / 工具栏 / 页签整体收紧 */
-body.platform-desktop .table-header { padding: 10px 14px !important; }
-body.platform-desktop .table-icon { font-size: 22px !important; }
-body.platform-desktop .table-name { font-size: 1.05rem !important; }
-body.platform-desktop .table-breadcrumb { font-size: 0.78rem !important; }
-body.platform-desktop .table-stats { gap: 12px !important; }
-body.platform-desktop .table-toolbar { padding: 8px 12px !important; gap: 8px !important; flex-wrap: wrap !important; }
+body.platform-desktop .table-header { padding: 8px 12px !important; }
+body.platform-desktop .table-icon { font-size: 20px !important; }
+body.platform-desktop .table-name { font-size: 0.9375rem !important; }
+body.platform-desktop .table-breadcrumb { font-size: 0.75rem !important; }
+body.platform-desktop .table-stats { gap: 14px !important; }
+body.platform-desktop .table-toolbar { padding: 6px 12px !important; gap: 6px !important; flex-wrap: wrap !important; }
 body.platform-desktop .toolbar-left,
 body.platform-desktop .toolbar-right { gap: 6px !important; flex-wrap: wrap !important; }
 body.platform-desktop .table-toolbar .btn,
@@ -1201,7 +1455,7 @@ body.platform-desktop .table-toolbar .dropdown-item { padding: 4px 10px !importa
 body.platform-desktop .nav-tabs { padding: 0 0.5rem !important; }
 body.platform-desktop .nav-tabs .nav-link { padding: 6px 12px !important; font-size: 12px !important; }
 body.platform-desktop .nav-tabs .nav-link .badge { font-size: 10px !important; padding: 2px 5px !important; }
-body.platform-desktop .tab-content { padding: 12px !important; }
+body.platform-desktop .tab-content { padding: 10px 12px !important; }
 
 /* SQL 编辑器工具栏（桌面端独立存在） */
 body.platform-desktop .sql-toolbar,
@@ -1248,11 +1502,32 @@ body.platform-desktop .btn-outline-warning {
   border-color: rgba(245, 158, 11, 0.5) !important;
   color: #f59e0b !important;
 }
+/* 工具栏里的主操作保留一点主题色，避免整条工具栏全是灰button */
+body.platform-desktop .tables-actions .btn-primary,
+body.platform-desktop .views-actions .btn-success,
+body.platform-desktop .procedures-actions .btn-info {
+  background-color: var(--db-primary-bg) !important;
+  border-color: var(--db-primary-color) !important;
+  color: var(--db-primary-color) !important;
+}
+body.platform-desktop .tables-actions .btn-primary:hover,
+body.platform-desktop .views-actions .btn-success:hover,
+body.platform-desktop .procedures-actions .btn-info:hover {
+  background-color: rgba(102, 126, 234, 0.3) !important;
+  color: var(--db-primary-light) !important;
+  border-color: var(--db-primary-light) !important;
+}
 /* 徽章统一中性 */
 body.platform-desktop .badge {
   background-color: var(--db-bg-soft) !important;
   color: var(--db-text-muted) !important;
   font-weight: 500 !important;
+  padding: 0.1rem 0.4rem;
+  font-size: 10px;
+  border-radius: 999px;
+  text-transform: none;
+  letter-spacing: 0;
+  box-shadow: none;
 }
 /* 数据库卡片的大块品牌渐变改为中性面，品牌色只保留 logo 小方块 */
 body.platform-desktop .db-mysql-bg,

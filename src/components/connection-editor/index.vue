@@ -464,76 +464,78 @@ loadDatabaseTypes();
 }
 
 .form-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .section-header {
   display: flex;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #cbd5e1;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--db-border);
 }
 
 .section-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: var(--db-primary-color);
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  background: var(--db-primary-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  margin-right: 1rem;
+  color: var(--db-primary-color);
+  font-size: 0.8125rem;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
 }
 
 .section-title {
-  font-size: 1.1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   margin: 0;
-  color: #1e293b;
+  color: var(--db-dark-color);
 }
 
 .section-content {
-  padding-left: 56px;
+  padding-left: 0;
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
 }
 
 .form-group-modern {
-  margin-bottom: 1rem;
+  margin-bottom: 0.625rem;
 }
 
 .form-label-modern {
   display: flex;
   align-items: center;
   font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+  color: var(--db-text-muted);
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
 }
 
 .form-control-modern,
 .form-select-modern {
   width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #94a3b8;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-  color: #1e293b;
-  background-color: #ffffff;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--db-border-light);
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  color: var(--db-text-body);
+  background-color: var(--db-bg-soft);
 }
 
 .form-control-modern:focus,
 .form-select-modern:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--db-primary-color);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.25);
 }
 
 .form-check-modern {
@@ -543,8 +545,8 @@ loadDatabaseTypes();
 }
 
 .form-check-input-modern {
-  margin-right: 0.75rem;
-  margin-top: 0.25rem;
+  margin-right: 0.5rem;
+  margin-top: 0.2rem;
 }
 
 .form-check-label-modern {
@@ -555,44 +557,48 @@ loadDatabaseTypes();
 
 .check-text {
   font-weight: 500;
-  color: #1e293b;
-  margin-bottom: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--db-text-body);
+  margin-bottom: 0.125rem;
 }
 
 .check-description {
-  font-size: 0.85rem;
-  color: #475569;
+  font-size: 0.6875rem;
+  color: var(--db-text-muted);
 }
 
 .required {
-  color: #dc3545;
+  color: var(--db-danger-color);
   margin-left: 0.25rem;
 }
 
 .error-content {
   display: flex;
   align-items: center;
-  padding: 1.5rem;
-  gap: 1rem;
+  padding: 0.75rem;
+  gap: 0.625rem;
+  background-color: var(--db-danger-bg);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 4px;
 }
 
 .error-icon {
-  width: 48px;
-  height: 48px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: #dc3545;
+  background: rgba(239, 68, 68, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 1.5rem;
+  color: var(--db-danger-color);
+  font-size: 0.9375rem;
   flex-shrink: 0;
 }
 
 .error-message {
   flex: 1;
-  color: #1e293b;
-  font-size: 0.95rem;
+  color: var(--db-text-body);
+  font-size: 0.8125rem;
   line-height: 1.6;
 }
 </style>

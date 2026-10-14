@@ -1,5 +1,6 @@
 // 主题探测：VSCode webview 由宿主维护 body 上的 vscode-light / vscode-dark / vscode-high-contrast 类，
-// 桌面端（Electron/浏览器）则跟随 OS 的 prefers-color-scheme。
+// 桌面端（Electron/浏览器）统一为「编辑器深色」主题（见 database.css 的 body.platform-desktop 块），
+// 不再跟随 OS 的 prefers-color-scheme，否则会出现「CSS 深色 + JS 浅色」的错配。
 // 纯 CSS 能覆盖的部分由 --db-* 令牌处理，这里供 JS 侧（ECharts / CodeMirror 等）使用。
 
 export function isDarkTheme(): boolean {
@@ -8,6 +9,7 @@ export function isDarkTheme(): boolean {
   if (cls && (cls.contains('vscode-light') || cls.contains('vscode-dark') || cls.contains('vscode-high-contrast'))) {
     return cls.contains('vscode-dark') || cls.contains('vscode-high-contrast');
   }
+  if (cls?.contains('platform-desktop')) return true;
   return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-color-scheme: dark)').matches;
 }
 

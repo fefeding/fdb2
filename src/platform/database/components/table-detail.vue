@@ -935,9 +935,9 @@ async function downloadSQLFile(content: string, filename: string) {
 }
 
 .table-header {
-  background-color: var(--db-gray-light);
-  border-bottom: 1px solid var(--db-gray-medium);
-  padding: 15px 20px;
+  background-color: var(--db-bg-soft2);
+  border-bottom: 1px solid var(--db-border);
+  padding: 8px 12px;
 }
 
 .table-header-content {
@@ -949,99 +949,100 @@ async function downloadSQLFile(content: string, filename: string) {
 .table-info {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
 }
 
 .table-icon {
-  font-size: 32px;
-  color: var(--db-dark-color);
+  font-size: 20px;
+  color: var(--db-primary-color);
 }
 
 .table-meta {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 2px;
 }
 
 .table-name {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 0.9375rem;
   font-weight: 600;
 }
 
 .table-breadcrumb {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.875rem;
-  color: var(--db-gray-dark);
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--db-text-muted);
 }
 
 .table-breadcrumb .crumb {
   display: inline-flex;
   align-items: center;
-  padding: 1px 6px;
-  border-radius: 6px;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  padding: 0;
+  border-radius: 0;
+  transition: color 0.15s ease;
 }
 
 .table-breadcrumb .crumb-link {
   cursor: pointer;
-  color: var(--db-gray-dark);
+  color: var(--db-primary-color);
 }
 
 .table-breadcrumb .crumb-link:hover {
-  background-color: var(--db-primary-bg);
-  color: #0969da;
+  background-color: transparent;
+  color: var(--db-primary-light);
   text-decoration: underline;
 }
 
 .table-breadcrumb .crumb-current {
-  font-weight: 600;
-  color: var(--db-dark-color);
+  font-weight: 500;
+  color: var(--db-text-muted);
 }
 
 .table-stats {
   display: flex;
-  gap: 20px;
+  gap: 14px;
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2px;
+  align-items: flex-end;
+  gap: 0;
 }
 
 .stat-value {
-  font-size: 1.125rem;
+  font-size: 0.9375rem;
   font-weight: 600;
+  line-height: 1.25;
   color: var(--db-dark-color);
 }
 
 .stat-label {
-  font-size: 0.75rem;
-  color: var(--db-gray-dark);
+  font-size: 0.6875rem;
+  color: var(--db-text-muted);
 }
 
 .table-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
-  background-color: var(--db-gray-light);
-  border-bottom: 1px solid var(--db-gray-medium);
+  padding: 6px 12px;
+  background-color: var(--db-bg-soft2);
+  border-bottom: 1px solid var(--db-border);
 }
 
 .toolbar-left {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   align-items: center;
 }
 
 .toolbar-right {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   align-items: center;
 }
 
@@ -1053,36 +1054,39 @@ async function downloadSQLFile(content: string, filename: string) {
 }
 
 .nav-tabs {
-  border-bottom: 1px solid var(--db-gray-medium);
+  border-bottom: 1px solid var(--db-border);
   background-color: var(--db-gray-light);
   flex-shrink: 0;
+  padding: 0 6px;
 }
 
 .nav-tabs .nav-link {
-  color: var(--db-darker-color);
+  color: var(--db-text-muted);
   border: none;
-  border-bottom: 3px solid transparent;
+  border-bottom: 2px solid transparent;
   border-radius: 0;
-  padding: 10px 15px;
+  padding: 6px 12px;
+  font-size: 12px;
   font-weight: 500;
 }
 
 .nav-tabs .nav-link:hover {
-  background-color: var(--db-border);
-  border-bottom-color: var(--db-text-faint);
+  background-color: var(--db-bg-soft);
+  border-bottom-color: var(--db-border-light);
+  color: var(--db-dark-color);
 }
 
 .nav-tabs .nav-link.active {
-  background-color: var(--db-surface);
-  border-bottom-color: #0d6efd;
-  color: #0d6efd;
+  background-color: transparent;
+  border-bottom-color: var(--db-primary-color);
+  color: var(--db-primary-color);
 }
 
 .tab-content {
   flex: 1;
   overflow: auto;
-  padding: 20px;
-  background-color: var(--db-surface);
+  padding: 10px 12px;
+  background-color: transparent;
   display: flex;
   flex-direction: column;
 }
@@ -1119,7 +1123,7 @@ async function downloadSQLFile(content: string, filename: string) {
   position: absolute;
   top: -5px;
   right: -15px;
-  color: #0d6efd;
+  color: var(--db-primary-color);
   font-size: 0.75rem;
 }
 
@@ -1135,8 +1139,8 @@ async function downloadSQLFile(content: string, filename: string) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 300px;
-  gap: 15px;
+  height: 200px;
+  gap: 10px;
 }
 
 .empty-state {
@@ -1144,20 +1148,20 @@ async function downloadSQLFile(content: string, filename: string) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 300px;
-  gap: 15px;
-  color: var(--db-gray-dark);
+  height: 200px;
+  gap: 10px;
+  color: var(--db-text-muted);
 }
 
 .empty-state i {
-  font-size: 48px;
+  font-size: 28px;
   opacity: 0.5;
 }
 
 .pagination-nav {
-  margin-top: 20px;
-  border-top: 1px solid var(--db-gray-medium);
-  padding-top: 15px;
+  margin-top: 10px;
+  border-top: 1px solid var(--db-border);
+  padding-top: 10px;
 }
 
 .pagination-container {
@@ -1169,8 +1173,8 @@ async function downloadSQLFile(content: string, filename: string) {
 }
 
 .pagination-info {
-  font-size: 0.875rem;
-  color: var(--db-gray-dark);
+  font-size: 0.75rem;
+  color: var(--db-text-muted);
 }
 
 .page-size-selector {
@@ -1187,8 +1191,8 @@ async function downloadSQLFile(content: string, filename: string) {
 
 .structure-actions {
   display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
+  gap: 6px;
+  margin-bottom: 10px;
 }
 
 .structure-table, .indexes-table, .relations-table {

@@ -609,44 +609,46 @@ function getDbLogoText(type?: string): string {
 
 <style scoped>
 .connection-detail {
-  padding: 20px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 20px;
+  gap: 10px;
 }
 
 .connection-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 20px;
-  background-color: var(--db-gray-light);
-  border-radius: 8px;
-  border: 1px solid var(--db-gray-medium);
+  margin-bottom: 0;
+  padding: 8px 12px;
+  background-color: var(--db-bg-soft2);
+  border-radius: 6px;
+  border: 1px solid var(--db-border);
 }
 
 .connection-info {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .connection-avatar {
-  width: 60px;
-  height: 60px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 6px;
   background-color: var(--db-border);
-  border: 1px solid var(--db-gray-medium);
+  border: 1px solid var(--db-border);
+  flex-shrink: 0;
 }
 
 .db-logo {
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   color: var(--db-gray-dark);
 }
 
@@ -683,35 +685,36 @@ function getDbLogoText(type?: string): string {
 
 .connection-name {
   margin: 0;
-  font-size: 20px;
+  font-size: 15px;
   font-weight: 600;
 }
 
 .connection-type-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .db-type {
-  padding: 4px 12px;
-  border-radius: 12px;
-  background-color: var(--db-border);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--db-darker-color);
+  padding: 1px 7px;
+  border-radius: 999px;
+  background-color: var(--db-primary-bg);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--db-primary-color);
 }
 
 .connection-status {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px;
+  font-size: 12px;
+  color: var(--db-text-muted);
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background-color: var(--db-gray-dark);
 }
@@ -744,20 +747,20 @@ function getDbLogoText(type?: string): string {
 }
 
 .connection-details-panel {
-  margin-bottom: 30px;
+  margin-bottom: 0;
   animation: fadeIn 0.3s ease;
 }
 
 .section-title {
-  margin: 0 0 16px 0;
-  font-size: 16px;
+  margin: 0 0 10px 0;
+  font-size: 13px;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 8px;
   color: var(--db-dark-color);
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--db-gray-medium);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--db-border);
 }
 
 @keyframes fadeIn {
@@ -772,20 +775,20 @@ function getDbLogoText(type?: string): string {
 }
 
 .detail-card {
-  border: 1px solid var(--db-gray-medium);
-  border-radius: 8px;
+  border: 1px solid var(--db-border);
+  border-radius: 6px;
   overflow: hidden;
 }
 
 .card-header {
-  padding: 16px;
-  background-color: var(--db-bg-soft2);
-  border-bottom: 1px solid var(--db-gray-medium);
+  padding: 10px;
+  background-color: var(--db-bg-soft);
+  border-bottom: 1px solid var(--db-border);
 }
 
 .card-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -793,101 +796,99 @@ function getDbLogoText(type?: string): string {
 }
 
 .card-body {
-  padding: 16px;
+  padding: 10px;
 }
 
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 16px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 0;
 }
 
 .info-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 10px;
-  background-color: var(--db-gray-light);
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  border: 1px solid var(--db-gray-medium);
+  gap: 2px;
+  padding: 6px 8px;
+  background-color: var(--db-bg-soft);
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+  border: 1px solid var(--db-border);
 }
 
 .info-item:hover {
-  background-color: var(--db-border-soft);
-  transform: translateY(-1px);
+  background-color: var(--db-bg-soft2);
 }
 
 .info-label {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 600;
-  color: var(--db-gray-dark);
+  color: var(--db-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.04em;
 }
 
 .info-value {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--db-dark-color);
 }
 
 .db-type-badge {
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
   font-weight: 500;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 16px;
+  gap: 8px;
 }
 
 .stat-item {
-  text-align: center;
-  padding: 12px;
-  background-color: var(--db-gray-light);
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  border: 1px solid var(--db-gray-medium);
+  text-align: left;
+  padding: 8px;
+  background-color: var(--db-bg-soft);
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+  border: 1px solid var(--db-border);
 }
 
 .stat-item:hover {
-  background-color: var(--db-border-soft);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background-color: var(--db-bg-soft2);
 }
 
 .stat-value {
-  font-size: 20px;
+  font-size: 15px;
   font-weight: 600;
+  line-height: 1.25;
   color: var(--db-dark-color);
 }
 
 .stat-label {
-  font-size: 12px;
-  color: var(--db-gray-dark);
-  margin-top: 4px;
+  font-size: 11px;
+  color: var(--db-text-muted);
+  margin-top: 2px;
 }
 
 .quick-actions {
-  margin-bottom: 30px;
-  padding: 20px;
-  background-color: var(--db-gray-light);
-  border-radius: 8px;
-  border: 1px solid var(--db-gray-medium);
+  margin-bottom: 0;
+  padding: 10px 12px;
+  background-color: var(--db-bg-soft2);
+  border-radius: 6px;
+  border: 1px solid var(--db-border);
 }
 
 .actions-header {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .actions-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -896,43 +897,44 @@ function getDbLogoText(type?: string): string {
 
 .actions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px;
 }
 
 .action-btn {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
-  padding: 16px;
-  background-color: var(--db-surface);
-  border: 1px solid var(--db-gray-medium);
-  border-radius: 8px;
+  padding: 6px 10px;
+  background-color: var(--db-bg-soft);
+  border: 1px solid var(--db-border);
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  color: var(--db-text-body);
 }
 
 .action-btn:hover {
-  background-color: var(--db-border-soft);
-  transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--db-bg-soft2);
+  border-color: var(--db-primary-color);
 }
 
 .action-icon {
-  font-size: 24px;
-  color: var(--db-gray-dark);
+  font-size: 14px;
+  color: var(--db-primary-color);
 }
 
 .action-text {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
-  color: var(--db-dark-color);
+  color: var(--db-text-body);
 }
 
 .connection-tabs {
-  border: 1px solid var(--db-gray-medium);
-  border-radius: 8px;
+  border: 1px solid var(--db-border);
+  border-radius: 6px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -942,27 +944,31 @@ function getDbLogoText(type?: string): string {
 }
 
 .nav-tabs {
-  border-bottom: 1px solid var(--db-gray-medium);
+  border-bottom: 1px solid var(--db-border);
   background-color: var(--db-gray-light);
+  padding: 0 4px;
+  gap: 0;
 }
 
 .nav-link {
   border: none;
   border-radius: 0;
-  padding: 12px 20px;
-  font-size: 14px;
+  padding: 6px 12px;
+  font-size: 12px;
   font-weight: 500;
-  transition: all 0.2s ease;
-  color: var(--db-darker-color);
+  transition: color 0.15s ease, background-color 0.15s ease;
+  color: var(--db-text-muted);
 }
 
 .nav-link:hover {
-  background-color: var(--db-border-soft);
+  background-color: var(--db-bg-soft);
+  color: var(--db-dark-color);
 }
 
 .nav-link.active {
-  background-color: var(--db-surface);
-  border-bottom: 2px solid #0d6efd;
+  background-color: transparent;
+  color: var(--db-primary-color);
+  border-bottom: 2px solid var(--db-primary-color);
 }
 
 .tab-content {
@@ -974,7 +980,7 @@ function getDbLogoText(type?: string): string {
 }
 
 .tab-panel {
-  padding: 20px;
+  padding: 0;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -985,7 +991,7 @@ function getDbLogoText(type?: string): string {
 .databases-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   flex: 1;
   overflow: hidden;
   min-height: 0;
@@ -1002,11 +1008,11 @@ function getDbLogoText(type?: string): string {
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 30px;
-  padding: 0 10px;
-  border: 1px solid var(--db-gray-medium);
-  border-radius: 15px;
-  background: var(--db-surface);
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--db-border-light);
+  border-radius: 4px;
+  background: var(--db-bg-soft);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -1041,13 +1047,13 @@ function getDbLogoText(type?: string): string {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   padding: 0;
-  border: 1px solid var(--db-gray-medium);
-  border-radius: 8px;
+  border: 1px solid var(--db-border-light);
+  border-radius: 4px;
   background: transparent;
-  color: var(--db-darker-color);
+  color: var(--db-text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -1075,8 +1081,8 @@ function getDbLogoText(type?: string): string {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  gap: 16px;
+  padding: 28px 16px;
+  gap: 10px;
 }
 
 .empty-state {
@@ -1084,26 +1090,26 @@ function getDbLogoText(type?: string): string {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  gap: 16px;
+  padding: 28px 16px;
+  gap: 10px;
   text-align: center;
 }
 
 .empty-state i {
-  font-size: 48px;
-  color: var(--db-border-light);
+  font-size: 28px;
+  color: var(--db-text-faint);
 }
 
 .empty-state p {
   margin: 0;
-  color: var(--db-gray-dark);
-  font-size: 16px;
+  color: var(--db-text-muted);
+  font-size: 12px;
 }
 
 .databases-list-simple {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 8px;
+  gap: 6px;
 }
 
 .database-item {
@@ -1111,29 +1117,29 @@ function getDbLogoText(type?: string): string {
   flex-direction: row;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  background: var(--db-bg-soft2);
+  padding: 6px 8px;
+  border: 1px solid var(--db-border);
+  border-radius: 4px;
+  background: var(--db-bg-soft);
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
   text-align: left;
 }
 
 .database-item:hover {
-  background: var(--db-primary-bg);
+  background: var(--db-bg-soft2);
   border-color: var(--db-primary-color);
 }
 
 .database-item-icon {
-  font-size: 14px;
-  color: var(--db-info-color);
+  font-size: 12px;
+  color: var(--db-primary-color);
   flex-shrink: 0;
 }
 
 .database-item-name {
   flex: 1;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--db-dark-color);
   overflow: hidden;
@@ -1165,7 +1171,7 @@ function getDbLogoText(type?: string): string {
 
 .database-item-actions .btn:hover {
   color: var(--db-primary-color);
-  background: var(--db-surface);
+  background: var(--db-bg-soft2);
 }
 
 .sql-section {

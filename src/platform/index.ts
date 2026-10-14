@@ -22,9 +22,13 @@ import Modal from '@/components/modal/index.vue';
 import DataGrid from '@/components/dataGrid/index.vue';
 import modalPlugin from '@/components/modal/index';
 
-// 桌面端标记：用于加载一套「紧凑 + 降噪」的开发者工具观感（与 VSCode webview 的
+// 桌面端标记：用于加载一套「编辑器深色 + 紧凑」的开发者工具观感（与 VSCode webview 的
 // body.vscode-native-nav 规则同源，互不影响）
-if (typeof document !== 'undefined') document.body.classList.add('platform-desktop');
+if (typeof document !== 'undefined') {
+    document.body.classList.add('platform-desktop');
+    // 让 Bootstrap 的下拉 / 弹窗 / 分页等组件跟随我们的深色令牌
+    document.documentElement.setAttribute('data-bs-theme', 'dark');
+}
 
 const app = createApp(App);
 const pinia = createPinia();
