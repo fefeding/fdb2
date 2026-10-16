@@ -46,13 +46,15 @@ export class VSCodeBridge {
 
     /**
      * 监听来自 VSCode 扩展的消息
+     *
+     * 这里刻意不按 event.origin 过滤：VSCode 各版本经 webview.postMessage 下发时
+     * 携带的 origin 并不稳定（部分版本为非空值），一旦过滤就会把宿主消息整批丢掉，
+     * 表现为「连接下拉为空 / 数据库列表不展示」这类面板级静默失效。
+     * rpc.ts 与 entry/explorer.ts 的监听同样不过滤，这里与之保持一致。
+     * webview 内 CSP 已限定脚本来源、宿主是唯一消息来源，该过滤没有实际收益。
      */
     onMessage(callback: (message: any) => void): void {
-        window.addEventListener('message', event => {
-            // 安全检查：确保消息来自扩展
-            if (event.origin) {
-                return;
-            }
+        window.addEventListener('message', (event) => {
             callback(event.data);
         });
     }

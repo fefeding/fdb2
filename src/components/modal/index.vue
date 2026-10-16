@@ -1,6 +1,6 @@
 <template>
     <div class="modal fade" :id="modalId" ref="modalContainer" tabindex="-1" aria-labelledby="modalLabel">
-        <div class="modal-dialog modal-dialog-centered" :class="{'modal-fullscreen': isFullScreen}" :style="dynamicStyle">
+        <div class="modal-dialog modal-dialog-centered" :class="{'modal-fullscreen': isFullScreen, 'modal-dialog-auto': isAutoSize}" :style="dynamicStyle">
             <div class="modal-content" :class="contentClass" style=" margin: auto;">
                 <div class="modal-header" :class="headerClass" style="padding: 1rem 1.5rem;">
                     <h5 class="modal-title d-flex align-items-center" id="modalLabel">
@@ -12,7 +12,7 @@
                 <div class="modal-body text-wrap" v-if="modalShow">
                     <slot v-if="$slots.default"></slot>
                     <div v-else>
-                        <div class="d-flex align-items-center mb-3">
+                        <div class="d-flex align-items-center mb-2">
                             <i v-if="typeIcon" :class="typeIcon" class="me-3 fs-1"></i>
                             <div class="flex-grow-1 text-wrap">{{dynamicContent}}</div>
                         </div>
@@ -53,7 +53,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { ref, onMounted, onUnmounted, watch, computed, nextTick } from 'vue';
+    import { ref, onMounted, onUnmounted, watch, computed, nextTick, useSlots } from 'vue';
     import { useI18n } from 'vue-i18n';
     import * as bootstrap from 'bootstrap';
     import Loading from '@/components/loading/index.vue';
@@ -137,14 +137,18 @@
         window.removeEventListener('resize', checkScreenSize);
     });
     
+    // 无自定义内容（纯文案提示）且非全屏时，弹窗按信息量自适应大小
+    const slots = useSlots();
+    const isAutoSize = computed(() => !slots.default && !props.isFullScreen);
+
     const dynamicStyle = computed(() => {        
         return {
-            maxWidth: isMobile.value ? '100vw' : '80vw!important',
-            width: 'auto', // 移除固定宽度，使用自动宽度
-            minWidth: '300px',
+            // 自适应模式下宽度完全交给 .modal-dialog-auto 样式处理；
+            // 带自定义内容（表单等）的弹窗保持原有宽度行为
+            ...(isAutoSize.value ? {} : { width: 'auto', minWidth: '300px' }),
             wordWrap: 'break-word',
             overflowWrap: 'break-word',
-            zIndex: 1060, // 设置一个比backdrop(1055)更高的z-index
+            zIndex: '1060', // 设置一个比backdrop(1055)更高的z-index
             ...(Object.keys(props.style).length ? props.style : {}),
             ...(dynamicOptions.value?.style || {}),
         };
@@ -466,7 +470,15 @@
 <style scoped>
 .modal-dialog {
     z-index: var(--bs-modal-zindex);
-    max-width:none !important;
+    max-width: none;
+}
+
+/* 纯文案提示弹窗：宽高跟随内容，短消息不再撑成大弹窗 */
+.modal-dialog.modal-dialog-auto {
+    width: fit-content;
+    min-width: min(280px, 92vw);
+    max-width: min(80vw, 420px);
+    margin: auto;
 }
 
 .modal-success .modal-header {
@@ -490,7 +502,6 @@
 }
 
 .modal-body {
-  min-height: 80px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -548,8 +559,7 @@
 }
 
 .modal-body .fs-1 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
+  font-size: 1.75rem;
 }
 
 /* 响应式调整 */
