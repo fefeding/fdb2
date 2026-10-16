@@ -182,7 +182,7 @@
     :closeButton="{ text: $t('common.confirm'), show: true }"
     :confirmButton="{ text: '', show: false }"
     :isFullScreen="false"
-    :style="{ maxWidth: '400px!important', width: '100%' }"
+    :style="{ maxWidth: '400px', width: '100%', margin: 'auto' }"
   >
     <div class="error-content">
       <div class="error-icon">

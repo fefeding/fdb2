@@ -60,6 +60,48 @@ const SHELL_CSS = `
   body.vscode-native-nav .nav-tabs .nav-link .badge { font-size: 10px !important; padding: 2px 5px !important; }
   body.vscode-native-nav .tab-content { padding: 12px !important; }
 
+  /* ---------------- 表格密度 ----------------
+   * 与 database.css「基础组件密度 → .table」段（body.platform-desktop）逐条对应。
+   * 桌面端入口会给 body 加 platform-desktop 拿到这套密度，webview 不加该类，
+   * 表头/单元格便退回 Bootstrap 默认（1rem 字号 + .5rem 内边距），在面板里显得很大。
+   *
+   * 刻意不加 !important：table-editor.vue 等组件的 scoped 规则靠 important 覆盖
+   * 通用密度（弹窗内表格要更紧凑），一旦这里也加 important 会把那些特例一起打掉。
+   * 表头额外限定 thead，是为了压过 database.css:1135 同特异性的 body.vscode-dark .table th。
+   */
+  body.vscode-native-nav .table {
+    border-radius: 0;
+    box-shadow: none;
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--db-text-body);
+    --bs-table-border-color: var(--db-border);
+    --bs-table-striped-bg: var(--db-bg-soft2);
+    --bs-table-striped-color: var(--db-text-body);
+    --bs-table-hover-bg: var(--db-bg-soft);
+  }
+  body.vscode-native-nav .table thead th {
+    padding: 0.375rem 0.625rem;
+    background-color: var(--db-bg-soft);
+    border-color: var(--db-border);
+    color: var(--db-text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  body.vscode-native-nav .table td {
+    padding: 0.3rem 0.625rem;
+    border-color: var(--db-border);
+    font-size: 12px;
+  }
+  body.vscode-native-nav .table-dark {
+    --bs-table-bg: var(--db-bg-soft);
+    --bs-table-color: var(--db-text-muted);
+  }
+  body.vscode-native-nav .table-striped tbody tr:nth-of-type(odd) { background-color: transparent; }
+  body.vscode-native-nav .table-hover tbody tr:hover { background-color: var(--db-bg-soft); transform: none; }
+  body.vscode-native-nav .table-responsive { border-radius: 0; box-shadow: none; }
+
   /* ---------------- 配色降噪 ----------------
    * 桌面端 UI 用的是「语义色按钮 + 数据库品牌渐变块」，在编辑器面板里过于花哨。
    * webview 内统一收敛为中性观感：操作按钮改为主题色描边，仅破坏性操作保留红色，

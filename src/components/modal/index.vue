@@ -13,7 +13,7 @@
                     <slot v-if="$slots.default"></slot>
                     <div v-else>
                         <div class="d-flex align-items-center mb-2">
-                            <i v-if="typeIcon" :class="typeIcon" class="me-3 fs-1"></i>
+                            <i v-if="typeIcon" :class="typeIcon" class="me-3 modal-type-icon"></i>
                             <div class="flex-grow-1 text-wrap">{{dynamicContent}}</div>
                         </div>
                         <div v-if="shouldShowDetails()" class="error-details-toggle mt-2">
@@ -118,24 +118,6 @@
     const dynamicShowCancel = ref(false);
     const detailsExpanded = ref(false);
     const dynamicErrorDetails = ref<any>(null);
-    // 响应式最大宽度计算
-    const isMobile = ref(false);
-    
-    // 检测屏幕宽度
-    const checkScreenSize = () => {
-        isMobile.value = window.innerWidth < 768; // 768px是Bootstrap的md断点
-    };
-    
-    // 初始化检测
-    checkScreenSize();
-    
-    // 监听窗口大小变化
-    window.addEventListener('resize', checkScreenSize);
-    
-    // 组件卸载时移除事件监听
-    onUnmounted(() => {
-        window.removeEventListener('resize', checkScreenSize);
-    });
     
     // 无自定义内容（纯文案提示）且非全屏时，弹窗按信息量自适应大小
     const slots = useSlots();
@@ -558,8 +540,10 @@
     margin-bottom: 0.5rem;
 }
 
-.modal-body .fs-1 {
+/* 提示类型图标：随内容紧凑展示（不用 Bootstrap 的 fs-1，避免 2.5rem 撑高弹窗） */
+.modal-type-icon {
   font-size: 1.75rem;
+  line-height: 1;
 }
 
 /* 响应式调整 */
