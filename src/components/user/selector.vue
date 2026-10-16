@@ -2,7 +2,7 @@
   <div class="user-permission-selector">
     <div class="dropdown" :class="{ show: isOpen }">
       <button 
-        class="btn btn-light w-100 text-start border rounded-md d-flex align-items-center justify-content-between"
+        class="btn btn-outline-secondary w-100 text-start border rounded-md d-flex align-items-center justify-content-between"
         type="button" 
         @click="toggleDropdown"
         :aria-expanded="isOpen"
@@ -404,16 +404,16 @@ defineExpose({
 }
 
 .dropdown-menu::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--db-bg-soft);
   border-radius: 3px;
 }
 
 .dropdown-menu::-webkit-scrollbar-thumb {
-  background: #ccc;
+  background: var(--db-border-light);
   border-radius: 3px;
 }
 
 .dropdown-menu::-webkit-scrollbar-thumb:hover {
-  background: #aaa;
+  background: var(--db-text-muted);
 }
 </style>

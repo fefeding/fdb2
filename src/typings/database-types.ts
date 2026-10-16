@@ -304,15 +304,15 @@ export const SQLSERVER_COLUMN_TYPES: ColumnType[] = [
 
   // 字符串类型
   { name: 'CHAR', label: 'CHAR', category: ColumnCategory.STRING, requiresLength: true, defaultLength: 1, description: '固定长度字符串' },
-  { name: 'VARCHAR', label: 'VARCHAR', category: ColumnCategory.STRING, requiresLength: true, defaultLength: 1, description: '可变长度字符串' },
+  { name: 'VARCHAR', label: 'VARCHAR', category: ColumnCategory.STRING, requiresLength: true, defaultLength: 255, description: '可变长度字符串' },
   { name: 'TEXT', label: 'TEXT', category: ColumnCategory.TEXT, description: '文本' },
   { name: 'NCHAR', label: 'NCHAR', category: ColumnCategory.STRING, requiresLength: true, defaultLength: 1, description: 'Unicode固定长度字符串' },
-  { name: 'NVARCHAR', label: 'NVARCHAR', category: ColumnCategory.STRING, requiresLength: true, defaultLength: 1, description: 'Unicode可变长度字符串' },
+  { name: 'NVARCHAR', label: 'NVARCHAR', category: ColumnCategory.STRING, requiresLength: true, defaultLength: 255, description: 'Unicode可变长度字符串' },
   { name: 'NTEXT', label: 'NTEXT', category: ColumnCategory.TEXT, description: 'Unicode文本' },
 
   // 二进制字符串类型
   { name: 'BINARY', label: 'BINARY', category: ColumnCategory.BINARY, requiresLength: true, defaultLength: 1, description: '固定长度二进制' },
-  { name: 'VARBINARY', label: 'VARBINARY', category: ColumnCategory.BINARY, requiresLength: true, defaultLength: 1, description: '可变长度二进制' },
+  { name: 'VARBINARY', label: 'VARBINARY', category: ColumnCategory.BINARY, requiresLength: true, defaultLength: 255, description: '可变长度二进制' },
   { name: 'IMAGE', label: 'IMAGE', category: ColumnCategory.BINARY, description: '二进制图像' },
 
   // 其他类型

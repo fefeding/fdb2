@@ -77,6 +77,19 @@
   --db-primary-bg: #e0e7ff;
   --db-code-bg: #282c34;
   --db-code-fg: #abb2bf;
+
+  /* 语义底色上的文字色（浅色主题用深色阶；暗色主题在下方各暗色块覆写为亮色阶） */
+  --db-success-fg: #047857;
+  --db-warning-fg: #b45309;
+  --db-danger-fg: #b91c1c;
+  --db-info-fg: #1d4ed8;
+
+  /* JSON 语法高亮（浅色：GitHub Light 配色；暗色在各暗色块覆写为 GitHub Dark） */
+  --db-json-key: #d04255;
+  --db-json-string: #22863a;
+  --db-json-number: #005cc5;
+  --db-json-boolean: #d73a49;
+  --db-json-null: #6f42c1;
 }
 
 /* 全局布局 - 现代桌面应用风格 */
@@ -446,7 +459,11 @@ body {
 }
 
 .btn-close {
-  background: var(--db-gray-light);
+  background-color: var(--db-gray-light);
+  background-image: var(--bs-btn-close-bg);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 0.8em auto;
   border: none;
   border-radius: var(--db-radius-md);
   width: 32px;
@@ -458,8 +475,7 @@ body {
 }
 
 .btn-close:hover {
-  background: var(--db-danger-color);
-  color: var(--db-on-accent);
+  background-color: var(--db-danger-color);
   transform: rotate(90deg);
 }
 
@@ -952,6 +968,17 @@ pre {
     --db-primary-bg: rgba(102, 126, 234, 0.18);
     --db-code-bg: #1b1f27;
     --db-code-fg: #abb2bf;
+
+    /* 语义底色上的文字 / JSON 高亮：暗色下统一提亮 */
+    --db-success-fg: #34d399;
+    --db-warning-fg: #fbbf24;
+    --db-danger-fg: #f87171;
+    --db-info-fg: #60a5fa;
+    --db-json-key: #ff7b72;
+    --db-json-string: #a5d6ff;
+    --db-json-number: #79c0ff;
+    --db-json-boolean: #d2a8ff;
+    --db-json-null: #8b949e;
   }
 
   body:not(.vscode-light):not(.vscode-dark):not(.vscode-high-contrast) .card {
@@ -976,6 +1003,26 @@ pre {
   body:not(.vscode-light):not(.vscode-dark):not(.vscode-high-contrast) .table th {
     background: #475569;
     color: #f1f5f9;
+  }
+
+  /* Bootstrap 浅色工具类在暗色下过于刺眼/对比不足，统一改挂主题令牌
+     （与下方 body.vscode-dark 的同名规则对应，覆盖 OS 暗色入口） */
+  body:not(.vscode-light):not(.vscode-dark):not(.vscode-high-contrast) .border-light,
+  body:not(.vscode-light):not(.vscode-dark):not(.vscode-high-contrast) .bg-light {
+    border-color: #475569 !important;
+    background-color: #263041 !important;
+  }
+
+  body:not(.vscode-light):not(.vscode-dark):not(.vscode-high-contrast) .btn-outline-secondary,
+  body:not(.vscode-light):not(.vscode-dark):not(.vscode-high-contrast) .btn-outline-light {
+    color: #f1f5f9 !important;
+    border-color: #4d5b6b !important;
+  }
+
+  body:not(.vscode-light):not(.vscode-dark):not(.vscode-high-contrast) .btn-outline-secondary:hover,
+  body:not(.vscode-light):not(.vscode-dark):not(.vscode-high-contrast) .btn-outline-light:hover {
+    background-color: #263041 !important;
+    color: #f1f5f9 !important;
   }
 }
 
@@ -1015,6 +1062,17 @@ body.vscode-high-contrast {
   --db-primary-bg: rgba(102, 126, 234, 0.18);
   --db-code-bg: var(--vscode-textCodeBlock-background, #1b1f27);
   --db-code-fg: var(--vscode-editor-foreground, #abb2bf);
+
+  /* 语义底色上的文字 / JSON 高亮：暗色下统一提亮 */
+  --db-success-fg: #34d399;
+  --db-warning-fg: #fbbf24;
+  --db-danger-fg: #f87171;
+  --db-info-fg: #60a5fa;
+  --db-json-key: #ff7b72;
+  --db-json-string: #a5d6ff;
+  --db-json-number: #79c0ff;
+  --db-json-boolean: #d2a8ff;
+  --db-json-null: #8b949e;
 }
 
 /* 浅色主题：同样桥接到宿主令牌，跟随任意浅色主题（GitHub Light / Quiet Light / Solarized Light…） */
@@ -1080,27 +1138,36 @@ body.vscode-high-contrast .table th {
   color: var(--db-text-body);
 }
 
-/* Bootstrap 的浅色工具类在暗色下过于刺眼/对比不足，统一改挂主题令牌 */
+/* Bootstrap 的浅色工具类在暗色下过于刺眼/对比不足，统一改挂主题令牌。
+   覆盖全部暗色入口：VSCode webview 暗色/高对比、桌面端（body.platform-desktop）。
+   注意 body.platform-desktop 只在桌面端入口添加（src/platform/index.ts），
+   webview 不带该类，不会误伤浅色编辑器主题。 */
 body.vscode-dark .border-light,
 body.vscode-high-contrast .border-light,
+body.platform-desktop .border-light,
 body.vscode-dark .bg-light,
-body.vscode-high-contrast .bg-light {
+body.vscode-high-contrast .bg-light,
+body.platform-desktop .bg-light {
   border-color: var(--db-border) !important;
   background-color: var(--db-bg-soft) !important;
 }
 
 body.vscode-dark .btn-outline-secondary,
 body.vscode-high-contrast .btn-outline-secondary,
+body.platform-desktop .btn-outline-secondary,
 body.vscode-dark .btn-outline-light,
-body.vscode-high-contrast .btn-outline-light {
+body.vscode-high-contrast .btn-outline-light,
+body.platform-desktop .btn-outline-light {
   color: var(--db-text-body) !important;
   border-color: var(--db-border-light) !important;
 }
 
 body.vscode-dark .btn-outline-secondary:hover,
 body.vscode-high-contrast .btn-outline-secondary:hover,
+body.platform-desktop .btn-outline-secondary:hover,
 body.vscode-dark .btn-outline-light:hover,
-body.vscode-high-contrast .btn-outline-light:hover {
+body.vscode-high-contrast .btn-outline-light:hover,
+body.platform-desktop .btn-outline-light:hover {
   background-color: var(--db-bg-soft) !important;
   color: var(--db-text-body) !important;
 }
@@ -1214,6 +1281,17 @@ body.platform-desktop:not(.vscode-dark):not(.vscode-light):not(.vscode-high-cont
 
   --db-code-bg: #1b1f27;
   --db-code-fg: #abb2bf;
+
+  /* 语义底色上的文字 / JSON 高亮：暗色下统一提亮 */
+  --db-success-fg: #34d399;
+  --db-warning-fg: #fbbf24;
+  --db-danger-fg: #f87171;
+  --db-info-fg: #60a5fa;
+  --db-json-key: #ff7b72;
+  --db-json-string: #a5d6ff;
+  --db-json-number: #79c0ff;
+  --db-json-boolean: #d2a8ff;
+  --db-json-null: #8b949e;
 
   /* 深色下投影几乎不可见，层级改由边框与面色表达 */
   --db-shadow-sm: none;

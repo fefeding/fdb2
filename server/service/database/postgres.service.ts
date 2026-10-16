@@ -3,11 +3,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { BaseDatabaseService } from './base.service';
-import { 
-  TableEntity, 
-  ColumnEntity, 
-  IndexEntity, 
-  ForeignKeyEntity 
+import { buildColumnType, formatDefaultLiteral, escapeSqlString } from './sql-type.helper';
+import {
+  TableEntity,
+  ColumnEntity,
+  IndexEntity,
+  ForeignKeyEntity
 } from '../../model/database.entity';
 
 /**
@@ -749,28 +750,19 @@ export class PostgreSQLService extends BaseDatabaseService {
 
       // 修改表注释
       if (tableDiff.tableCommentChanged) {
-        sqlStatements.push(`COMMENT ON TABLE "${tableName}" IS '${tableDiff.tableComment}';`);
+        sqlStatements.push(`COMMENT ON TABLE "${tableName}" IS '${escapeSqlString(tableDiff.tableComment)}';`);
       }
+
+      // 重命名列：RENAME COLUMN 保留数据与索引，必须先于其它 ALTER 执行
+      (tableDiff.renamedColumns || []).forEach(({ oldColumn, newColumn }: any) => {
+        sqlStatements.push(`ALTER TABLE "${tableName}" RENAME COLUMN "${oldColumn.name}" TO "${newColumn.name}";`);
+      });
 
       // 添加新列
       tableDiff.addedColumns.forEach((column: any) => {
-        // 检查type是否已经包含长度信息（括号）
-        const typeHasLength = /\(\d+\)/.test(column.type);
+        const columnType = buildColumnType('postgres', column.type, column.length, column.precision, column.scale);
 
-        let columnSQL = `ALTER TABLE "${tableName}" ADD COLUMN "${column.name}" ${column.type}`;
-
-        // 处理长度和精度（仅当type中没有指定长度时才添加）
-        if (!typeHasLength) {
-          if (column.length) {
-            columnSQL += `(${column.length})`;
-          } else if (column.precision) {
-            if (column.scale) {
-              columnSQL += `(${column.precision},${column.scale})`;
-            } else {
-              columnSQL += `(${column.precision})`;
-            }
-          }
-        }
+        let columnSQL = `ALTER TABLE "${tableName}" ADD COLUMN "${column.name}" ${columnType}`;
 
         // 处理NULL约束
         if (!column.nullable) {
@@ -779,17 +771,12 @@ export class PostgreSQLService extends BaseDatabaseService {
 
         // 处理默认值
         if (column.defaultValue) {
-          const upperDefault = column.defaultValue.toString().toUpperCase();
-          if (['CURRENT_TIMESTAMP', 'NOW()', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
-            columnSQL += ` DEFAULT ${upperDefault}`;
-          } else {
-            columnSQL += ` DEFAULT '${column.defaultValue}'`;
-          }
+          columnSQL += ` DEFAULT ${formatDefaultLiteral(column.defaultValue)}`;
         }
 
         // 处理自增（PostgreSQL使用SERIAL或GENERATED AS IDENTITY）
         if (column.isAutoIncrement) {
-          if (column.type.toLowerCase().includes('serial') || column.type.toLowerCase().includes('bigserial')) {
+          if (column.type.toLowerCase().includes('serial')) {
             // 类型已经包含自增
           } else {
             columnSQL += ' GENERATED ALWAYS AS IDENTITY';
@@ -800,33 +787,16 @@ export class PostgreSQLService extends BaseDatabaseService {
 
         // 添加列注释
         if (column.comment) {
-          sqlStatements.push(`COMMENT ON COLUMN "${tableName}"."${column.name}" IS '${column.comment}';`);
+          sqlStatements.push(`COMMENT ON COLUMN "${tableName}"."${column.name}" IS '${escapeSqlString(column.comment)}';`);
         }
       });
 
       // 修改列
       tableDiff.modifiedColumns.forEach((modification: any) => {
         const { oldColumn, newColumn } = modification;
+        const columnType = buildColumnType('postgres', newColumn.type, newColumn.length, newColumn.precision, newColumn.scale);
 
-        // 检查type是否已经包含长度信息（括号）
-        const typeHasLength = /\(\d+\)/.test(newColumn.type);
-
-        let columnSQL = `ALTER TABLE "${tableName}" ALTER COLUMN "${newColumn.name}" SET DATA TYPE ${newColumn.type}`;
-
-        // 处理长度和精度（仅当type中没有指定长度时才添加）
-        if (!typeHasLength) {
-          if (newColumn.length) {
-            columnSQL += `(${newColumn.length})`;
-          } else if (newColumn.precision) {
-            if (newColumn.scale) {
-              columnSQL += `(${newColumn.precision},${newColumn.scale})`;
-            } else {
-              columnSQL += `(${newColumn.precision})`;
-            }
-          }
-        }
-
-        sqlStatements.push(columnSQL + ';');
+        sqlStatements.push(`ALTER TABLE "${tableName}" ALTER COLUMN "${newColumn.name}" SET DATA TYPE ${columnType};`);
 
         // 修改NULL约束
         if (!newColumn.nullable) {
@@ -837,19 +807,14 @@ export class PostgreSQLService extends BaseDatabaseService {
 
         // 修改默认值
         if (newColumn.defaultValue) {
-          const upperDefault = newColumn.defaultValue.toString().toUpperCase();
-          if (['CURRENT_TIMESTAMP', 'NOW()', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
-            sqlStatements.push(`ALTER TABLE "${tableName}" ALTER COLUMN "${newColumn.name}" SET DEFAULT ${upperDefault};`);
-          } else {
-            sqlStatements.push(`ALTER TABLE "${tableName}" ALTER COLUMN "${newColumn.name}" SET DEFAULT '${newColumn.defaultValue}';`);
-          }
+          sqlStatements.push(`ALTER TABLE "${tableName}" ALTER COLUMN "${newColumn.name}" SET DEFAULT ${formatDefaultLiteral(newColumn.defaultValue)};`);
         } else {
           sqlStatements.push(`ALTER TABLE "${tableName}" ALTER COLUMN "${newColumn.name}" DROP DEFAULT;`);
         }
 
         // 修改列注释
         if (newColumn.comment) {
-          sqlStatements.push(`COMMENT ON COLUMN "${tableName}"."${newColumn.name}" IS '${newColumn.comment}';`);
+          sqlStatements.push(`COMMENT ON COLUMN "${tableName}"."${newColumn.name}" IS '${escapeSqlString(newColumn.comment)}';`);
         }
       });
 

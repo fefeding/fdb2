@@ -263,6 +263,7 @@ export default {
     tableModifySuccess: 'Table structure modified successfully',
     tableCreateFailed: 'Failed to create table',
     tableModifyFailed: 'Failed to modify table structure',
+    getTableInfoFailed: 'Failed to get table structure',
     size: 'Size',
   },
   tableDetail: {
@@ -380,6 +381,8 @@ export default {
     operationsHeader: 'Actions',
     columnNamePlaceholder: 'Column name',
     selectType: 'Select type',
+    customType: 'Custom type',
+    customTypePlaceholder: "e.g. ENUM('a','b'), DECIMAL(10,2)",
     lengthPlaceholder: 'Length',
     precisionPlaceholder: 'Precision',
     scalePlaceholder: 'Scale',

@@ -1106,7 +1106,7 @@ onMounted(() => {
   background: var(--db-danger-bg);
   border: 1px solid var(--db-danger-bg);
   border-radius: 8px;
-  color: #991b1b;
+  color: var(--db-danger-fg);
 }
 
 .error-message i {

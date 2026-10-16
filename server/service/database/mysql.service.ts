@@ -3,11 +3,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { BaseDatabaseService } from './base.service';
-import { 
-  TableEntity, 
-  ColumnEntity, 
-  IndexEntity, 
-  ForeignKeyEntity 
+import { buildColumnType, formatDefaultLiteral, escapeSqlString } from './sql-type.helper';
+import {
+  TableEntity,
+  ColumnEntity,
+  IndexEntity,
+  ForeignKeyEntity
 } from '../../model/database.entity';
 
 /**
@@ -769,28 +770,47 @@ export class MySQLService extends BaseDatabaseService {
 
       // 修改表注释
       if (tableDiff.tableCommentChanged) {
-        sqlStatements.push(`ALTER TABLE \`${tableName}\` COMMENT='${tableDiff.tableComment}';`);
+        sqlStatements.push(`ALTER TABLE \`${tableName}\` COMMENT='${escapeSqlString(tableDiff.tableComment)}';`);
       }
+
+      // 重命名列：必须用 CHANGE COLUMN（一次完成改名 + 改定义），
+      // 若退化成 DROP COLUMN + ADD COLUMN 会丢失该列的全部原始数据
+      const renamedColumns = tableDiff.renamedColumns || [];
+      renamedColumns.forEach(({ oldColumn, newColumn }: any) => {
+        const columnType = buildColumnType('mysql', newColumn.type, newColumn.length, newColumn.precision, newColumn.scale);
+
+        let columnSQL = `ALTER TABLE \`${tableName}\` CHANGE COLUMN \`${oldColumn.name}\` \`${newColumn.name}\` ${columnType}`;
+
+        if (!newColumn.nullable) {
+          columnSQL += ' NOT NULL';
+        }
+
+        if (newColumn.defaultValue) {
+          columnSQL += ` DEFAULT ${formatDefaultLiteral(newColumn.defaultValue)}`;
+        }
+
+        if (newColumn.isAutoIncrement) {
+          columnSQL += ' AUTO_INCREMENT';
+        }
+
+        if (newColumn.comment) {
+          columnSQL += ` COMMENT '${escapeSqlString(newColumn.comment)}'`;
+        }
+
+        sqlStatements.push(columnSQL + ';');
+      });
+
+      // 已由 CHANGE COLUMN 处理定义的列，不再重复 MODIFY
+      const renamedOldNames = new Set(renamedColumns.map((r: any) => r.oldColumn.name));
+      const modifiedColumns = (tableDiff.modifiedColumns || []).filter(
+        (modification: any) => !renamedOldNames.has(modification.oldColumn.name)
+      );
 
       // 添加新列
       tableDiff.addedColumns.forEach((column: any) => {
-        // 检查type是否已经包含长度信息（括号）
-        const typeHasLength = /\(\d+\)/.test(column.type);
+        const columnType = buildColumnType('mysql', column.type, column.length, column.precision, column.scale);
 
-        let columnSQL = `ALTER TABLE \`${tableName}\` ADD COLUMN \`${column.name}\` ${column.type}`;
-
-        // 处理长度和精度（仅当type中没有指定长度时才添加）
-        if (!typeHasLength) {
-          if (column.length) {
-            columnSQL += `(${column.length})`;
-          } else if (column.precision) {
-            if (column.scale) {
-              columnSQL += `(${column.precision},${column.scale})`;
-            } else {
-              columnSQL += `(${column.precision})`;
-            }
-          }
-        }
+        let columnSQL = `ALTER TABLE \`${tableName}\` ADD COLUMN \`${column.name}\` ${columnType}`;
 
         // 处理NULL约束
         if (!column.nullable) {
@@ -799,12 +819,7 @@ export class MySQLService extends BaseDatabaseService {
 
         // 处理默认值
         if (column.defaultValue) {
-          const upperDefault = column.defaultValue.toString().toUpperCase();
-          if (['CURRENT_TIMESTAMP', 'NOW()', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
-            columnSQL += ` DEFAULT ${upperDefault}`;
-          } else {
-            columnSQL += ` DEFAULT '${column.defaultValue}'`;
-          }
+          columnSQL += ` DEFAULT ${formatDefaultLiteral(column.defaultValue)}`;
         }
 
         // 处理自增
@@ -814,33 +829,18 @@ export class MySQLService extends BaseDatabaseService {
 
         // 处理注释
         if (column.comment) {
-          columnSQL += ` COMMENT '${column.comment}'`;
+          columnSQL += ` COMMENT '${escapeSqlString(column.comment)}'`;
         }
 
         sqlStatements.push(columnSQL + ';');
       });
 
       // 修改列
-      tableDiff.modifiedColumns.forEach((modification: any) => {
+      modifiedColumns.forEach((modification: any) => {
         const { oldColumn, newColumn } = modification;
+        const columnType = buildColumnType('mysql', newColumn.type, newColumn.length, newColumn.precision, newColumn.scale);
 
-        // 检查type是否已经包含长度信息（括号）
-        const typeHasLength = /\(\d+\)/.test(newColumn.type);
-
-        let columnSQL = `ALTER TABLE \`${tableName}\` MODIFY COLUMN \`${newColumn.name}\` ${newColumn.type}`;
-
-        // 处理长度和精度（仅当type中没有指定长度时才添加）
-        if (!typeHasLength) {
-          if (newColumn.length) {
-            columnSQL += `(${newColumn.length})`;
-          } else if (newColumn.precision) {
-            if (newColumn.scale) {
-              columnSQL += `(${newColumn.precision},${newColumn.scale})`;
-            } else {
-              columnSQL += `(${newColumn.precision})`;
-            }
-          }
-        }
+        let columnSQL = `ALTER TABLE \`${tableName}\` MODIFY COLUMN \`${newColumn.name}\` ${columnType}`;
 
         // 处理NULL约束
         if (!newColumn.nullable) {
@@ -851,12 +851,7 @@ export class MySQLService extends BaseDatabaseService {
 
         // 处理默认值
         if (newColumn.defaultValue) {
-          const upperDefault = newColumn.defaultValue.toString().toUpperCase();
-          if (['CURRENT_TIMESTAMP', 'NOW()', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
-            columnSQL += ` DEFAULT ${upperDefault}`;
-          } else {
-            columnSQL += ` DEFAULT '${newColumn.defaultValue}'`;
-          }
+          columnSQL += ` DEFAULT ${formatDefaultLiteral(newColumn.defaultValue)}`;
         }
 
         // 处理自增
@@ -866,7 +861,7 @@ export class MySQLService extends BaseDatabaseService {
 
         // 处理注释
         if (newColumn.comment) {
-          columnSQL += ` COMMENT '${newColumn.comment}'`;
+          columnSQL += ` COMMENT '${escapeSqlString(newColumn.comment)}'`;
         }
 
         sqlStatements.push(columnSQL + ';');

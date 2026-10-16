@@ -1407,12 +1407,12 @@ onMounted(() => {
 
 .import-result h5 {
   font-size: 1.25rem;
-  color: #065f46;
+  color: var(--db-success-fg);
   margin-bottom: 0.5rem;
 }
 
 .import-result p {
-  color: #047857;
+  color: var(--db-success-fg);
   margin-bottom: 1.5rem;
 }
 

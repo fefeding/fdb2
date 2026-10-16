@@ -403,8 +403,8 @@
       :visible="showTableEditor"
       :connection="connection"
       :database="database"
-      :table-name="editingTableName"
-      :mode="editingTableName ? 'edit' : 'create'"
+      :table="editingTable"
+      :mode="tableEditorMode"
       @close="closeTableEditor"
       @submit="handleTableChange"
       @execute-sql="handleExecuteSQL"
@@ -459,7 +459,8 @@ const editingProcedure = ref<any>(null);
 
 // 表编辑器相关
 const showTableEditor = ref(false);
-const editingTableName = ref('');
+const tableEditorMode = ref<'create' | 'edit'>('create');
+const editingTable = ref<TableEntity | null>(null);
 
 
 
@@ -512,14 +513,30 @@ function createTable() {
     return;
   }
   // 直接打开表编辑器，而不是创建空表
-  editingTableName.value = newTable.value.name;
+  tableEditorMode.value = 'create';
+  editingTable.value = {
+    name: newTable.value.name,
+    comment: newTable.value.comment,
+    rowCount: 0,
+    dataSize: 0,
+    indexSize: 0,
+    columns: []
+  };
   showTableEditor.value = true;
   showCreateTable.value = false;
 }
 
-function editTable(table: TableEntity) {
-  editingTableName.value = table.name;
-  showTableEditor.value = true;
+async function editTable(table: TableEntity) {
+  if (!props.connection?.id) return;
+  try {
+    const response = await databaseService.getTableInfo(props.connection.id, props.database, table.name);
+    editingTable.value = response.data || null;
+    tableEditorMode.value = 'edit';
+    showTableEditor.value = true;
+  } catch (error) {
+    console.error('获取表结构失败:', error);
+    modal.error(t('databaseDetail.getTableInfoFailed'));
+  }
 }
 
 // async function deleteTable(table: TableEntity) {
@@ -554,13 +571,15 @@ function editTable(table: TableEntity) {
 
 
 function createNewTable() {
-  editingTableName.value = '';
+  tableEditorMode.value = 'create';
+  editingTable.value = null;
   showTableEditor.value = true;
 }
 
 function closeTableEditor() {
   showTableEditor.value = false;
-  editingTableName.value = '';
+  tableEditorMode.value = 'create';
+  editingTable.value = null;
 }
 
 // 生命周期

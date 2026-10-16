@@ -2,11 +2,12 @@ import { DataSource } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { BaseDatabaseService } from './base.service';
-import { 
-  TableEntity, 
-  ColumnEntity, 
-  IndexEntity, 
-  ForeignKeyEntity 
+import { buildColumnType, formatDefaultLiteral } from './sql-type.helper';
+import {
+  TableEntity,
+  ColumnEntity,
+  IndexEntity,
+  ForeignKeyEntity
 } from '../../model/database.entity';
 
 /**
@@ -565,52 +566,75 @@ export class SQLiteService extends BaseDatabaseService {
       const tableName = tableDiff.tableName;
       const sqlStatements: string[] = [];
 
+      const renamedColumns = tableDiff.renamedColumns || [];
+      const modifiedColumns = tableDiff.modifiedColumns || [];
+      const deletedColumns = tableDiff.deletedColumns || [];
+      const addedColumns = tableDiff.addedColumns || [];
+
       // SQLite不支持直接修改表注释，只能忽略
 
-      // 如果有修改或删除列，需要重建表
-      if (tableDiff.modifiedColumns.length > 0 || tableDiff.deletedColumns.length > 0) {
+      // 如果有修改或删除列，需要重建表（重命名也一并纳入，避免丢数据）
+      if (modifiedColumns.length > 0 || deletedColumns.length > 0 || renamedColumns.length > 0) {
         const tempTableName = `_temp_${tableName}_${Date.now()}`;
-        
-        // 获取所有列（包括新增的和未修改的）
-        const allColumns = [...tableDiff.addedColumns];
+
+        // 获取现有的全部列
         const existingColumns = await this.getColumns(dataSource, databaseName, tableName);
-        
-        // 添加未修改的现有列
-        existingColumns.forEach(col => {
-          const isDeleted = tableDiff.deletedColumns.some((dc: any) => dc.name === col.name);
-          const isModified = tableDiff.modifiedColumns.some((mc: any) => mc.oldColumn.name === col.name);
-          if (!isDeleted && !isModified) {
-            allColumns.push(col);
+
+        // 建立「旧列名 → 新列定义」映射
+        const renamedMap = new Map<string, any>();
+        renamedColumns.forEach(({ oldColumn, newColumn }: any) => {
+          renamedMap.set(oldColumn.name, newColumn);
+        });
+        const modifiedMap = new Map<string, any>();
+        modifiedColumns.forEach((modification: any) => {
+          if (!renamedMap.has(modification.oldColumn.name)) {
+            modifiedMap.set(modification.oldColumn.name, modification.newColumn);
           }
         });
+        const deletedNames = new Set(deletedColumns.map((col: any) => col.name));
 
-        // 添加修改后的列
-        tableDiff.modifiedColumns.forEach((modification: any) => {
-          allColumns.push(modification.newColumn);
+        // 逐列建立「新列 ← 旧表达式」映射，保证 INSERT 列与 SELECT 表达式严格一一对应
+        const pairs: Array<{ column: any; expr: string }> = [];
+
+        const pushColumn = (column: any, sourceExpr: string) => {
+          pairs.push({ column, expr: sourceExpr });
+        };
+
+        existingColumns.forEach(col => {
+          if (deletedNames.has(col.name)) return; // 删除的列不迁移
+          const renamed = renamedMap.get(col.name);
+          const modified = modifiedMap.get(col.name);
+          // 无论是否改名/修改，都从旧列取值，保证原有数据不丢失
+          pushColumn(renamed || modified || col, `"${col.name}"`);
         });
+
+        // 全新增的列没有旧数据，用默认值（无默认值则为 NULL）占位
+        const addedNames = new Set<string>();
+        addedColumns.forEach((col: any) => {
+          if (addedNames.has(col.name)) return;
+          addedNames.add(col.name);
+          pushColumn(col, col.defaultValue ? formatDefaultLiteral(col.defaultValue) : 'NULL');
+        });
+
+        // 按前端给出的新列顺序排列，保证重建后列顺序与界面一致
+        const columnOrder: string[] = Array.isArray(tableDiff.columnOrder) ? tableDiff.columnOrder : [];
+        if (columnOrder.length > 0) {
+          pairs.sort((a, b) => {
+            const ia = columnOrder.indexOf(a.column.name);
+            const ib = columnOrder.indexOf(b.column.name);
+            return (ia === -1 ? Number.MAX_SAFE_INTEGER : ia) - (ib === -1 ? Number.MAX_SAFE_INTEGER : ib);
+          });
+        }
 
         // 创建临时表
         let createTableSQL = `CREATE TABLE "${tempTableName}" (`;
         const columnDefinitions: string[] = [];
 
-        allColumns.forEach(column => {
-          // 检查type是否已经包含长度信息（括号）
-          const typeHasLength = /\(\d+\)/.test(column.type);
+        pairs.forEach(({ column }) => {
+          // SQLite 的 VARCHAR 等不带长度也合法，此处仅处理已填写的参数
+          const columnType = buildColumnType('sqlite', column.type, column.length, column.precision, column.scale);
 
-          let definition = `"${column.name}" ${column.type}`;
-
-          // 处理长度和精度（仅当type中没有指定长度时才添加）
-          if (!typeHasLength) {
-            if (column.length) {
-              definition += `(${column.length})`;
-            } else if (column.precision) {
-              if (column.scale) {
-                definition += `(${column.precision},${column.scale})`;
-              } else {
-                definition += `(${column.precision})`;
-              }
-            }
-          }
+          let definition = `"${column.name}" ${columnType}`;
 
           // 处理NULL约束
           if (!column.nullable) {
@@ -619,12 +643,7 @@ export class SQLiteService extends BaseDatabaseService {
 
           // 处理默认值
           if (column.defaultValue) {
-            const upperDefault = column.defaultValue.toString().toUpperCase();
-            if (['CURRENT_TIMESTAMP', 'NOW()', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
-              definition += ` DEFAULT ${upperDefault}`;
-            } else {
-              definition += ` DEFAULT '${column.defaultValue}'`;
-            }
+            definition += ` DEFAULT ${formatDefaultLiteral(column.defaultValue)}`;
           }
 
           // 处理主键和自增
@@ -643,10 +662,10 @@ export class SQLiteService extends BaseDatabaseService {
         createTableSQL += ')';
         sqlStatements.push(createTableSQL + ';');
 
-        // 复制数据到临时表
-        const existingColumnNames = existingColumns.map(col => `"${col.name}"`).join(', ');
-        const newColumnNames = allColumns.map(col => `"${col.name}"`).join(', ');
-        sqlStatements.push(`INSERT INTO "${tempTableName}" (${newColumnNames}) SELECT ${existingColumnNames} FROM "${tableName}";`);
+        // 复制数据到临时表（列与表达式一一对应，重命名/新增都不会错位）
+        sqlStatements.push(
+          `INSERT INTO "${tempTableName}" (${pairs.map(p => `"${p.column.name}"`).join(', ')}) SELECT ${pairs.map(p => p.expr).join(', ')} FROM "${tableName}";`
+        );
 
         // 删除旧表
         sqlStatements.push(`DROP TABLE "${tableName}";`);
@@ -654,26 +673,12 @@ export class SQLiteService extends BaseDatabaseService {
         // 重命名临时表
         sqlStatements.push(`ALTER TABLE "${tempTableName}" RENAME TO "${tableName}";`);
 
-      } else if (tableDiff.addedColumns.length > 0) {
+      } else if (addedColumns.length > 0) {
         // 只有添加列，可以直接使用ALTER TABLE ADD COLUMN
         tableDiff.addedColumns.forEach((column: any) => {
-          // 检查type是否已经包含长度信息（括号）
-          const typeHasLength = /\(\d+\)/.test(column.type);
+          const columnType = buildColumnType('sqlite', column.type, column.length, column.precision, column.scale);
 
-          let columnSQL = `ALTER TABLE "${tableName}" ADD COLUMN "${column.name}" ${column.type}`;
-
-          // 处理长度和精度（仅当type中没有指定长度时才添加）
-          if (!typeHasLength) {
-            if (column.length) {
-              columnSQL += `(${column.length})`;
-            } else if (column.precision) {
-              if (column.scale) {
-                columnSQL += `(${column.precision},${column.scale})`;
-              } else {
-                columnSQL += `(${column.precision})`;
-              }
-            }
-          }
+          let columnSQL = `ALTER TABLE "${tableName}" ADD COLUMN "${column.name}" ${columnType}`;
 
           // 处理NULL约束
           if (!column.nullable) {
@@ -682,12 +687,7 @@ export class SQLiteService extends BaseDatabaseService {
 
           // 处理默认值
           if (column.defaultValue) {
-            const upperDefault = column.defaultValue.toString().toUpperCase();
-            if (['CURRENT_TIMESTAMP', 'NOW()', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
-              columnSQL += ` DEFAULT ${upperDefault}`;
-            } else {
-              columnSQL += ` DEFAULT '${column.defaultValue}'`;
-            }
+            columnSQL += ` DEFAULT ${formatDefaultLiteral(column.defaultValue)}`;
           }
 
           sqlStatements.push(columnSQL + ';');

@@ -270,6 +270,7 @@ export default {
     tableModifySuccess: '表结构修改成功',
     tableCreateFailed: '创建表失败',
     tableModifyFailed: '表结构修改失败',
+    getTableInfoFailed: '获取表结构失败',
     size: '大小',
   },
   tableDetail: {
@@ -389,6 +390,8 @@ export default {
     operationsHeader: '操作',
     columnNamePlaceholder: '字段名',
     selectType: '选择类型',
+    customType: '自定义类型',
+    customTypePlaceholder: '如 ENUM(\'a\',\'b\')、DECIMAL(10,2)',
     lengthPlaceholder: '长度',
     precisionPlaceholder: '精度',
     scalePlaceholder: '小数',

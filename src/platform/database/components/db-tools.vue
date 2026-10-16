@@ -1228,24 +1228,24 @@ function showScheduleModal() {
 
 /* JSON 语法高亮 - 不使用 scoped 以确保 v-html 内容能应用样式 */
 :deep(.json-key) {
-  color: #d04255;
+  color: var(--db-json-key);
   font-weight: 500;
 }
 
 :deep(.json-string) {
-  color: #22863a;
+  color: var(--db-json-string);
 }
 
 :deep(.json-number) {
-  color: #005cc5;
+  color: var(--db-json-number);
 }
 
 :deep(.json-boolean) {
-  color: #d73a49;
+  color: var(--db-json-boolean);
 }
 
 :deep(.json-null) {
-  color: #6f42c1;
+  color: var(--db-json-null);
 }
 
 /* 滚动条样式 */

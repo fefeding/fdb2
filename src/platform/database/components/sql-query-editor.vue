@@ -783,7 +783,7 @@ watch(querySql, () => {
   padding: 1rem 1.5rem;
   background: var(--db-danger-bg);
   border-left: 4px solid #ef4444;
-  color: #991b1b;
+  color: var(--db-danger-fg);
 }
 
 .error-message i {
