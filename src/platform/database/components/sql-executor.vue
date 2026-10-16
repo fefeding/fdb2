@@ -10,7 +10,8 @@
         </button>
       </div>
       <div class="toolbar-right">
-        <button class="btn btn-outline-primary btn-sm" @click="clearSql">
+        <!-- 次要操作：用中性描边弱化，避免与左侧"执行 SQL"的实心主按钮抢视觉 -->
+        <button class="btn btn-outline-secondary btn-sm" @click="clearSql">
           <i class="bi bi-trash"></i> {{ $t('sqlExecutor.clearBtn') }}
         </button>
       </div>

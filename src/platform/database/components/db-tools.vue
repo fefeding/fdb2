@@ -610,22 +610,49 @@ function showPermissionsModal() {
 }
 
 // 性能监控
+/** 把查询结果规整成结果区可展示的结构（查询类为行数组，管理类为执行回执） */
+function toDisplayData(sql: string, data: any): any {
+  if (Array.isArray(data)) return { sql, rowCount: data.length, rows: data };
+  if (data && typeof data === 'object') return { sql, ...data };
+  return { sql, result: data };
+}
+
+/**
+ * 工具页自己执行 SQL 并把结果写入结果区。
+ * 旧实现只 emit('execute-sql') 交给上层编辑器执行，工具页仅留一句"已发送 SQL 查询"，
+ * 查询结果在工具页永远看不到；改为本地执行后不再向上 emit，避免同一条 SQL 被执行两次
+ * （对 FLUSH LOGS 这类非幂等语句尤其重要）。
+ */
+async function runSqlTool(operation: string, sql: string) {
+  if (!props.connection?.id) {
+    modal.warning(t('dbTools.selectConnectionFirst'));
+    return;
+  }
+  try {
+    const res = await databaseService.executeQuery(props.connection.id, sql, props.database);
+    if (res.ret === 0) {
+      addExecutionResult(operation, 'success', toDisplayData(sql, res.data));
+    } else {
+      modal.error(res.msg || t('dbTools.execFailed'));
+      addExecutionResult(operation, 'error', { sql, ...formatError(res) });
+    }
+  } catch (error: any) {
+    console.error(`${operation}失败:`, error);
+    modal.error(error?.msg || error?.message || t('dbTools.execFailed'));
+    addExecutionResult(operation, 'error', { sql, ...formatError(error) });
+  }
+}
+
 function showProcessList() {
-  const sql = 'SHOW PROCESSLIST';
-  addExecutionResult(t('dbTools.processList'), 'info', { sql: sql, message: t('dbTools.sqlSent') });
-  emit('execute-sql', sql);
+  runSqlTool(t('dbTools.processList'), 'SHOW PROCESSLIST');
 }
 
 function showSlowQueries() {
-  const sql = 'SELECT * FROM mysql.slow_log ORDER BY start_time DESC LIMIT 10';
-  addExecutionResult(t('dbTools.slowQueries'), 'info', { sql: sql, message: t('dbTools.sqlSent') });
-  emit('execute-sql', sql);
+  runSqlTool(t('dbTools.slowQueries'), 'SELECT * FROM mysql.slow_log ORDER BY start_time DESC LIMIT 10');
 }
 
 function showConnectionsList() {
-  const sql = 'SHOW STATUS LIKE "Threads_connected"';
-  addExecutionResult(t('dbTools.connectionCount'), 'info', { sql: sql, message: t('dbTools.sqlSent') });
-  emit('execute-sql', sql);
+  runSqlTool(t('dbTools.connectionCount'), 'SHOW STATUS LIKE "Threads_connected"');
 }
 
 // 数据库优化
@@ -688,10 +715,10 @@ async function clearLogs() {
     'FLUSH LOGS'
   ];
 
-  logs.forEach(sql => {
-    addExecutionResult(`${t('dbTools.clearLogs')} - ${sql.split(' ')[1]}`, 'info', { sql, message: t('dbTools.sqlSent') });
-    emit('execute-sql', sql);
-  });
+  // 逐条执行：清理类语句非幂等，必须在工具页内执行并回显结果
+  for (const sql of logs) {
+    await runSqlTool(`${operation} - ${sql.split(' ')[1]}`, sql);
+  }
 }
 
 // 数据迁移
@@ -744,14 +771,11 @@ function showStatistics() {
     WHERE table_schema = DATABASE()
     ORDER BY (data_length + index_length) DESC
   `;
-  addExecutionResult(t('dbTools.dataStatistics'), 'info', { sql: sql, message: t('dbTools.sqlSent') });
-  emit('execute-sql', sql);
+  runSqlTool(t('dbTools.dataStatistics'), sql);
 }
 
 function showAuditLog() {
-  const sql = 'SELECT * FROM mysql.general_log ORDER BY event_time DESC LIMIT 100';
-  addExecutionResult(t('dbTools.auditLog'), 'info', { sql: sql, message: t('dbTools.sqlSent') });
-  emit('execute-sql', sql);
+  runSqlTool(t('dbTools.auditLog'), 'SELECT * FROM mysql.general_log ORDER BY event_time DESC LIMIT 100');
 }
 
 // 恢复功能
