@@ -1,5 +1,6 @@
 import { ConnectionService } from '../connection.service';
 import { BaseDatabaseService } from './base.service';
+import type { DataSource } from 'typeorm';
 import {
   DatabaseEntity,
   TableEntity
@@ -423,6 +424,9 @@ export class DatabaseService {
    * 同步表结构和数据到其他数据库
    */
   async syncTable(connectionId: string, syncConfig: any): Promise<any> {
+    // 手动配置目标库时创建的是一次性连接（不进缓存），必须在本方法结束时显式销毁，
+    // 否则每跑一次同步就泄漏一个连接池，长期使用会耗尽服务端 max_connections
+    let tempTargetDataSource: DataSource | undefined;
     try {
       const { source, target, options } = syncConfig;
       
@@ -451,6 +455,7 @@ export class DatabaseService {
           password: target.password,
           database: target.database
         });
+        tempTargetDataSource = targetDataSource;
         targetService = this.getDatabaseService(target.dbType);
         targetDatabaseName = target.database;
       }
@@ -553,6 +558,14 @@ export class DatabaseService {
     } catch (error: any) {
       console.error('同步表失败:', error);
      throw error;
+    } finally {
+      if (tempTargetDataSource) {
+        try {
+          await tempTargetDataSource.destroy();
+        } catch (error) {
+          console.error('销毁同步目标临时连接失败:', error);
+        }
+      }
     }
   }
 
