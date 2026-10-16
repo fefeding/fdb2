@@ -10,6 +10,8 @@ import {
   IndexEntity,
   ForeignKeyEntity
 } from '../../model/database.entity';
+import { canonicalizeTableEntity } from '../../core/schema/canonical';
+import { emitCreateDdl } from '../../core/schema/ddl-emitter';
 
 /**
  * MySQL数据库服务实现
@@ -760,129 +762,6 @@ export class MySQLService extends BaseDatabaseService {
     }
   }
 
-  /**
-   * 修改表结构
-   */
-  async alterTable(dataSource: DataSource, databaseName: string, tableDiff: any): Promise<any> {
-    try {
-      const tableName = tableDiff.tableName;
-      const sqlStatements: string[] = [];
-
-      // 修改表注释
-      if (tableDiff.tableCommentChanged) {
-        sqlStatements.push(`ALTER TABLE \`${tableName}\` COMMENT='${escapeSqlString(tableDiff.tableComment)}';`);
-      }
-
-      // 重命名列：必须用 CHANGE COLUMN（一次完成改名 + 改定义），
-      // 若退化成 DROP COLUMN + ADD COLUMN 会丢失该列的全部原始数据
-      const renamedColumns = tableDiff.renamedColumns || [];
-      renamedColumns.forEach(({ oldColumn, newColumn }: any) => {
-        const columnType = buildColumnType('mysql', newColumn.type, newColumn.length, newColumn.precision, newColumn.scale);
-
-        let columnSQL = `ALTER TABLE \`${tableName}\` CHANGE COLUMN \`${oldColumn.name}\` \`${newColumn.name}\` ${columnType}`;
-
-        if (!newColumn.nullable) {
-          columnSQL += ' NOT NULL';
-        }
-
-        if (newColumn.defaultValue) {
-          columnSQL += ` DEFAULT ${formatDefaultLiteral(newColumn.defaultValue)}`;
-        }
-
-        if (newColumn.isAutoIncrement) {
-          columnSQL += ' AUTO_INCREMENT';
-        }
-
-        if (newColumn.comment) {
-          columnSQL += ` COMMENT '${escapeSqlString(newColumn.comment)}'`;
-        }
-
-        sqlStatements.push(columnSQL + ';');
-      });
-
-      // 已由 CHANGE COLUMN 处理定义的列，不再重复 MODIFY
-      const renamedOldNames = new Set(renamedColumns.map((r: any) => r.oldColumn.name));
-      const modifiedColumns = (tableDiff.modifiedColumns || []).filter(
-        (modification: any) => !renamedOldNames.has(modification.oldColumn.name)
-      );
-
-      // 添加新列
-      tableDiff.addedColumns.forEach((column: any) => {
-        const columnType = buildColumnType('mysql', column.type, column.length, column.precision, column.scale);
-
-        let columnSQL = `ALTER TABLE \`${tableName}\` ADD COLUMN \`${column.name}\` ${columnType}`;
-
-        // 处理NULL约束
-        if (!column.nullable) {
-          columnSQL += ' NOT NULL';
-        }
-
-        // 处理默认值
-        if (column.defaultValue) {
-          columnSQL += ` DEFAULT ${formatDefaultLiteral(column.defaultValue)}`;
-        }
-
-        // 处理自增
-        if (column.isAutoIncrement) {
-          columnSQL += ' AUTO_INCREMENT';
-        }
-
-        // 处理注释
-        if (column.comment) {
-          columnSQL += ` COMMENT '${escapeSqlString(column.comment)}'`;
-        }
-
-        sqlStatements.push(columnSQL + ';');
-      });
-
-      // 修改列
-      modifiedColumns.forEach((modification: any) => {
-        const { oldColumn, newColumn } = modification;
-        const columnType = buildColumnType('mysql', newColumn.type, newColumn.length, newColumn.precision, newColumn.scale);
-
-        let columnSQL = `ALTER TABLE \`${tableName}\` MODIFY COLUMN \`${newColumn.name}\` ${columnType}`;
-
-        // 处理NULL约束
-        if (!newColumn.nullable) {
-          columnSQL += ' NOT NULL';
-        } else {
-          columnSQL += ' NULL';
-        }
-
-        // 处理默认值
-        if (newColumn.defaultValue) {
-          columnSQL += ` DEFAULT ${formatDefaultLiteral(newColumn.defaultValue)}`;
-        }
-
-        // 处理自增
-        if (newColumn.isAutoIncrement) {
-          columnSQL += ' AUTO_INCREMENT';
-        }
-
-        // 处理注释
-        if (newColumn.comment) {
-          columnSQL += ` COMMENT '${escapeSqlString(newColumn.comment)}'`;
-        }
-
-        sqlStatements.push(columnSQL + ';');
-      });
-
-      // 删除列
-      tableDiff.deletedColumns.forEach((column: any) => {
-        sqlStatements.push(`ALTER TABLE \`${tableName}\` DROP COLUMN \`${column.name}\`;`);
-      });
-
-      // 执行SQL语句
-      if (sqlStatements.length > 0) {
-        await this.executeBatchQuery(dataSource, sqlStatements, { useTransaction: true });
-      }
-
-      return { ret: 0, message: '表结构修改成功' };
-    } catch (error) {
-      console.error('MySQL修改表结构失败:', error);
-      return { ret: 1, message: `修改表结构失败: ${error instanceof Error ? error.message : String(error)}` };
-    }
-  }
 
   /**
    * 批量插入数据
@@ -965,57 +844,16 @@ export class MySQLService extends BaseDatabaseService {
    */
   async createTable(dataSource: DataSource, databaseName: string, table: any): Promise<void> {
     const { name, columns, comment } = table;
-    
-    let sql = `CREATE TABLE \`${name}\` (\n`;
-    const columnDefs: string[] = [];
-    const primaryKeys: string[] = [];
 
-    columns.forEach((column: any) => {
-      let columnDef = `  \`${column.name}\` ${column.type}`;
-      
-      if (!column.nullable) {
-        columnDef += ' NOT NULL';
-      }
-      
-      if (column.defaultValue) {
-        const upperDefault = column.defaultValue.toString().toUpperCase();
-        if (['CURRENT_TIMESTAMP', 'NOW()', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
-          columnDef += ` DEFAULT ${upperDefault}`;
-        } else {
-          columnDef += ` DEFAULT '${column.defaultValue}'`;
-        }
-      }
-      
-      if (column.isAutoIncrement) {
-        columnDef += ' AUTO_INCREMENT';
-      }
-      
-      if (column.comment) {
-        columnDef += ` COMMENT '${column.comment}'`;
-      }
-      
-      columnDefs.push(columnDef);
-      
-      // 收集主键列
-      if (column.isPrimary) {
-        primaryKeys.push(`\`${column.name}\``);
-      }
+    // 统一走 emitCreateDdl：前端建表 / SQLite 重建 / syncTable 建表共用同一渲染出口。
+    // 顺带修复旧实现的既有缺陷：PG/CRDB 的 `int SERIAL` 与内联 COMMENT（语法错误）、
+    // SQLite 丢失主键、默认值假值兜底与一律加引号等。
+    const canonical = canonicalizeTableEntity({
+      name,
+      comment: comment ?? '',
+      columns: columns ?? []
     });
-
-    // 添加主键约束
-    if (primaryKeys.length > 0) {
-      columnDefs.push(`  PRIMARY KEY (${primaryKeys.join(', ')})`);
-    }
-
-    sql += columnDefs.join(',\n');
-    sql += '\n)';
-    
-    if (comment) {
-      sql += ` COMMENT='${comment}'`;
-    }
-    
-    sql += ';';
-    
-    await dataSource.query(sql);
+    const statements = emitCreateDdl('mysql', canonical, { mssqlDatabase: databaseName });
+    await this.executeBatchQuery(dataSource, statements, { useTransaction: true });
   }
 }

@@ -437,14 +437,6 @@ export class MongoDBService extends BaseDatabaseService {
     return `\`${identifier}\``;
   }
 
-  /**
-   * 修改表结构
-   * MongoDB是文档数据库，没有传统的表结构概念
-   * 集合中的文档可以有不同的结构，因此不需要ALTER TABLE
-   */
-  async alterTable(dataSource: DataSource, databaseName: string, tableDiff: any): Promise<any> {
-    return { ret: 0, message: 'MongoDB是文档数据库，不需要修改表结构' };        
-  }
 
   /**
    * 批量插入数据

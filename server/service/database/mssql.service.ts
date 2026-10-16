@@ -9,6 +9,8 @@ import {
   IndexEntity,
   ForeignKeyEntity
 } from '../../model/database.entity';
+import { canonicalizeTableEntity } from '../../core/schema/canonical';
+import { emitCreateDdl } from '../../core/schema/ddl-emitter';
 
 /**
  * SQL Server数据库服务实现
@@ -189,6 +191,23 @@ export class SQLServerService extends BaseDatabaseService {
       ORDER BY ic.key_ordinal
     `, [`${database}.${table}`]);
     return result.map((row: any) => row.name);
+  }
+
+  /**
+   * 获取表当前主键约束的真实名称（如 PK__t_test__3A4CA8FD）。
+   *
+   * SQL Server 自动生成的约束名带哈希后缀，无法从变更集或表名推断；
+   * 必须先回查 sys.key_constraints，否则 DROP CONSTRAINT 必然失败。
+   * 供 schema 引擎在生成改主键语句前调用（见 buildAlterPlan）。
+   */
+  async getPrimaryKeyConstraintName(dataSource: DataSource, database: string, table: string): Promise<string | null> {
+    const result = await dataSource.query(`
+      SELECT k.name AS name
+      FROM ${this.quoteIdentifier(database)}.sys.key_constraints k
+      WHERE k.type = 'PK'
+        AND k.parent_object_id = OBJECT_ID(?)
+    `, [`${database}.${table}`]);
+    return result?.[0]?.name ?? null;
   }
 
   /**
@@ -722,94 +741,6 @@ export class SQLServerService extends BaseDatabaseService {
     }
   }
 
-  /**
-   * 修改表结构
-   */
-  async alterTable(dataSource: DataSource, databaseName: string, tableDiff: any): Promise<any> {
-    try {
-      const tableName = tableDiff.tableName;
-      const sqlStatements: string[] = [];
-
-      // 修改表注释（使用扩展属性）
-      if (tableDiff.tableCommentChanged) {
-        sqlStatements.push(`EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'${escapeSqlString(tableDiff.tableComment)}', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'${escapeSqlString(tableName)}';`);
-      }
-
-      // 重命名列：sp_rename 保留数据，必须先于 ALTER COLUMN 执行
-      (tableDiff.renamedColumns || []).forEach(({ oldColumn, newColumn }: any) => {
-        sqlStatements.push(`EXEC sp_rename N'dbo.${escapeSqlString(tableName)}.${escapeSqlString(oldColumn.name)}', N'${escapeSqlString(newColumn.name)}', N'COLUMN';`);
-      });
-
-      // 添加新列
-      tableDiff.addedColumns.forEach((column: any) => {
-        const columnType = buildColumnType('mssql', column.type, column.length, column.precision, column.scale);
-
-        let columnSQL = `ALTER TABLE [${databaseName}].[dbo].[${tableName}] ADD [${column.name}] ${columnType}`;
-
-        // 处理NULL约束
-        if (!column.nullable) {
-          columnSQL += ' NOT NULL';
-        }
-
-        // 处理默认值
-        if (column.defaultValue) {
-          columnSQL += ` DEFAULT ${formatDefaultLiteral(column.defaultValue)}`;
-        }
-
-        // 处理自增（MSSQL使用IDENTITY）
-        if (column.isAutoIncrement) {
-          if (column.type.toLowerCase().includes('int')) {
-            columnSQL += ' IDENTITY(1,1)';
-          }
-        }
-
-        sqlStatements.push(columnSQL + ';');
-
-        // 添加列注释
-        if (column.comment) {
-          sqlStatements.push(`EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'${escapeSqlString(column.comment)}', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'${escapeSqlString(tableName)}', @level2type = N'COLUMN', @level2name = N'${escapeSqlString(column.name)}';`);
-        }
-      });
-
-      // 修改列
-      tableDiff.modifiedColumns.forEach((modification: any) => {
-        const { oldColumn, newColumn } = modification;
-        const columnType = buildColumnType('mssql', newColumn.type, newColumn.length, newColumn.precision, newColumn.scale);
-
-        // 修改列类型和长度
-        let columnSQL = `ALTER TABLE [${databaseName}].[dbo].[${tableName}] ALTER COLUMN [${newColumn.name}] ${columnType}`;
-
-        // 处理NULL约束
-        if (!newColumn.nullable) {
-          columnSQL += ' NOT NULL';
-        } else {
-          columnSQL += ' NULL';
-        }
-
-        sqlStatements.push(columnSQL + ';');
-
-        // 修改列注释
-        if (newColumn.comment) {
-          sqlStatements.push(`EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'${escapeSqlString(newColumn.comment)}', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'${escapeSqlString(tableName)}', @level2type = N'COLUMN', @level2name = N'${escapeSqlString(newColumn.name)}';`);
-        }
-      });
-
-      // 删除列
-      tableDiff.deletedColumns.forEach((column: any) => {
-        sqlStatements.push(`ALTER TABLE [${databaseName}].[dbo].[${tableName}] DROP COLUMN [${column.name}];`);
-      });
-
-      // 执行SQL语句
-      if (sqlStatements.length > 0) {
-        await this.executeBatchQuery(dataSource, sqlStatements, { useTransaction: true });
-      }
-
-      return { ret: 0, message: '表结构修改成功' };
-    } catch (error) {
-      console.error('SQL Server修改表结构失败:', error);
-      return { ret: 1, message: `修改表结构失败: ${error instanceof Error ? error.message : String(error)}` };
-    }
-  }
 
   /**
    * 批量插入数据
@@ -864,41 +795,16 @@ export class SQLServerService extends BaseDatabaseService {
    */
   async createTable(dataSource: DataSource, databaseName: string, table: any): Promise<void> {
     const { name, columns, comment } = table;
-    
-    let sql = `CREATE TABLE [${databaseName}].[dbo].[${name}] (\n`;
-    const columnDefs: string[] = [];
 
-    columns.forEach((column: any) => {
-      let columnDef = `  [${column.name}] ${column.type}`;
-      
-      if (!column.nullable) {
-        columnDef += ' NOT NULL';
-      }
-      
-      if (column.defaultValue) {
-        const upperDefault = column.defaultValue.toString().toUpperCase();
-        if (['CURRENT_TIMESTAMP', 'GETDATE()', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
-          columnDef += ` DEFAULT ${upperDefault}`;
-        } else {
-          columnDef += ` DEFAULT '${column.defaultValue}'`;
-        }
-      }
-      
-      if (column.isAutoIncrement) {
-        columnDef += ' IDENTITY(1,1)';
-      }
-      
-      columnDefs.push(columnDef);
+    // 统一走 emitCreateDdl：前端建表 / SQLite 重建 / syncTable 建表共用同一渲染出口。
+    // 顺带修复旧实现的既有缺陷：PG/CRDB 的 `int SERIAL` 与内联 COMMENT（语法错误）、
+    // SQLite 丢失主键、默认值假值兜底与一律加引号等。
+    const canonical = canonicalizeTableEntity({
+      name,
+      comment: comment ?? '',
+      columns: columns ?? []
     });
-
-    sql += columnDefs.join(',\n');
-    sql += '\n)';
-    
-    await dataSource.query(sql);
-    
-    // 添加表注释
-    if (comment) {
-      await dataSource.query(`EXEC sp_addextendedproperty @name = N'MS_Description', @value = '${comment}', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'${name}';`);
-    }
+    const statements = emitCreateDdl('mssql', canonical, { mssqlDatabase: databaseName });
+    await this.executeBatchQuery(dataSource, statements, { useTransaction: true });
   }
 }

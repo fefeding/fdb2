@@ -31,10 +31,12 @@
               <div class="col-md-6">
                 <div class="mb-3">
                   <label class="form-label">{{ $t('tableEditor.tableCommentLabel') }}</label>
-                  <input 
-                    v-model="formData.tableComment" 
-                    type="text" 
-                    class="form-control" 
+                  <input
+                    v-model="formData.tableComment"
+                    type="text"
+                    class="form-control"
+                    :disabled="tableCommentDisabled"
+                    :title="tableCommentDisabled ? '该数据库不支持表注释' : undefined"
                     :placeholder="$t('tableEditor.tableCommentPlaceholder')"
                   >
                 </div>
@@ -73,6 +75,8 @@
                         v-model="column.name" 
                         type="text" 
                         class="form-control form-control-sm" 
+                        :disabled="renameDisabled"
+                        :title="renameDisabled ? '该数据库不支持修改列名' : undefined"
                         :placeholder="$t('tableEditor.columnNamePlaceholder')"
                       >
                     </td>
@@ -143,7 +147,9 @@
                           v-model="column.isPrimary" 
                           type="checkbox" 
                           class="form-check-input"
-                          @change="onPrimaryKeyChange(column, index)"
+                          :disabled="pkDisabled"
+                          :title="pkDisabled ? '该数据库不支持在线修改主键' : undefined"
+                          @change="onPrimaryKeyChange(column)"
                         >
                       </div>
                     </td>
@@ -154,14 +160,18 @@
                           type="checkbox" 
                           class="form-check-input"
                           :disabled="!column.isPrimary || !supportsAutoIncrement(column)"
+                          :title="supportsAutoIncrement(column) ? '自增列将作为唯一主键' : undefined"
+                          @change="onAutoIncrementChange(column, index)"
                         >
                       </div>
                     </td>
                     <td>
-                      <input 
-                        v-model="column.comment" 
-                        type="text" 
-                        class="form-control form-control-sm" 
+                      <input
+                        v-model="column.comment"
+                        type="text"
+                        class="form-control form-control-sm"
+                        :disabled="columnCommentDisabled"
+                        :title="columnCommentDisabled ? '该数据库不支持列注释' : undefined"
                         :placeholder="$t('tableEditor.fieldComment')"
                       >
                     </td>
@@ -180,16 +190,33 @@
             </div>
           </div>
 
-          <!-- SQL预览 -->
+          <!-- SQL预览：后端生成（create/edit 均与执行同一出口，所见即所得） -->
           <div class="sql-preview-section mt-4">
-            <h6 class="section-title">{{ $t('tableEditor.sqlPreview') }}</h6>
-            <pre class="sql-preview">{{ generateSQL() }}</pre>
+            <div class="d-flex align-items-center justify-content-between">
+              <h6 class="section-title mb-0">{{ $t('tableEditor.sqlPreview') }}</h6>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                :disabled="refreshingTables"
+                title="重新拉取表列表（重名检测等依赖它；预览默认走 30 秒缓存）"
+                @click="refreshTableList"
+              >
+                {{ refreshingTables ? '刷新中...' : '刷新表列表' }}
+              </button>
+            </div>
+            <pre class="sql-preview mt-2">{{ previewSql }}</pre>
           </div>
         </div>
         
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" @click="close">{{ $t('common.cancel') }}</button>
-          <button type="button" class="btn btn-primary" @click="submit">{{ $t('common.save') }}</button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            :disabled="submitDisabled"
+            :title="submitDisabledHint || undefined"
+            @click="submit"
+          >{{ $t('common.save') }}</button>
         </div>
       </div>
     </div>
@@ -203,7 +230,8 @@ import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import { DatabaseService } from '@/service/database';
 import { modal } from '@/utils/modal';
 import { getColumnTypesByName, ColumnCategory } from '@/typings/database-types';
-import { isNumericType, isBooleanType } from '@/utils/database-types';
+// DDL 契约（单一事实来源：前端不再自己拼 SQL/diff，只组装目标态 TableSpec）
+import type { TableSpec, ColumnSpec, DdlCapability } from '../../../../server/model/ddl-spec';
 
 // Props
 const props = defineProps<{
@@ -227,38 +255,10 @@ const { t } = useI18n();
 // 自定义类型的哨兵值：选中后由用户输入完整类型（如 ENUM('a','b')、DECIMAL(10,2)）
 const CUSTOM_TYPE_VALUE = '__custom__';
 
-// 当前数据库类型（统一小写）
-const dbType = computed(() => (props.connection?.type || '').toLowerCase());
-
-// 与 MySQL 语法兼容的数据库
-const MYSQL_LIKE_TYPES = new Set(['mysql', 'mariadb', 'aurora-mysql', 'auroramysql']);
-// 与 PostgreSQL 语法兼容的数据库（CockroachDB 走 PostgreSQL 协议）
-const POSTGRES_LIKE_TYPES = new Set([
-  'postgres', 'postgresql', 'cockroachdb',
-  'aurora-postgres', 'aurorapostgres', 'aurora-postgresql'
-]);
-
-const isMySqlLike = () => MYSQL_LIKE_TYPES.has(dbType.value);
-const isPostgresLike = () => POSTGRES_LIKE_TYPES.has(dbType.value);
-
 // 列的最终类型字符串
 function rawType(column: any): string {
   if (!column) return '';
   return column.type === CUSTOM_TYPE_VALUE ? (column.customType || '') : (column.type || '');
-}
-
-// SQL 中实际使用的类型字符串（SQLite 自增必须是 INTEGER PRIMARY KEY）
-function sqlType(column: any): string {
-  const type = rawType(column);
-  if (dbType.value === 'sqlite' && column?.isAutoIncrement && /^INT$/i.test(type.trim())) {
-    return 'INTEGER';
-  }
-  return type;
-}
-
-// 转义 SQL 字符串字面量中的单引号
-function escapeSqlString(value: any): string {
-  return String(value ?? '').replace(/'/g, "''");
 }
 
 // 获取当前数据库支持的列类型
@@ -274,7 +274,7 @@ const columnTypesByCategory = computed(() => {
     if (!categories[type.category]) {
       categories[type.category] = [];
     }
-    categories[type.category].push(type);
+    (categories[type.category] as any[]).push(type);
   });
   return categories;
 });
@@ -310,13 +310,6 @@ const formData = ref({
   }>
 });
 
-// 原始表结构（用于对比差异）
-const originalTableData = ref({
-  tableName: '',
-  tableComment: '',
-  columns: [] as any[]
-});
-
 // 解析类型字符串，提取基础类型名和长度/精度
 // 例如: "varchar(255)" -> { baseType: "VARCHAR", length: "255" }
 //       "decimal(10,2)" -> { baseType: "DECIMAL", precision: "10", scale: "2" }
@@ -330,8 +323,8 @@ function parseColumnType(typeStr: string): { baseType: string; length?: string; 
 
   const match = typeStr.match(/^([a-zA-Z\s]+)\(([^)]+)\)$/);
   if (match) {
-    result.baseType = match[1].trim().toUpperCase();
-    const params = match[2].split(',').map((s: string) => s.trim());
+    result.baseType = (match[1] as string).trim().toUpperCase();
+    const params = (match[2] as string).split(',').map((s: string) => s.trim());
 
     // 查找类型定义，判断是长度还是精度
     const typeInfo = columnTypes.value.find(t => t.name.toUpperCase() === result.baseType);
@@ -378,7 +371,6 @@ function initFormData() {
       }) || []
     };
     formData.value = { ...tableData };
-    originalTableData.value = JSON.parse(JSON.stringify(tableData));
   } else {
     // 创建模式：如果传入 partial table，预填表名/注释
     const isCreateWithPrefill = props.mode === 'create' && props.table;
@@ -399,165 +391,135 @@ function initFormData() {
         comment: ''
       } as any]
     };
-    originalTableData.value = {
-      tableName: '',
-      tableComment: '',
-      columns: [] as any[]
-    };
   }
-}
-
-// 列定义是否发生变化（不含列名，用于判断"仅改名"）
-function isColumnDefinitionChanged(newCol: any, originalCol: any): boolean {
-  return (
-    newCol.type !== originalCol.type ||
-    newCol.customType !== originalCol.customType ||
-    newCol.length !== originalCol.length ||
-    newCol.precision !== originalCol.precision ||
-    newCol.scale !== originalCol.scale ||
-    newCol.nullable !== originalCol.nullable ||
-    newCol.defaultValue !== originalCol.defaultValue ||
-    newCol.isPrimary !== originalCol.isPrimary ||
-    newCol.isAutoIncrement !== originalCol.isAutoIncrement ||
-    newCol.comment !== originalCol.comment
-  );
-}
-
-// 编辑距离（用于列名相似度判断）
-function levenshtein(a: string, b: string): number {
-  const m = a.length;
-  const n = b.length;
-  if (m === 0) return n;
-  if (n === 0) return m;
-
-  let prev: number[] = new Array(n + 1).fill(0);
-  let curr: number[] = new Array(n + 1).fill(0);
-  for (let j = 0; j <= n; j++) prev[j] = j;
-
-  for (let i = 1; i <= m; i++) {
-    curr[0] = i;
-    const aChar = a.charAt(i - 1);
-    for (let j = 1; j <= n; j++) {
-      const cost = aChar === b.charAt(j - 1) ? 0 : 1;
-      curr[j] = Math.min(
-        (curr[j - 1] as number) + 1,
-        (prev[j] as number) + 1,
-        (prev[j - 1] as number) + cost
-      );
-    }
-    const tmp = prev;
-    prev = curr;
-    curr = tmp;
-  }
-  return prev[n] as number;
-}
-
-// 两个列名是否可能属于同一次重命名，返回相似度分数（0 表示不是重命名关系）
-function renameNameScore(oldName: string, newName: string): number {
-  const a = String(oldName || '').trim().toLowerCase();
-  const b = String(newName || '').trim().toLowerCase();
-  if (!a || !b || a === b) return 0;
-  // 前缀关系：name -> name1、user_name -> user_name2
-  if (a.startsWith(b) || b.startsWith(a)) return 3;
-  // 少量编辑：拼写修正
-  const maxLen = Math.max(a.length, b.length);
-  if (maxLen > 0 && levenshtein(a, b) <= Math.max(1, Math.floor(maxLen / 3))) return 1;
-  return 0;
 }
 
 /**
- * 重命名检测：把「新增列」与「删除列」中名称相近的配成对。
- * 否则改名会被生成为 DROP COLUMN + ADD COLUMN，导致原数据丢失。
+ * 目标态组装：UI 表单 -> TableSpec（前端唯一的职责）。
+ * 原始态由后端实时读取，diff/SQL 生成全部在后端 schema 引擎完成——
+ * 前端不再持有"旧结构缓存"，缓存过期导致的错误语句从机制上消除。
  */
-function matchRenamedColumns(addedColumns: any[], deletedColumns: any[]) {
-  const pairs: Array<{ oldColumn: any; newColumn: any }> = [];
-  const usedOld = new Set<any>();
-
-  addedColumns.forEach((newCol, newIndex) => {
-    let bestOld: any = null;
-    let bestScore = 0;
-    deletedColumns.forEach((oldCol, oldIndex) => {
-      if (usedOld.has(oldCol)) return;
-      const score = renameNameScore(oldCol.name, newCol.name);
-      if (score === 0) return;
-      // 顺序位置一致的候选优先
-      const total = score + (oldIndex === newIndex ? 0.1 : 0);
-      if (total > bestScore) {
-        bestScore = total;
-        bestOld = oldCol;
+function buildTableSpec(): TableSpec {
+  const columns: ColumnSpec[] = formData.value.columns
+    .filter(col => col.name && rawType(col))
+    .map(col => {
+      const raw = rawType(col).trim();
+      const isCustom = col.type === CUSTOM_TYPE_VALUE;
+      // UI 约定：默认值输入框为空串 = 无默认值（hasDefault: false）；
+      // '0'、'NULL' 等文本由后端三态归一，不再受前端假值兜底影响
+      const hasDefault = col.defaultValue !== '' && col.defaultValue !== null && col.defaultValue !== undefined;
+      const spec: ColumnSpec = {
+        name: col.name.trim(),
+        type: isCustom ? raw : col.type,
+        nullable: col.nullable,
+        hasDefault,
+        autoIncrement: !!col.isAutoIncrement
+      };
+      if (isCustom) {
+        spec.customType = raw;
+      } else {
+        if (col.length !== '' && col.length !== null && col.length !== undefined) spec.length = col.length;
+        if (col.precision !== null && col.precision !== undefined && col.precision !== '') spec.precision = col.precision;
+        if (col.scale !== null && col.scale !== undefined && col.scale !== '') spec.scale = col.scale;
       }
+      if (hasDefault) spec.defaultValue = String(col.defaultValue);
+      if (col.comment) spec.comment = col.comment;
+      return spec;
     });
-    if (bestOld) {
-      usedOld.add(bestOld);
-      pairs.push({ oldColumn: bestOld, newColumn: newCol });
-    }
-  });
-
-  return pairs;
+  return {
+    name: formData.value.tableName.trim(),
+    comment: formData.value.tableComment ?? '',
+    columns,
+    // 表级主键：勾选/取消只改这个数组（单归属），不产生列级记账
+    primaryKey: formData.value.columns
+      .filter(c => c.isPrimary && c.name)
+      .map(c => c.name.trim())
+  };
 }
 
-// 计算表结构差异
-function calculateTableDiff() {
-  const diff = {
-    tableName: formData.value.tableName,
-    tableCommentChanged: formData.value.tableComment !== originalTableData.value.tableComment,
-    tableComment: formData.value.tableComment,
-    // 完整的新列顺序（供后端 SQLite 重建表时保持列顺序）
-    columnOrder: formData.value.columns.map(c => c.name).filter(Boolean),
-    addedColumns: [] as any[],
-    modifiedColumns: [] as any[],
-    deletedColumns: [] as any[],
-    renamedColumns: [] as Array<{ oldColumn: any; newColumn: any }>
-  };
+// SQL 预览：create/edit 都调后端 preview（与执行同一出口，所见即所得）；
+// 顺带缓存后端返回的方言能力（capabilities），驱动 UI 按真实能力禁用输入。
+const previewSql = ref('-- 完善表单后将在此显示后端生成的 SQL');
+const caps = ref<DdlCapability | null>(null);
+let previewTimer: ReturnType<typeof setTimeout> | null = null;
+let previewSeq = 0;
 
-  // 创建原始列的映射（按列名）
-  const originalColumnsMap = new Map();
-  originalTableData.value.columns.forEach(col => {
-    originalColumnsMap.set(col.name, col);
-  });
-
-  // 检查新增和修改的列
-  formData.value.columns.forEach(newCol => {
-    const originalCol = originalColumnsMap.get(newCol.name);
-
-    if (!originalCol) {
-      // 新增列
-      diff.addedColumns.push(newCol);
-    } else if (isColumnDefinitionChanged(newCol, originalCol)) {
-      // 检查列是否被修改
-      diff.modifiedColumns.push({
-        oldColumn: originalCol,
-        newColumn: newCol
-      });
-    }
-  });
-
-  // 检查删除的列
-  const deletedColumns = originalTableData.value.columns.filter(
-    originalCol => !formData.value.columns.some(newCol => newCol.name === originalCol.name)
-  );
-
-  // 重命名检测：把改名产生的"新增 + 删除"合并为重命名，避免数据丢失
-  const renamedColumns = matchRenamedColumns(diff.addedColumns, deletedColumns);
-  if (renamedColumns.length > 0) {
-    const renamedNewNames = new Set(renamedColumns.map(r => r.newColumn));
-    const renamedOldColumns = new Set(renamedColumns.map(r => r.oldColumn));
-    diff.renamedColumns = renamedColumns;
-    diff.addedColumns = diff.addedColumns.filter(col => !renamedNewNames.has(col));
-    diff.deletedColumns = deletedColumns.filter(col => !renamedOldColumns.has(col));
-
-    // 改名同时改了定义（如长度/类型）的，额外记为修改，由 CHANGE COLUMN / ALTER COLUMN 处理
-    renamedColumns.forEach(({ oldColumn, newColumn }) => {
-      if (isColumnDefinitionChanged(newColumn, oldColumn)) {
-        diff.modifiedColumns.push({ oldColumn, newColumn });
-      }
-    });
-  } else {
-    diff.deletedColumns = deletedColumns;
+async function refreshPreview() {
+  if (!props.connection?.id) return;
+  if (props.mode === 'edit' && !props.table?.name) return;
+  if (!formData.value.tableName) return;
+  // 字段信息未填完时明确提示，而不是沿用上一次的预览结果——
+  // 否则会出现"预览显示没有检测到任何修改、保存却真的执行了语句"的错觉
+  if (formData.value.columns.some(col => col.name && !rawType(col))) {
+    previewSql.value = '-- 请完善字段信息（列名与类型）后再查看 SQL';
+    return;
   }
 
-  return diff;
+  const seq = ++previewSeq;
+  const spec = buildTableSpec();
+  try {
+    const result = props.mode === 'create'
+      ? await databaseService.previewCreateTable(props.connection.id, props.database, spec)
+      : await databaseService.previewAlterTable(props.connection.id, props.database, props.table!.name, spec);
+    if (seq !== previewSeq) return; // 过期响应丢弃（用户已继续编辑）
+    if (result?.capabilities) caps.value = result.capabilities;
+    previewSql.value = result?.ret === 0
+      ? (result.preview || (props.mode === 'create' ? '-- 完善表单后将在此显示建表 SQL' : '没有检测到任何修改'))
+      : (result?.message || '预览失败');
+  } catch (error: any) {
+    if (seq !== previewSeq) return;
+    previewSql.value = `预览失败: ${error?.message || error}`;
+  }
 }
+
+// 表单变化后防抖刷新预览（create/edit 均生效）
+watch(formData, () => {
+  if (previewTimer) clearTimeout(previewTimer);
+  previewTimer = setTimeout(refreshPreview, 500);
+}, { deep: true });
+
+// ---- 方言能力驱动的 UI 禁用（在 caps 拉到前不禁用，避免闪烁） ----
+// 表注释：SQLite 等不支持（caps.tableComment === false）
+const tableCommentDisabled = computed(() => caps.value?.tableComment === false);
+// 列注释：SQLite 等不支持
+const columnCommentDisabled = computed(() => caps.value?.columnComment === false);
+// 编辑模式改主键：CockroachDB 等不支持
+const pkDisabled = computed(() => props.mode === 'edit' && caps.value?.alterPrimaryKey === false);
+// 编辑模式改列名（改名）：ClickHouse 等不支持
+const renameDisabled = computed(() => props.mode === 'edit' && caps.value?.renameColumn === false);
+// 提交不可用：非 SQL 方言建表 / 整体不支持在线改表
+const submitDisabled = computed(() =>
+  (props.mode === 'create' && caps.value?.createTable === false) ||
+  (props.mode === 'edit' && caps.value?.alterStrategy === 'unsupported')
+);
+const submitDisabledHint = computed(() => {
+  if (props.mode === 'create' && caps.value?.createTable === false) {
+    return '该数据库类型不支持通过 SQL 建表';
+  }
+  if (props.mode === 'edit' && caps.value?.alterStrategy === 'unsupported') {
+    return '该数据库类型不支持在线修改表结构';
+  }
+  return '';
+});
+
+// 手动刷新表列表：预览默认走后端 30 秒缓存，需要最新结构（如别处刚建了同名表）时点这里全量拉取
+const refreshingTables = ref(false);
+async function refreshTableList() {
+  if (!props.connection?.id) return;
+  refreshingTables.value = true;
+  try {
+    const result = await databaseService.refreshTableCache(props.connection.id, props.database);
+    if (result?.ret !== 0) {
+      await modal.warning(result?.message || '刷新表列表失败');
+    }
+    await refreshPreview(); // 用最新表列表重算预览
+  } catch (error: any) {
+    await modal.warning(`刷新表列表失败: ${error?.message || error}`);
+  } finally {
+    refreshingTables.value = false;
+  }
+}
+
 // 添加字段
 function addColumn() {
   formData.value.columns.push({
@@ -573,332 +535,35 @@ function addColumn() {
     isAutoIncrement: false,
     comment: ''
   });
+  // 结构性改动立即刷新，不等 500ms 防抖：避免用户加完列就保存时预览仍是旧结果
+  void refreshPreview();
 }
 
 // 删除字段
 function removeColumn(index: number) {
   if (formData.value.columns.length > 1) {
     formData.value.columns.splice(index, 1);
+    // 同上：删列是结构性改动，立即刷新预览
+    void refreshPreview();
   }
 }
 
-// 主键变更处理
-function onPrimaryKeyChange(column: any, index: number) {
-  if (column.isPrimary) {
-    // 取消其他字段的主键标记
-    formData.value.columns.forEach((col, idx) => {
-      if (idx !== index) {
-        col.isPrimary = false;
-      }
-    });
-  }
-  // 如果取消主键，也取消自增
+// 主键变更处理：支持复合主键（同时勾选多列）
+function onPrimaryKeyChange(column: any) {
+  // 取消主键时同步取消自增（自增列必须是主键）
   if (!column.isPrimary) {
     column.isAutoIncrement = false;
   }
 }
 
-// 生成SQL语句
-function generateSQL(): string {
-  if (!formData.value.tableName) return '请输入表名';
-
-  const quoteIdentifier = getQuoter();
-
-  if (props.mode === 'create') {
-    const type = dbType.value;
-
-    // 创建表SQL：列定义
-    const columnsSQL = formData.value.columns
-      .filter(col => col.name && rawType(col))
-      .map(col => buildColumnDefinition(col, quoteIdentifier))
-      .join(',\n  ');
-
-    if (!columnsSQL) return '请至少完善一个字段';
-
-    // 处理主键
-    const primaryKeys = formData.value.columns
-      .filter(col => col.isPrimary && col.name)
-      .map(col => quoteIdentifier(col.name));
-
-    // SQLite 自增主键已在列定义中包含 PRIMARY KEY，不需要再添加
-    const hasSqliteAutoIncrementPrimary = type === 'sqlite' &&
-      formData.value.columns.some(col => col.isAutoIncrement && col.isPrimary && col.name);
-
-    let sql = `CREATE TABLE ${quoteIdentifier(formData.value.tableName)} (\n  ${columnsSQL}`;
-
-    if (primaryKeys.length > 0 && !hasSqliteAutoIncrementPrimary) {
-      sql += `,\n  PRIMARY KEY (${primaryKeys.join(', ')})`;
-    }
-
-    sql += '\n)';
-
-    // MySQL 表选项
-    if (isMySqlLike()) {
-      if (formData.value.tableComment) {
-        sql += ` COMMENT='${escapeSqlString(formData.value.tableComment)}'`;
-      }
-      sql += ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4';
-    }
-
-    // 不支持内联 COMMENT 的数据库，用独立语句补充注释
-    const commentStatements: string[] = [];
-    if (formData.value.tableComment && (isPostgresLike() || dbType.value === 'oracle')) {
-      commentStatements.push(`COMMENT ON TABLE ${quoteIdentifier(formData.value.tableName)} IS '${escapeSqlString(formData.value.tableComment)}'`);
-    }
-    formData.value.columns.forEach(col => {
-      if (!col.name || !col.comment) return;
-      if (isPostgresLike() || dbType.value === 'oracle') {
-        commentStatements.push(`COMMENT ON COLUMN ${quoteIdentifier(formData.value.tableName)}.${quoteIdentifier(col.name)} IS '${escapeSqlString(col.comment)}'`);
-      }
-    });
-    if (commentStatements.length > 0) {
-      sql += ';\n' + commentStatements.join(';\n');
-    }
-
-    return sql;
-  } else {
-    // 修改表：按真实差异生成（与提交给后端的 tableDiff 一致）
-    const diff = calculateTableDiff();
-    const tableName = diff.tableName;
-    const statements: string[] = [];
-
-    // 表注释
-    if (diff.tableCommentChanged && diff.tableComment) {
-      if (isMySqlLike()) {
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} COMMENT='${escapeSqlString(diff.tableComment)}'`);
-      } else if (isPostgresLike() || dbType.value === 'oracle') {
-        statements.push(`COMMENT ON TABLE ${quoteIdentifier(tableName)} IS '${escapeSqlString(diff.tableComment)}'`);
-      } else if (dbType.value === 'mssql' || dbType.value === 'sqlserver') {
-        statements.push(`EXEC sp_addextendedproperty @name=N'MS_Description', @value=N'${escapeSqlString(diff.tableComment)}', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'${escapeSqlString(tableName)}'`);
-      }
-      // SQLite 不支持表注释
-    }
-
-    // 重命名列：必须用改名语句，不能用 DROP COLUMN + ADD COLUMN（会丢原数据）
-    diff.renamedColumns.forEach(({ oldColumn, newColumn }) => {
-      if (isMySqlLike()) {
-        // MySQL 的 CHANGE COLUMN 可一次完成改名 + 改定义，并保留列位置与数据
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} CHANGE COLUMN ${quoteIdentifier(oldColumn.name)} ${quoteIdentifier(newColumn.name)} ${sqlType(newColumn)}${getTypeParams(newColumn)}${buildColumnAttributes(newColumn)}`);
-      } else if (isPostgresLike()) {
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} RENAME COLUMN ${quoteIdentifier(oldColumn.name)} TO ${quoteIdentifier(newColumn.name)}`);
-      } else if (dbType.value === 'oracle') {
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} RENAME COLUMN ${quoteIdentifier(oldColumn.name)} TO ${quoteIdentifier(newColumn.name)}`);
-      } else if (dbType.value === 'mssql' || dbType.value === 'sqlserver') {
-        statements.push(`EXEC sp_rename N'dbo.${escapeSqlString(tableName)}.${escapeSqlString(oldColumn.name)}', N'${escapeSqlString(newColumn.name)}', N'COLUMN'`);
-      } else if (dbType.value === 'sqlite') {
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} RENAME COLUMN ${quoteIdentifier(oldColumn.name)} TO ${quoteIdentifier(newColumn.name)}`);
-      }
-    });
-
-    // 新增列
-    diff.addedColumns.forEach((col: any) => {
-      const def = buildColumnAttributes(col);
-      if (dbType.value === 'oracle') {
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} ADD (${quoteIdentifier(col.name)} ${sqlType(col)}${getTypeParams(col)}${def})`);
-      } else if (dbType.value === 'mssql' || dbType.value === 'sqlserver') {
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} ADD ${quoteIdentifier(col.name)} ${sqlType(col)}${getTypeParams(col)}${def}`);
-      } else {
-        // MySQL / PostgreSQL / CockroachDB / SQLite
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} ADD COLUMN ${quoteIdentifier(col.name)} ${sqlType(col)}${getTypeParams(col)}${def}`);
-      }
-      const colComment = buildColumnCommentStatement(col);
-      if (colComment) statements.push(colComment);
-    });
-
-    // 修改列
-    diff.modifiedColumns.forEach((modification: any) => {
-      const col = modification.newColumn;
-      const def = buildColumnAttributes(col);
-      // MySQL 的 CHANGE COLUMN 已经按新定义重建过该列，无需再 MODIFY
-      if (isMySqlLike() && diff.renamedColumns.some(r => r.oldColumn === modification.oldColumn)) {
-        return;
-      }
-      if (isMySqlLike()) {
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} MODIFY COLUMN ${quoteIdentifier(col.name)} ${sqlType(col)}${getTypeParams(col)}${def}`);
-      } else if (isPostgresLike()) {
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} ALTER COLUMN ${quoteIdentifier(col.name)} TYPE ${sqlType(col)}${getTypeParams(col)}`);
-        statements.push(col.nullable
-          ? `ALTER TABLE ${quoteIdentifier(tableName)} ALTER COLUMN ${quoteIdentifier(col.name)} DROP NOT NULL`
-          : `ALTER TABLE ${quoteIdentifier(tableName)} ALTER COLUMN ${quoteIdentifier(col.name)} SET NOT NULL`);
-        if (col.defaultValue) {
-          statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} ALTER COLUMN ${quoteIdentifier(col.name)} SET DEFAULT ${formatDefaultValue(col.defaultValue, sqlType(col))}`);
-        } else {
-          statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} ALTER COLUMN ${quoteIdentifier(col.name)} DROP DEFAULT`);
-        }
-      } else if (dbType.value === 'mssql' || dbType.value === 'sqlserver') {
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} ALTER COLUMN ${quoteIdentifier(col.name)} ${sqlType(col)}${getTypeParams(col)} ${col.nullable ? 'NULL' : 'NOT NULL'}`);
-        if (col.defaultValue) {
-          statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} ADD CONSTRAINT DF_${tableName}_${col.name} DEFAULT ${formatDefaultValue(col.defaultValue, sqlType(col))} FOR ${quoteIdentifier(col.name)}`);
-        } else {
-          statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} DROP CONSTRAINT DF_${tableName}_${col.name}`);
-        }
-      } else if (dbType.value === 'oracle') {
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} MODIFY (${quoteIdentifier(col.name)} ${sqlType(col)}${getTypeParams(col)}${def})`);
-      } else if (dbType.value === 'sqlite') {
-        statements.push(`-- SQLite 不支持直接修改列 "${col.name}"，需要重建表`);
-      }
-      const colComment = buildColumnCommentStatement(col);
-      if (colComment) statements.push(colComment);
-    });
-
-    // 删除列
-    diff.deletedColumns.forEach((col: any) => {
-      if (dbType.value === 'sqlite') {
-        statements.push(`-- SQLite 不支持直接删除列 "${col.name}"，需要重建表`);
-      } else {
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} DROP COLUMN ${quoteIdentifier(col.name)}`);
-      }
-    });
-
-    // 主键变更（仅在实际发生变化时生成）
-    const oldPk = originalTableData.value.columns.filter(c => c.isPrimary).map(c => quoteIdentifier(c.name));
-    const newPk = formData.value.columns.filter(c => c.isPrimary && c.name).map(c => quoteIdentifier(c.name));
-    const pkChanged = oldPk.join(',') !== newPk.join(',');
-    if (pkChanged) {
-      if (isMySqlLike()) {
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} DROP PRIMARY KEY`);
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} ADD PRIMARY KEY (${newPk.join(', ')})`);
-      } else if (isPostgresLike() || dbType.value === 'oracle' || dbType.value === 'mssql' || dbType.value === 'sqlserver') {
-        statements.push(`-- 需要先手动删除旧主键约束，再执行：`);
-        statements.push(`ALTER TABLE ${quoteIdentifier(tableName)} ADD CONSTRAINT ${quoteIdentifier(`${tableName}_pkey`)} PRIMARY KEY (${newPk.join(', ')})`);
-      } else if (dbType.value === 'sqlite') {
-        statements.push(`-- SQLite 修改主键需要重建表`);
-      }
-    }
-
-    if (statements.length === 0) return '没有检测到任何修改';
-    return statements.join(';\n') + ';';
-  }
-}
-
-// 构建列定义中的属性部分（NULL / 默认值 / 自增 / MySQL 注释）
-function buildColumnAttributes(col: any): string {
-  const type = sqlType(col);
-  let sql = '';
-
-  const isSqliteAutoIncrementPrimary = dbType.value === 'sqlite' && col.isAutoIncrement && col.isPrimary;
-  if (!col.nullable && !isSqliteAutoIncrementPrimary) {
-    sql += ' NOT NULL';
-  }
-
-  if (col.defaultValue) {
-    sql += ` DEFAULT ${formatDefaultValue(col.defaultValue, type)}`;
-  }
-
-  if (col.isAutoIncrement) {
-    if (isMySqlLike()) {
-      sql += ' AUTO_INCREMENT';
-    } else if (isPostgresLike()) {
-      // SERIAL / BIGSERIAL 已自带自增
-      if (!type.toLowerCase().includes('serial')) {
-        sql += ' GENERATED ALWAYS AS IDENTITY';
-      }
-    } else if (dbType.value === 'sqlite') {
-      sql += col.isPrimary ? ' PRIMARY KEY AUTOINCREMENT' : ' AUTOINCREMENT';
-    } else if (dbType.value === 'oracle') {
-      if (type.toLowerCase().includes('number')) {
-        sql += ' GENERATED BY DEFAULT AS IDENTITY';
-      }
-    } else if (dbType.value === 'mssql' || dbType.value === 'sqlserver') {
-      sql += ' IDENTITY(1,1)';
-    }
-  }
-
-  // MySQL 支持内联列注释
-  if (col.comment && isMySqlLike()) {
-    sql += ` COMMENT '${escapeSqlString(col.comment)}'`;
-  }
-
-  return sql;
-}
-
-// 构建 CREATE TABLE 的列定义
-function buildColumnDefinition(col: any, quoteIdentifier: (name: string) => string): string {
-  return `${quoteIdentifier(col.name)} ${sqlType(col)}${getTypeParams(col)}${buildColumnAttributes(col)}`;
-}
-
-// 构建列注释语句（内联 COMMENT 不可用的数据库）
-function buildColumnCommentStatement(col: any): string {
-  if (!col.comment) return '';
-  const quoteIdentifier = getQuoter();
-  if (isPostgresLike() || dbType.value === 'oracle') {
-    return `COMMENT ON COLUMN ${quoteIdentifier(formData.value.tableName)}.${quoteIdentifier(col.name)} IS '${escapeSqlString(col.comment)}'`;
-  }
-  if (dbType.value === 'mssql' || dbType.value === 'sqlserver') {
-    return `EXEC sp_addextendedproperty @name=N'MS_Description', @value=N'${escapeSqlString(col.comment)}', @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'${escapeSqlString(formData.value.tableName)}', @level2type=N'COLUMN', @level2name=N'${escapeSqlString(col.name)}'`;
-  }
-  return '';
-}
-
-// 获取标识符引用函数
-function getQuoter(): (name: string) => string {
-  return (name: string) => {
-    if (!props.connection) return `"${name}"`;
-    switch (dbType.value) {
-      case 'mysql':
-      case 'mariadb':
-      case 'aurora-mysql':
-      case 'auroramysql':
-      case 'clickhouse':
-      case 'click-house':
-        return `\`${name}\``;
-      case 'postgres':
-      case 'postgresql':
-      case 'cockroachdb':
-      case 'aurora-postgres':
-      case 'aurorapostgres':
-      case 'aurora-postgresql':
-      case 'sqlite':
-        return `"${name}"`;
-      case 'oracle': return `"${name.toUpperCase()}"`;
-      case 'mssql':
-      case 'sqlserver':
-        return `[${name}]`;
-      default: return `"${name}"`;
-    }
-  };
-}
-
-// 各数据库常见的函数/关键字形式默认值（原样输出，不加引号）
-const DEFAULT_KEYWORDS = new Set([
-  'current_timestamp', 'now()', 'current_date', 'current_time',
-  'localtimestamp', 'localtime', 'current_user',
-  'sysdate', 'systimestamp', 'getdate()', 'getutcdate()',
-  'sysdatetime()', 'sysdatetimeoffset()', 'sysutcdatetime()',
-  'newid()', 'newsequentialid()', 'gen_random_uuid()', 'uuid_generate_v4()'
-]);
-
-// 格式化默认值
-function formatDefaultValue(value: any, type: string): string {
-  if (value === null || value === undefined || value === '') {
-    return 'NULL';
-  }
-
-  const raw = String(value).trim();
-  const lower = raw.toLowerCase();
-
-  // 函数/关键字形式的默认值原样输出（不加引号）
-  if (lower === 'null') return 'NULL';
-  if (DEFAULT_KEYWORDS.has(lower)) return raw;
-  // 形如 now() / getdate() / newid() 的零参函数调用
-  if (/^[a-z_][a-z0-9_]*\s*\(\s*\)$/.test(lower)) return raw;
-  // current_timestamp(6) 这类带精度参数的时间函数
-  if (/^current_timestamp\s*\(\s*\d+\s*\)$/.test(lower)) return raw;
-
-  const lowerType = type.toLowerCase();
-
-  // 数值类型不加引号
-  if (isNumericType(lowerType) && !isNaN(Number(raw))) {
-    return raw;
-  }
-
-  // 布尔类型
-  if (isBooleanType(lowerType)) {
-    return value ? 'TRUE' : 'FALSE';
-  }
-  
-  // 字符串类型加引号
-  return `'${String(value).replace(/'/g, "''")}'`;
+// 自增变更处理：自增列必须单独成主键
+//（MySQL 要求 AUTO_INCREMENT 列是索引的首列，放在复合主键的非首位会报错）
+function onAutoIncrementChange(column: any, index: number) {
+  if (!column.isAutoIncrement) return;
+  formData.value.columns.forEach((col, idx) => {
+    col.isPrimary = idx === index;
+    if (idx !== index) col.isAutoIncrement = false;
+  });
 }
 
 // 提交表单
@@ -920,45 +585,43 @@ async function submit() {
     }
 
     let result;
-    
-    if (props.mode === 'create') {
-      // 创建表：使用 SQL 语句
-      const sql = generateSQL();
-      result = await databaseService.executeQuery(
-        props.connection.id,
-        sql,
-        props.database
-      );
-    } else {
-      // 修改表：使用差异化对比
-      const tableDiff = calculateTableDiff();
-      
-      // 检查是否有实际修改
-      if (tableDiff.addedColumns.length === 0 && 
-          tableDiff.modifiedColumns.length === 0 && 
-          tableDiff.deletedColumns.length === 0 && 
-          tableDiff.renamedColumns.length === 0 && 
-          !tableDiff.tableCommentChanged) {
-        await modal.info('没有检测到任何修改');
-        return;
-      }
 
-      // 调用修改表接口（需要后端实现）
-      result = await databaseService.alterTable(
+    if (props.mode === 'create') {
+      // 创建表：同样只传目标态 TableSpec——建表 DDL 由后端 emitCreateDdl 生成
+      //（与 SQLite 重建、方言 syncTable 建表同一渲染出口），后端先做重名检测
+      result = await databaseService.executeCreateTable(
         props.connection.id,
         props.database,
-        tableDiff
+        buildTableSpec()
       );
+    } else {
+      // 修改表：只传目标态 TableSpec——对比/生成/执行全在后端 schema 引擎，
+      // 基于实时结构 diff，前端缓存过期不再可能生成错误语句
+      result = await databaseService.executeAlterTable(
+        props.connection.id,
+        props.database,
+        props.table!.name,
+        buildTableSpec()
+      );
+
+      // 后端基于实时结构判定无变更（含"改了又改回"），保持旧 UX：提示且不关弹窗
+      if (result.ret === 0 && (!result.statements || result.statements.length === 0)) {
+        await modal.info(result.message || '没有检测到任何修改');
+        return;
+      }
     }
-    
+
+    const success = result.ret === 0;
     emit('submit', {
-      success: result.ret === 0,
-      message: result.ret === 0 ? '操作成功' : '操作失败',
+      success,
+      message: success ? (result.message || '操作成功') : (result.message || '操作失败'),
       data: result.data,
       mode: props.mode
     });
-    
-    close();
+
+    // 失败时保留弹窗内容：建表重名、约束冲突等都是改一下就能重试的错误，
+    // 关掉会让用户重新填整个表单
+    if (success) close();
   } catch (error) {
     console.error('提交失败:', error);
     emit('submit', {
@@ -978,6 +641,11 @@ function close() {
 watch(() => props.visible, (newVal) => {
   if (newVal) {
     initFormData();
+    caps.value = null;
+    // 打开即拉一次后端预览（后续靠 formData watch 防抖刷新）：
+    // 首次响应带回 capabilities，弹窗一打开 UI 就能按真实方言能力禁用输入
+    previewSql.value = '-- 完善表单后将在此显示后端生成的 SQL';
+    setTimeout(refreshPreview, 0);
   }
 });
 
@@ -1036,32 +704,6 @@ function needsPrecision(column: any): boolean {
 function needsScale(column: any): boolean {
   const typeInfo = getSelectedType(column);
   return typeInfo?.requiresScale || false;
-}
-
-// 生成类型的长度/精度参数字符串，例如 "(255)" / "(10,2)"。
-// 当列未填写长度/精度但该类型必需时，回退到类型定义的默认值，避免生成非法 SQL（如 MySQL 的 VARCHAR）。
-function getTypeParams(column: any): string {
-  const raw = rawType(column);
-  if (!raw || raw.includes('(')) return ''; // 类型本身已带括号
-  const typeInfo = getSelectedType(column);
-
-  // 精度/小数位（如 DECIMAL / FLOAT / DOUBLE / NUMBER）
-  if (typeInfo?.requiresPrecision) {
-    const precision = column.precision || typeInfo.defaultPrecision;
-    const scale = column.scale || typeInfo.defaultScale;
-    if (precision == null) return '';
-    return scale != null ? `(${precision},${scale})` : `(${precision})`;
-  }
-
-  // 长度（如 VARCHAR / CHAR / INT / BINARY 等）
-  if (typeInfo?.requiresLength) {
-    const length = column.length || typeInfo.defaultLength;
-    if (length != null) {
-      return `(${length})`;
-    }
-  }
-
-  return '';
 }
 
 // 检查类型是否支持自增

@@ -388,7 +388,8 @@ function handleRouteQuery() {
           // 如果提供了表参数，等表列表加载完后自动选中该表
           if (tableName) {
             loadTablesForDatabase(connection, database, true).then(() => {
-              const tables = tableCache.value.get(dbKey) || [];
+              // 走 getTablesForDatabase 而非直接读缓存：视图不在树里，不能按表选中
+              const tables = getTablesForDatabase(connectionId, database);
               const t = tables.find((x: any) => x.name === tableName);
               if (t) {
                 selectTable(connection, database, t);
@@ -728,10 +729,23 @@ function getDatabasesForConnection(connectionId: string): string[] {
   return databaseCache.value.get(connectionId) || [];
 }
 
-function getTablesForDatabase(connectionId: string | undefined, database: string): TableEntity[] {  
+/**
+ * 是否视图。
+ * 各方言 getTables 写入的 type 值不统一（MySQL 的 information_schema 给 'BASE TABLE' / 'VIEW'，
+ * 也有方言写小写），统一按包含 VIEW 判定；未带 type 的按表处理。
+ */
+function isView(table: TableEntity | undefined | null): boolean {
+  return String(table?.type || '').toUpperCase().includes('VIEW');
+}
+
+/**
+ * 左侧树只展示表：视图不进树——点开会被当成表进入表详情（视图没有主键/索引/外键，
+ * 结构页也不适用），视图统一由数据库详情页的"视图"标签页承载（独立 getViews 接口）。
+ */
+function getTablesForDatabase(connectionId: string | undefined, database: string): TableEntity[] {
   if(!connectionId) return [];
   const dbKey = `${connectionId}-${database}`;
-  return tableCache.value.get(dbKey) || [];
+  return (tableCache.value.get(dbKey) || []).filter((t) => !isView(t));
 }
 
 function editConnection(connection: ConnectionEntity) {
@@ -1438,6 +1452,8 @@ function showToast(title: string, message: string, type: string = 'success') {
   font-size: 0.8125rem;
   color: var(--db-text-muted);
 }
+
+
 
 .node-label {
   flex: 1;

@@ -1,9 +1,14 @@
 import { ConnectionService } from '../connection.service';
 import { BaseDatabaseService } from './base.service';
-import { 
-  DatabaseEntity, 
-  TableEntity 
+import {
+  DatabaseEntity,
+  TableEntity
 } from '../../model/database.entity';
+import { getDialectInfo } from '../../core/dialect';
+import { canonicalizeTableEntity, canonicalizeTableSpec } from '../../core/schema/canonical';
+import { diffTable } from '../../core/schema/diff';
+import { ddlCapabilities, emitAlterDdl, emitCreateDdl, tableNameEquals } from '../../core/schema/ddl-emitter';
+import type { DdlCapability, DdlPreview, TableSpec } from '../../model/ddl-spec';
 import { MySQLService } from './mysql.service';
 import { PostgreSQLService } from './postgres.service';
 import { SQLiteService } from './sqlite.service';
@@ -150,13 +155,290 @@ export class DatabaseService {
     return databaseService.executeQuery(dataSource, sql);
   }
 
-  /**
-   * 修改表结构
-   */
-  async alterTable(connectionId: string, databaseName: string, tableDiff: any): Promise<any> {
+  // ---- 表列表缓存 ----
+  // 预览在用户每次输入后（防抖）都会触发，全量 getTables 对大库是重操作；
+  // 但执行前必须拿到最新列表，否则重名检测会失效 → 预览走缓存、执行强制刷新。
+  private tableListCache = new Map<string, { tables: any[]; ts: number }>();
+  private static readonly TABLE_LIST_TTL_MS = 30_000;
+
+  private tableListKey(connectionId: string, databaseName: string): string {
+    return `${connectionId}::${databaseName}`;
+  }
+
+  /** 取表列表（force = 跳过缓存全量拉取） */
+  private async getTableList(
+    connectionId: string,
+    databaseName: string,
+    force: boolean
+  ): Promise<any[]> {
+    const key = this.tableListKey(connectionId, databaseName);
+    const hit = this.tableListCache.get(key);
+    if (!force && hit && Date.now() - hit.ts < DatabaseService.TABLE_LIST_TTL_MS) {
+      return hit.tables;
+    }
     const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
-    const databaseService = this.getDatabaseService(dataSource.options.type as string);
-    return databaseService.alterTable(dataSource, databaseName, tableDiff);
+    const dbService = this.getDatabaseService(dataSource.options.type as string);
+    const tables = await dbService.getTables(dataSource, databaseName);
+    const list = Array.isArray(tables) ? tables : [];
+    this.tableListCache.set(key, { tables: list, ts: Date.now() });
+    return list;
+  }
+
+  /** 失效缓存（建表/改表成功后表列表已变化） */
+  private invalidateTableList(connectionId: string, databaseName: string): void {
+    this.tableListCache.delete(this.tableListKey(connectionId, databaseName));
+  }
+
+  /** 手动刷新表列表（全量拉取，忽略缓存） */
+  async refreshTableCache(
+    connectionId: string,
+    databaseName: string
+  ): Promise<{ ret: number; message: string }> {
+    try {
+      const tables = await this.getTableList(connectionId, databaseName, true);
+      return { ret: 0, message: `表列表已刷新（${tables.length} 张表）` };
+    } catch (error) {
+      return { ret: 1, message: `刷新表列表失败: ${error instanceof Error ? error.message : String(error)}` };
+    }
+  }
+
+  /**
+   * 目标态 TableSpec 的静态校验（建表/改表共用）
+   */
+  private validateTableSpec(spec: TableSpec): string {
+    if (!spec || typeof spec.name !== 'string' || !spec.name.trim()) {
+      throw new Error('目标表名不能为空');
+    }
+    if (!Array.isArray(spec.columns) || spec.columns.length === 0) {
+      throw new Error('目标结构至少需要一列');
+    }
+    const names = new Set(spec.columns.map((c) => c.name));
+    if (names.size !== spec.columns.length) {
+      throw new Error('目标结构存在重名列');
+    }
+    for (const pk of spec.primaryKey || []) {
+      if (!names.has(pk)) throw new Error(`主键列 "${pk}" 不在目标结构中`);
+    }
+    return spec.name.trim();
+  }
+
+  /**
+   * 建表计划（preview/execute 的单一出口）：目标态 TableSpec -> 建表 DDL。
+   * 与改表共用 emitCreateDdl——SQLite 重建临时表、方言 syncTable 建表、
+   * 前端建表全部走同一渲染出口，CREATE TABLE 不再有第二份方言实现。
+   */
+  private async buildCreatePlan(
+    connectionId: string,
+    databaseName: string,
+    spec: TableSpec,
+    forceRefresh = false
+  ) {
+    const tableName = this.validateTableSpec(spec);
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+    const type = dataSource.options.type as string;
+    const kind = getDialectInfo(type).kind;
+    const dbService = this.getDatabaseService(type);
+    const caps = ddlCapabilities(kind);
+
+    // 方言不支持建表：作为计划内错误返回（而非抛出）——capabilities 仍要带回前端用于禁用 UI
+    if (!caps.createTable) {
+      return { dataSource, kind, caps, dbService, statements: [] as string[], error: `该数据库类型（${kind}）不支持通过 SQL 建表` };
+    }
+
+    // 重名检测：目标态与实时结构冲突（等价 409 语义）。
+    // 预览走缓存避免每次输入都全量拉表；执行前必须 force 刷新，否则缓存会让重名检测失效。
+    const tables = await this.getTableList(connectionId, databaseName, forceRefresh);
+    if (tables.some((t) => tableNameEquals(kind, String(t?.name ?? ''), tableName))) {
+      return { dataSource, kind, caps, dbService, statements: [] as string[], error: `表 "${tableName}" 已存在` };
+    }
+
+    const desired = canonicalizeTableSpec(spec);
+    const statements = emitCreateDdl(kind, desired, { mssqlDatabase: databaseName });
+    return { dataSource, kind, caps, dbService, statements, error: '' };
+  }
+
+  /**
+   * 预览建表：纯计算不执行。与执行同一出口生成语句，所见即所得。
+   */
+  async previewCreateTable(
+    connectionId: string,
+    databaseName: string,
+    spec: TableSpec
+  ): Promise<DdlPreview & { ret: number; message: string; capabilities: DdlCapability | null }> {
+    try {
+      const plan = await this.buildCreatePlan(connectionId, databaseName, spec);
+      const previewText = plan.statements.length > 0 ? plan.statements.join(';\n') + ';' : '';
+      return {
+        ret: plan.error ? 1 : 0,
+        message: plan.error || '预览成功',
+        statements: plan.statements,
+        preview: previewText,
+        changeSet: null,
+        capabilities: plan.caps
+      };
+    } catch (error) {
+      // 与 executeCreateTable 对称：预览失败也走业务失败返回（ret 1），而非抛成 HTTP 500
+      return {
+        ret: 1,
+        message: `预览失败: ${error instanceof Error ? error.message : String(error)}`,
+        statements: [],
+        preview: '',
+        changeSet: null,
+        capabilities: null
+      };
+    }
+  }
+
+  /**
+   * 执行建表：与预览同一出口生成语句后执行（事务包裹）。
+   */
+  async executeCreateTable(
+    connectionId: string,
+    databaseName: string,
+    spec: TableSpec
+  ): Promise<{ ret: number; message: string; statements: string[] }> {
+    try {
+      // 执行前强制刷新表列表：重名检测必须基于最新结构，不能用预览的缓存
+      const plan = await this.buildCreatePlan(connectionId, databaseName, spec, true);
+      if (plan.error) {
+        return { ret: 1, message: plan.error, statements: [] };
+      }
+      if (plan.statements.length === 0) {
+        return { ret: 1, message: '未能生成建表语句', statements: [] };
+      }
+      await plan.dbService.executeBatchQuery(plan.dataSource, plan.statements, { useTransaction: true });
+      this.invalidateTableList(connectionId, databaseName); // 表列表已变化
+      return { ret: 0, message: '表创建成功', statements: plan.statements };
+    } catch (error) {
+      console.error('执行建表失败:', error);
+      return { ret: 1, message: `创建表失败: ${error instanceof Error ? error.message : String(error)}`, statements: [] };
+    }
+  }
+
+  /**
+   * 表结构变更计划（preview/execute 的单一出口）。
+   *
+   * 前端只传目标态 TableSpec；原始态由后端重读实时结构获得——
+   * diff 永远基于服务端最新结构，前端缓存过期不再可能生成错误语句。
+   */
+  private async buildAlterPlan(
+    connectionId: string,
+    databaseName: string,
+    tableName: string,
+    spec: TableSpec
+  ) {
+    this.validateTableSpec(spec);
+
+    const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
+    const type = dataSource.options.type as string;
+    const kind = getDialectInfo(type).kind;
+    const dbService = this.getDatabaseService(type);
+    const caps = ddlCapabilities(kind);
+
+    // 实时结构 = 原始态（canonicalizeTableEntity 直接消化 ColumnEntity[]）
+    const columns = await dbService.getColumns(dataSource, databaseName, tableName);
+    if (!Array.isArray(columns) || columns.length === 0) {
+      throw new Error(`表 "${tableName}" 不存在或无法读取列信息`);
+    }
+    // 表列表仅用于取表注释（原始态以 getColumns 为准），走缓存即可
+    const tables = await this.getTableList(connectionId, databaseName, false);
+    const tableEntity = tables.find((t) => tableNameEquals(kind, String(t?.name ?? ''), tableName));
+
+    const original = canonicalizeTableEntity({
+      name: tableName,
+      comment: (tableEntity?.comment as string) ?? '',
+      columns
+    });
+    const desired = canonicalizeTableSpec(spec);
+    const changeSet = diffTable(original, desired);
+
+    // 方言能力之外的变更：作为计划内错误返回，不生成注定失败的语句
+    //（如 SQL Server 的主键约束名是自动生成的，DROP CONSTRAINT 无从构造）
+    let error = '';
+    if (changeSet.primaryKey && !caps.alterPrimaryKey) {
+      error = `该数据库类型（${kind}）不支持修改主键`;
+    }
+
+    // SQL Server：删除现有主键必须知道真实的约束名（PK__<table>__<hash>），回查系统表获取。
+    // 仅在「已有主键需要 DROP」时才必需；纯新增主键的约束名由我们自己指定。
+    let mssqlPkConstraintName: string | undefined;
+    if (!error && kind === 'mssql' && changeSet.primaryKey && changeSet.primaryKey.from.length > 0) {
+      const svc = dbService as any;
+      if (typeof svc.getPrimaryKeyConstraintName === 'function') {
+        mssqlPkConstraintName = (await svc.getPrimaryKeyConstraintName(dataSource, databaseName, tableName)) || undefined;
+      }
+      if (!mssqlPkConstraintName) {
+        error = '无法定位该表的主键约束名，无法修改主键';
+      }
+    }
+
+    const statements = error
+      ? []
+      : emitAlterDdl(kind, original, desired, mssqlPkConstraintName ? { mssqlPkConstraintName } : undefined);
+    return { dataSource, kind, caps, dbService, statements, changeSet, error };
+  }
+
+  /**
+   * 预览表结构变更：纯计算不执行。preview 与 execute 共用 buildAlterPlan，
+   * 所见即所得。
+   */
+  async previewAlterTable(
+    connectionId: string,
+    databaseName: string,
+    tableName: string,
+    spec: TableSpec
+  ): Promise<DdlPreview & { ret: number; message: string; capabilities: DdlCapability | null }> {
+    try {
+      const plan = await this.buildAlterPlan(connectionId, databaseName, tableName, spec);
+      const previewText = plan.statements.length > 0 ? plan.statements.join(';\n') + ';' : '';
+      return {
+        ret: plan.error ? 1 : 0,
+        message: plan.error || '预览成功',
+        statements: plan.statements,
+        preview: previewText,
+        changeSet: plan.changeSet,
+        capabilities: plan.caps
+      };
+    } catch (error) {
+      // 与 executeAlterTable 对称：预览失败走业务失败返回（ret 1），而非抛成 HTTP 500
+      return {
+        ret: 1,
+        message: `预览失败: ${error instanceof Error ? error.message : String(error)}`,
+        statements: [],
+        preview: '',
+        changeSet: null,
+        capabilities: null
+      };
+    }
+  }
+
+  /**
+   * 执行表结构变更：与预览同一出口生成语句后执行（事务包裹，失败整体回滚）。
+   */
+  async executeAlterTable(
+    connectionId: string,
+    databaseName: string,
+    tableName: string,
+    spec: TableSpec
+  ): Promise<{ ret: number; message: string; statements: string[] }> {
+    try {
+      const plan = await this.buildAlterPlan(connectionId, databaseName, tableName, spec);
+      if (plan.error) {
+        return { ret: 1, message: plan.error, statements: [] };
+      }
+      if (plan.statements.length === 0) {
+        return { ret: 0, message: '没有检测到任何修改', statements: [] };
+      }
+      if (plan.caps.alterStrategy === 'unsupported') {
+        return { ret: 1, message: `该数据库类型（${plan.kind}）不支持在线修改表结构`, statements: [] };
+      }
+      await plan.dbService.executeBatchQuery(plan.dataSource, plan.statements, { useTransaction: true });
+      this.invalidateTableList(connectionId, databaseName); // 表结构/表名可能已变化
+      return { ret: 0, message: '表结构修改成功', statements: plan.statements };
+    } catch (error) {
+      console.error('执行表结构变更失败:', error);
+      return { ret: 1, message: `修改表结构失败: ${error instanceof Error ? error.message : String(error)}`, statements: [] };
+    }
   }
 
   /**

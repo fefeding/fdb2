@@ -245,22 +245,48 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
       return exportPath;
     }
 
-    // /api/database/saveTableStructure
-    if (pathname === '/api/database/saveTableStructure') {
-      const { id, database, table, columns } = body;
-      if (!id || !database || !table || !columns) throw Error('Missing parameters');
+    // /api/database/refreshTableCache（手动全量拉取表列表，忽略预览缓存）
+    if (pathname === '/api/database/refreshTableCache') {
+      const { id, database } = body;
+      if (!id || !database) throw Error('Missing parameters');
 
-      const sql = generateTableSQL(table.name, columns, table);
-      const result = await databaseService.executeQuery(id, sql, database);
-      return { success: true, sql, result };
+      const result = await databaseService.refreshTableCache(id, database);
+      return result;
     }
 
-    // /api/database/alterTable
-    if (pathname === '/api/database/alterTable') {
-      const { id, database, tableDiff } = body;
-      if (!id || !database || !tableDiff) throw Error('Missing parameters');
+    // /api/database/previewCreateTable（纯计算：目标态 TableSpec -> 建表 DDL 与方言能力）
+    if (pathname === '/api/database/previewCreateTable') {
+      const { id, database, spec } = body;
+      if (!id || !database || !spec) throw Error('Missing parameters');
 
-      const result = await databaseService.alterTable(id, database, tableDiff);
+      const result = await databaseService.previewCreateTable(id, database, spec);
+      return result;
+    }
+
+    // /api/database/executeCreateTable（执行：后端检测重名后生成并执行建表语句）
+    if (pathname === '/api/database/executeCreateTable') {
+      const { id, database, spec } = body;
+      if (!id || !database || !spec) throw Error('Missing parameters');
+
+      const result = await databaseService.executeCreateTable(id, database, spec);
+      return result;
+    }
+
+    // /api/database/previewAlterTable（纯计算：目标态 TableSpec -> DDL 语句与变更集）
+    if (pathname === '/api/database/previewAlterTable') {
+      const { id, database, tableName, spec } = body;
+      if (!id || !database || !tableName || !spec) throw Error('Missing parameters');
+
+      const result = await databaseService.previewAlterTable(id, database, tableName, spec);
+      return result;
+    }
+
+    // /api/database/executeAlterTable（执行：后端重读实时结构生成并执行，所见即所得）
+    if (pathname === '/api/database/executeAlterTable') {
+      const { id, database, tableName, spec } = body;
+      if (!id || !database || !tableName || !spec) throw Error('Missing parameters');
+
+      const result = await databaseService.executeAlterTable(id, database, tableName, spec);
       return result;
     }
 
@@ -378,7 +404,11 @@ export async function handleDatabaseRoutes(pathname: string, body: any) {
       // 使用数据库服务生成正确的CREATE VIEW语法
       const dataSource = await databaseService['connectionService'].getActiveConnection(id, database);
       const dbService = databaseService['getDatabaseService'](dataSource.options.type as string);
-      const sql = `CREATE VIEW ${dbService['quoteIdentifier'](viewName)} AS ${definition}`;
+      // 防御：若传入的已是完整 CREATE VIEW 语句（SQLite/Oracle 的 getViewDefinition 形态），
+      // 直接执行，避免拼成 `CREATE VIEW v AS CREATE VIEW v AS ...`
+      const def = String(definition).trim();
+      const isFullCreate = /^CREATE\s+(?:OR\s+REPLACE\s+)?(?:ALGORITHM\s*=\s*\w+\s+)?VIEW\s/is.test(def);
+      const sql = isFullCreate ? def : `CREATE VIEW ${dbService['quoteIdentifier'](viewName)} AS ${def}`;
       const result = await databaseService.executeQuery(id, sql, database);
       return { success: true, sql, result };
     }
@@ -445,115 +475,6 @@ function convertToCSV(data: any[]): string {
   return [csvHeaders, ...csvRows].join('\n');
 }
 
-function generateTableSQL(tableName: string, columns: any[], tableInfo: any): string {
-  let sql = `CREATE TABLE \`${tableName}\` (\n`;
-
-  const primaryKeys = [] as Array<string>;
-
-  columns.forEach((column, index) => {
-    const columnDef = [] as Array<string>;
-    columnDef.push(`  \`${column.name}\``);
-    columnDef.push(getColumnTypeDefinition(column));
-
-    if (!column.nullable) {
-      columnDef.push('NOT NULL');
-    }
-
-    if (column.defaultValue !== null && column.defaultValue !== '') {
-      columnDef.push(`DEFAULT ${formatDefaultValue(column.defaultValue, column.type)}`);
-    }
-
-    if (column.isAutoIncrement) {
-      columnDef.push('AUTO_INCREMENT');
-    }
-
-    if (column.comment) {
-      columnDef.push(`COMMENT '${column.comment}'`);
-    }
-
-    sql += columnDef.join(' ');
-
-    if (index < columns.length - 1) {
-      sql += ',\n';
-    }
-
-    if (column.isPrimary) {
-      primaryKeys.push(column.name);
-    }
-  });
-
-  // 添加主键约束
-  if (primaryKeys.length > 0) {
-    sql += `,\n  PRIMARY KEY (\`${primaryKeys.join('`, `')}\`)`;
-  }
-
-  sql += `\n) ENGINE=${tableInfo.engine} DEFAULT CHARSET=${tableInfo.charset} COLLATE=${tableInfo.collation}`;
-
-  if (tableInfo.comment) {
-    sql += ` COMMENT='${tableInfo.comment}'`;
-  }
-
-  sql += ';';
-
-  return sql;
-}
-
-function generateAlterTableSQL(tableName: string, newColumns: any[], oldColumns: any[] = []): string[] {
-  const statements = [] as Array<string>;
-
-  // 简化实现：删除所有列，重新添加列
-  // 注意：实际生产中需要更复杂的对比逻辑
-  statements.push(`DROP TABLE IF EXISTS \`${tableName}_temp\`;`);
-
-  let createTempSQL = `CREATE TABLE \`${tableName}_temp\` (\n`;
-  const primaryKeys = [] as Array<string>;
-
-  newColumns.forEach((column, index) => {
-    const columnDef = [] as Array<string>;
-    columnDef.push(`  \`${column.name}\``);
-    columnDef.push(getColumnTypeDefinition(column));
-
-    if (!column.nullable) {
-      columnDef.push('NOT NULL');
-    }
-
-    if (column.defaultValue !== null && column.defaultValue !== '') {
-      columnDef.push(`DEFAULT ${formatDefaultValue(column.defaultValue, column.type)}`);
-    }
-
-    if (column.isAutoIncrement) {
-      columnDef.push('AUTO_INCREMENT');
-    }
-
-    if (column.comment) {
-      columnDef.push(`COMMENT '${column.comment}'`);
-    }
-
-    createTempSQL += columnDef.join(' ');
-
-    if (index < newColumns.length - 1) {
-      createTempSQL += ',\n';
-    }
-
-    if (column.isPrimary) {
-      primaryKeys.push(column.name);
-    }
-  });
-
-  if (primaryKeys.length > 0) {
-    createTempSQL += `,\n  PRIMARY KEY (\`${primaryKeys.join('`, `')}\`)`;
-  }
-
-  createTempSQL += '\n);';
-  statements.push(createTempSQL);
-
-  // 复制数据和重命名
-  statements.push(`INSERT INTO \`${tableName}_temp\` SELECT * FROM \`${tableName}\`;`);
-  statements.push(`DROP TABLE \`${tableName}\`;`);
-  statements.push(`RENAME TABLE \`${tableName}_temp\` TO \`${tableName}\`;`);
-
-  return statements;
-}
 
 function generateInsertSQL(dbType: string, tableName: string, data: any, dbService: any, columns?: any[]): string {
   // 如果提供了列信息，过滤掉自增字段
@@ -606,41 +527,6 @@ function generateDeleteSQL(dbType: string, tableName: string, where: any, dbServ
     .join(' AND ');
 
   return `DELETE FROM ${dbService.quoteIdentifier(tableName)} WHERE ${whereClause};`;
-}
-
-function getColumnTypeDefinition(column: any): string {
-  let type = column.type.toUpperCase();
-
-  if (needsLength(column.type) && column.length) {
-    type += `(${column.length})`;
-  }
-
-  return type;
-}
-
-function needsLength(type: string): boolean {
-  const typesNeedingLength = ['varchar', 'char', 'decimal', 'float', 'double'];
-  return typesNeedingLength.some(t => type.startsWith(t));
-}
-
-function formatDefaultValue(value: string, type: string): string {
-  if (value === '' || value === null || value === undefined) {
-    return 'NULL';
-  }
-
-  if (isNumberType(type) || ['float', 'double', 'decimal'].includes(type)) {
-    return value;
-  }
-
-  // 特殊关键字处理
-  if (value.toString().toUpperCase() === 'CURRENT_TIMESTAMP' ||
-    value.toString().toUpperCase() === 'NOW()' ||
-    value.toString().toUpperCase() === 'CURRENT_DATE') {
-    return value.toString().toUpperCase();
-  }
-
-  // 字符串类型需要加引号
-  return `'${value.replace(/'/g, "''")}'`;
 }
 
 function formatValue(dbType: string, value: any): string {

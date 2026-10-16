@@ -373,11 +373,6 @@ export abstract class BaseDatabaseService {
   abstract exportTableDataToExcel(dataSource: DataSource, databaseName: string, tableName: string, options?: any): Promise<string>;
 
   /**
-   * 修改表结构 - 子类实现
-   */
-  abstract alterTable(dataSource: DataSource, databaseName: string, tableDiff: any): Promise<any>;
-
-  /**
    * 批量插入数据 - 子类实现
    */
   abstract bulkInsert(dataSource: DataSource, databaseName: string, tableName: string, data: any[]): Promise<void>;

@@ -6,60 +6,18 @@
  * 这里按数据库补齐默认参数；类型本身已带括号（如 ENUM('a','b')、DECIMAL(10,2)）时原样返回。
  */
 
-interface TypeDefault {
-  length?: number;
-  precision?: number;
-  scale?: number;
+/**
+ * 默认参数已统一到 core/schema/type-defaults（schema 引擎与此处共用同一份），
+ * 避免两处参数漂移；本文件只做 databaseType → DialectKind 的适配。
+ */
+import { getDialectInfo } from '../../core/dialect';
+import { typeParamDefault } from '../../core/schema/type-defaults';
+
+/** 把用户/驱动传入的 databaseType（可能是 mariadb、sqlserver 等别名）归一为方言 */
+function defaultFor(databaseType: string, type: string) {
+  return typeParamDefault(getDialectInfo(databaseType).kind, type);
 }
 
-/**
- * 各数据库中「缺参即非法」的类型的默认参数。
- * SQLite 的 VARCHAR 等不带长度也合法，因此不在此列。
- */
-const TYPE_DEFAULTS: Record<string, Record<string, TypeDefault>> = {
-  mysql: {
-    tinyint: { length: 4 },
-    smallint: { length: 6 },
-    mediumint: { length: 9 },
-    int: { length: 11 },
-    integer: { length: 11 },
-    bigint: { length: 20 },
-    decimal: { precision: 10, scale: 2 },
-    float: { precision: 10, scale: 2 },
-    double: { precision: 16, scale: 4 },
-    bit: { length: 1 },
-    char: { length: 1 },
-    varchar: { length: 255 },
-    binary: { length: 1 },
-    varbinary: { length: 255 }
-  },
-  postgres: {
-    decimal: { precision: 10, scale: 2 },
-    numeric: { precision: 10, scale: 2 },
-    'character varying': { length: 255 },
-    varchar: { length: 255 },
-    character: { length: 1 },
-    char: { length: 1 }
-  },
-  mssql: {
-    decimal: { precision: 18, scale: 0 },
-    numeric: { precision: 18, scale: 0 },
-    float: { precision: 53 },
-    char: { length: 1 },
-    varchar: { length: 255 },
-    nchar: { length: 1 },
-    nvarchar: { length: 255 },
-    binary: { length: 1 },
-    varbinary: { length: 255 }
-  },
-  oracle: {
-    char: { length: 1 },
-    nchar: { length: 1 },
-    varchar2: { length: 4000 },
-    nvarchar2: { length: 2000 },
-    raw: { length: 2000 }
-  }
-};
 
 /** 类型是否已自带参数（如 VARCHAR(255)、DECIMAL(10,2)、ENUM('a','b')） */
 export function hasTypeParams(type: string): boolean {
@@ -99,7 +57,7 @@ export function buildColumnType(
 ): string {
   if (!type || hasTypeParams(type)) return type;
 
-  const defaults = TYPE_DEFAULTS[String(databaseType || '').toLowerCase()]?.[baseTypeName(type)];
+  const defaults = defaultFor(databaseType, baseTypeName(type));
   if (!defaults) return type;
 
   if (defaults.precision != null) {

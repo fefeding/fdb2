@@ -13,6 +13,9 @@ dist-ssr
 coverage
 *.local
 
+# TypeScript 增量构建缓存
+*.tsbuildinfo
+
 /cypress/videos/
 /cypress/screenshots/
 

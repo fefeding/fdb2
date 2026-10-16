@@ -205,14 +205,14 @@
                     </td>
                     <td>{{ column.comment || '-' }}</td>
                     <td>
-                      <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary btn-sm" @click="editColumn(column)">
-                          <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-outline-danger btn-sm" @click="deleteColumn(column)">
-                          <i class="bi bi-trash"></i>
-                        </button>
-                      </div>
+                      <!-- 列的增删改统一在"修改表结构"中完成，此处只保留入口 -->
+                      <button
+                        class="btn btn-outline-primary btn-sm"
+                        :title="$t('tableDetail.modifyStructure')"
+                        @click="editColumn(column)"
+                      >
+                        <i class="bi bi-pencil"></i>
+                      </button>
                     </td>
                   </tr>
                 </tbody>
@@ -677,20 +677,6 @@ function editColumn(column: any) {
   // 打开列编辑器
   tableEditorMode.value = 'edit';
   showTableEditor.value = true;
-}
-
-function deleteColumn(column: any) {
-  // 删除列
-  modal.confirm(t('tableDetail.confirmDeleteColumn', { name: column.name }), {
-    confirmButtonText: '删除',
-    cancelButtonText: '取消',
-    type: 'danger'
-  }).then(result => {
-    if (result) {
-      // 这里可以调用API删除列
-      emit('refresh-structure');
-    }
-  });
 }
 
 function editIndex(index: any) {

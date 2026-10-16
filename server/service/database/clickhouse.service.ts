@@ -719,58 +719,6 @@ export class ClickHouseService extends BaseDatabaseService {
     return type;
   }
 
-  /**
-   * 修改表结构
-   * ClickHouse支持 ADD/MODIFY/DROP/COMMENT COLUMN，但不支持事务。
-   */
-  async alterTable(dataSource: DataSource, databaseName: string, tableDiff: any): Promise<any> {
-    try {
-      const tableName = tableDiff.tableName;
-      const qualified = `\`${this.escape(databaseName)}\`.\`${this.escape(tableName)}\``;
-      const sqlStatements: string[] = [];
-
-      // 添加新列
-      (tableDiff.addedColumns || []).forEach((column: any) => {
-        let columnSQL = `ALTER TABLE ${qualified} ADD COLUMN \`${this.escape(column.name)}\` ${this.resolveColumnType(column)}`;
-        if (column.defaultValue) {
-          const upperDefault = column.defaultValue.toString().toUpperCase();
-          if (['CURRENT_TIMESTAMP', 'NOW()', 'TODAY()'].includes(upperDefault)) {
-            columnSQL += ` DEFAULT ${upperDefault}`;
-          } else {
-            columnSQL += ` DEFAULT ${ClickHouseConnection.escapeLiteral(column.defaultValue)}`;
-          }
-        }
-        columnSQL += ';';
-        sqlStatements.push(columnSQL);
-        if (column.comment) {
-          sqlStatements.push(`ALTER TABLE ${qualified} COMMENT COLUMN \`${this.escape(column.name)}\` '${this.escape(column.comment)}';`);
-        }
-      });
-
-      // 修改列
-      (tableDiff.modifiedColumns || []).forEach((modification: any) => {
-        const { newColumn } = modification;
-        sqlStatements.push(`ALTER TABLE ${qualified} MODIFY COLUMN \`${this.escape(newColumn.name)}\` ${this.resolveColumnType(newColumn)};`);
-        if (newColumn.comment) {
-          sqlStatements.push(`ALTER TABLE ${qualified} COMMENT COLUMN \`${this.escape(newColumn.name)}\` '${this.escape(newColumn.comment)}';`);
-        }
-      });
-
-      // 删除列
-      (tableDiff.deletedColumns || []).forEach((column: any) => {
-        sqlStatements.push(`ALTER TABLE ${qualified} DROP COLUMN \`${this.escape(column.name)}\`;`);
-      });
-
-      for (const statement of sqlStatements) {
-        await (dataSource as any).query(statement);
-      }
-
-      return { ret: 0, message: '表结构修改成功' };
-    } catch (error: any) {
-      console.error('ClickHouse修改表结构失败:', error);
-      return { ret: 1, message: `修改表结构失败: ${error?.message || error}` };
-    }
-  }
 
   /**
    * 批量插入数据

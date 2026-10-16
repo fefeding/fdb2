@@ -21,7 +21,9 @@
         </div>
         <div class="database-stats">
           <div class="stat-item">
-            <div class="stat-value">{{ databaseInfo?.tableCount || 0 }}</div>
+            <!-- 用过滤后的表列表计数：databaseInfo.tableCount 来自后端 getTables，含视图，
+                 会与列表（已排除视图，视图在"视图"标签页）对不上 -->
+            <div class="stat-value">{{ (tables || []).length }}</div>
             <div class="stat-label">{{ $t('connection.tableCount') }}</div>
           </div>
           <div class="stat-item">
@@ -622,19 +624,48 @@ function showCreateViewModal() {
   showCreateView.value = true;
 }
 
+/**
+ * 提取对象定义文本（视图/存储过程共用）。
+ * 后端定义类接口返回的就是 SQL 字符串，并统一包装成 { ret, msg, data }；
+ * 这里兼容「字符串 / 数组 / { definition }」三种形态，避免取值路径变化导致编辑框空白。
+ */
+function extractDefinition(result: any): string {
+  const raw = typeof result === 'string' ? result : result?.data;
+  if (typeof raw === 'string') return raw;
+  if (Array.isArray(raw)) return String(raw[0]?.definition ?? raw[0]?.ddl ?? '');
+  if (raw && typeof raw === 'object') return String(raw.definition ?? raw.ddl ?? raw.sql ?? '');
+  return '';
+}
+
 async function editView(view: any) {
   try {
     const result = await databaseService.getViewDefinition(props.connection?.id || '', props.database, view.name);
+    const definition = extractDefinition(result);
     editingView.value = {
       name: view.name,
-      definition: result.data?.[0]?.definition || '',
+      definition,
       comment: view.comment
     };
     showCreateView.value = true;
+    if (!definition) {
+      modal.warning(t('databaseDetail.getViewDefFailed'));
+    }
   } catch (error) {
     console.error('获取视图定义失败:', error);
     modal.error(t('databaseDetail.getViewDefFailed'));
   }
+}
+
+/**
+ * 视图定义归一为「AS 之后的部分」。
+ * 各方言 getViewDefinition 返回的形态不同：MySQL/PG/MSSQL 只给 SELECT 片段，
+ * 而 SQLite/Oracle 给的是完整 CREATE VIEW 语句——直接回传会被后端再拼一次
+ * `CREATE VIEW <name> AS ...` 而变成语法错误，改名时还会沿用旧视图名。
+ */
+function normalizeViewDefinition(definition: string): string {
+  const s = String(definition || '').trim();
+  const m = /^CREATE\s+(?:OR\s+REPLACE\s+)?(?:ALGORITHM\s*=\s*\w+\s+)?(?:DEFINER\s*=\s*\S+\s+)?(?:SQL\s+SECURITY\s+\w+\s+)?VIEW\s+.+?\s+AS\s+/is.exec(s);
+  return m ? s.slice(m[0].length).trim() : s;
 }
 
 async function createOrUpdateView() {
@@ -644,6 +675,7 @@ async function createOrUpdateView() {
   }
 
   try {
+    const definition = normalizeViewDefinition(editingView.value.definition);
     
     if (views.value.some(v => v.name === editingView.value.name)) {
       // 编辑视图 - 先删除再创建
@@ -654,7 +686,7 @@ async function createOrUpdateView() {
       props.connection?.id || '',
       props.database,
       editingView.value.name,
-      editingView.value.definition
+      definition
     );
     
     if (result.success || result.ret === 0) {
@@ -717,12 +749,16 @@ function showCreateProcedureModal() {
 async function editProcedure(procedure: any) {
   try {
     const result = await databaseService.getProcedureDefinition(props.connection?.id || '', props.database, procedure.name);
+    const definition = extractDefinition(result);
     editingProcedure.value = {
       name: procedure.name,
-      definition: result.data?.[0]?.definition || '',
+      definition,
       comment: procedure.comment
     };
     showCreateProcedure.value = true;
+    if (!definition) {
+      modal.warning(t('databaseDetail.getProcedureDefFailed'));
+    }
   } catch (error) {
     console.error('获取存储过程定义失败:', error);
     modal.error(t('databaseDetail.getProcedureDefFailed'));

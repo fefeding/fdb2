@@ -1,5 +1,6 @@
 import { request } from '@/service/base';
 import type { ConnectionEntity, DatabaseEntity, TableEntity, ColumnEntity, IndexEntity, ForeignKeyEntity } from '@/typings/database';
+import type { TableSpec } from '../../server/model/ddl-spec';
 
 /**
  * 数据库连接管理服务
@@ -236,34 +237,79 @@ export class DatabaseService {
   }
 
   /**
-   * 保存表结构（新建表）
+   * 手动刷新表列表缓存（全量拉取，用于重名检测等需要最新结构的场景）
    */
-  async saveTableStructure(
+  async refreshTableCache(
     connectionId: string,
-    database: string,
-    table: any,
-    columns: any[]
+    database: string
   ) {
-    return request('/api/database/saveTableStructure', {
+    return request('/api/database/refreshTableCache', {
       id: connectionId,
-      database,
-      table,
-      columns
+      database
     });
   }
 
   /**
-   * 修改表结构
+   * 预览建表（目标态 TableSpec -> 建表 DDL 与方言能力，不执行）
    */
-  async alterTable(
+  async previewCreateTable(
     connectionId: string,
     database: string,
-    tableDiff: any
+    spec: TableSpec
   ) {
-    return request('/api/database/alterTable', {
+    return request('/api/database/previewCreateTable', {
       id: connectionId,
       database,
-      tableDiff
+      spec
+    });
+  }
+
+  /**
+   * 执行建表（后端检测重名后生成并执行）
+   */
+  async executeCreateTable(
+    connectionId: string,
+    database: string,
+    spec: TableSpec
+  ) {
+    return request('/api/database/executeCreateTable', {
+      id: connectionId,
+      database,
+      spec
+    });
+  }
+
+  /**
+   * 预览表结构变更（目标态 TableSpec -> DDL 语句与变更集，不执行）
+   */
+  async previewAlterTable(
+    connectionId: string,
+    database: string,
+    tableName: string,
+    spec: TableSpec
+  ) {
+    return request('/api/database/previewAlterTable', {
+      id: connectionId,
+      database,
+      tableName,
+      spec
+    });
+  }
+
+  /**
+   * 执行表结构变更（后端重读实时结构生成语句并执行）
+   */
+  async executeAlterTable(
+    connectionId: string,
+    database: string,
+    tableName: string,
+    spec: TableSpec
+  ) {
+    return request('/api/database/executeAlterTable', {
+      id: connectionId,
+      database,
+      tableName,
+      spec
     });
   }
 

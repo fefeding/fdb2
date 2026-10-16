@@ -9,6 +9,8 @@ import {
   IndexEntity,
   ForeignKeyEntity
 } from '../../model/database.entity';
+import { canonicalizeTableEntity } from '../../core/schema/canonical';
+import { emitCreateDdl } from '../../core/schema/ddl-emitter';
 
 /**
  * SQLite数据库服务实现
@@ -557,154 +559,6 @@ export class SQLiteService extends BaseDatabaseService {
     }
   }
 
-  /**
-   * 修改表结构
-   * SQLite的ALTER TABLE操作非常有限，需要通过重建表来实现复杂的表结构修改
-   */
-  async alterTable(dataSource: DataSource, databaseName: string, tableDiff: any): Promise<any> {
-    try {
-      const tableName = tableDiff.tableName;
-      const sqlStatements: string[] = [];
-
-      const renamedColumns = tableDiff.renamedColumns || [];
-      const modifiedColumns = tableDiff.modifiedColumns || [];
-      const deletedColumns = tableDiff.deletedColumns || [];
-      const addedColumns = tableDiff.addedColumns || [];
-
-      // SQLite不支持直接修改表注释，只能忽略
-
-      // 如果有修改或删除列，需要重建表（重命名也一并纳入，避免丢数据）
-      if (modifiedColumns.length > 0 || deletedColumns.length > 0 || renamedColumns.length > 0) {
-        const tempTableName = `_temp_${tableName}_${Date.now()}`;
-
-        // 获取现有的全部列
-        const existingColumns = await this.getColumns(dataSource, databaseName, tableName);
-
-        // 建立「旧列名 → 新列定义」映射
-        const renamedMap = new Map<string, any>();
-        renamedColumns.forEach(({ oldColumn, newColumn }: any) => {
-          renamedMap.set(oldColumn.name, newColumn);
-        });
-        const modifiedMap = new Map<string, any>();
-        modifiedColumns.forEach((modification: any) => {
-          if (!renamedMap.has(modification.oldColumn.name)) {
-            modifiedMap.set(modification.oldColumn.name, modification.newColumn);
-          }
-        });
-        const deletedNames = new Set(deletedColumns.map((col: any) => col.name));
-
-        // 逐列建立「新列 ← 旧表达式」映射，保证 INSERT 列与 SELECT 表达式严格一一对应
-        const pairs: Array<{ column: any; expr: string }> = [];
-
-        const pushColumn = (column: any, sourceExpr: string) => {
-          pairs.push({ column, expr: sourceExpr });
-        };
-
-        existingColumns.forEach(col => {
-          if (deletedNames.has(col.name)) return; // 删除的列不迁移
-          const renamed = renamedMap.get(col.name);
-          const modified = modifiedMap.get(col.name);
-          // 无论是否改名/修改，都从旧列取值，保证原有数据不丢失
-          pushColumn(renamed || modified || col, `"${col.name}"`);
-        });
-
-        // 全新增的列没有旧数据，用默认值（无默认值则为 NULL）占位
-        const addedNames = new Set<string>();
-        addedColumns.forEach((col: any) => {
-          if (addedNames.has(col.name)) return;
-          addedNames.add(col.name);
-          pushColumn(col, col.defaultValue ? formatDefaultLiteral(col.defaultValue) : 'NULL');
-        });
-
-        // 按前端给出的新列顺序排列，保证重建后列顺序与界面一致
-        const columnOrder: string[] = Array.isArray(tableDiff.columnOrder) ? tableDiff.columnOrder : [];
-        if (columnOrder.length > 0) {
-          pairs.sort((a, b) => {
-            const ia = columnOrder.indexOf(a.column.name);
-            const ib = columnOrder.indexOf(b.column.name);
-            return (ia === -1 ? Number.MAX_SAFE_INTEGER : ia) - (ib === -1 ? Number.MAX_SAFE_INTEGER : ib);
-          });
-        }
-
-        // 创建临时表
-        let createTableSQL = `CREATE TABLE "${tempTableName}" (`;
-        const columnDefinitions: string[] = [];
-
-        pairs.forEach(({ column }) => {
-          // SQLite 的 VARCHAR 等不带长度也合法，此处仅处理已填写的参数
-          const columnType = buildColumnType('sqlite', column.type, column.length, column.precision, column.scale);
-
-          let definition = `"${column.name}" ${columnType}`;
-
-          // 处理NULL约束
-          if (!column.nullable) {
-            definition += ' NOT NULL';
-          }
-
-          // 处理默认值
-          if (column.defaultValue) {
-            definition += ` DEFAULT ${formatDefaultLiteral(column.defaultValue)}`;
-          }
-
-          // 处理主键和自增
-          if (column.isPrimary) {
-            if (column.isAutoIncrement) {
-              definition += ' PRIMARY KEY AUTOINCREMENT';
-            } else {
-              definition += ' PRIMARY KEY';
-            }
-          }
-
-          columnDefinitions.push(definition);
-        });
-
-        createTableSQL += columnDefinitions.join(',\n');
-        createTableSQL += ')';
-        sqlStatements.push(createTableSQL + ';');
-
-        // 复制数据到临时表（列与表达式一一对应，重命名/新增都不会错位）
-        sqlStatements.push(
-          `INSERT INTO "${tempTableName}" (${pairs.map(p => `"${p.column.name}"`).join(', ')}) SELECT ${pairs.map(p => p.expr).join(', ')} FROM "${tableName}";`
-        );
-
-        // 删除旧表
-        sqlStatements.push(`DROP TABLE "${tableName}";`);
-
-        // 重命名临时表
-        sqlStatements.push(`ALTER TABLE "${tempTableName}" RENAME TO "${tableName}";`);
-
-      } else if (addedColumns.length > 0) {
-        // 只有添加列，可以直接使用ALTER TABLE ADD COLUMN
-        tableDiff.addedColumns.forEach((column: any) => {
-          const columnType = buildColumnType('sqlite', column.type, column.length, column.precision, column.scale);
-
-          let columnSQL = `ALTER TABLE "${tableName}" ADD COLUMN "${column.name}" ${columnType}`;
-
-          // 处理NULL约束
-          if (!column.nullable) {
-            columnSQL += ' NOT NULL';
-          }
-
-          // 处理默认值
-          if (column.defaultValue) {
-            columnSQL += ` DEFAULT ${formatDefaultLiteral(column.defaultValue)}`;
-          }
-
-          sqlStatements.push(columnSQL + ';');
-        });
-      }
-
-      // 执行SQL语句
-      if (sqlStatements.length > 0) {
-        await this.executeBatchQuery(dataSource, sqlStatements, { useTransaction: true });
-      }
-
-      return { ret: 0, message: '表结构修改成功' };
-    } catch (error) {
-      console.error('SQLite修改表结构失败:', error);
-      return { ret: 1, message: `修改表结构失败: ${error instanceof Error ? error.message : String(error)}` };
-    }
-  }
 
   /**
    * 批量插入数据
@@ -752,36 +606,16 @@ export class SQLiteService extends BaseDatabaseService {
    */
   async createTable(dataSource: DataSource, databaseName: string, table: any): Promise<void> {
     const { name, columns, comment } = table;
-    
-    let sql = `CREATE TABLE "${name}" (\n`;
-    const columnDefs: string[] = [];
 
-    columns.forEach((column: any) => {
-      let columnDef = `  "${column.name}" ${column.type}`;
-      
-      if (!column.nullable) {
-        columnDef += ' NOT NULL';
-      }
-      
-      if (column.defaultValue) {
-        const upperDefault = column.defaultValue.toString().toUpperCase();
-        if (['CURRENT_TIMESTAMP', 'CURRENT_DATE', 'CURRENT_TIME'].includes(upperDefault)) {
-          columnDef += ` DEFAULT ${upperDefault}`;
-        } else {
-          columnDef += ` DEFAULT '${column.defaultValue}'`;
-        }
-      }
-      
-      if (column.isAutoIncrement) {
-        columnDef += ' AUTOINCREMENT';
-      }
-      
-      columnDefs.push(columnDef);
+    // 统一走 emitCreateDdl：前端建表 / SQLite 重建 / syncTable 建表共用同一渲染出口。
+    // 顺带修复旧实现的既有缺陷：PG/CRDB 的 `int SERIAL` 与内联 COMMENT（语法错误）、
+    // SQLite 丢失主键、默认值假值兜底与一律加引号等。
+    const canonical = canonicalizeTableEntity({
+      name,
+      comment: comment ?? '',
+      columns: columns ?? []
     });
-
-    sql += columnDefs.join(',\n');
-    sql += '\n)';
-    
-    await dataSource.query(sql);
+    const statements = emitCreateDdl('sqlite', canonical, { mssqlDatabase: databaseName });
+    await this.executeBatchQuery(dataSource, statements, { useTransaction: true });
   }
 }

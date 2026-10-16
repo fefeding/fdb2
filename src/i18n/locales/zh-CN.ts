@@ -325,7 +325,6 @@ export default {
     operationFailed: '操作失败',
     structureModifySuccess: '表结构修改成功',
     structureModifyFailed: '表结构修改失败',
-    confirmDeleteColumn: '确定要删除列 {name} 吗？',
     confirmDeleteIndex: '确定要删除索引 {name} 吗？',
     confirmDeleteFK: '确定要删除外键 {name} 吗？',
     noInsertField: '没有可插入的字段',

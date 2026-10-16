@@ -316,7 +316,6 @@ export default {
     operationFailed: 'Operation failed',
     structureModifySuccess: 'Table structure modified successfully',
     structureModifyFailed: 'Failed to modify table structure',
-    confirmDeleteColumn: 'Are you sure you want to delete column {name}?',
     confirmDeleteIndex: 'Are you sure you want to delete index {name}?',
     confirmDeleteFK: 'Are you sure you want to delete foreign key {name}?',
     noInsertField: 'No insertable fields',
