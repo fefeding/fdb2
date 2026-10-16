@@ -268,6 +268,7 @@ import Loading from '@/components/loading/index.vue';
 import ConnectionDetail from './components/connection-detail.vue';
 import DatabaseDetail from './components/database-detail.vue';
 import TableDetail from './components/table-detail.vue';
+import { pickTables } from './utils/table';
 import { modal } from '@/utils/modal';
 
 const route = useRoute();
@@ -294,6 +295,8 @@ const loadingConnections = ref(new Set<string>());
 const databaseCache = ref<Map<string, string[]>>(new Map());
 const tableCache = ref<Map<string, TableEntity[]>>(new Map());
 const databaseInfoCache = ref<Map<string, any>>(new Map());
+// 进行中的表列表请求（key 同 tableCache），用于并发调用去重
+const inflightTables = new Map<string, Promise<void>>();
 
 // 标签页状态
 const activeTab = ref('overview');
@@ -374,7 +377,7 @@ function handleRouteQuery() {
 
       // 如果提供了数据库参数，选择数据库
       if (database) {
-        setTimeout(() => {
+        setTimeout(async () => {
           selectedDatabase.value = database;
           selectedTable.value = null;
           activeTab.value = 'tables';
@@ -383,23 +386,23 @@ function handleRouteQuery() {
           const dbKey = `${connectionId}-${database}`;
           expandedDatabases.value.add(dbKey);
           loadDatabaseInfo(connection, database);
-          loadTablesForDatabase(connection, database, true);
 
-          // 如果提供了表参数，等表列表加载完后自动选中该表
-          if (tableName) {
-            loadTablesForDatabase(connection, database, true).then(() => {
-              // 走 getTablesForDatabase 而非直接读缓存：视图不在树里，不能按表选中
-              const tables = getTablesForDatabase(connectionId, database);
-              const t = tables.find((x: any) => x.name === tableName);
-              if (t) {
-                selectTable(connection, database, t);
-              }
-              isUpdatingFromUrl = false;
-            });
-          } else {
-            // 重置标志位
-            isUpdatingFromUrl = false;
+          // 带 table 参数时（VSCode 侧栏树点表走的就是这条路径）必须等表列表
+          // 真正落到缓存后再按名字选中，否则读到空列表、停在数据库详情页
+          await loadTablesForDatabase(connection, database, true);
+          // 走 getTablesForDatabase 而非直接读缓存：视图不在树里，不能按表选中
+          let t = tableName
+            ? getTablesForDatabase(connectionId, database).find((x: any) => x.name === tableName)
+            : undefined;
+          // 宿主侧栏树把视图也作为可点节点传了过来，这里按显式请求兜底放行，
+          // 否则点视图会静默停在数据库详情页
+          if (!t && tableName) {
+            t = (tableCache.value.get(`${connectionId}-${database}`) || []).find((x: any) => x.name === tableName);
           }
+          if (t) {
+            selectTable(connection, database, t);
+          }
+          isUpdatingFromUrl = false;
         }, 100);
       } else {
         // 重置标志位
@@ -536,42 +539,52 @@ function selectDatabase(connection: ConnectionEntity, database: string) {
   loadTablesForDatabase(connection, database, true);
 }
 
-async function loadTablesForDatabase(connection: ConnectionEntity, database: string, forceRefresh = false) {
+async function loadTablesForDatabase(connection: ConnectionEntity, database: string, forceRefresh = false): Promise<void> {
   const dbKey = `${connection.id}-${database}`;
-  
-  if (loadingTables.value.has(dbKey)) return;
-  
+
+  // 同一库已有请求在飞：复用它，而不是直接 return。
+  // 否则调用方 await 到的是「什么都没加载」，此时读表缓存必然是空的
+  // （宿主树带 table 参数导航时，表详情页就因此打不开）。
+  const inflight = inflightTables.get(dbKey);
+  if (inflight) return inflight;
+
   // 检查缓存
   if (!forceRefresh && tableCache.value.has(dbKey)) {
     return;
   }
-  
+
   loadingTables.value.add(dbKey);
-  
-  try {
-    const info = await databaseService.getDatabaseInfo(connection.id, database);
-    const tables = info?.data?.tables || [];
-    
-    // 使用新的 Map 实例来触发响应式更新
-    const newCache = new Map(tableCache.value);
-    newCache.set(dbKey, tables);
-    tableCache.value = newCache;
-  } catch (error) {
-    console.error('加载表失败:', error);
+
+  const task = (async () => {
+    try {
+      const info = await databaseService.getDatabaseInfo(connection.id, database);
+      const tables = info?.data?.tables || [];
+
+      // 使用新的 Map 实例来触发响应式更新
+      const newCache = new Map(tableCache.value);
+      newCache.set(dbKey, tables);
+      tableCache.value = newCache;
+    } catch (error) {
+      console.error('加载表失败:', error);
     
 
-    modal.error(error.msg || error.message || '加载表失败', {
-      operation: 'LOAD_TABLES',
-      database: database,
-      stack: error.stack
-    });
+      modal.error(error.msg || error.message || '加载表失败', {
+        operation: 'LOAD_TABLES',
+        database: database,
+        stack: error.stack
+      });
     
-    const newCache = new Map(tableCache.value);
-    newCache.set(dbKey, []);
-    tableCache.value = newCache;
-  } finally {
-    loadingTables.value.delete(dbKey);
-  }
+      const newCache = new Map(tableCache.value);
+      newCache.set(dbKey, []);
+      tableCache.value = newCache;
+    } finally {
+      loadingTables.value.delete(dbKey);
+      inflightTables.delete(dbKey);
+    }
+  })();
+
+  inflightTables.set(dbKey, task);
+  return task;
 }
 
 async function loadDatabaseInfo(connection: ConnectionEntity, database: string, forceRefresh = false) {
@@ -730,22 +743,13 @@ function getDatabasesForConnection(connectionId: string): string[] {
 }
 
 /**
- * 是否视图。
- * 各方言 getTables 写入的 type 值不统一（MySQL 的 information_schema 给 'BASE TABLE' / 'VIEW'，
- * 也有方言写小写），统一按包含 VIEW 判定；未带 type 的按表处理。
- */
-function isView(table: TableEntity | undefined | null): boolean {
-  return String(table?.type || '').toUpperCase().includes('VIEW');
-}
-
-/**
  * 左侧树只展示表：视图不进树——点开会被当成表进入表详情（视图没有主键/索引/外键，
  * 结构页也不适用），视图统一由数据库详情页的"视图"标签页承载（独立 getViews 接口）。
  */
 function getTablesForDatabase(connectionId: string | undefined, database: string): TableEntity[] {
   if(!connectionId) return [];
   const dbKey = `${connectionId}-${database}`;
-  return (tableCache.value.get(dbKey) || []).filter((t) => !isView(t));
+  return pickTables(tableCache.value.get(dbKey) || []);
 }
 
 function editConnection(connection: ConnectionEntity) {

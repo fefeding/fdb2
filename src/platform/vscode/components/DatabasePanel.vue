@@ -57,25 +57,46 @@
             当前数据库：<strong>{{ currentDatabase }}</strong>
             <button class="btn btn-link" @click="currentTab = 'databases'">切换</button>
           </div>
-          <h3 class="section-title">表 / 视图</h3>
+          <h3 class="section-title">表 ({{ tables.length }})</h3>
           <div class="table-list">
             <div v-for="table in tables" :key="table.name" class="table-item">
-              <div class="table-icon">{{ table.type === 'view' ? '👁️' : '📋' }}</div>
+              <div class="table-icon">📋</div>
               <div class="table-info">
                 <div class="table-name">{{ table.name }}</div>
                 <div v-if="table.comment" class="table-comment">{{ table.comment }}</div>
-                <div v-if="table.rows !== null && table.rows !== undefined" class="table-meta">
-                  <span>{{ formatNumber(table.rows) }} 行</span>
+                <div v-if="table.rowCount !== undefined && table.rowCount !== null" class="table-meta">
+                  <span>{{ formatNumber(table.rowCount) }} 行</span>
+                  <span v-if="table.dataSize">{{ formatSize(table.dataSize) }}</span>
                   <span v-if="table.engine">{{ table.engine }}</span>
                 </div>
               </div>
-              <span :class="['table-type', table.type]">{{ table.type === 'view' ? 'VIEW' : 'TABLE' }}</span>
               <div class="table-actions">
                 <button class="action-btn" @click.stop="viewData(table)">数据</button>
                 <button class="action-btn" @click.stop="viewStructure(table)">结构</button>
               </div>
             </div>
             <div v-if="tables.length === 0" class="empty-text">该数据库下没有表</div>
+          </div>
+        </div>
+
+        <div v-show="currentTab === 'views'" class="tab-content">
+          <div class="section-subtitle">
+            当前数据库：<strong>{{ currentDatabase }}</strong>
+            <button class="btn btn-link" @click="currentTab = 'databases'">切换</button>
+          </div>
+          <h3 class="section-title">视图 ({{ views.length }})</h3>
+          <div class="table-list">
+            <div v-for="view in views" :key="view.name" class="table-item">
+              <div class="table-icon">👁️</div>
+              <div class="table-info">
+                <div class="table-name">{{ view.name }}</div>
+                <div v-if="view.comment" class="table-comment">{{ view.comment }}</div>
+              </div>
+              <div class="table-actions">
+                <button class="action-btn" @click.stop="viewData(view)">数据</button>
+              </div>
+            </div>
+            <div v-if="views.length === 0" class="empty-text">该数据库下没有视图</div>
           </div>
         </div>
 
@@ -89,22 +110,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { getVSCodeBridge } from '../bridge';
+import { pickTables } from '@/platform/database/utils/table';
 
 const vscode = getVSCodeBridge();
 
 const connections = ref<any[]>([]);
 const selectedConnectionId = ref('');
 const databases = ref<string[]>([]);
-const tables = ref<any[]>([]);
+// getTables 返回的是「表 + 视图」的混合列表，这里按 TableEntity.type 拆开，
+// 与工作台的数据库详情页保持一致：表只放表，视图单独一个标签页。
+const rawTables = ref<any[]>([]);
+const views = ref<any[]>([]);
 const loading = ref(false);
 const currentTab = ref('databases');
 const currentDatabase = ref('');
 
+const tables = computed(() => pickTables(rawTables.value));
+
 const tabs = [
   { id: 'databases', name: '数据库' },
   { id: 'tables', name: '表' },
+  { id: 'views', name: '视图' },
   { id: 'sqleditor', name: 'SQL' }
 ];
 
@@ -125,9 +153,12 @@ onMounted(() => {
       loading.value = false;
       currentTab.value = 'databases';
     } else if (message.command === 'tables') {
-      tables.value = message.data || [];
+      rawTables.value = message.data || [];
       loading.value = false;
       currentTab.value = 'tables';
+      loadViews();
+    } else if (message.command === 'views') {
+      views.value = message.data || [];
     } else if (message.command === 'error') {
       loading.value = false;
       alert('操作失败: ' + message.data);
@@ -148,13 +179,16 @@ function onConnectionChange() {
     loadDatabases(selectedConnectionId.value);
   } else {
     databases.value = [];
-    tables.value = [];
+    rawTables.value = [];
+    views.value = [];
   }
 }
 
 function loadDatabases(id: string) {
   loading.value = true;
   currentDatabase.value = '';
+  rawTables.value = [];
+  views.value = [];
   vscode.postMessage({ command: 'getDatabases', data: { id } });
 }
 
@@ -162,9 +196,20 @@ function selectDatabase(db: string) {
   if (!selectedConnectionId.value) return;
   currentDatabase.value = db;
   loading.value = true;
+  rawTables.value = [];
+  views.value = [];
   vscode.postMessage({
     command: 'getTables',
     data: { id: selectedConnectionId.value, database: db }
+  });
+}
+
+/** 视图走独立接口：方言的 getTables 对视图的支持并不一致，混在一起容易漏 */
+function loadViews() {
+  if (!selectedConnectionId.value || !currentDatabase.value) return;
+  vscode.postMessage({
+    command: 'getViews',
+    data: { id: selectedConnectionId.value, database: currentDatabase.value }
   });
 }
 
@@ -187,7 +232,16 @@ function openQuery() {
 }
 
 function formatNumber(n: number): string {
-  return n.toLocaleString();
+  return Number(n || 0).toLocaleString();
+}
+
+function formatSize(bytes: number): string {
+  const b = Number(bytes || 0);
+  if (b <= 0) return '0 B';
+  const k = 1024;
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(units.length - 1, Math.floor(Math.log(b) / Math.log(k)));
+  return `${(b / Math.pow(k, i)).toFixed(2)} ${units[i]}`;
 }
 </script>
 
@@ -369,18 +423,6 @@ function formatNumber(n: number): string {
   font-size: 12px;
   color: var(--dbt-descriptionForeground);
   margin-top: 2px;
-}
-
-.table-type {
-  padding: 2px 8px;
-  border-radius: 12px;
-  background-color: var(--dbt-badge-background);
-  font-size: 11px;
-}
-
-.table-type.view {
-  background-color: var(--dbt-gitDecoration-modifiedResourceForeground);
-  color: #fff;
 }
 
 .table-actions {

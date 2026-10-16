@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
 import { DatabaseBridge } from '../service/DatabaseBridge';
+// 与 webview 侧共用同一份视图判定（utils/table.ts），
+// 避免宿主与 webview 各写一份 type 比较导致两边显示不一致
+import { isViewTable } from '../../../../src/platform/database/utils/table';
 
 export type TreeCtx = 'connection' | 'database' | 'table' | 'column' | 'error';
 
@@ -42,7 +45,7 @@ export class DatabaseTreeProvider implements vscode.TreeDataProvider<DbTreeItem>
           database: element.database
         })) || [];
         return tables.map((t) =>
-          DbTreeItem.table(t.name, t.type, element.connectionId!, element.database!)
+          DbTreeItem.table(t.name, t.type, t.rowCount, t.comment, element.connectionId!, element.database!)
         );
       }
 
@@ -111,10 +114,16 @@ export class DbTreeItem extends vscode.TreeItem {
     return item;
   }
 
-  static table(name: string, type: string, connId: string, db: string): DbTreeItem {
-    const isView = (type || '').toLowerCase() === 'view';
+  static table(name: string, type: string, rowCount: number | undefined, comment: string | undefined, connId: string, db: string): DbTreeItem {
+    // 视图也作为可点节点：宿主工作台会把它导航到对应位置（数据可看，结构页无主键/外键）
+    const view = isViewTable({ type });
     const item = new DbTreeItem(name, 'table', vscode.TreeItemCollapsibleState.Collapsed, connId, db, name);
-    item.iconPath = new vscode.ThemeIcon(isView ? 'eye' : 'table');
+    item.iconPath = new vscode.ThemeIcon(view ? 'eye' : 'table');
+    const desc: string[] = [];
+    if (view) desc.push('视图');
+    if (rowCount !== undefined && rowCount !== null) desc.push(`${rowCount} 行`);
+    if (!view && comment) desc.push(comment);
+    item.description = desc.join(' · ');
     item.command = {
       command: 'dbtool.openExplorer',
       title: '打开数据库工作台',

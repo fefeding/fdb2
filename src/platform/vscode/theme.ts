@@ -120,6 +120,53 @@ const SHELL_CSS = `
   body.vscode-native-nav .text-primary.spinner-border {
     color: var(--db-text-muted) !important;
   }
+
+  /* ---------------- 弹窗内不做降噪 ----------------
+   * 上面的降噪针对的是「面板里一排操作按钮太花哨」，而弹窗是聚焦场景：
+   * 表新增/修改结构弹窗里的「保存(蓝)」「添加字段(绿)」「删除列(红)」必须与桌面端一致，
+   * 否则同一套 table-editor 组件在两个环境里观感不同。
+   *
+   * Bootstrap 5.3 的按钮本身就由 --bs-btn-* 变量驱动（随 data-bs-theme 切明暗），
+   * 所以这里只需把被降噪压平的三个属性还原回变量取值，不重新指定具体色值。
+   */
+  body.vscode-native-nav .modal .btn-primary,
+  body.vscode-native-nav .modal .btn-success,
+  body.vscode-native-nav .modal .btn-info,
+  body.vscode-native-nav .modal .btn-secondary,
+  body.vscode-native-nav .modal .btn-danger {
+    background-color: var(--bs-btn-bg) !important;
+    border-color: var(--bs-btn-border-color) !important;
+    color: var(--bs-btn-color) !important;
+  }
+  body.vscode-native-nav .modal .btn-primary:hover,
+  body.vscode-native-nav .modal .btn-primary:focus,
+  body.vscode-native-nav .modal .btn-success:hover,
+  body.vscode-native-nav .modal .btn-success:focus,
+  body.vscode-native-nav .modal .btn-info:hover,
+  body.vscode-native-nav .modal .btn-info:focus,
+  body.vscode-native-nav .modal .btn-secondary:hover,
+  body.vscode-native-nav .modal .btn-secondary:focus,
+  body.vscode-native-nav .modal .btn-danger:hover,
+  body.vscode-native-nav .modal .btn-danger:focus {
+    background-color: var(--bs-btn-hover-bg) !important;
+    border-color: var(--bs-btn-hover-border-color) !important;
+    color: var(--bs-btn-hover-color) !important;
+  }
+  /* 描边类：基础态透明底 + 自身边框色，hover 回填自身 hover 底色 */
+  body.vscode-native-nav .modal .btn-outline-danger,
+  body.vscode-native-nav .modal .btn-outline-warning {
+    background-color: transparent !important;
+    border-color: var(--bs-btn-border-color) !important;
+    color: var(--bs-btn-color) !important;
+  }
+  body.vscode-native-nav .modal .btn-outline-danger:hover,
+  body.vscode-native-nav .modal .btn-outline-danger:focus,
+  body.vscode-native-nav .modal .btn-outline-warning:hover,
+  body.vscode-native-nav .modal .btn-outline-warning:focus {
+    background-color: var(--bs-btn-hover-bg) !important;
+    border-color: var(--bs-btn-hover-border-color) !important;
+    color: var(--bs-btn-hover-color) !important;
+  }
 `;
 
 export function installVscodeShellStyle(): void {
