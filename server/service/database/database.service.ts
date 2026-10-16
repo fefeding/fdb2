@@ -193,13 +193,9 @@ export class DatabaseService {
   async refreshTableCache(
     connectionId: string,
     databaseName: string
-  ): Promise<{ ret: number; message: string }> {
-    try {
-      const tables = await this.getTableList(connectionId, databaseName, true);
-      return { ret: 0, message: `表列表已刷新（${tables.length} 张表）` };
-    } catch (error) {
-      return { ret: 1, message: `刷新表列表失败: ${error instanceof Error ? error.message : String(error)}` };
-    }
+  ): Promise<{ count: number }> {
+    const tables = await this.getTableList(connectionId, databaseName, true);
+    return { count: tables.length };
   }
 
   /**
@@ -259,34 +255,24 @@ export class DatabaseService {
 
   /**
    * 预览建表：纯计算不执行。与执行同一出口生成语句，所见即所得。
+   *
+   * 返回约定：只返回业务数据，失败一律 throw——由统一响应层包装成 { ret: 非0, msg: 错误信息 }，
+   * 不再自带 ret/message（否则会出现外层 ret 恒为 0、错误被当成成功的双层结构）。
    */
   async previewCreateTable(
     connectionId: string,
     databaseName: string,
     spec: TableSpec
-  ): Promise<DdlPreview & { ret: number; message: string; capabilities: DdlCapability | null }> {
-    try {
-      const plan = await this.buildCreatePlan(connectionId, databaseName, spec);
-      const previewText = plan.statements.length > 0 ? plan.statements.join(';\n') + ';' : '';
-      return {
-        ret: plan.error ? 1 : 0,
-        message: plan.error || '预览成功',
-        statements: plan.statements,
-        preview: previewText,
-        changeSet: null,
-        capabilities: plan.caps
-      };
-    } catch (error) {
-      // 与 executeCreateTable 对称：预览失败也走业务失败返回（ret 1），而非抛成 HTTP 500
-      return {
-        ret: 1,
-        message: `预览失败: ${error instanceof Error ? error.message : String(error)}`,
-        statements: [],
-        preview: '',
-        changeSet: null,
-        capabilities: null
-      };
-    }
+  ): Promise<DdlPreview & { capabilities: DdlCapability }> {
+    const plan = await this.buildCreatePlan(connectionId, databaseName, spec);
+    if (plan.error) throw new Error(plan.error);
+    const previewText = plan.statements.length > 0 ? plan.statements.join(';\n') + ';' : '';
+    return {
+      statements: plan.statements,
+      preview: previewText,
+      changeSet: null,
+      capabilities: plan.caps
+    };
   }
 
   /**
@@ -296,23 +282,19 @@ export class DatabaseService {
     connectionId: string,
     databaseName: string,
     spec: TableSpec
-  ): Promise<{ ret: number; message: string; statements: string[] }> {
+  ): Promise<{ statements: string[] }> {
+    // 执行前强制刷新表列表：重名检测必须基于最新结构，不能用预览的缓存
+    const plan = await this.buildCreatePlan(connectionId, databaseName, spec, true);
+    if (plan.error) throw new Error(plan.error);
+    if (plan.statements.length === 0) throw new Error('未能生成建表语句');
     try {
-      // 执行前强制刷新表列表：重名检测必须基于最新结构，不能用预览的缓存
-      const plan = await this.buildCreatePlan(connectionId, databaseName, spec, true);
-      if (plan.error) {
-        return { ret: 1, message: plan.error, statements: [] };
-      }
-      if (plan.statements.length === 0) {
-        return { ret: 1, message: '未能生成建表语句', statements: [] };
-      }
       await plan.dbService.executeBatchQuery(plan.dataSource, plan.statements, { useTransaction: true });
-      this.invalidateTableList(connectionId, databaseName); // 表列表已变化
-      return { ret: 0, message: '表创建成功', statements: plan.statements };
     } catch (error) {
       console.error('执行建表失败:', error);
-      return { ret: 1, message: `创建表失败: ${error instanceof Error ? error.message : String(error)}`, statements: [] };
+      throw new Error(`创建表失败: ${error instanceof Error ? error.message : String(error)}`);
     }
+    this.invalidateTableList(connectionId, databaseName); // 表列表已变化
+    return { statements: plan.statements };
   }
 
   /**
@@ -375,7 +357,19 @@ export class DatabaseService {
     const statements = error
       ? []
       : emitAlterDdl(kind, original, desired, mssqlPkConstraintName ? { mssqlPkConstraintName } : undefined);
-    return { dataSource, kind, caps, dbService, statements, changeSet, error };
+    return {
+      dataSource,
+      kind,
+      caps,
+      dbService,
+      statements,
+      changeSet,
+      error,
+      // 诊断用：实时表列名 vs 目标列名（"没有检测到任何修改"时让前端直接展示，
+      // 用户即可确认"新增的字段其实已存在于实时表"；若 target 有而 live 没有则暴露引擎 bug）
+      liveColumns: original.columns.map((c) => c.name),
+      targetColumns: desired.columns.map((c) => c.name)
+    };
   }
 
   /**
@@ -387,29 +381,16 @@ export class DatabaseService {
     databaseName: string,
     tableName: string,
     spec: TableSpec
-  ): Promise<DdlPreview & { ret: number; message: string; capabilities: DdlCapability | null }> {
-    try {
-      const plan = await this.buildAlterPlan(connectionId, databaseName, tableName, spec);
-      const previewText = plan.statements.length > 0 ? plan.statements.join(';\n') + ';' : '';
-      return {
-        ret: plan.error ? 1 : 0,
-        message: plan.error || '预览成功',
-        statements: plan.statements,
-        preview: previewText,
-        changeSet: plan.changeSet,
-        capabilities: plan.caps
-      };
-    } catch (error) {
-      // 与 executeAlterTable 对称：预览失败走业务失败返回（ret 1），而非抛成 HTTP 500
-      return {
-        ret: 1,
-        message: `预览失败: ${error instanceof Error ? error.message : String(error)}`,
-        statements: [],
-        preview: '',
-        changeSet: null,
-        capabilities: null
-      };
-    }
+  ): Promise<DdlPreview & { capabilities: DdlCapability }> {
+    const plan = await this.buildAlterPlan(connectionId, databaseName, tableName, spec);
+    if (plan.error) throw new Error(plan.error);
+    const previewText = plan.statements.length > 0 ? plan.statements.join(';\n') + ';' : '';
+    return {
+      statements: plan.statements,
+      preview: previewText,
+      changeSet: plan.changeSet,
+      capabilities: plan.caps
+    };
   }
 
   /**
@@ -420,25 +401,22 @@ export class DatabaseService {
     databaseName: string,
     tableName: string,
     spec: TableSpec
-  ): Promise<{ ret: number; message: string; statements: string[] }> {
+  ): Promise<{ statements: string[] }> {
+    const plan = await this.buildAlterPlan(connectionId, databaseName, tableName, spec);
+    if (plan.error) throw new Error(plan.error);
+    // 无变更是正常情况（如"改了又改回"），由调用方按 statements 为空给出提示，不当作错误
+    if (plan.statements.length === 0) return { statements: [] };
+    if (plan.caps.alterStrategy === 'unsupported') {
+      throw new Error(`该数据库类型（${plan.kind}）不支持在线修改表结构`);
+    }
     try {
-      const plan = await this.buildAlterPlan(connectionId, databaseName, tableName, spec);
-      if (plan.error) {
-        return { ret: 1, message: plan.error, statements: [] };
-      }
-      if (plan.statements.length === 0) {
-        return { ret: 0, message: '没有检测到任何修改', statements: [] };
-      }
-      if (plan.caps.alterStrategy === 'unsupported') {
-        return { ret: 1, message: `该数据库类型（${plan.kind}）不支持在线修改表结构`, statements: [] };
-      }
       await plan.dbService.executeBatchQuery(plan.dataSource, plan.statements, { useTransaction: true });
-      this.invalidateTableList(connectionId, databaseName); // 表结构/表名可能已变化
-      return { ret: 0, message: '表结构修改成功', statements: plan.statements };
     } catch (error) {
       console.error('执行表结构变更失败:', error);
-      return { ret: 1, message: `修改表结构失败: ${error instanceof Error ? error.message : String(error)}`, statements: [] };
+      throw new Error(`修改表结构失败: ${error instanceof Error ? error.message : String(error)}`);
     }
+    this.invalidateTableList(connectionId, databaseName); // 表结构/表名可能已变化
+    return { statements: plan.statements };
   }
 
   /**

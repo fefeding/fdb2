@@ -81,6 +81,18 @@ export class ConnectionService {
 /**
  * 数据库管理服务
  */
+/**
+ * 解包统一响应：{ ret, msg, data }。
+ * 后端现在只返回业务数据、失败一律 throw（由响应层包装成 ret 非 0 + msg 错误信息），
+ * 因此这里 ret !== 0 时直接抛出 msg，调用方拿到的就是纯净的业务数据。
+ */
+function unwrapData<T = any>(res: any): T {
+  if (res && typeof res === 'object' && 'ret' in res && res.ret !== 0) {
+    throw new Error(res.msg || '操作失败');
+  }
+  return (res?.data ?? res) as T;
+}
+
 export class DatabaseService {
   
   /**
@@ -243,10 +255,10 @@ export class DatabaseService {
     connectionId: string,
     database: string
   ) {
-    return request('/api/database/refreshTableCache', {
+    return unwrapData<{ count: number }>(await request('/api/database/refreshTableCache', {
       id: connectionId,
       database
-    });
+    }));
   }
 
   /**
@@ -257,11 +269,11 @@ export class DatabaseService {
     database: string,
     spec: TableSpec
   ) {
-    return request('/api/database/previewCreateTable', {
+    return unwrapData<{ statements: string[]; preview: string; capabilities: any }>(await request('/api/database/previewCreateTable', {
       id: connectionId,
       database,
       spec
-    });
+    }));
   }
 
   /**
@@ -272,11 +284,11 @@ export class DatabaseService {
     database: string,
     spec: TableSpec
   ) {
-    return request('/api/database/executeCreateTable', {
+    return unwrapData<{ statements: string[] }>(await request('/api/database/executeCreateTable', {
       id: connectionId,
       database,
       spec
-    });
+    }));
   }
 
   /**
@@ -288,12 +300,12 @@ export class DatabaseService {
     tableName: string,
     spec: TableSpec
   ) {
-    return request('/api/database/previewAlterTable', {
+    return unwrapData<{ statements: string[]; preview: string; capabilities: any }>(await request('/api/database/previewAlterTable', {
       id: connectionId,
       database,
       tableName,
       spec
-    });
+    }));
   }
 
   /**
@@ -305,12 +317,12 @@ export class DatabaseService {
     tableName: string,
     spec: TableSpec
   ) {
-    return request('/api/database/executeAlterTable', {
+    return unwrapData<{ statements: string[]; liveColumns?: string[]; targetColumns?: string[] }>(await request('/api/database/executeAlterTable', {
       id: connectionId,
       database,
       tableName,
       spec
-    });
+    }));
   }
 
   /**

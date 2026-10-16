@@ -458,16 +458,15 @@ async function refreshPreview() {
   const seq = ++previewSeq;
   const spec = buildTableSpec();
   try {
-    const result = props.mode === 'create'
+    const data = props.mode === 'create'
       ? await databaseService.previewCreateTable(props.connection.id, props.database, spec)
       : await databaseService.previewAlterTable(props.connection.id, props.database, props.table!.name, spec);
     if (seq !== previewSeq) return; // 过期响应丢弃（用户已继续编辑）
-    if (result?.capabilities) caps.value = result.capabilities;
-    previewSql.value = result?.ret === 0
-      ? (result.preview || (props.mode === 'create' ? '-- 完善表单后将在此显示建表 SQL' : '没有检测到任何修改'))
-      : (result?.message || '预览失败');
+    if (data?.capabilities) caps.value = data.capabilities;
+    previewSql.value = data?.preview || (props.mode === 'create' ? '-- 完善表单后将在此显示建表 SQL' : '没有检测到任何修改');
   } catch (error: any) {
     if (seq !== previewSeq) return;
+    // 后端失败已包装为 ret 非 0 + msg，service 层解包时抛出
     previewSql.value = `预览失败: ${error?.message || error}`;
   }
 }
@@ -508,10 +507,7 @@ async function refreshTableList() {
   if (!props.connection?.id) return;
   refreshingTables.value = true;
   try {
-    const result = await databaseService.refreshTableCache(props.connection.id, props.database);
-    if (result?.ret !== 0) {
-      await modal.warning(result?.message || '刷新表列表失败');
-    }
+    await databaseService.refreshTableCache(props.connection.id, props.database);
     await refreshPreview(); // 用最新表列表重算预览
   } catch (error: any) {
     await modal.warning(`刷新表列表失败: ${error?.message || error}`);
@@ -584,49 +580,48 @@ async function submit() {
       return;
     }
 
-    let result;
+    // 成功时后端只返回业务数据 { statements }；失败由 service 层解包后抛出
+    const result = props.mode === 'create'
+      ? await databaseService.executeCreateTable(
+          props.connection.id,
+          props.database,
+          buildTableSpec()
+        )
+      : await databaseService.executeAlterTable(
+          props.connection.id,
+          props.database,
+          props.table!.name,
+          buildTableSpec()
+        );
 
-    if (props.mode === 'create') {
-      // 创建表：同样只传目标态 TableSpec——建表 DDL 由后端 emitCreateDdl 生成
-      //（与 SQLite 重建、方言 syncTable 建表同一渲染出口），后端先做重名检测
-      result = await databaseService.executeCreateTable(
-        props.connection.id,
-        props.database,
-        buildTableSpec()
-      );
-    } else {
-      // 修改表：只传目标态 TableSpec——对比/生成/执行全在后端 schema 引擎，
-      // 基于实时结构 diff，前端缓存过期不再可能生成错误语句
-      result = await databaseService.executeAlterTable(
-        props.connection.id,
-        props.database,
-        props.table!.name,
-        buildTableSpec()
-      );
-
-      // 后端基于实时结构判定无变更（含"改了又改回"），保持旧 UX：提示且不关弹窗
-      if (result.ret === 0 && (!result.statements || result.statements.length === 0)) {
-        await modal.info(result.message || '没有检测到任何修改');
-        return;
-      }
+    // 后端基于实时结构判定无变更（含"改了又改回"），保持旧 UX：提示且不关弹窗
+    if (!result?.statements || result.statements.length === 0) {
+      // 把实时表已有列名带出来：多数情况是"该字段其实已存在于表中"（之前已保存成功）
+      const liveCols = (result as any)?.liveColumns as string[] | undefined;
+      const live = liveCols?.length ? liveCols.join('、') : '（未知）';
+      const tip = liveCols?.length
+        ? `当前实时表已有列：${live}\n若你以为新增的字段出现在上面，说明它之前已保存成功，或本来就存在。`
+        : '未读取到实时表结构，请刷新表列表后重试。';
+      await modal.info(`没有检测到任何修改。\n${tip}`);
+      return;
     }
 
-    const success = result.ret === 0;
     emit('submit', {
-      success,
-      message: success ? (result.message || '操作成功') : (result.message || '操作失败'),
-      data: result.data,
+      success: true,
+      message: props.mode === 'create' ? '表创建成功' : '表结构修改成功',
+      data: result,
       mode: props.mode
     });
 
-    // 失败时保留弹窗内容：建表重名、约束冲突等都是改一下就能重试的错误，
-    // 关掉会让用户重新填整个表单
-    if (success) close();
-  } catch (error) {
+    close();
+  } catch (error: any) {
     console.error('提交失败:', error);
+    // 失败不关闭弹窗：保留用户已填内容，展示后端返回的具体原因（重名/约束冲突改一下即可重试）
+    const message = error?.message || '操作失败';
+    await modal.error(message);
     emit('submit', {
       success: false,
-      message: '操作失败',
+      message,
       mode: props.mode
     });
   }
