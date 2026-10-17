@@ -2,17 +2,19 @@
     <div class="modal fade" :id="modalId" ref="modalContainer" tabindex="-1" aria-labelledby="modalLabel">
         <div class="modal-dialog modal-dialog-centered" :class="{'modal-fullscreen': isFullScreen, 'modal-dialog-auto': isAutoSize}" :style="dynamicStyle">
             <div class="modal-content" :class="contentClass" style=" margin: auto;">
-                <div class="modal-header" :class="headerClass" style="padding: 1rem 1.5rem;">
+                <div class="modal-header" :class="headerClass">
                     <h5 class="modal-title d-flex align-items-center" id="modalLabel">
                         <i v-if="typeIcon" :class="typeIcon" class="me-2"></i>
                         {{dynamicTitle || props.title}}
                     </h5>
-                    <button type="button" class="btn-close" aria-label="Close" @click="cancel"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @click="cancel">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                 </div>
                 <div class="modal-body text-wrap" v-if="modalShow">
                     <slot v-if="$slots.default"></slot>
                     <div v-else>
-                        <div class="d-flex align-items-center mb-2">
+                        <div class="d-flex align-items-center" :class="shouldShowDetails() ? 'mb-2' : 'mb-0'">
                             <i v-if="typeIcon" :class="typeIcon" class="me-3 modal-type-icon"></i>
                             <div class="flex-grow-1 text-wrap">{{dynamicContent}}</div>
                         </div>
@@ -352,6 +354,24 @@
         return Promise.resolve();
     }
 
+    /**
+     * 强制收起弹窗（兜底）。
+     * Bootstrap 的 hide() 依赖自身 _isShown / 过渡回调，在个别宿主环境（VSCode webview）
+     * 里可能出现「点了关闭但状态没翻转」的情况，此时直接摘掉 show 类并移除遮罩，
+     * 保证关闭按钮一定生效。
+     */
+    function forceHide() {
+        const el = modalContainer.value;
+        if (!el) return false;
+        const stillVisible = el.classList.contains('show') || getComputedStyle(el).display !== 'none';
+        if (!stillVisible) return false;
+        el.classList.remove('show', 'fade');
+        el.style.display = 'none';
+        document.querySelectorAll('.modal-backdrop').forEach((b) => b.remove());
+        ModalHide();
+        return true;
+    }
+
     function hide() {
         if (isHiding.value) {
             console.log('Modal already hiding, skipping');
@@ -376,6 +396,10 @@
                 
                 modalInstance.hide();
                 setTimeout(checkHidden, 100); // 给一些时间开始隐藏动画
+                // 兜底：800ms 仍未隐藏则强制收起，避免「点了关闭没反应」
+                setTimeout(() => {
+                    if (forceHide()) resolve();
+                }, 800);
             });
         }
         return Promise.resolve();
@@ -463,6 +487,68 @@
     margin: auto;
 }
 
+/* ---------------- 弹窗自身的紧凑密度 ----------------
+ * database.css 的 .modal-header/.modal-body/.modal-footer 面向「网页大屏」，
+ * 而桌面端靠 body.platform-desktop 覆盖成紧凑值，webview（VSCode）没有该类，
+ * 于是同一套弹窗在 webview 里标题 24px、内边距 32px，显得又空又大。
+ * 这里把密度收进组件自身（与 platform-desktop 的取值一致），
+ * 两个宿主下观感统一，不再依赖全局样式差异。
+ */
+.modal-header {
+    padding: 0.625rem 0.875rem;
+}
+
+.modal-header::before {
+    display: none; /* 去掉标题栏顶部 4px 品牌色条 */
+}
+
+.modal-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 0.875rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.modal-footer {
+    padding: 0.5rem 0.875rem;
+    gap: 0.5rem;
+}
+
+.modal-footer .btn {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8125rem;
+}
+
+/* 关闭按钮：不用 .btn-close 的 svg data-uri 背景（webview CSP 下不渲染，
+ * 会退化成一个无图标的灰色方块），改用 bootstrap-icons 字形画叉 */
+.btn-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background-color: transparent;
+    background-image: none;
+    box-shadow: none;
+    opacity: 0.85;
+    font-size: 13px;
+    color: inherit;
+}
+
+.btn-close:hover,
+.btn-close:focus {
+    background-color: rgba(128, 128, 128, 0.28);
+    opacity: 1;
+}
+
 .modal-success .modal-header {
   background-color: var(--bs-success);
   color: white;
@@ -481,12 +567,6 @@
 .modal-info .modal-header {
   background-color: var(--bs-info);
   color: white;
-}
-
-.modal-body {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
 }
 
 .error-details {
@@ -542,7 +622,7 @@
 
 /* 提示类型图标：随内容紧凑展示（不用 Bootstrap 的 fs-1，避免 2.5rem 撑高弹窗） */
 .modal-type-icon {
-  font-size: 1.75rem;
+  font-size: 1.25rem;
   line-height: 1;
 }
 

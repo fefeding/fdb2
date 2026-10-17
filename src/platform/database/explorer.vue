@@ -391,14 +391,9 @@ function handleRouteQuery() {
           // 真正落到缓存后再按名字选中，否则读到空列表、停在数据库详情页
           await loadTablesForDatabase(connection, database, true);
           // 走 getTablesForDatabase 而非直接读缓存：视图不在树里，不能按表选中
-          let t = tableName
+          const t = tableName
             ? getTablesForDatabase(connectionId, database).find((x: any) => x.name === tableName)
             : undefined;
-          // 宿主侧栏树把视图也作为可点节点传了过来，这里按显式请求兜底放行，
-          // 否则点视图会静默停在数据库详情页
-          if (!t && tableName) {
-            t = (tableCache.value.get(`${connectionId}-${database}`) || []).find((x: any) => x.name === tableName);
-          }
           if (t) {
             selectTable(connection, database, t);
           }
