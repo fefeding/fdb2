@@ -207,7 +207,6 @@ export default {
     refreshDatabase: 'Refresh Database',
     deleteDatabase: 'Delete Database',
     refreshTable: 'Refresh Table',
-    viewStructure: 'View Structure',
     defaultTitle: 'Database Explorer',
     defaultDesc: 'Select a connection, database, or table from the left panel to view details',
     rowsSuffix: 'rows',

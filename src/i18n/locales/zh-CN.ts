@@ -213,7 +213,6 @@ export default {
     refreshDatabase: '刷新数据库',
     deleteDatabase: '删除数据库',
     refreshTable: '刷新表',
-    viewStructure: '查看结构',
     defaultTitle: '数据库浏览器',
     defaultDesc: '请从左侧选择一个连接、数据库或表来查看详细信息',
     rowsSuffix: '行',

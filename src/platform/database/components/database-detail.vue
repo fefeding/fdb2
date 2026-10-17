@@ -1059,8 +1059,9 @@ function handleExecuteSQL(sql: string) {
 
 .table-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 8px;
+  /* 最小列宽 240px + 12px 间距：避免窄卡片把表名挤成「t_ai_agent_...」这类过度截断 */
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
 }
 
 .table-card {
@@ -1080,22 +1081,28 @@ function handleExecuteSQL(sql: string) {
 
 .card-header {
   background: var(--db-bg-soft);
-  padding: 6px 8px;
+  /* 右侧预留编辑按钮的常驻空间（约 32px）：按钮绝对定位不占 flex 位，
+     用 padding 留白让表名/引擎名不会被按钮盖住，也不必为按钮压缩表名宽度 */
+  padding: 6px 32px 6px 8px;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  position: relative;
 }
 
+/* 卡片图标与引擎徽标统一收敛为中性灰：
+   密集网格里高饱和的绿/蓝会互相干扰，改为描边+浅灰后表名才是视觉主角 */
 .table-icon {
   width: 22px;
   height: 22px;
   font-size: 0.75rem;
-  background: var(--db-success-bg);
+  background: transparent;
+  border: 1px solid var(--db-border);
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--db-accent-color);
+  color: var(--db-text-faint);
   flex-shrink: 0;
 }
 
@@ -1123,9 +1130,10 @@ function handleExecuteSQL(sql: string) {
 
 .table-engine {
   font-size: 0.625rem;
-  color: var(--db-primary-color);
-  background: var(--db-primary-bg);
-  padding: 0 0.375rem;
+  /* 引擎名是次要信息：去掉高饱和底色，仅留浅灰文字 */
+  color: var(--db-text-faint);
+  background: transparent;
+  padding: 0;
   border-radius: 999px;
   flex-shrink: 0;
 }
@@ -1183,12 +1191,14 @@ function handleExecuteSQL(sql: string) {
   line-height: 1.4;
 }
 
+/* 编辑按钮常驻右上角：绝对定位，不参与 flex 排版，
+   因此不会像内联那样挤压表名（表名可用满 header 内容区宽度）。 */
 .table-actions {
+  position: absolute;
+  top: 4px;
+  right: 4px;
   display: flex;
   gap: 0.375rem;
-  flex-shrink: 0;
-  margin-left: auto;
-  align-self: flex-start;
 }
 
 .table-actions .btn {

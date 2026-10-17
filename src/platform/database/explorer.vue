@@ -147,13 +147,6 @@
                           >
                             <i class="bi bi-arrow-clockwise"></i>
                           </button>
-                          <button 
-                            class="btn btn-sm btn-icon" 
-                            @click.stop="viewTableStructure(connection, database, table)"
-                            :title="$t('explorer.viewStructure')"
-                          >
-                            <i class="bi bi-diagram-3"></i>
-                          </button>
                         </div>
                       </div>
                     </div>
@@ -843,11 +836,6 @@ async function handleRefreshStructure() {
 
 function insertNewRow() {
   showToast('提示', '新增功能开发中...', 'info');
-}
-
-function viewTableStructure(connection: ConnectionEntity, database: string, table: TableEntity) {
-  selectTable(connection, database, table);
-  activeTableTab.value = 'structure';
 }
 
 function getDbTypeLabel(type: string): string {
