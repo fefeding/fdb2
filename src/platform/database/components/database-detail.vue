@@ -136,6 +136,14 @@
                       {{ table.comment }}
                     </div>
                   </div>
+                  <div class="table-actions">
+                    <button class="btn btn-sm btn-outline-primary" @click.stop="editTable(table)" :title="$t('common.edit')">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <!-- <button class="btn btn-sm btn-outline-danger" @click.stop="deleteTable(table)">
+                      <i class="bi bi-trash"></i>
+                    </button> -->
+                  </div>
                 </div>
                 <div class="card-body">
                     <div class="table-stats">
@@ -148,14 +156,6 @@
                         <span class="stat-value">{{ formatSize(table.dataSize) }}</span>
                       </div>
                     </div>
-                  <div class="table-actions">
-                    <button class="btn btn-sm btn-outline-primary" @click.stop="editTable(table)">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                    <!-- <button class="btn btn-sm btn-outline-danger" @click.stop="deleteTable(table)">
-                      <i class="bi bi-trash"></i>
-                    </button> -->
-                  </div>
                 </div>
               </div>
             </div>
@@ -1138,7 +1138,7 @@ function handleExecuteSQL(sql: string) {
   text-overflow: ellipsis;
 }
 
-/* 卡片正文：标签在上、数值在下，右下角编辑按钮（对齐 VSCode 数据库插件的表格卡片） */
+/* 卡片正文：标签在上、数值在下 */
 .card-body {
   padding: 8px;
   display: flex;
@@ -1187,6 +1187,8 @@ function handleExecuteSQL(sql: string) {
   display: flex;
   gap: 0.375rem;
   flex-shrink: 0;
+  margin-left: auto;
+  align-self: flex-start;
 }
 
 .table-actions .btn {
