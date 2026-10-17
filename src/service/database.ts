@@ -412,6 +412,22 @@ export class DatabaseService {
   }
 
   /**
+   * 导出数据库架构（DDL）
+   * 后端返回：{ success: boolean, schema: string }
+   */
+  async exportSchema(connectionId: string, databaseName: string) {
+    return request('/api/database/exportSchema', { id: connectionId, databaseName });
+  }
+
+  /**
+   * 查看数据库日志
+   * 后端返回：{ success: boolean, logs: any[] }
+   */
+  async viewLogs(connectionId: string, databaseName?: string, limit = 100) {
+    return request('/api/database/viewLogs', { id: connectionId, databaseName, limit });
+  }
+
+  /**
    * 恢复数据库
    */
   async restoreDatabase(

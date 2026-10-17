@@ -11,7 +11,7 @@
           <button 
             type="button" 
             class="btn-close" 
-            @click="removeToast(index)"
+            @click="removeToast(toast)"
           ></button>
         </div>
         <div class="toast-body">{{ toast.message }}</div>

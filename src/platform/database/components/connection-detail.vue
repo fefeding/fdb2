@@ -124,9 +124,10 @@
           </div>
           <div class="action-text">SQL查询</div>
         </button> -->
-        <button class="action-btn" @click="exportSchema">
+        <button class="action-btn" :disabled="exportingSchema" @click="exportSchema">
           <div class="action-icon">
-            <i class="bi bi-download"></i>
+            <i v-if="exportingSchema" class="spinner-border spinner-border-sm"></i>
+            <i v-else class="bi bi-download"></i>
           </div>
           <div class="action-text">{{ $t('connection.exportSchema') }}</div>
         </button>
@@ -323,6 +324,46 @@
         </div>
       </div>
     </div>
+
+    <!-- 查看日志弹窗 -->
+    <div v-if="showLogs" class="modal fade show d-block" style="background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">{{ $t('connection.logsTitle') }}</h5>
+            <button type="button" class="btn-close" @click="showLogs = false"></button>
+          </div>
+          <div class="modal-body">
+            <div v-if="loadingLogs" class="logs-state">
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              {{ $t('common.loading') }}
+            </div>
+            <div v-else-if="!connectionLogs.length" class="logs-state">
+              {{ $t('connection.logsEmpty') }}
+            </div>
+            <div v-else class="logs-table-wrap">
+              <table class="table table-sm table-bordered mb-0">
+                <thead>
+                  <tr>
+                    <th v-for="col in logColumns" :key="col">{{ col }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(row, i) in connectionLogs" :key="i">
+                    <td v-for="col in logColumns" :key="col">{{ formatLogCell(row, col) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="showLogs = false">
+              {{ $t('common.close') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -334,6 +375,8 @@ import { useConnectionStore } from '@/stores/connection';
 import SqlExecutor from './sql-executor.vue';
 import { useI18n } from 'vue-i18n';
 import { modal } from '@/utils/modal';
+import { DatabaseService } from '@/service/database';
+import { saveTextFile } from '@/utils/download';
 
 const { t } = useI18n();
 
@@ -356,6 +399,7 @@ const emit = defineEmits<{
 
 // 初始化连接 store
 const connectionStore = useConnectionStore();
+const databaseService = new DatabaseService();
 
 // 连接统计信息
 const connectionStats = ref({
@@ -378,6 +422,17 @@ const isDetailsExpanded = ref(false);
 function toggleDetails() {
   isDetailsExpanded.value = !isDetailsExpanded.value;
 }
+
+// 导出架构 / 查看日志
+const exportingSchema = ref(false);
+const showLogs = ref(false);
+const loadingLogs = ref(false);
+const connectionLogs = ref<any[]>([]);
+/** 日志列：由首条记录推导，兼容各方言返回的不同字段 */
+const logColumns = computed(() => {
+  const first = connectionLogs.value.find((l) => l && typeof l === 'object');
+  return first ? Object.keys(first) : ['message'];
+});
 
 // 创建数据库相关
 const showCreateDatabase = ref(false);
@@ -508,16 +563,85 @@ function refreshAll() {
   }
 }
 
-function exportSchema() {
-  if (props.connection) {
-    emit('export-schema', props.connection);
+/**
+ * 导出架构：连接维度没有「当前库」，逐库调用后端 exportSchema 后拼成一份完整 DDL。
+ * 后端已按方言实现（MySQL/PG/SQLite/MSSQL/Oracle/ClickHouse/CockroachDB/SAP/Mongo）。
+ */
+async function exportSchema() {
+  if (!props.connection || exportingSchema.value) return;
+  const conn = props.connection;
+  // ConnectionEntity.id 是可选字段，这里收窄后再用
+  const connId = conn.id;
+  if (!connId) return;
+
+  if (!databases.value.length) {
+    await connectionStore.loadDatabases();
+  }
+  const names = databases.value.map((d: any) => d.name).filter(Boolean);
+  if (!names.length) {
+    await modal.warning(t('connection.schemaExportNoDatabase'));
+    return;
+  }
+
+  exportingSchema.value = true;
+  try {
+    const parts: string[] = [
+      `-- ${conn.name} 架构导出`,
+      `-- 时间: ${new Date().toISOString()}`,
+      `-- 数据库数: ${names.length}`,
+      ''
+    ];
+    for (const db of names) {
+      const res: any = await databaseService.exportSchema(connId, db);
+      const schema = String(res?.schema || '').trim();
+      parts.push(`-- ==================== ${db} ====================`);
+      parts.push(schema || `-- (${db} 无表或导出为空)`);
+      parts.push('');
+    }
+
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const result = await saveTextFile(`${conn.name}-schema-${stamp}.sql`, parts.join('\n'), {
+      SQL: ['sql']
+    });
+    // 用户在保存对话框里取消，不再提示成功
+    if (result.cancelled) return;
+
+    await modal.success(
+      t('connection.schemaExported', {
+        count: names.length,
+        path: result.path ? `\n${result.path}` : ''
+      })
+    );
+  } catch (error: any) {
+    await modal.error(error?.message || t('connection.schemaExportFailed'));
+  } finally {
+    exportingSchema.value = false;
   }
 }
 
-function viewLogs() {
-  if (props.connection) {
-    emit('view-logs', props.connection);
+/** 查看日志：拉取最近记录后在本组件的弹窗里展示 */
+async function viewLogs() {
+  const connId = props.connection?.id;
+  if (!connId) return;
+  showLogs.value = true;
+  loadingLogs.value = true;
+  connectionLogs.value = [];
+  try {
+    const res: any = await databaseService.viewLogs(connId, undefined, 100);
+    connectionLogs.value = Array.isArray(res?.logs) ? res.logs : [];
+  } catch (error: any) {
+    await modal.error(error?.message || t('connection.logsLoadFailed'));
+  } finally {
+    loadingLogs.value = false;
   }
+}
+
+/** 日志单元格：对象/数组序列化，避免表格里出现 [object Object] */
+function formatLogCell(row: any, key: string): string {
+  const v = row?.[key];
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'object') return JSON.stringify(v);
+  return String(v);
 }
 
 function showCreateDatabaseModal() {
@@ -1253,6 +1377,26 @@ function getDbLogoText(type?: string): string {
     padding: 10px 16px;
     font-size: 13px;
   }
+}
+
+/* 日志弹窗 */
+.logs-state {
+  padding: 24px;
+  text-align: center;
+  color: var(--db-text-muted);
+}
+
+.logs-table-wrap {
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.logs-table-wrap td {
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
 }
 </style>
 

@@ -102,6 +102,25 @@ const SHELL_CSS = `
   body.vscode-native-nav .table-hover tbody tr:hover { background-color: var(--db-bg-soft); transform: none; }
   body.vscode-native-nav .table-responsive { border-radius: 0; box-shadow: none; }
 
+  /* 关闭按钮：database.css 给它铺了 var(--db-gray-light) 实心底 + 黑色 svg，
+   * webview 深色背景下 svg 看不见，只剩一个灰色圆角方块（标题栏右上角那个）。
+   * 对齐 platform-desktop 改透明底，让 svg 可见（data-bs-theme=dark 时 Bootstrap 会反白）。
+   * 刻意不动 background-image / 尺寸：modal 组件里有改用字形图标的特例，不能被打掉。
+   */
+  body.vscode-native-nav .btn-close {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    background-color: transparent;
+    border-radius: 4px;
+    opacity: 0.7;
+  }
+  body.vscode-native-nav .btn-close:hover {
+    background-color: var(--db-bg-soft);
+    opacity: 1;
+    transform: none;
+  }
+
   /* ---------------- 配色降噪 ----------------
    * 桌面端 UI 用的是「语义色按钮 + 数据库品牌渐变块」，在编辑器面板里过于花哨。
    * webview 内统一收敛为中性观感：操作按钮改为主题色描边，仅破坏性操作保留红色，

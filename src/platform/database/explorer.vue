@@ -181,8 +181,6 @@
           @edit-connection="handleEditConnection"
           @refresh-all="handleRefreshAll"
           @open-sql-query="handleOpenSqlQuery"
-          @export-schema="handleExportSchema"
-          @view-logs="handleViewLogs"
           @create-database="handleCreateDatabase"
         />
 
@@ -799,16 +797,6 @@ function handleCreateDatabase() {
 function handleOpenSqlQuery(connection: ConnectionEntity) {
   // TODO: 打开SQL查询界面
   showToast('提示', 'SQL查询功能开发中...', 'info');
-}
-
-function handleExportSchema(connection: ConnectionEntity) {
-  // TODO: 导出数据库架构
-  showToast('提示', '架构导出功能开发中...', 'info');
-}
-
-function handleViewLogs(connection: ConnectionEntity) {
-  // TODO: 查看连接日志
-  showToast('提示', '日志查看功能开发中...', 'info');
 }
 
 function refreshAll() {
