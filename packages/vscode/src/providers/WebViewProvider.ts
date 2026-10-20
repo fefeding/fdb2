@@ -185,11 +185,6 @@ export class WebViewProvider {
     panel.iconPath = vscode.Uri.joinPath(this.context.extensionUri, 'resources', 'activity-icon.svg');
 
     const webview = panel.webview;
-    // webview 资源目录的 asWebviewUri，作为 <base> 让动态 import() 的 chunk 相对路径
-    // 正确解析到受 localResourceRoots 信任的地址（ESM 代码分割后有多文件）。
-    const webviewDirUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.context.extensionUri, WEBVIEW_DIR)
-    );
     const scriptUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.context.extensionUri, WEBVIEW_DIR, 'main.js')
     );
@@ -210,13 +205,12 @@ export class WebViewProvider {
 <meta charset="utf-8" />
 <meta http-equiv="Content-Security-Policy" content="${csp}" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<base href="${webviewDirUri.toString()}/" />
 <title>${escapeHtml(title)}</title>
 </head>
 <body>
 <div id="app"></div>
 <script nonce="${nonce}">window.__PANEL_TYPE__ = ${JSON.stringify(panelType)};</script>
-<script type="module" nonce="${nonce}" src="${scriptUri}"></script>
+<script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;
 

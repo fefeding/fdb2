@@ -31,18 +31,15 @@ export default defineConfig({
     sourcemap: !minify,
     // 把字体等静态资源内联为 data URI，避免 VSCode webview 下外部资源路径无法解析（图标 404）
     assetsInlineLimit: 100000000,
-    // 关闭 modulepreload：各面板/工作台改为运行时动态 import()，避免初始即拉取全部 chunk
-    modulePreload: false,
     rollupOptions: {
       input: {
         index: path.resolve(__dirname, 'src/platform/vscode/entry/index.ts')
       },
       output: {
         entryFileNames: 'main.js',
-        // 多 chunk 场景：文件名带 hash 避免同目录冲突；format 必须为 es 才能代码分割
         chunkFileNames: 'main.[hash].js',
-        assetFileNames: 'main.[hash].[ext]',
-        format: 'es'
+        assetFileNames: 'main.[ext]',
+        format: 'iife'
       }
     }
   },
