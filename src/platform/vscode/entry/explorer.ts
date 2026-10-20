@@ -6,7 +6,8 @@
  *
  * 注意：
  *  - vite 产物是 runtime-only Vue（无运行时模板编译器），根组件必须用 render 函数；
- *  - IIFE 单文件打包下不能用动态 import()，路由组件一律静态导入。
+ *  - 本模块经 entry/index.ts 的 import('./explorer') 动态加载（ESM 代码分割），
+ *    因此内部路由组件 / 桌面端子组件可静态导入，只在用户打开「工作台」时才下载执行。
  */
 import { createApp, h, defineComponent } from 'vue';
 import { createRouter, createMemoryHistory, RouterView } from 'vue-router';
