@@ -1,0 +1,22 @@
+{
+  "displayName": "Database Tool (fdb2)",
+  "extension.description": "A powerful database management tool: connection management, SQL query, data browsing and table structure inspection, supporting MySQL / PostgreSQL / SQL Server / SQLite / Oracle / MongoDB / ClickHouse and more.",
+  "viewContainer.dbtool.title": "Database Tool",
+  "view.databaseExplorer.name": "Database Connections",
+  "command.addConnection.title": "Add Connection",
+  "command.refreshConnections.title": "Refresh Connections",
+  "command.openQueryPanel.title": "New Query",
+  "command.openDatabasePanel.title": "Database Browser",
+  "command.testConnection.title": "Test Connection",
+  "command.deleteConnection.title": "Delete Connection",
+  "command.viewTableData.title": "View Data",
+  "command.viewTableStructure.title": "View Structure",
+  "command.editConnection.title": "Edit Connection",
+  "command.copyTableName.title": "Copy Table Name",
+  "command.copySelectSQL.title": "Copy SELECT Statement",
+  "dbtool.category": "Database Tool",
+  "viewsWelcome.databaseExplorer.contents": "No database connections yet.\n[Add Connection](command:dbtool.addConnection)\nConnection config is shared with the desktop fdb2 by default (~/.fdb2).",
+  "configuration.title": "Database Tool",
+  "config.queryLimit.description": "Default number of rows per page for table data pagination (used when the page does not explicitly specify a page size).",
+  "config.dataDir.description": "Directory for connection config and cache (leave empty to use the desktop db_tool ~/.fdb2, automatically reusing existing connections)."
+}

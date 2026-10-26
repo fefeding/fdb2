@@ -329,6 +329,7 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { copyToClipboard } from '../utils/helpers';
 
 const { t } = useI18n();
 
@@ -515,9 +516,9 @@ function copyQuery(query: any) {
 }
 
 function copySql(sql: string) {
-  navigator.clipboard.writeText(sql).then(() => {
+  copyToClipboard(sql).then((ok) => {
     // 这里可以显示复制成功提示
-    console.log('SQL已复制到剪贴板');
+    if (ok) console.log('SQL已复制到剪贴板');
   });
 }
 

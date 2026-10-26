@@ -1,7 +1,7 @@
 {
   "name": "vscode-fdb2",
-  "displayName": "Database Tool (fdb2)",
-  "description": "强大的数据库管理工具：连接管理、SQL 查询、数据浏览与表结构查看，支持 MySQL / PostgreSQL / SQL Server / SQLite / Oracle / MongoDB / ClickHouse 等多种数据库。",
+  "displayName": "%displayName%",
+  "description": "%extension.description%",
   "version": "1.2.22",
   "publisher": "fefeding",
   "license": "MIT",
@@ -50,7 +50,7 @@
       "activitybar": [
         {
           "id": "dbtool",
-          "title": "Database Tool",
+          "title": "%viewContainer.dbtool.title%",
           "icon": "resources/activity-icon.svg"
         }
       ]
@@ -59,76 +59,76 @@
       "dbtool": [
         {
           "id": "databaseExplorer",
-          "name": "数据库连接"
+          "name": "%view.databaseExplorer.name%"
         }
       ]
     },
     "commands": [
       {
         "command": "dbtool.addConnection",
-        "title": "添加连接",
+        "title": "%command.addConnection.title%",
         "icon": "$(add)",
-        "category": "Database Tool"
+        "category": "%dbtool.category%"
       },
       {
         "command": "dbtool.refreshConnections",
-        "title": "刷新连接",
+        "title": "%command.refreshConnections.title%",
         "icon": "$(refresh)",
-        "category": "Database Tool"
+        "category": "%dbtool.category%"
       },
       {
         "command": "dbtool.openQueryPanel",
-        "title": "新建查询",
+        "title": "%command.openQueryPanel.title%",
         "icon": "$(terminal)",
-        "category": "Database Tool"
+        "category": "%dbtool.category%"
       },
       {
         "command": "dbtool.openDatabasePanel",
-        "title": "数据库浏览器",
+        "title": "%command.openDatabasePanel.title%",
         "icon": "$(database)",
-        "category": "Database Tool"
+        "category": "%dbtool.category%"
       },
       {
         "command": "dbtool.testConnection",
-        "title": "测试连接",
+        "title": "%command.testConnection.title%",
         "icon": "$(check)",
-        "category": "Database Tool"
+        "category": "%dbtool.category%"
       },
       {
         "command": "dbtool.deleteConnection",
-        "title": "删除连接",
+        "title": "%command.deleteConnection.title%",
         "icon": "$(trash)",
-        "category": "Database Tool"
+        "category": "%dbtool.category%"
       },
       {
         "command": "dbtool.viewTableData",
-        "title": "查看数据",
+        "title": "%command.viewTableData.title%",
         "icon": "$(table)",
-        "category": "Database Tool"
+        "category": "%dbtool.category%"
       },
       {
         "command": "dbtool.viewTableStructure",
-        "title": "查看结构",
+        "title": "%command.viewTableStructure.title%",
         "icon": "$(list-unordered)",
-        "category": "Database Tool"
+        "category": "%dbtool.category%"
       },
       {
         "command": "dbtool.editConnection",
-        "title": "编辑连接",
+        "title": "%command.editConnection.title%",
         "icon": "$(pencil)",
-        "category": "Database Tool"
+        "category": "%dbtool.category%"
       },
       {
         "command": "dbtool.copyTableName",
-        "title": "复制表名",
+        "title": "%command.copyTableName.title%",
         "icon": "$(clippy)",
-        "category": "Database Tool"
+        "category": "%dbtool.category%"
       },
       {
         "command": "dbtool.copySelectSQL",
-        "title": "复制 SELECT 语句",
+        "title": "%command.copySelectSQL.title%",
         "icon": "$(code)",
-        "category": "Database Tool"
+        "category": "%dbtool.category%"
       }
     ],
     "menus": {
@@ -195,21 +195,21 @@
     "viewsWelcome": [
       {
         "view": "databaseExplorer",
-        "contents": "暂无数据库连接。\n[添加连接](command:dbtool.addConnection)\n连接配置默认与桌面端 fdb2 共享（~/.fdb2）。"
+        "contents": "%viewsWelcome.databaseExplorer.contents%"
       }
     ],
     "configuration": {
-      "title": "Database Tool",
+      "title": "%configuration.title%",
       "properties": {
         "dbtool.queryLimit": {
           "type": "number",
           "default": 200,
-          "description": "表数据分页的默认每页行数（页面未显式指定分页大小时生效）。"
+          "description": "%config.queryLimit.description%"
         },
         "dbtool.dataDir": {
           "type": "string",
           "default": "",
-          "description": "连接配置与缓存目录（留空则使用桌面端 db_tool 的 ~/.fdb2，自动复用已有连接）。"
+          "description": "%config.dataDir.description%"
         }
       }
     }

@@ -10,10 +10,13 @@ import TableDataPanel from '../components/TableDataPanel.vue';
 import TableStructurePanel from '../components/TableStructurePanel.vue';
 import { mountExplorer } from './explorer';
 import { installVscodeShellStyle } from '../theme';
+import { installClipboardPolyfill } from '../clipboard';
 import '../style.css';
 
 // 必须在挂载前注入，避免首帧闪烁
 installVscodeShellStyle();
+// webview 内 navigator.clipboard 受限，提前兜底，保证复制/剪切可用
+installClipboardPolyfill();
 
 const type = (window as any).__PANEL_TYPE__ || 'database';
 

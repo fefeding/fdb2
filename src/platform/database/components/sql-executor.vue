@@ -96,6 +96,7 @@ import { DatabaseService } from '@/service/database';
 import { modal } from '@/utils/modal';
 import { exportDataToCSV, exportDataToJSON, formatFileName } from '../utils/export';
 import { isDarkTheme, onThemeChange } from '../utils/theme';
+import { clipboardKeymap } from '../utils/cm-clipboard';
 
 // Props
 const props = defineProps<{
@@ -363,6 +364,7 @@ function initEditor() {
       sql(),
       // 暗色主题才套 oneDark，浅色主题下保持 CodeMirror 默认亮色，避免编辑器与界面割裂
       ...(isDarkTheme() ? [oneDark] : []),
+      clipboardKeymap,
       keymap.of(defaultKeymap),
       EditorView.updateListener.of(update => {
         if (update.docChanged) {
@@ -417,6 +419,7 @@ function initResultEditor() {
       placeholder(t('sqlExecutor.resultPlaceholder')),
       json(),
       syntaxHighlighting(defaultHighlightStyle),
+      clipboardKeymap,
       keymap.of(defaultKeymap),
       EditorView.lineWrapping,
       // 设置只读

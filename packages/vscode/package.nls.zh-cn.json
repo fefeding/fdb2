@@ -1,0 +1,22 @@
+{
+  "displayName": "数据库工具 (fdb2)",
+  "extension.description": "强大的数据库管理工具：连接管理、SQL 查询、数据浏览与表结构查看，支持 MySQL / PostgreSQL / SQL Server / SQLite / Oracle / MongoDB / ClickHouse 等多种数据库。",
+  "viewContainer.dbtool.title": "数据库工具",
+  "view.databaseExplorer.name": "数据库连接",
+  "command.addConnection.title": "添加连接",
+  "command.refreshConnections.title": "刷新连接",
+  "command.openQueryPanel.title": "新建查询",
+  "command.openDatabasePanel.title": "数据库浏览器",
+  "command.testConnection.title": "测试连接",
+  "command.deleteConnection.title": "删除连接",
+  "command.viewTableData.title": "查看数据",
+  "command.viewTableStructure.title": "查看结构",
+  "command.editConnection.title": "编辑连接",
+  "command.copyTableName.title": "复制表名",
+  "command.copySelectSQL.title": "复制 SELECT 语句",
+  "dbtool.category": "数据库工具",
+  "viewsWelcome.databaseExplorer.contents": "暂无数据库连接。\n[添加连接](command:dbtool.addConnection)\n连接配置默认与桌面端 fdb2 共享（~/.fdb2）。",
+  "configuration.title": "数据库工具",
+  "config.queryLimit.description": "表数据分页的默认每页行数（页面未显式指定分页大小时生效）。",
+  "config.dataDir.description": "连接配置与缓存目录（留空则使用桌面端 db_tool 的 ~/.fdb2，自动复用已有连接）。"
+}
