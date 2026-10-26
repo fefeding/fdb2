@@ -50,6 +50,31 @@ function deleteServerInfo() {
   }
 }
 
+// 获取本地配置文件路径（与 PID/INFO 同目录）
+function getConfigPath() {
+  const dataDir = process.env.DB_TOOL_DATA_DIR || path.join(os.homedir(), '.fdb2');
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+  return path.join(dataDir, 'fdb2.config.json');
+}
+
+// 读取本地配置（容错：损坏时回退空对象）
+function readConfig() {
+  try {
+    const p = getConfigPath();
+    if (!fs.existsSync(p)) return {};
+    return JSON.parse(fs.readFileSync(p, 'utf8')) || {};
+  } catch {
+    return {};
+  }
+}
+
+// 写入本地配置
+function writeConfig(cfg) {
+  fs.writeFileSync(getConfigPath(), JSON.stringify(cfg, null, 2));
+}
+
 // 解析命令行参数
 const args = process.argv.slice(2);
 const command = args[0] || 'help';
@@ -66,9 +91,17 @@ switch (command) {
   case 'restart':
     restartProject();
     break;
+  case 'token':
+    handleTokenCommand(commandArgs);
+    break;
   case '-v':
   case '--version':
     showVersion();
+    break;
+  case '-h':
+  case '--help':
+  case 'help':
+    showHelp();
     break;
   default: {
     // 数据库命令（conn/db/table/rows/...）交给编译后的 CLI
@@ -198,6 +231,16 @@ async function startProject() {
   // 创建日志文件流
   const logFileFd = createLogFileStream(logFilePath);
   
+  // 注入远程访问令牌：若未通过环境变量显式指定，则从本地配置读取并写入子进程环境
+  if (!process.env.DB_TOOL_REMOTE_TOKEN) {
+    const cfg = readConfig();
+    if (cfg.remoteToken) {
+      process.env.DB_TOOL_REMOTE_TOKEN = cfg.remoteToken;
+      console.log('已从本地配置载入远程访问令牌。');
+    }
+  }
+  
+
   // 使用 node 命令启动服务器（异步，后台运行）
   const child = spawn(cmd, args, {
     cwd: projectRoot,
@@ -349,8 +392,40 @@ function showHelp() {
   console.log('FDB2 Database Tool');
   console.log('');
   console.log('Usage:');
-  console.log('  fdb2 start    Start the project');
-  console.log('  fdb2 stop     Stop the project');
-  console.log('  fdb2 restart  Restart the project');
+  console.log('  fdb2 start                 Start the project');
+  console.log('  fdb2 stop                  Stop the project');
+  console.log('  fdb2 restart               Restart the project');
+  console.log('  fdb2 token set <token>    Save remote access token to local config');
+  console.log('  fdb2 token get            Show the saved remote access token');
   console.log('');
+  console.log('数据库操作（连接/库表/数据/SQL 等）作为子命令使用，例如 `fdb2 conn`、`fdb2 db`。');
+  console.log('远程连接相关说明见 README 的「远程代理服务」章节。');
+}
+
+// 处理 token 子命令：set / get
+function handleTokenCommand(args) {
+  const sub = args[0];
+  if (sub === 'set') {
+    const value = args[1];
+    if (!value) {
+      console.error('用法: fdb2 token set <token>');
+      process.exitCode = 1;
+      return;
+    }
+    const cfg = readConfig();
+    cfg.remoteToken = value;
+    writeConfig(cfg);
+    console.log('远程访问令牌已保存到本地配置文件。');
+    console.log('下次执行 `fdb2 start` 时会自动应用到服务端。');
+  } else if (sub === 'get' || sub === 'view') {
+    const cfg = readConfig();
+    if (cfg.remoteToken) {
+      console.log(cfg.remoteToken);
+    } else {
+      console.log('（尚未设置远程访问令牌）');
+    }
+  } else {
+    console.error('用法: fdb2 token set <token> | fdb2 token get');
+    process.exitCode = 1;
+  }
 }

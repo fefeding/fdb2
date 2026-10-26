@@ -107,6 +107,12 @@ The remote database password never leaves the remote server: it is **not** sent 
 ```bash
 # on the remote machine
 DB_TOOL_REMOTE_TOKEN=your-secret fdb2 start -p 9800
+
+# 也可以把令牌持久化保存，之后 `fdb2 start` 会自动读取，无需每次设置环境变量：
+fdb2 token set your-secret
+fdb2 start -p 9800
+# 查看已保存的令牌：
+fdb2 token get
 ```
 Once set, the remote server rejects every HTTP request that does not carry the matching `x-db-tool-token` header, and answers `远程访问令牌无效` (*invalid remote access token*). Put the same value into the proxy connection's **Access Token** field.
 

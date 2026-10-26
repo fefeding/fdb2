@@ -90,7 +90,7 @@ If the database is **not reachable from this machine** (corporate VPN, private s
 
 The remote server's connections are then merged into your local connection list, and everything (schema browsing, SQL, DDL, data CRUD, export, plus editing/deleting the connection config) is forwarded to the remote server and executed there. The remote database password stays on the remote server and is never sent to this client.
 
-> 🔒 To protect a remote server, start it with `DB_TOOL_REMOTE_TOKEN=<secret>`; it then rejects HTTP requests without a matching `x-db-tool-token` header. Put the same value in the proxy connection's **Access Token** field. Set the token **only on the remote server** — setting it locally would lock out your own client. The check guards the HTTP entry point only; in-process calls from the extension host are unaffected.
+> 🔒 To protect a remote server, start it with `DB_TOOL_REMOTE_TOKEN=<secret>`; it then rejects HTTP requests without a matching `x-db-tool-token` header. Put the same value in the proxy connection's **Access Token** field. Set the token **only on the remote server** — setting it locally would lock out your own client. The check guards the HTTP entry point only; in-process calls from the extension host are unaffected. You can persist the token with `fdb2 token set <secret>` so that `fdb2 start` applies it automatically (run `fdb2 token get` to view it).
 
 > ℹ️ Proxying is one level deep (`A → B → C` is not supported), and the remote service must be reachable from this machine.
 

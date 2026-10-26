@@ -124,6 +124,12 @@ http://localhost:9800
 ```bash
 # 在远程机器上
 DB_TOOL_REMOTE_TOKEN=你的密钥 fdb2 start -p 9800
+
+# 也可以把令牌持久化保存到本地配置文件，之后 `fdb2 start` 会自动应用，免去每次设置环境变量：
+fdb2 token set 你的密钥
+fdb2 start -p 9800
+# 查看已保存的令牌：
+fdb2 token get
 ```
 设置后，远程服务端会拒绝所有未携带 `x-db-tool-token` 请求头的 HTTP 请求，并返回 `远程访问令牌无效`。把同样的值填进代理连接的「访问令牌」即可。
 
