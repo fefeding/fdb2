@@ -82,7 +82,7 @@ app.use('/api/', async (req, res, next) => {
       const handleDatabaseRoutes = serverModule.handleDatabaseRoutes;
       
       // 调用 handleDatabaseRoutes 函数处理请求
-      const result = await handleDatabaseRoutes(req.originalUrl, req.body);
+      const result = await handleDatabaseRoutes(req.originalUrl, req.body, req.headers);
       
       // 返回处理结果
       res.status(200).json({

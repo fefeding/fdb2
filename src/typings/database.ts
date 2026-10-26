@@ -53,6 +53,31 @@ export interface ConnectionEntity {
   enabled?: boolean;
 
   /**
+   * 是否为远程代理配置项（本身不是真实数据库连接，仅用于转发）
+   */
+  _isProxy?: boolean;
+
+  /**
+   * 是否为远程服务暴露出来的连接
+   */
+  _remote?: boolean;
+
+  /**
+   * 所属远程代理连接的 ID
+   */
+  _proxyId?: string;
+
+  /**
+   * 所属远程代理连接的名称
+   */
+  _remoteName?: string;
+
+  /**
+   * 远程服务不可达时的错误信息
+   */
+  _remoteError?: string;
+
+  /**
    * 创建时间
    */
   createdAt?: Date;

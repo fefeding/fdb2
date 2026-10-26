@@ -452,6 +452,9 @@ function selectConnection(connection: ConnectionEntity) {
 }
 
 async function loadDatabasesForConnection(connection: ConnectionEntity, forceRefresh = false) {
+  // 远程代理配置本身不是真实连接，无需加载数据库（其下的具体连接由远程暴露）
+  if (connection._isProxy) return;
+
   const cacheKey = connection.id || '';
   
   // 检查缓存
@@ -832,7 +835,8 @@ function getDbTypeLabel(type: string): string {
     postgres: 'PostgreSQL',
     sqlite: 'SQLite',
     mssql: 'SQL Server',
-    oracle: 'Oracle'
+    oracle: 'Oracle',
+    remote: '远程代理服务'
   };
   return labelMap[type] || type;
 }
@@ -865,7 +869,8 @@ function getDbLogoText(type: string): string {
     postgres: 'P',
     sqlite: 'S',
     mssql: 'MS',
-    oracle: 'O'
+    oracle: 'O',
+    remote: 'R'
   };
   return textMap[type] || 'D';
 }

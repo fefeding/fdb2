@@ -15,7 +15,7 @@
         </select>
       </div>
 
-      <template v-if="form.type !== 'sqlite'">
+      <template v-if="form.type !== 'sqlite' && form.type !== 'remote'">
         <div class="form-row">
           <div class="form-col form-group">
             <label class="form-label">主机地址</label>
@@ -37,6 +37,18 @@
             <input v-model="form.password" type="password" class="form-control" placeholder="••••••••" />
           </div>
         </div>
+      </template>
+
+      <template v-if="form.type === 'remote'">
+        <div class="form-group">
+          <label class="form-label">远程服务地址 <span class="required">*</span></label>
+          <input v-model="form.remoteUrl" class="form-control" placeholder="http://192.168.1.10:9800" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">访问令牌（可选）</label>
+          <input v-model="form.remoteToken" type="password" class="form-control" placeholder="与服务端 DB_TOOL_REMOTE_TOKEN 一致" />
+        </div>
+        <p class="form-hint">保存后，该远程服务上的所有数据库连接会自动出现在连接列表中，可像本地数据库一样直接访问。</p>
       </template>
 
       <div class="form-group">
@@ -84,7 +96,8 @@ const databaseTypes = [
   { type: 'cockroachdb', name: 'CockroachDB', defaultPort: 26257, ssl: false },
   { type: 'mongodb', name: 'MongoDB', defaultPort: 27017, ssl: false },
   { type: 'sap', name: 'SAP HANA', defaultPort: 39013, ssl: false },
-  { type: 'clickhouse', name: 'ClickHouse', defaultPort: 8123, ssl: false }
+  { type: 'clickhouse', name: 'ClickHouse', defaultPort: 8123, ssl: false },
+  { type: 'remote', name: '远程代理服务', defaultPort: 0, ssl: false }
 ];
 
 const supportsSsl = computed(() => {
@@ -99,7 +112,9 @@ const form = reactive({
   port: 3306,
   database: '',
   username: '',
-  password: ''
+  password: '',
+  remoteUrl: '',
+  remoteToken: ''
 });
 
 onMounted(() => {
@@ -129,7 +144,9 @@ function enterEditMode(connection: any) {
     port: connection.port || 0,
     database: connection.database || '',
     username: connection.username || '',
-    password: connection.password || ''
+    password: connection.password || '',
+    remoteUrl: connection.options?.remoteUrl || '',
+    remoteToken: connection.options?.remoteToken || ''
   });
   sslEnabled.value = !!connection.options?.ssl;
 }
@@ -152,7 +169,15 @@ function buildPayload() {
     password: form.password,
     options: {}
   };
-  if (supportsSsl.value && sslEnabled.value) {
+  if (form.type === 'remote') {
+    payload.host = '';
+    payload.port = 0;
+    payload.username = '';
+    payload.password = '';
+    payload.database = '';
+    payload.options.remoteUrl = form.remoteUrl;
+    payload.options.remoteToken = form.remoteToken;
+  } else if (supportsSsl.value && sslEnabled.value) {
     payload.options.ssl = true;
   }
   return payload;
@@ -268,5 +293,17 @@ function handleCancel() {
 
 .btn-secondary:hover {
   background-color: var(--dbt-button-secondaryHoverBackground);
+}
+
+.required {
+  color: #e5484d;
+  margin-left: 0.25rem;
+}
+
+.form-hint {
+  margin: 0.25rem 0 0;
+  font-size: 12px;
+  color: var(--dbt-descriptionForeground);
+  line-height: 1.5;
 }
 </style>

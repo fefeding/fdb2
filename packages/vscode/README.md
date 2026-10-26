@@ -11,6 +11,7 @@ The extension embeds the `fdb2` web UI inside a VSCode Webview. The native **Act
 ## ✨ Features
 
 - **Connection management** — Add / edit / delete / test connections from the Activity Bar's **Database Tool** view. Connection config is shared with the desktop `fdb2` app under `~/.fdb2/connections.json` (overridable via the `dbtool.dataDir` setting).
+- **Remote proxy connections** — Point a connection at a remote `fdb2` server over HTTP and work with the databases that server exposes, even when they are unreachable from this machine (see *Connect through a remote service* below).
 - **Object explorer tree** — A native VSCode tree: **Connection → Database → Table → Column**. Click any node to open the related panel.
 - **Per-connection tabs** — Clicking the *same* connection (or its databases/tables) reuses the same editor tab; clicking a *different* connection opens a brand-new tab, so you can compare multiple databases side by side.
 - **SQL query** — A dedicated query panel that executes arbitrary SQL and renders results as a sortable, paginated table (`Ctrl/Cmd+Enter` to run).
@@ -62,16 +63,36 @@ Fill in:
 | Field | Description |
 | --- | --- |
 | Name | A friendly label (shown in the tree and tab title). |
-| Type | `mysql`, `postgres`, `sqlserver`, `sqlite`, `oracle`, `mongodb`, `clickhouse`, `cockroachdb`, `sap` … |
+| Type | `mysql`, `postgres`, `sqlserver`, `sqlite`, `oracle`, `mongodb`, `clickhouse`, `cockroachdb`, `sap`, `remote` … |
 | Host / Port | Server address (ignored for SQLite file-based databases). |
 | User / Password | Credentials. |
 | Database | Optional default database. |
 | (SQLite) File | Absolute path to the `.db` / `.sqlite` file. |
 | (ClickHouse) Auth | Uses the HTTP interface (default port `8123`) with Basic auth and the default user `default`. |
+| (remote) Service URL | Base URL of a remote `fdb2` server, e.g. `http://10.0.0.5:9800` — the service **root**, no trailing `/api`. |
+| (remote) Access Token | Optional. Only needed when the remote server runs with `DB_TOOL_REMOTE_TOKEN`. |
 
 Then click **Save**. The connection appears in the tree and the form panel closes.
 
 > 💡 Connections are stored at `~/.fdb2/connections.json` and are **shared** with the desktop `fdb2` app by default.
+
+### 2b. Connect through a remote service (HTTP proxy)
+
+If the database is **not reachable from this machine** (corporate VPN, private subnet, bastion host…), run `fdb2` on a machine that *can* reach it and let the extension talk to that service over HTTP:
+
+1. **On the machine that can reach the database** — start the service and make sure it is reachable from here:
+   ```bash
+   fdb2 start -p 9800
+   # then open http://<remote-ip>:9800 in a browser to confirm
+   ```
+2. **On that remote service** — add the real database connections as usual.
+3. **Here in the extension** — *Add Connection* → **Type: `remote`** → fill **Service URL** (and **Access Token** if the remote server requires one) → **Save**.
+
+The remote server's connections are then merged into your local connection list, and everything (schema browsing, SQL, DDL, data CRUD, export, plus editing/deleting the connection config) is forwarded to the remote server and executed there. The remote database password stays on the remote server and is never sent to this client.
+
+> 🔒 To protect a remote server, start it with `DB_TOOL_REMOTE_TOKEN=<secret>`; it then rejects HTTP requests without a matching `x-db-tool-token` header. Put the same value in the proxy connection's **Access Token** field. Set the token **only on the remote server** — setting it locally would lock out your own client. The check guards the HTTP entry point only; in-process calls from the extension host are unaffected.
+
+> ℹ️ Proxying is one level deep (`A → B → C` is not supported), and the remote service must be reachable from this machine.
 
 ### 3. Test a connection
 Right-click a connection → **Test Connection** (or use the inline `✓` action). A success/error toast appears.

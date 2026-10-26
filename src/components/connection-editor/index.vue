@@ -43,7 +43,7 @@
       </div>
 
       <!-- 连接配置 -->
-      <div class="form-section" v-if="connectionForm.type !== 'sqlite'">
+      <div class="form-section" v-if="connectionForm.type !== 'sqlite' && connectionForm.type !== 'remote'">
         <div class="section-header">
           <div class="section-icon">
             <i class="bi bi-hdd-network"></i>
@@ -102,6 +102,35 @@
                      :placeholder="$t('connection.databaseFilePlaceholder')" required>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- 远程代理服务配置 -->
+      <div class="form-section" v-if="connectionForm.type === 'remote'">
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="bi bi-cloud"></i>
+          </div>
+          <h3 class="section-title">{{ $t('connection.remoteConfig') }}</h3>
+        </div>
+        <div class="section-content">
+          <div class="form-grid">
+            <div class="form-group-modern">
+              <label class="form-label-modern">
+                <i class="bi bi-hdd-network me-2"></i>{{ $t('connection.remoteUrl') }} <span class="required">*</span>
+              </label>
+              <input type="text" class="form-control-modern" v-model="connectionForm.options.remoteUrl"
+                     :placeholder="$t('connection.remoteUrlPlaceholder')" required>
+            </div>
+            <div class="form-group-modern">
+              <label class="form-label-modern">
+                <i class="bi bi-key me-2"></i>{{ $t('connection.remoteToken') }}
+              </label>
+              <input type="password" class="form-control-modern" v-model="connectionForm.options.remoteToken"
+                     :placeholder="$t('connection.remoteTokenPlaceholder')">
+            </div>
+          </div>
+          <p class="form-hint">{{ $t('connection.remoteConfigHint') }}</p>
         </div>
       </div>
 
@@ -227,7 +256,9 @@ const errorMessage = ref('');
 
 // 响应式数据
 const editingConnection = ref<ConnectionEntity | null>(null);
-const connectionForm = ref<ConnectionEntity>({
+// 表单里 options 始终存在（远程代理的 remoteUrl/remoteToken 等都放在这里）
+type ConnectionForm = Omit<ConnectionEntity, 'options'> & { options: Record<string, any> };
+const connectionForm = ref<ConnectionForm>({
   id: '',
   name: '',
   type: '',
@@ -254,6 +285,13 @@ function validateConnection(connection: ConnectionEntity): { isValid: boolean; m
   
   if (!connection.type?.trim()) {
     return { isValid: false, message: t('connection.typeRequired') };
+  }
+  
+  if (connection.type === 'remote') {
+    if (!connection.options?.remoteUrl?.trim()) {
+      return { isValid: false, message: t('connection.remoteUrlRequired') };
+    }
+    return { isValid: true, message: '' };
   }
   
   if (connection.type !== 'sqlite') {
@@ -312,7 +350,7 @@ function showAddModal() {
 // 显示编辑模态框
 function showEditModal(connection: ConnectionEntity) {
   editingConnection.value = connection;
-  connectionForm.value = { ...connection };
+  connectionForm.value = { ...connection, options: connection.options || {} };
   show();
 }
 
@@ -600,5 +638,13 @@ loadDatabaseTypes();
   color: var(--db-text-body);
   font-size: 0.8125rem;
   line-height: 1.6;
+}
+
+.form-hint {
+  grid-column: 1 / -1;
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--db-text-muted);
+  line-height: 1.5;
 }
 </style>

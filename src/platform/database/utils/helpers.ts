@@ -262,7 +262,8 @@ export function getDbTypeLabel(type: string): string {
     mssql: 'SQL Server',
     sqlserver: 'SQL Server',
     oracle: 'Oracle',
-    mongodb: 'MongoDB'
+    mongodb: 'MongoDB',
+    remote: '远程代理服务'
   };
   return labelMap[type.toLowerCase()] || type;
 }

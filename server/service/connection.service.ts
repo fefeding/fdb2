@@ -110,6 +110,12 @@ export class ConnectionService {
     if (updates.name && connections.find((conn, idx) => conn.name === updates.name && idx !== index)) {
       throw new Error('连接名称已存在');
     }
+    // 空密码不覆盖已保存的密码：
+    // 远程代理场景下客户端不持有远程库的密码（服务端不下发），编辑保存时密码框为空，
+    // 若直接覆盖会把远端的密码清掉。
+    if (updates.password === '' && connections[index].password) {
+      delete updates.password;
+    }
     // @ts-ignore
     connections[index] = { ...connections[index], ...updates, updatedAt: new Date() };
     await this.saveConnections(connections);
@@ -139,10 +145,20 @@ export class ConnectionService {
 
   /**
    * 测试数据库连接
+   *
+   * 当请求带 id 时，优先用服务端已保存的配置补齐客户端未回传的凭据
+   * （远程代理场景下客户端不持有远程库的密码，密码只保存在服务端）。
    */
   async testConnection(connection: ConnectionEntity): Promise<boolean> {
     try {
-      const tempDataSource = await this.createTypeORMDataSource(connection);
+      let target = connection;
+      if (connection.id) {
+        const stored = await this.getConnectionById(connection.id);
+        if (stored) {
+          target = { ...stored, ...connection, password: connection.password || stored.password };
+        }
+      }
+      const tempDataSource = await this.createTypeORMDataSource(target);
       await tempDataSource.query('SELECT 1');
       await tempDataSource.destroy();
       return true;

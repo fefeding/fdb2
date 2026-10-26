@@ -773,6 +773,21 @@ export class DatabaseService {
           supportDistributed: true,
           supportHighPerformance: true
         }
+      },
+      {
+        value: 'remote',
+        label: '远程代理服务',
+        icon: 'bi-cloud',
+        defaultPort: null,
+        description: '通过 HTTP 代理访问远程 db_tool 服务端的数据库',
+        features: {
+          supportSchemas: false,
+          supportProcedures: false,
+          supportTriggers: false,
+          supportViews: false,
+          supportFullTextSearch: false,
+          supportJson: false
+        }
       }
     ];
   }

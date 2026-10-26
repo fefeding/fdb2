@@ -1,6 +1,259 @@
 import * as http from "node:http";
+import * as https from "node:https";
 import { ConnectionService } from './service/connection.service';
 import { DatabaseService } from './service/database/database.service';
+
+// 远程代理相关常量
+const REMOTE_ID_SEP = '::';
+const REMOTE_TOKEN_HEADER = 'x-db-tool-token';
+// 代理请求标记：用于识别"本请求本身来自代理"，避免远程地址指向自身(或互指)时无限递归合并
+const REMOTE_PROXY_HEADER = 'x-db-tool-proxy';
+
+// 永不转发的路由：只作用于本地连接配置（无远程对应物或需要本地语义）
+const LOCAL_ONLY_ROUTES = new Set<string>([
+  '/api/database/getConnection',
+  '/api/database/addConnection',
+  '/api/database/getSupportedDatabaseTypes'
+]);
+
+// 连接配置类路由：复合 id 时转发到远程，但允许直接操作「远程代理配置」本身
+const CONNECTION_CONFIG_ROUTES = new Set<string>([
+  '/api/database/getConnections',
+  '/api/database/getConnection',
+  '/api/database/addConnection',
+  '/api/database/updateConnection',
+  '/api/database/deleteConnection',
+  '/api/database/testConnection',
+  '/api/database/getSupportedDatabaseTypes'
+]);
+
+function isRemoteConnection(conn: any): boolean {
+  return !!conn && conn.type === 'remote';
+}
+
+/** 从请求中取出被操作连接的 id（body 或路径段） */
+function extractConnId(pathname: string, body: any): string | undefined {
+  if (pathname.startsWith('/api/database/truncateTable/') || pathname.startsWith('/api/database/dropTable/')) {
+    const parts = pathname.split('/').filter(Boolean);
+    return parts[3];
+  }
+  if (body && typeof body.id === 'string') return body.id;
+  return undefined;
+}
+
+/**
+ * 拆分复合 id：proxyId::remoteConnId。
+ * remoteConnId 自身可能仍是复合 id（多级代理），必须保留剩余部分，不能用 split 截断。
+ */
+function splitProxyId(connId: string): { proxyId: string; remoteConnId: string } | null {
+  const idx = connId.indexOf(REMOTE_ID_SEP);
+  if (idx <= 0) return null;
+  return {
+    proxyId: connId.slice(0, idx),
+    remoteConnId: connId.slice(idx + REMOTE_ID_SEP.length)
+  };
+}
+
+/** 判断是否为指向远程的复合 id（proxyId::remoteConnId） */
+async function resolveRemoteProxy(pathname: string, body: any): Promise<{ proxyConn: any; remoteConnId: string } | null> {
+  if (LOCAL_ONLY_ROUTES.has(pathname)) return null;
+  const connId = extractConnId(pathname, body);
+  if (!connId || !connId.includes(REMOTE_ID_SEP)) return null;
+  const parts = splitProxyId(connId);
+  if (!parts) return null;
+  const proxyConn = await connectionService.getConnectionById(parts.proxyId);
+  if (!proxyConn || !isRemoteConnection(proxyConn)) return null;
+  return { proxyConn, remoteConnId: parts.remoteConnId };
+}
+
+/** 解析远程响应体（远程服务统一返回 { ret, msg, data } 信封） */
+function parseRemotePayload(text: string): any {
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    return {};
+  }
+}
+
+/** 通过 Node 18+ 全局 fetch 调用远程服务 */
+async function postRemoteByFetch(
+  url: string,
+  body: any,
+  headers: Record<string, string>,
+  timeoutMs: number
+): Promise<any> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...headers },
+      body: JSON.stringify(body ?? {}),
+      signal: controller.signal
+    });
+    const text = await resp.text();
+    const payload = parseRemotePayload(text);
+    if (!resp.ok) {
+      throw new Error(payload?.msg || `远程服务返回 HTTP ${resp.status}`);
+    }
+    return payload;
+  } catch (e: any) {
+    if (e?.name === 'AbortError') throw new Error('远程服务请求超时');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * 低版本 Node 没有全局 fetch 时的回退实现。
+ * VSCode 1.75-1.84 的扩展宿主内置 Node 16（无全局 fetch），扩展声明支持 ^1.75.0，故保留此路径。
+ */
+function postRemoteByNodeHttp(
+  url: string,
+  body: any,
+  headers: Record<string, string>,
+  timeoutMs: number
+): Promise<any> {
+  return new Promise((resolve, reject) => {
+    let target: URL;
+    try {
+      target = new URL(url);
+    } catch {
+      reject(new Error(`远程服务地址无效: ${url}`));
+      return;
+    }
+    const payload = Buffer.from(JSON.stringify(body ?? {}));
+    const lib = target.protocol === 'https:' ? https : http;
+    const req = lib.request(
+      {
+        hostname: target.hostname,
+        port: target.port || (target.protocol === 'https:' ? 443 : 80),
+        path: (target.pathname || '/') + (target.search || ''),
+        method: 'POST',
+        headers: { ...headers, 'Content-Length': payload.length }
+      },
+      (res) => {
+        let raw = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk: string) => { raw += chunk; });
+        res.on('end', () => {
+          const data = parseRemotePayload(raw);
+          const status = res.statusCode || 0;
+          if (status < 200 || status >= 300) {
+            reject(new Error(data?.msg || `远程服务返回 HTTP ${status}`));
+            return;
+          }
+          resolve(data);
+        });
+      }
+    );
+    req.setTimeout(timeoutMs, () => { req.destroy(new Error('远程服务请求超时')); });
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
+/** 统一的远程调用入口：优先全局 fetch，低版本回退 node:http(s)；返回 { ret, msg, data } 信封 */
+async function postRemote(
+  url: string,
+  body: any,
+  headers: Record<string, string>,
+  timeoutMs: number
+): Promise<any> {
+  if (typeof fetch === 'function') {
+    return await postRemoteByFetch(url, body, headers, timeoutMs);
+  }
+  return await postRemoteByNodeHttp(url, body, headers, timeoutMs);
+}
+
+/** 构造带令牌与代理标记的请求头 */
+function buildRemoteHeaders(proxyConn: any): Record<string, string> {
+  const headers: Record<string, string> = { [REMOTE_PROXY_HEADER]: '1' };
+  const token = proxyConn?.options?.remoteToken;
+  if (token) headers[REMOTE_TOKEN_HEADER] = String(token);
+  return headers;
+}
+
+/** 把请求原样转发到远程 db_tool 服务端（自动解包远程响应，避免二次包装） */
+async function proxyToRemote(proxyConn: any, remoteConnId: string, pathname: string, body: any): Promise<any> {
+  const base = String(proxyConn.options?.remoteUrl || '').replace(/\/+$/, '');
+  if (!base) throw new Error('远程代理连接缺少 remoteUrl');
+  let targetPath = pathname;
+  if (pathname.startsWith('/api/database/truncateTable/') || pathname.startsWith('/api/database/dropTable/')) {
+    const parts = pathname.split('/').filter(Boolean);
+    // 不做 URL 编码：连接 id 由本地生成（仅含安全字符），而对端解析路径段时不做 decode，
+    // 编码会把 ':' 变成 %3A 导致对端无法解析复合 id。
+    parts[3] = remoteConnId;
+    targetPath = '/' + parts.join('/');
+  }
+  const targetBody = { ...body, id: remoteConnId };
+  const env = await postRemote(`${base}${targetPath}`, targetBody, buildRemoteHeaders(proxyConn), 60000);
+  if (env && typeof env === 'object' && env.ret && env.ret !== 0) {
+    throw new Error(env.msg || '远程服务执行失败');
+  }
+  return env?.data;
+}
+
+/** 拉取远程服务上的连接列表（用于网关模式合并，单层、过滤嵌套代理配置） */
+async function fetchRemoteConnections(proxyConn: any): Promise<{ list: any[]; error?: string }> {
+  const base = String(proxyConn.options?.remoteUrl || '').replace(/\/+$/, '');
+  if (!base) return { list: [], error: '缺少 remoteUrl' };
+  try {
+    const env = await postRemote(`${base}/api/database/getConnections`, {}, buildRemoteHeaders(proxyConn), 10000);
+    if (env && env.ret && env.ret !== 0) {
+      console.warn('[remote] 获取远程连接列表失败:', env.msg);
+      return { list: [], error: env.msg || '远程服务返回错误' };
+    }
+    return { list: Array.isArray(env?.data) ? env.data : [] };
+  } catch (e: any) {
+    console.warn('[remote] 获取远程连接列表失败:', e?.message);
+    return { list: [], error: e?.message || '远程服务不可达' };
+  }
+}
+
+/** 网关模式：本地连接列表 = 本地连接 + 远程代理暴露的连接 */
+async function handleGetConnectionsWithProxy(): Promise<any[]> {
+  const locals = await connectionService.getAllConnections();
+  // 并行拉取各远程服务，避免多个远程时串行等待
+  const remoteResults = await Promise.all(
+    locals.map(conn => (isRemoteConnection(conn) ? fetchRemoteConnections(conn) : Promise.resolve(null)))
+  );
+  const result: any[] = [];
+  locals.forEach((conn, index) => {
+    if (!isRemoteConnection(conn)) {
+      result.push(conn);
+      return;
+    }
+    const remote = remoteResults[index];
+    // 代理配置本身保留（用于编辑/删除），标记 _isProxy
+    result.push({ ...conn, _isProxy: true, _remoteError: remote?.error });
+    for (const rc of remote?.list || []) {
+      if (rc.type === 'remote' || rc._isProxy) continue; // 不暴露嵌套代理配置
+      const safe = { ...rc };
+      delete safe.password; // 不把远程库的密码下发到客户端
+      result.push({
+        ...safe,
+        id: `${conn.id}${REMOTE_ID_SEP}${rc.id}`,
+        _proxyId: conn.id,
+        _remote: true,
+        _remoteName: conn.name
+      });
+    }
+  });
+  return result;
+}
+
+/** 测试远程代理连接（探活远程服务） */
+async function testRemoteConnection(conn: any): Promise<boolean> {
+  const base = String(conn.options?.remoteUrl || '').replace(/\/+$/, '');
+  if (!base) throw new Error('缺少 remoteUrl');
+  const env = await postRemote(`${base}/api/database/getConnections`, {}, buildRemoteHeaders(conn), 10000);
+  if (env && env.ret && env.ret !== 0) throw new Error(env.msg || '远程服务返回错误');
+  return true;
+}
 
 // 初始化服务实例
 const connectionService = new ConnectionService();
@@ -8,12 +261,48 @@ const databaseService = new DatabaseService();
 
 
 // 数据库相关路由处理
-export async function handleDatabaseRoutes(pathname: string, body: any) {
+export async function handleDatabaseRoutes(pathname: string, body: any, headers?: any) {
   try {
-    // /api/database/getConnections
+    // 远程访问令牌校验（仅当远程服务端设置了 DB_TOOL_REMOTE_TOKEN 且请求经由 HTTP 入口时生效）
+    const envToken = process.env.DB_TOOL_REMOTE_TOKEN;
+    if (envToken && headers) {
+      const incoming = String(headers[REMOTE_TOKEN_HEADER] || headers['x-db-tool-token'] || '');
+      if (incoming !== envToken) {
+        throw new Error('远程访问令牌无效');
+      }
+    }
+
+    // 网关模式：合并远程服务暴露的连接
     if (pathname === '/api/database/getConnections') {
-      const result = await connectionService.getAllConnections();
-      return result;
+      // 请求本身来自代理时不再二次合并，避免远程地址指向自身(或互指)造成无限递归
+      if (headers && headers[REMOTE_PROXY_HEADER]) {
+        return await connectionService.getAllConnections();
+      }
+      return await handleGetConnectionsWithProxy();
+    }
+
+    // 远程代理连接本身的测试：直接探活远程服务
+    if (pathname === '/api/database/testConnection' && body && isRemoteConnection(body)) {
+      return await testRemoteConnection(body);
+    }
+
+    // 复合 id（proxyId::remoteConnId）→ 转发到远程：
+    // 覆盖数据操作（查询/建表/改结构等）与连接配置的增删改
+    const proxy = await resolveRemoteProxy(pathname, body);
+    if (proxy) {
+      return await proxyToRemote(proxy.proxyConn, proxy.remoteConnId, pathname, body);
+    }
+
+    // 对「远程代理配置」本身做数据操作时给出明确提示（配置本身的增删改是允许的）
+    if (!CONNECTION_CONFIG_ROUTES.has(pathname)) {
+      const connId = extractConnId(pathname, body);
+      if (connId && !connId.includes(REMOTE_ID_SEP)) {
+        const conn = await connectionService.getConnectionById(connId);
+        if (conn && isRemoteConnection(conn)) {
+          if (pathname === '/api/database/closeConnection') return true; // 代理配置本身无需关闭
+          throw new Error(`请选择「${conn.name}」代理下的具体数据库连接进行操作`);
+        }
+      }
     }
 
     // /api/database/getConnection

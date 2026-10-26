@@ -336,7 +336,8 @@ function getDbTypeLabel(type: string): string {
     postgres: 'PostgreSQL',
     sqlite: 'SQLite',
     mssql: 'SQL Server',
-    oracle: 'Oracle'
+    oracle: 'Oracle',
+    remote: '远程代理服务'
   };
   return labelMap[type] || type;
 }

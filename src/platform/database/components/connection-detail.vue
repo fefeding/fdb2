@@ -48,6 +48,14 @@
                   <label class="info-label">{{ $t('connection.host') }}</label>
                   <div class="info-value">{{ connection?.host }}</div>
                 </div>
+                <div class="info-item" v-if="connection?._isProxy && connection?.options?.remoteUrl">
+                  <label class="info-label">{{ $t('connection.remoteUrl') }}</label>
+                  <div class="info-value">{{ connection?.options?.remoteUrl }}</div>
+                </div>
+                <div class="info-item" v-if="connection?._remoteError">
+                  <label class="info-label">{{ $t('connection.connectionStatus') }}</label>
+                  <div class="info-value" style="color: var(--db-danger-color)">{{ connection?._remoteError }}</div>
+                </div>
                 <div class="info-item">
                   <label class="info-label">{{ $t('connection.port') }}</label>
                   <div class="info-value">{{ connection?.port }}</div>
@@ -708,7 +716,8 @@ function getDbTypeLabel(type?: string): string {
     postgres: 'PostgreSQL',
     mssql: 'SQL Server',
     sqlite: 'SQLite',
-    oracle: 'Oracle'
+    oracle: 'Oracle',
+    remote: '远程代理服务'
   };
   return typeMap[type || ''] || 'Unknown';
 }
@@ -725,7 +734,8 @@ function getDbLogoText(type?: string): string {
     postgres: 'PG',
     mssql: 'MS',
     sqlite: 'SQ',
-    oracle: 'OR'
+    oracle: 'OR',
+    remote: 'R'
   };
   return textMap[type || ''] || 'DB';
 }

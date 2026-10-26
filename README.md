@@ -78,6 +78,47 @@ http://localhost:9800
 
 > 💡 **Tip**: Default port is 9800, but if occupied, it will automatically select another available port
 
+## 🌍 Remote Database Access (HTTP Proxy)
+
+Sometimes the database is **not reachable from your machine** — it sits behind a corporate VPN, on a private subnet, or on a bastion host. In that case, run `fdb2` on a machine that *can* reach it and let your local client talk to that service over HTTP.
+
+### How it works
+Add a connection of type **Remote Proxy Service** and point it at the remote `fdb2` server. Once saved, **every database connection configured on that remote server is merged into your local connection list**, and every operation — browsing schemas, running SQL, DDL, data CRUD, export, even editing or deleting the connection config — is forwarded to the remote server and executed there.
+
+The remote database password never leaves the remote server: it is **not** sent down to your client.
+
+### Setup
+1. **On the machine that can reach the database**, start the service and confirm it is reachable from your client:
+   ```bash
+   fdb2 start -p 9800
+   # then open http://<remote-ip>:9800 in a browser to confirm
+   ```
+2. **On that remote service**, add the real database connections as usual.
+3. **On your local client** (web UI or the VSCode extension) → *Add Connection* → **Type: Remote Proxy Service**:
+
+   | Field | Description |
+   | --- | --- |
+   | Service URL | Base URL of the remote `fdb2` server, e.g. `http://10.0.0.5:9800` — the **root** of the service, without a trailing `/api`. |
+   | Access Token | Optional. Only needed when the remote server was started with `DB_TOOL_REMOTE_TOKEN`. |
+
+4. **Save.** The remote connections now appear in your local connection list — expand, query, and edit them exactly like local ones. Editing or deleting one of those remote connections applies to the remote server's configuration.
+
+### Securing the remote service
+```bash
+# on the remote machine
+DB_TOOL_REMOTE_TOKEN=your-secret fdb2 start -p 9800
+```
+Once set, the remote server rejects every HTTP request that does not carry the matching `x-db-tool-token` header, and answers `远程访问令牌无效` (*invalid remote access token*). Put the same value into the proxy connection's **Access Token** field.
+
+> ⚠️ Set the token **only on the remote server**. Setting it on your own local server would also lock out your local browser/extension.
+> The token guards the HTTP entry point only; in-process calls (e.g. from the VSCode extension host) are not affected.
+
+### Notes & limits
+- The remote service must be reachable from your client (LAN IP, VPN, SSH tunnel, …).
+- Proxying is **one level deep** — a chain `A → B → C` is not supported.
+- If the remote service is unreachable, the proxy entry exposes no connections and the connection detail panel shows the error.
+- The remote server keeps its own database credentials; the local client only stores the proxy URL and token.
+
 ## 🔌 VSCode Extension
 
 Prefer staying inside the editor? `fdb2` also ships as a **VSCode extension** — "Database Tool (fdb2)" — that embeds the same UI directly in VSCode.
