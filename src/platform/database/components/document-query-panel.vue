@@ -7,15 +7,15 @@
 
       <div class="btn-group btn-group-sm" role="group">
         <button class="btn" :class="mode === 'find' ? 'btn-primary' : 'btn-outline-primary'" @click="mode = 'find'">
-          过滤查询
+          {{ $t('documentQuery.filterTab') }}
         </button>
         <button class="btn" :class="mode === 'aggregate' ? 'btn-primary' : 'btn-outline-primary'" @click="mode = 'aggregate'">
-          聚合管道
+          {{ $t('documentQuery.aggregateTab') }}
         </button>
       </div>
 
       <template v-if="mode === 'find'">
-        <input v-model="sort" class="form-control form-control-sm" style="width: 180px;" placeholder='排序，如 {"age":-1}' />
+        <input v-model="sort" class="form-control form-control-sm" style="width: 180px;" :placeholder="$t('documentQuery.sortPlaceholder')" />
         <select class="form-select form-select-sm" style="width: 90px;" v-model.number="pageSize">
           <option :value="20">20</option>
           <option :value="50">50</option>
@@ -24,15 +24,15 @@
       </template>
 
       <button class="btn btn-success btn-sm" :disabled="loading || !collection" @click="run">
-        <i class="bi bi-play-fill"></i> {{ loading ? '执行中...' : '执行' }}
+        <i class="bi bi-play-fill"></i> {{ loading ? $t('documentQuery.executing') : $t('documentQuery.execute') }}
       </button>
-      <span v-if="total !== null" class="text-muted small">共 {{ total }} 条</span>
+      <span v-if="total !== null" class="text-muted small">{{ $t('documentQuery.totalLabel', { count: total }) }}</span>
     </div>
 
     <div class="row g-2">
       <div class="col-md-5">
         <label class="form-label small">
-          {{ mode === 'find' ? '过滤条件（JSON）' : '聚合管道（JSON 数组）' }}
+          {{ mode === 'find' ? $t('documentQuery.filterLabel') : $t('documentQuery.aggregateLabel') }}
         </label>
         <textarea
           class="form-control font-monospace"
@@ -42,13 +42,13 @@
           :placeholder='mode === "find" ? "{\n  \"status\": \"active\"\n}" : "[\n  { \"$group\": { \"_id\": \"$status\", \"count\": { \"$sum\": 1 } } }\n]"'
         ></textarea>
         <div class="text-muted small mt-1">
-          {{ mode === 'find' ? '留空表示不过滤' : 'MongoDB 聚合管道，例如 $match / $group / $sort' }}
+          {{ mode === 'find' ? $t('documentQuery.filterHint') : $t('documentQuery.aggregateHint') }}
         </div>
       </div>
       <div class="col-md-7">
-        <label class="form-label small">结果</label>
+        <label class="form-label small">{{ $t('documentQuery.result') }}</label>
         <div v-if="error" class="alert alert-danger py-2 small">{{ error }}</div>
-        <div v-else-if="result.length === 0" class="text-muted small">暂无结果</div>
+        <div v-else-if="result.length === 0" class="text-muted small">{{ $t('documentQuery.noResult') }}</div>
         <pre v-else class="result-json">{{ JSON.stringify(result, null, 2) }}</pre>
       </div>
     </div>
@@ -57,8 +57,11 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import { DatabaseService } from '@/service/database';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   connection: ConnectionEntity | null;
@@ -106,7 +109,7 @@ async function run() {
     const parsed = trimmed ? JSON.parse(trimmed) : (mode.value === 'find' ? {} : []);
     if (mode.value === 'find') {
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        error.value = '过滤条件必须是 JSON 对象，例如 {"status":"active"}';
+        error.value = t('documentQuery.filterMustBeObject');
         return;
       }
       const res: any = await databaseService.getTableData(
@@ -122,7 +125,7 @@ async function run() {
       total.value = res?.data?.total ?? 0;
     } else {
       if (!Array.isArray(parsed)) {
-        error.value = '聚合管道必须是 JSON 数组，例如 [{ "$match": {} }]';
+        error.value = t('documentQuery.aggregateMustBeArray');
         return;
       }
       const res: any = await databaseService.aggregate(

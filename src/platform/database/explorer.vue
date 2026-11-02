@@ -136,7 +136,7 @@
                         <div class="node-main" @click="selectTable(connection, database, table)">
                           <div class="node-label">
                             <span class="table-name">{{ table.name }}</span>
-                            <span class="table-info" v-if="table.rowCount !== undefined">{{ formatNumber(table.rowCount) }} {{ isDocDb(connection) ? '个文档' : $t('explorer.rowsSuffix') }}</span>
+                            <span class="table-info" v-if="table.rowCount !== undefined">{{ formatNumber(table.rowCount) }} {{ isDocDb(connection) ? $t('explorer.docsSuffix') : $t('explorer.rowsSuffix') }}</span>
                           </div>
                         </div>
                         <div class="node-actions">
@@ -251,6 +251,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { ConnectionService, DatabaseService } from '@/service/database';
 import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import ConnectionEditor from '@/components/connection-editor/index.vue';
@@ -270,6 +271,7 @@ function isDocDb(connection: any): boolean {
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 const connectionService = new ConnectionService();
 const databaseService = new DatabaseService();
 
@@ -314,7 +316,7 @@ const sqlExecuting = ref(false);
 
 // 全局Loading状态
 const isGlobalLoading = ref(false);
-const loadingMessage = ref('加载中...');
+const loadingMessage = ref('');
 
 // 组件引用
 const connectionEditorRef = ref();
@@ -417,7 +419,7 @@ async function loadConnections() {
     connections.value = (response as any)?.data || [];
   } catch (error) {
     console.error('加载连接失败:', error);
-    modal.error(error.msg || error.message || '加载连接失败', {
+    modal.error(error.msg || error.message || t('explorer.loadConnectionsFailed'), {
       operation: 'LOAD_CONNECTIONS',
       stack: error.stack
     });
@@ -482,7 +484,7 @@ async function loadDatabasesForConnection(connection: ConnectionEntity, forceRef
   } catch (error) {
     console.error('加载数据库失败:', error);
     
-    modal.error(error.msg || error.message || '加载数据库失败', {
+    modal.error(error.msg || error.message || t('explorer.loadDatabasesFailed'), {
       operation: 'LOAD_DATABASES',
       connectionId: connection.id,
       stack: error.stack
@@ -563,7 +565,7 @@ async function loadTablesForDatabase(connection: ConnectionEntity, database: str
       console.error('加载表失败:', error);
     
 
-      modal.error(error.msg || error.message || '加载表失败', {
+      modal.error(error.msg || error.message || t('explorer.loadTablesFailed'), {
         operation: 'LOAD_TABLES',
         database: database,
         stack: error.stack
@@ -594,7 +596,7 @@ async function loadDatabaseInfo(connection: ConnectionEntity, database: string, 
     console.error('加载数据库信息失败:', error);
     
 
-    modal.error(error.msg || error.message || '加载数据库信息失败', {
+    modal.error(error.msg || error.message || t('explorer.loadDatabaseInfoFailed'), {
       operation: 'LOAD_DATABASE_INFO',
       database: database,
       stack: error.stack
@@ -644,7 +646,7 @@ function goToDatabase() {
 async function loadTableData(connection: ConnectionEntity, database: string, tableName: string, page: number = 1, pageSize: number = 50, searchQuery?: string) {
   try {
     isGlobalLoading.value = true;
-    loadingMessage.value = `正在加载表 "${tableName}" 的数据...`;
+    loadingMessage.value = t('explorer.loadingTableData', { name: tableName });
     
     // 构建WHERE条件用于搜索
     let whereClause = '';
@@ -703,7 +705,7 @@ async function loadTableData(connection: ConnectionEntity, database: string, tab
     console.error('加载表数据失败:', error);
     
 
-    modal.error(error.msg || error.message || '加载表数据失败', {
+    modal.error(error.msg || error.message || t('explorer.loadTableDataFailed'), {
       operation: 'LOAD_TABLE_DATA',
       table: tableName,
       stack: error.stack
@@ -723,7 +725,7 @@ async function loadTableStructure(connection: ConnectionEntity, database: string
     console.error('加载表结构失败:', error);
     
 
-    modal.error(error.msg || error.message || '加载表结构失败', {
+    modal.error(error.msg || error.message || t('explorer.loadTableStructureFailed'), {
       operation: 'LOAD_TABLE_STRUCTURE',
       table: tableName,
       stack: error.stack
@@ -756,13 +758,13 @@ async function testConnection(connection: ConnectionEntity) {
     const result = await connectionService.testConnection(connection);
     
     if (result.ret === 0 && result.data) {
-      showToast('', `连接 "${connection.name}" 测试成功`, 'success');
+      showToast('', t('explorer.testConnectionSuccess', { name: connection.name }), 'success');
     } else {
-      showToast('', `连接 "${connection.name}" 测试失败`, 'error');
+      showToast('', t('explorer.testConnectionFailed', { name: connection.name }), 'error');
     }
   } catch (error) {
 
-    modal.error(error.msg || error.message || '连接测试失败', {
+    modal.error(error.msg || error.message || t('explorer.testConnectionError'), {
       operation: 'TEST_CONNECTION',
       connectionId: connection.id,
       stack: error.stack
@@ -805,7 +807,7 @@ function handleCreateDatabase() {
 
 function handleOpenSqlQuery(connection: ConnectionEntity) {
   // TODO: 打开SQL查询界面
-  showToast('提示', 'SQL查询功能开发中...', 'info');
+  showToast(t('common.tip'), t('explorer.sqlQueryInDev'), 'info');
 }
 
 function refreshAll() {
@@ -827,12 +829,12 @@ async function refreshTableData(page: number = 1, pageSize: number = 50, searchQ
 async function handleRefreshStructure() {
   if (selectedConnection.value && selectedDatabase.value && selectedTable.value) {
     await loadTableStructure(selectedConnection.value, selectedDatabase.value, selectedTable.value.name);
-    showToast('', '表结构已刷新', 'success');
+    showToast('', t('explorer.tableStructureRefreshed'), 'success');
   }
 }
 
 function insertNewRow() {
-  showToast('提示', '新增功能开发中...', 'info');
+  showToast(t('common.tip'), t('explorer.featureInDev'), 'info');
 }
 
 function getDbTypeLabel(type: string): string {
@@ -842,7 +844,7 @@ function getDbTypeLabel(type: string): string {
     sqlite: 'SQLite',
     mssql: 'SQL Server',
     oracle: 'Oracle',
-    remote: '远程代理服务'
+    remote: t('connection.typeRemote')
   };
   return labelMap[type] || type;
 }
@@ -910,7 +912,7 @@ async function refreshConnection(connection: ConnectionEntity) {
     await loadDatabasesForConnection(connection, true);
   }
   
-  showToast('', `连接 "${connection.name}" 已刷新`, 'success');
+  showToast('', t('explorer.connectionRefreshed', { name: connection.name }), 'success');
 }
 
 async function refreshDatabase(connection: ConnectionEntity, database: string) {
@@ -931,22 +933,22 @@ async function refreshDatabase(connection: ConnectionEntity, database: string) {
     await loadDatabaseInfo(connection, database);
   }
   
-  showToast('', `数据库 "${database}" 已刷新`, 'success');
+  showToast('', t('explorer.databaseRefreshed', { name: database }), 'success');
 }
 
 async function deleteDatabase(connection: ConnectionEntity, database: string) {
-  const result = await modal.confirm(`确定要删除数据库 "${database}" 吗？此操作将删除数据库及其所有数据且不可恢复。`);
+  const result = await modal.confirm(t('explorer.confirmDeleteDatabase', { name: database }));
   if (result) {
     try {
       isGlobalLoading.value = true;
-      loadingMessage.value = `正在删除数据库 "${database}"...`;
+      loadingMessage.value = t('explorer.deletingDatabase', { name: database });
       
       // 执行删除数据库的SQL
       const deleteSql = `DROP DATABASE \`${database}\``;
       const result = await databaseService.executeQuery(connection.id, deleteSql);
       
       if (result.ret === 0) {
-        showToast('成功', `数据库 "${database}" 已删除`, 'success');
+        showToast(t('common.success'), t('explorer.databaseDeleted', { name: database }), 'success');
         
         // 清除缓存
         const connectionId = connection.id || '';
@@ -964,12 +966,12 @@ async function deleteDatabase(connection: ConnectionEntity, database: string) {
         tableCache.value.delete(dbKey);
         databaseInfoCache.value.delete(dbKey);
       } else {
-        showToast('错误', `删除数据库失败: ${result.error}`, 'error');
+        showToast(t('common.error'), `${t('explorer.deleteDatabaseFailed')}: ${result.error}`, 'error');
       }
     } catch (error) {
       console.error('删除数据库失败:', error);
       
-      modal.error(error.msg || error.message || '删除数据库失败', {
+      modal.error(error.msg || error.message || t('explorer.deleteDatabaseFailed'), {
         operation: 'DELETE_DATABASE',
         database: database,
         stack: error.stack
@@ -981,16 +983,16 @@ async function deleteDatabase(connection: ConnectionEntity, database: string) {
 }
 
 async function deleteConnection(connection: ConnectionEntity) {
-  const result = await modal.confirm(`确定要删除连接 "${connection.name}" 吗？此操作将删除该连接的配置但不会删除实际的数据库数据。`);
+  const result = await modal.confirm(t('explorer.confirmDeleteConnection', { name: connection.name }));
   if (result) {
     try {
       isGlobalLoading.value = true;
-      loadingMessage.value = `正在删除连接 "${connection.name}"...`;
-      
+      loadingMessage.value = t('explorer.deletingConnection', { name: connection.name });
+
       // 删除连接
       await connectionService.deleteConnection(connection.id || '');
-      
-      showToast('成功', `连接 "${connection.name}" 已删除`, 'success');
+
+      showToast(t('common.success'), t('explorer.connectionDeleted', { name: connection.name }), 'success');
       
       // 从连接列表中移除
       const index = connections.value.findIndex(conn => conn.id === connection.id);
@@ -1013,7 +1015,7 @@ async function deleteConnection(connection: ConnectionEntity) {
     } catch (error) {
       console.error('删除连接失败:', error);
       
-      modal.error(error.msg || error.message || '删除连接失败', {
+      modal.error(error.msg || error.message || t('explorer.deleteConnectionFailed'), {
         operation: 'DELETE_CONNECTION',
         connectionId: connection.id,
         stack: error.stack
@@ -1031,7 +1033,7 @@ async function refreshTable(connection: ConnectionEntity, database: string, tabl
     await loadTableStructure(connection, database, table.name);
   }
   
-  showToast('', `表 "${table.name}" 已刷新`, 'success');
+  showToast('', t('explorer.tableRefreshed', { name: table.name }), 'success');
 }
 
 // 新增的处理方法
@@ -1044,7 +1046,7 @@ function handleRefreshDatabase() {
 async function handleCreateTable(tableData: { name: string; comment: string }) {
   try {
     isGlobalLoading.value = true;
-    loadingMessage.value = `正在创建表 "${tableData.name}"...`;
+    loadingMessage.value = t('explorer.creatingTable', { name: tableData.name });
     
     // TODO: 实现创建表的逻辑
     console.log('创建表:', tableData);
@@ -1052,12 +1054,12 @@ async function handleCreateTable(tableData: { name: string; comment: string }) {
     // 刷新数据库
     await handleRefreshDatabase();
     
-    showToast('成功', `表 "${tableData.name}" 创建成功`, 'success');
+    showToast(t('common.success'), t('explorer.tableCreated', { name: tableData.name }), 'success');
   } catch (error) {
     console.error('创建表失败:', error);
     
 
-    modal.error(error.msg || error.message || '创建表失败', {
+    modal.error(error.msg || error.message || t('explorer.createTableFailed'), {
       operation: 'CREATE_TABLE',
       stack: error.stack
     });
@@ -1068,22 +1070,22 @@ async function handleCreateTable(tableData: { name: string; comment: string }) {
 
 function handleInsertData() {
   // TODO: 实现插入数据的逻辑
-  showToast('提示', '插入数据功能开发中...', 'info');
+  showToast(t('common.tip'), t('explorer.insertDataInDev'), 'info');
 }
 
 function handleExportTable() {
   // TODO: 实现导出表的逻辑
-  showToast('提示', '导出表功能开发中...', 'info');
+  showToast(t('common.tip'), t('explorer.exportTableInDev'), 'info');
 }
 
 async function handleTruncateTable() {
   if (!selectedTable.value || !selectedConnection.value || !selectedDatabase.value) return;
   
-  const result = await modal.confirm(`确定要清空表 "${selectedTable.value.name}" 吗？此操作将删除所有数据且不可恢复。`);
+  const result = await modal.confirm(t('explorer.confirmTruncateTable', { name: selectedTable.value.name }));
   if (result) {
     try {
       isGlobalLoading.value = true;
-      loadingMessage.value = `正在清空表 "${selectedTable.value.name}"...`;
+      loadingMessage.value = t('explorer.truncatingTable', { name: selectedTable.value.name });
       
       // TODO: 实现清空表的逻辑
       console.log('清空表:', selectedTable.value.name);
@@ -1091,12 +1093,12 @@ async function handleTruncateTable() {
       // 刷新表数据
       await refreshTableData();
       
-      showToast('成功', `表 "${selectedTable.value.name}" 已清空`, 'success');
+      showToast(t('common.success'), t('explorer.tableTruncated', { name: selectedTable.value.name }), 'success');
     } catch (error) {
       console.error('清空表失败:', error);
       
 
-      modal.error(error.msg || error.message || '清空表失败', {
+      modal.error(error.msg || error.message || t('explorer.truncateTableFailed'), {
         operation: 'TRUNCATE_TABLE',
         stack: error.stack
       });
@@ -1108,22 +1110,22 @@ async function handleTruncateTable() {
 
 function handleEditRow(row: any) {
   // TODO: 实现编辑行的逻辑
-  showToast('提示', '编辑行功能开发中...', 'info');
+  showToast(t('common.tip'), t('explorer.editRowInDev'), 'info');
 }
 
 function handleDeleteRow(row: any) {
   // TODO: 实现删除行的逻辑
-  showToast('提示', '删除行功能开发中...', 'info');
+  showToast(t('common.tip'), t('explorer.deleteRowInDev'), 'info');
 }
 
 async function handleExecuteSql(sql: string) {
   if (!selectedConnection.value) {
-    showToast('错误', '请先选择数据库连接', 'error');
+    showToast(t('common.error'), t('explorer.selectConnectionFirst'), 'error');
     return;
   }
   
   if (!sql.trim()) {
-    showToast('错误', 'SQL语句不能为空', 'error');
+    showToast(t('common.error'), t('explorer.sqlCannotBeEmpty'), 'error');
     return;
   }
   
@@ -1137,7 +1139,7 @@ async function handleExecuteSql(sql: string) {
     const result = await databaseService.executeQuery(selectedConnection.value.id, sql, databaseName);
     
     if (result.ret === 0 && result.data) {
-      showToast('', 'SQL执行成功', 'success');
+      showToast('', t('explorer.sqlExecuted'), 'success');
       
       // 保存SQL执行结果用于展示
       if (result.data && Array.isArray(result.data)) {
@@ -1156,7 +1158,7 @@ async function handleExecuteSql(sql: string) {
           affectedRows: result.data.affectedRows || 0,
           insertId: result.data.insertId || null
         };
-        showToast('', `执行成功，影响行数: ${result.data.affectedRows || 0}`, 'success');
+        showToast('', t('explorer.sqlAffectedRows', { count: result.data.affectedRows || 0 }), 'success');
       }
     } else {
       sqlResult.value = {
@@ -1166,7 +1168,7 @@ async function handleExecuteSql(sql: string) {
         affectedRows: 0,
         error: result.error
       };
-      showToast('错误', `SQL执行失败: ${result.error}`, 'error');
+      showToast(t('common.error'), `${t('explorer.sqlExecuteFailed')}: ${result.error}`, 'error');
     }
   } catch (error) {
     console.error('SQL执行失败:', error);
@@ -1179,7 +1181,7 @@ async function handleExecuteSql(sql: string) {
     };
     
 
-    modal.error(error.msg || error.message || 'SQL执行失败', {
+    modal.error(error.msg || error.message || t('explorer.sqlExecuteFailed'), {
       operation: 'EXECUTE_SQL',
       sql: sql,
       stack: error.stack

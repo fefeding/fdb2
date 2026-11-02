@@ -316,8 +316,8 @@
               <!-- SQL Server特定选项 -->
               <div v-if="connection?.type === 'mssql'">
                 <div class="mb-3">
-                  <label class="form-label">排序规则</label>
-                  <input type="text" class="form-control" v-model="newDatabase.options.collation" placeholder="排序规则">
+                  <label class="form-label">{{ $t('connection.collation') }}</label>
+                  <input type="text" class="form-control" v-model="newDatabase.options.collation" :placeholder="$t('connection.collation')">
                 </div>
               </div>
             </form>
@@ -718,7 +718,7 @@ function getDbTypeLabel(type?: string): string {
     mssql: 'SQL Server',
     sqlite: 'SQLite',
     oracle: 'Oracle',
-    remote: '远程代理服务'
+    remote: t('connection.typeRemote')
   };
   return typeMap[type || ''] || 'Unknown';
 }

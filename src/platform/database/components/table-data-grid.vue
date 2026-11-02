@@ -30,7 +30,7 @@
             <div class="column-header-custom" @click="handleSortChange({field: column.name, order: sortField === column.name ? (sortOrder === 'ASC' ? 'DESC' : (sortOrder === 'DESC' ? '' : 'ASC')) : 'ASC'})" :title="column.comment || column.name">
                 <div class="header-main">
                     <span class="column-name">{{ column.name }}</span>
-                    <span v-if="column.isPrimary" class="column-key text-primary ms-1" title="主键">
+                    <span v-if="column.isPrimary" class="column-key text-primary ms-1" :title="$t('tableDetail.primaryKeyHeader')">
                         <i class="bi bi-key-fill"></i>
                     </span>
                     <span class="sort-icon ms-1">
@@ -94,10 +94,13 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import DataGrid from '@/components/dataGrid/index.vue';
 import Pagination from '@/components/dataGrid/pagination.vue';
 import type { ConnectionEntity, TableEntity, ColumnEntity } from '@/typings/database';
 import { DatabaseService } from '@/service/database';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   connection: ConnectionEntity | null;
@@ -164,7 +167,7 @@ const gridColumns = computed(() => {
   // 添加操作列
   cols.push({
     name: 'actions',
-    text: '操作',
+    text: t('tableDetail.operationsHeader'),
     sortable: false,
     headerStyle: 'width: 100px;'
   } as any);

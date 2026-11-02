@@ -43,7 +43,7 @@
             :class="{ active: activeTab === 'tables' }"
             @click="activeTab = 'tables'"
           >
-            <i class="bi bi-table"></i> {{ isDocDb ? '集合' : $t('databaseDetail.tables') }}
+            <i class="bi bi-table"></i> {{ isDocDb ? $t('databaseDetail.collections') : $t('databaseDetail.tables') }}
           </button>
         </li>
         <!-- 视图/存储过程为关系型专属：文档型（MongoDB）不展示 -->
@@ -727,7 +727,7 @@ async function createOrUpdateView() {
   } catch (error) {
     console.error('保存视图失败:', error);
     const errorMsg = error instanceof Error ? error.message : String(error);
-    modal.error(errorMsg || '保存视图失败');
+    modal.error(errorMsg || t('databaseDetail.viewSaveFailed'));
   }
 }
 
@@ -823,7 +823,7 @@ async function createOrUpdateProcedure() {
   } catch (error) {
     console.error('保存存储过程失败:', error);
     const errorMsg = error instanceof Error ? error.message : String(error);
-    modal.error(errorMsg || '保存存储过程失败');
+    modal.error(errorMsg || t('databaseDetail.procedureSaveFailed'));
   }
 }
 

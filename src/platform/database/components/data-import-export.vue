@@ -524,7 +524,7 @@ async function loadConnections() {
     connections.value = response || [];
   } catch (error) {
     console.error('加载连接失败:', error);
-    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    const errorMessage = error instanceof Error ? error.message : t('importExport.unknownError');
     toast.error(t('importExport.loadConnectionFailed', { msg: errorMessage }));
   }
 }

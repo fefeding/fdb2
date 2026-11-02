@@ -36,7 +36,7 @@
                     type="text"
                     class="form-control"
                     :disabled="tableCommentDisabled"
-                    :title="tableCommentDisabled ? '该数据库不支持表注释' : undefined"
+                    :title="tableCommentDisabled ? $t('tableEditor.tableCommentUnsupported') : undefined"
                     :placeholder="$t('tableEditor.tableCommentPlaceholder')"
                   >
                 </div>
@@ -45,9 +45,7 @@
           </div>
 
           <!-- 字段管理：无模式方言建集合时无列定义，整节隐藏并给出说明 -->
-          <div v-if="schemalessCreate" class="alert alert-info py-2 small mb-4">
-            该数据库为无模式类型（MongoDB），将创建一个<strong>空集合</strong>，无需定义字段。
-          </div>
+          <div v-if="schemalessCreate" class="alert alert-info py-2 small mb-4" v-html="$t('tableEditor.schemalessHint')"></div>
           <div v-else class="columns-section">
             <div class="section-header d-flex justify-content-between align-items-center mb-3">
               <h6 class="section-title mb-0">{{ $t('tableEditor.columnManagement') }}</h6>
@@ -201,10 +199,10 @@
                 type="button"
                 class="btn btn-sm btn-outline-secondary"
                 :disabled="refreshingTables"
-                title="重新拉取表列表（重名检测等依赖它；预览默认走 30 秒缓存）"
+                :title="$t('tableEditor.refreshTableListTip')"
                 @click="refreshTableList"
               >
-                {{ refreshingTables ? '刷新中...' : '刷新表列表' }}
+                {{ refreshingTables ? $t('tableEditor.refreshing') : $t('tableEditor.refreshTableList') }}
               </button>
             </div>
             <pre class="sql-preview mt-2">{{ previewSql }}</pre>
@@ -459,7 +457,7 @@ async function refreshPreview() {
   // 否则会出现"预览显示没有检测到任何修改、保存却真的执行了语句"的错觉
   // 无模式建集合：字段定义已隐藏且被后端忽略，不提示"完善字段"
   if (!schemalessCreate.value && formData.value.columns.some(col => col.name && !rawType(col))) {
-    previewSql.value = '-- 请完善字段信息（列名与类型）后再查看 SQL';
+    previewSql.value = t('tableEditor.previewNeedColumns');
     return;
   }
 
@@ -471,11 +469,11 @@ async function refreshPreview() {
       : await databaseService.previewAlterTable(props.connection.id, props.database, props.table!.name, spec);
     if (seq !== previewSeq) return; // 过期响应丢弃（用户已继续编辑）
     if (data?.capabilities) caps.value = data.capabilities;
-    previewSql.value = data?.preview || (props.mode === 'create' ? '-- 完善表单后将在此显示建表 SQL' : '没有检测到任何修改');
+    previewSql.value = data?.preview || (props.mode === 'create' ? t('tableEditor.previewCreatePlaceholder') : t('tableEditor.previewNoChanges'));
   } catch (error: any) {
     if (seq !== previewSeq) return;
     // 后端失败已包装为 ret 非 0 + msg，service 层解包时抛出
-    previewSql.value = `预览失败: ${error?.message || error}`;
+    previewSql.value = t('tableEditor.previewFailed', { message: error?.message || error });
   }
 }
 
@@ -518,7 +516,7 @@ async function refreshTableList() {
     await databaseService.refreshTableCache(props.connection.id, props.database);
     await refreshPreview(); // 用最新表列表重算预览
   } catch (error: any) {
-    await modal.warning(`刷新表列表失败: ${error?.message || error}`);
+    await modal.warning(t('tableEditor.refreshTableListFailed', { message: error?.message || error }));
   } finally {
     refreshingTables.value = false;
   }
@@ -574,18 +572,18 @@ function onAutoIncrementChange(column: any, index: number) {
 async function submit() {
   try {
     if (!formData.value.tableName) {
-      await modal.warning('请输入表名');
+      await modal.warning(t('tableEditor.tableNameRequired'));
       return;
     }
     
     // 无模式建集合：字段被隐藏且后端忽略，不做字段完整性校验
     if (!schemalessCreate.value && formData.value.columns.some(col => !col.name || !rawType(col))) {
-      await modal.warning('请完善所有字段信息');
+      await modal.warning(t('tableEditor.columnsIncomplete'));
       return;
     }
     
     if (!props.connection?.id) {
-      await modal.warning('请先选择数据库连接');
+      await modal.warning(t('tableEditor.connectionRequired'));
       return;
     }
 
@@ -608,19 +606,19 @@ async function submit() {
     if (!result?.native && (!result?.statements || result.statements.length === 0)) {
       // 把实时表已有列名带出来：多数情况是"该字段其实已存在于表中"（之前已保存成功）
       const liveCols = (result as any)?.liveColumns as string[] | undefined;
-      const live = liveCols?.length ? liveCols.join('、') : '（未知）';
+      const live = liveCols?.length ? liveCols.join('、') : t('tableEditor.liveColumnsUnknown');
       const tip = liveCols?.length
-        ? `当前实时表已有列：${live}\n若你以为新增的字段出现在上面，说明它之前已保存成功，或本来就存在。`
-        : '未读取到实时表结构，请刷新表列表后重试。';
-      await modal.info(`没有检测到任何修改。\n${tip}`);
+        ? t('tableEditor.liveColumnsExist', { columns: live })
+        : t('tableEditor.liveSchemaMissing');
+      await modal.info(`${t('tableEditor.previewNoChanges')}\n${tip}`);
       return;
     }
 
     emit('submit', {
       success: true,
       message: props.mode === 'create'
-        ? (schemalessCreate.value ? '集合创建成功' : '表创建成功')
-        : '表结构修改成功',
+        ? (schemalessCreate.value ? t('tableEditor.createCollectionSuccess') : t('tableEditor.createTableSuccess'))
+        : t('tableEditor.alterTableSuccess'),
       data: result,
       mode: props.mode
     });
@@ -651,7 +649,7 @@ watch(() => props.visible, (newVal) => {
     caps.value = null;
     // 打开即拉一次后端预览（后续靠 formData watch 防抖刷新）：
     // 首次响应带回 capabilities，弹窗一打开 UI 就能按真实方言能力禁用输入
-    previewSql.value = '-- 完善表单后将在此显示后端生成的 SQL';
+    previewSql.value = t('tableEditor.previewCreateSqlPlaceholder');
     setTimeout(refreshPreview, 0);
   }
 });

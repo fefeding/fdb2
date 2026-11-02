@@ -54,7 +54,7 @@
           <i class="bi bi-pencil-square"></i> {{ $t('tableDetail.modifyStructure') }}
         </button>
         <button class="btn btn-success btn-sm" @click="()=>insertData()">
-          <i class="bi bi-plus-lg"></i> {{ isDocDb ? '新增文档' : $t('tableDetail.insertData') }}
+          <i class="bi bi-plus-lg"></i> {{ isDocDb ? $t('tableDetail.insertDocument') : $t('tableDetail.insertData') }}
         </button>
         <div class="btn-group">
           <button class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown">
@@ -232,13 +232,13 @@
             <!-- 文档型（MongoDB）：可新建/删除索引；关系型暂无统一建索引实现 -->
             <div v-if="isDocDb" class="mb-2">
               <button class="btn btn-success btn-sm" @click="showCreateIndex = !showCreateIndex">
-                <i class="bi bi-plus-lg"></i> 新建索引
+                <i class="bi bi-plus-lg"></i> {{ $t('tableDetail.createIndex') }}
               </button>
             </div>
             <div v-if="isDocDb && showCreateIndex" class="create-index-form mb-3 p-2 border rounded">
               <div class="row g-2 align-items-end">
                 <div class="col-md-5">
-                  <label class="form-label small mb-1">索引键（JSON）</label>
+                  <label class="form-label small mb-1">{{ $t('tableDetail.indexKeysLabel') }}</label>
                   <textarea
                     class="form-control font-monospace"
                     rows="3"
@@ -248,17 +248,17 @@
                   ></textarea>
                 </div>
                 <div class="col-md-3">
-                  <label class="form-label small mb-1">索引名（可选）</label>
+                  <label class="form-label small mb-1">{{ $t('tableDetail.indexNameOptional') }}</label>
                   <input class="form-control form-control-sm" v-model="newIndexName" placeholder="idx_name" />
                 </div>
                 <div class="col-md-2">
                   <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="uniqIdx" v-model="newIndexUnique" />
-                    <label class="form-check-label small" for="uniqIdx">唯一</label>
+                    <label class="form-check-label small" for="uniqIdx">{{ $t('tableDetail.uniqueHeader') }}</label>
                   </div>
                 </div>
                 <div class="col-md-2">
-                  <button class="btn btn-primary btn-sm" @click="createNewIndex">创建</button>
+                  <button class="btn btn-primary btn-sm" @click="createNewIndex">{{ $t('common.create') }}</button>
                 </div>
               </div>
               <div v-if="indexError" class="text-danger small mt-1">{{ indexError }}</div>
@@ -392,6 +392,7 @@ import TableEditor from './table-editor.vue';
 import SqlExecutor from './sql-executor.vue';
 import { exportDataToCSV, exportDataToJSON, exportDataToExcel, formatFileName } from '../utils/export';
 import { modal } from '@/utils/modal';
+import { toast } from '@/utils/toast';
 import { isNumericType, isBooleanType } from '@/utils/database-types';
 import { isVSCode } from '@/base/detect';
 import { isVscodeWebview, vscodePickSaveFolder, vscodeSaveFile, vscodeNotifyExported } from '@/platform/vscode/rpc';
@@ -565,7 +566,7 @@ async function deleteRow(row: any) {
       if (isDocDb.value) {
         const docId = row?._id;
         if (!docId) {
-          await modal.warning('该文档缺少 _id，无法删除');
+          await modal.warning(t('tableDetail.docMissingId'));
           return;
         }
         const resp = await databaseService.deleteData(
@@ -576,7 +577,7 @@ async function deleteRow(row: any) {
           String(docId)
         );
         if (resp.ret === 0) {
-          await modal.success(t('tableDetail.deleteSuccess'));
+          toast.success(t('tableDetail.deleteSuccess'));
           refreshData();
         } else {
           await modal.error(t('tableDetail.deleteFailed') + ': ' + (resp.msg || t('common.unknown')));
@@ -604,7 +605,7 @@ async function deleteRow(row: any) {
       );
 
       if (response.ret === 0) {
-        await modal.success(t('tableDetail.deleteSuccess'));
+        toast.success(t('tableDetail.deleteSuccess'));
         refreshData();
       } else {
         await modal.error(t('tableDetail.deleteFailed') + ': ' + (response.msg || t('common.unknown')));
@@ -766,11 +767,11 @@ async function createNewIndex() {
   try {
     keys = JSON.parse(newIndexKeys.value);
   } catch (e: any) {
-    indexError.value = 'JSON 格式错误：' + (e?.message || e);
+    indexError.value = t('tableDetail.indexKeysInvalidJson', { message: e?.message || e });
     return;
   }
   if (!keys || typeof keys !== 'object' || Array.isArray(keys)) {
-    indexError.value = '索引键必须是 JSON 对象，例如 {"name": 1}';
+    indexError.value = t('tableDetail.indexKeysMustBeObject');
     return;
   }
   try {
@@ -786,10 +787,10 @@ async function createNewIndex() {
       newIndexKeys.value = '{\n  \n}';
       newIndexName.value = '';
       newIndexUnique.value = false;
-      await modal.success('索引创建成功');
+      await modal.success(t('tableDetail.indexCreated'));
       emit('refresh-structure');
     } else {
-      indexError.value = res?.msg || '创建索引失败';
+      indexError.value = res?.msg || t('tableDetail.indexCreateFailed');
     }
   } catch (e: any) {
     indexError.value = e?.message || String(e);
@@ -799,12 +800,12 @@ async function createNewIndex() {
 async function deleteIndex(index: any) {
   // 主键索引不可删除（MongoDB 的 _id_ 由数据库维护）
   if (isDocDb.value && index?.name === '_id_') {
-    await modal.warning('主键索引（_id_）不可删除');
+    await modal.warning(t('tableDetail.primaryIndexUndeletable'));
     return;
   }
   const result = await modal.confirm(t('tableDetail.confirmDeleteIndex', { name: index.name }), {
-    confirmButtonText: '删除',
-    cancelButtonText: '取消',
+    confirmButtonText: t('common.delete'),
+    cancelButtonText: t('common.cancel'),
     type: 'danger'
   });
   if (!result) return;
@@ -819,13 +820,13 @@ async function deleteIndex(index: any) {
         index.name
       );
       if (res?.ret === 0) {
-        await modal.success('索引已删除');
+        await modal.success(t('tableDetail.indexDeleted'));
         emit('refresh-structure');
       } else {
-        await modal.error(res?.msg || '删除索引失败');
+        await modal.error(res?.msg || t('tableDetail.indexDeleteFailed'));
       }
     } catch (e: any) {
-      await modal.error(e?.message || '删除索引失败');
+      await modal.error(e?.message || t('tableDetail.indexDeleteFailed'));
     }
     return;
   }
@@ -835,8 +836,8 @@ async function deleteIndex(index: any) {
 function deleteForeignKey(fk: any) {
   // 删除外键
   modal.confirm(t('tableDetail.confirmDeleteFK', { name: fk.name }), {
-    confirmButtonText: '删除',
-    cancelButtonText: '取消',
+    confirmButtonText: t('common.delete'),
+    cancelButtonText: t('common.cancel'),
     type: 'danger'
   }).then(result => {
     if (result) {

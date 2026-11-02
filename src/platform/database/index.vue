@@ -337,7 +337,7 @@ function getDbTypeLabel(type: string): string {
     sqlite: 'SQLite',
     mssql: 'SQL Server',
     oracle: 'Oracle',
-    remote: '远程代理服务'
+    remote: t('connection.typeRemote')
   };
   return labelMap[type] || type;
 }

@@ -18,16 +18,16 @@
               <div class="d-flex align-items-center mb-1">
                 <label class="form-label mb-0">
                   {{ nounLabel }} JSON
-                  <small class="text-muted ms-2">{{ isEdit ? '编辑该文档' : '新建文档（JSON 对象）' }}</small>
+                  <small class="text-muted ms-2">{{ isEdit ? $t('dataEditor.editDocHint') : $t('dataEditor.newDocHint') }}</small>
                 </label>
                 <button type="button" class="btn btn-outline-secondary btn-sm ms-auto" @click="formatDocJson">
-                  <i class="bi bi-magic"></i> 格式化
+                  <i class="bi bi-magic"></i> {{ $t('common.format') }}
                 </button>
               </div>
               <div ref="docEditorRef" class="doc-json-editor"></div>
               <div v-if="docJsonError" class="text-danger small mt-1">{{ docJsonError }}</div>
               <div v-else class="text-muted small mt-1">
-                {{ isEdit ? '保存时按 _id 定位该文档' : '保存时插入为新文档，_id 由数据库生成' }}
+                {{ isEdit ? $t('dataEditor.docSaveEditHint') : $t('dataEditor.docSaveInsertHint') }}
               </div>
             </div>
             <div v-if="!isDocDb" class="row g-3">
@@ -262,7 +262,7 @@ function formatDocJson() {
       changes: { from: 0, to: docEditorInstance.value.state.doc.length, insert: formatted }
     });
   } catch (e: any) {
-    docJsonError.value = `JSON 格式错误：${e?.message || e}`;
+    docJsonError.value = t('dataEditor.docJsonInvalid', { message: e?.message || e });
   }
 }
 
@@ -536,11 +536,11 @@ async function handleSubmit() {
       try {
         doc = JSON.parse(docJson.value);
       } catch (e: any) {
-        docJsonError.value = `JSON 格式错误：${e?.message || e}`;
+        docJsonError.value = t('dataEditor.docJsonInvalid', { message: e?.message || e });
         return;
       }
       if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
-        docJsonError.value = '请提供一个 JSON 对象（例如 {"name":"alice"}）';
+        docJsonError.value = t('dataEditor.docJsonRequired');
         return;
       }
       docJsonError.value = '';

@@ -11,6 +11,9 @@ import TableStructurePanel from '../components/TableStructurePanel.vue';
 import { mountExplorer } from './explorer';
 import { installVscodeShellStyle } from '../theme';
 import { installClipboardPolyfill } from '../clipboard';
+import toastPlugin from '@/components/toast/index';
+import modalPlugin from '@/components/modal/index';
+import i18n from '@/i18n';
 import '../style.css';
 
 // 必须在挂载前注入，避免首帧闪烁
@@ -29,9 +32,13 @@ const registry: Record<string, any> = {
 };
 
 if (type === 'explorer') {
-  // 完整工作台：复用桌面端视图
+  // 完整工作台：复用桌面端视图（toast/modal 插件在 mountExplorer 内安装）
   mountExplorer();
 } else {
   const component = registry[type] || DatabasePanel;
-  createApp(component).mount('#app');
+  const app = createApp(component);
+  app.use(i18n);
+  app.use(toastPlugin);
+  app.use(modalPlugin);
+  app.mount('#app');
 }

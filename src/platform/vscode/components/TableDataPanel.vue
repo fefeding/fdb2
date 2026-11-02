@@ -150,6 +150,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { getVSCodeBridge } from '../bridge';
 import { isDocumentDb } from '@/typings/database-types';
+import { toast } from '@/utils/toast';
 
 const vscode = getVSCodeBridge();
 
@@ -228,6 +229,15 @@ onMounted(() => {
       const msg = '加载失败: ' + message.data;
       structError.value = msg;
       loadError.value = msg;
+    } else if (message.command === 'documentSaved') {
+      // 文档新增/更新/删除的宿主回执：用 toast 反馈，避免再弹 modal 与确认框叠加
+      const res = message.data || {};
+      if (res.ret === 0) {
+        toast.success(res.msg || '操作成功');
+        loadData(page.value);
+      } else {
+        toast.error(res.msg || '操作失败');
+      }
     }
   });
 });
@@ -297,7 +307,7 @@ function saveDoc(doc: any) {
     }
   });
   cancelEdit();
-  setTimeout(() => loadData(page.value), 400);
+  // 成功/失败由宿主回传的 documentSaved 消息处理（toast 反馈 + 列表刷新）
 }
 
 function deleteDoc(doc: any) {
@@ -311,7 +321,7 @@ function deleteDoc(doc: any) {
       docId: String(doc._id)
     }
   });
-  setTimeout(() => loadData(page.value), 400);
+  // 成功/失败由宿主回传的 documentSaved 消息处理（toast 反馈 + 列表刷新）
 }
 
 function loadStructure() {
