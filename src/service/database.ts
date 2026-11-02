@@ -147,6 +147,43 @@ export class DatabaseService {
     return request('/api/database/getTableData', params);
   }
 
+  // ---- 文档型（MongoDB）索引与聚合 ----
+
+  /** 获取集合索引列表 */
+  async getIndexes(connectionId: string, databaseName: string, tableName: string) {
+    return request('/api/database/getIndexes', {
+      id: connectionId, database: databaseName, table: tableName
+    });
+  }
+
+  /** 创建索引：keys 形如 { name: 1 } */
+  async createIndex(
+    connectionId: string, databaseName: string, tableName: string,
+    keys: Record<string, any>, options?: any
+  ) {
+    return request('/api/database/createIndex', {
+      id: connectionId, database: databaseName, table: tableName, keys, options
+    });
+  }
+
+  /** 删除索引 */
+  async dropIndex(
+    connectionId: string, databaseName: string, tableName: string, indexName: string
+  ) {
+    return request('/api/database/dropIndex', {
+      id: connectionId, database: databaseName, table: tableName, indexName
+    });
+  }
+
+  /** 执行聚合管道 */
+  async aggregate(
+    connectionId: string, databaseName: string, tableName: string, pipeline: any[]
+  ) {
+    return request('/api/database/aggregate', {
+      id: connectionId, database: databaseName, table: tableName, pipeline
+    });
+  }
+
   /**
    * 执行SQL查询
    */
@@ -284,7 +321,7 @@ export class DatabaseService {
     database: string,
     spec: TableSpec
   ) {
-    return unwrapData<{ statements: string[] }>(await request('/api/database/executeCreateTable', {
+    return unwrapData<{ statements: string[]; native?: boolean }>(await request('/api/database/executeCreateTable', {
       id: connectionId,
       database,
       spec
@@ -350,14 +387,17 @@ export class DatabaseService {
     database: string,
     tableName: string,
     data: any,
-    where: any
+    where: any,
+    docId?: string
   ) {
     return request('/api/database/updateData', {
       id: connectionId,
       database,
       table: tableName,
       data,
-      where
+      where,
+      // 文档型（MongoDB）按 _id 定位；关系型保持 where 条件
+      ...(docId !== undefined ? { docId } : {})
     });
   }
 
@@ -368,13 +408,16 @@ export class DatabaseService {
     connectionId: string,
     database: string,
     tableName: string,
-    where: any
+    where: any,
+    docId?: string
   ) {
     return request('/api/database/deleteData', {
       id: connectionId,
       database,
       table: tableName,
-      where
+      where,
+      // 文档型（MongoDB）按 _id 定位；关系型保持 where 条件
+      ...(docId !== undefined ? { docId } : {})
     });
   }
 

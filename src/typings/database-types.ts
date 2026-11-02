@@ -411,3 +411,36 @@ export function getDatabaseTypeConfigs(): DatabaseTypeConfig[] {
 export function getSupportedDatabaseTypes(): DatabaseType[] {
   return Object.values(DatabaseType);
 }
+
+// ---------------------------------------------------------------- 数据层能力
+
+/**
+ * 数据模型：document=文档型（MongoDB），relational=关系型。
+ * 与后端 server/core/dialect.ts 的 DialectFeature.dataModel 保持一致（单一事实来源在后端，
+ * 这里只做前端渲染分流的轻量判定，避免为一次 UI 判断发起请求）。
+ */
+export type DataModel = 'relational' | 'document';
+
+const DOCUMENT_DB_TYPES = new Set(['mongodb', 'mongo']);
+
+/** 按连接类型判定数据模型 */
+export function getDataModel(type: string | undefined | null): DataModel {
+  return DOCUMENT_DB_TYPES.has(String(type || '').toLowerCase()) ? 'document' : 'relational';
+}
+
+/** 是否文档型数据库：UI 据此切换到文档模式（集合/文档/JSON），关闭关系型入口 */
+export function isDocumentDb(type: string | undefined | null): boolean {
+  return getDataModel(type) === 'document';
+}
+
+/** 是否支持 SQL 编辑器与 SQL 查询构建器 */
+export function supportsSqlEditor(type: string | undefined | null): boolean {
+  return !isDocumentDb(type);
+}
+
+/** 文档模式下的术语：表→集合，记录→文档 */
+export function nounOf(type: string | undefined | null, key: 'table' | 'record'): string {
+  const doc = isDocumentDb(type);
+  if (key === 'table') return doc ? '集合' : '表';
+  return doc ? '文档' : '记录';
+}

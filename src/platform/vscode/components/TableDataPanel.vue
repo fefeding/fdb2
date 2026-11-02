@@ -11,7 +11,12 @@
       </div>
       <div class="toolbar-actions">
         <template v-if="tab === 'data'">
-          <input v-model="where" class="where-input" placeholder="WHERE 条件，例如 age > 18" @keyup.enter="loadData(1)" />
+          <input
+            v-model="where"
+            class="where-input"
+            :placeholder="wherePlaceholder"
+            @keyup.enter="loadData(1)"
+          />
           <button class="btn btn-secondary" @click="loadData(1)">筛选</button>
           <button class="btn btn-secondary" @click="refresh">刷新</button>
           <button class="btn btn-secondary" @click="prevPage" :disabled="page <= 1">上一页</button>
@@ -32,6 +37,33 @@
 
       <template v-else-if="tab === 'data'">
         <div v-if="loadError" class="error">{{ loadError }}</div>
+        <!-- 文档型（MongoDB）：按 JSON 文档渲染，保留嵌套结构 -->
+        <div v-else-if="isDocDb" class="doc-list">
+          <div v-if="documents.length === 0" class="empty">暂无文档</div>
+          <div v-for="(doc, idx) in documents" :key="doc._id || idx" class="doc-card">
+            <div class="doc-head">
+              <span class="doc-id">_id: {{ doc._id }}</span>
+              <template v-if="editingDocId === doc._id">
+                <button class="btn btn-sm btn-secondary" @click="formatDoc">格式化</button>
+                <button class="btn btn-sm btn-primary" @click="saveDoc(doc)">保存</button>
+                <button class="btn btn-sm btn-secondary" @click="cancelEdit">取消</button>
+              </template>
+              <template v-else>
+                <button class="btn btn-sm btn-secondary" @click="editDoc(doc)">编辑</button>
+                <button class="btn btn-sm btn-danger" @click="deleteDoc(doc)">删除</button>
+              </template>
+            </div>
+            <!-- webview 内 prompt 不可用，改为内联 JSON 编辑 -->
+            <textarea
+              v-if="editingDocId === doc._id"
+              class="doc-editor"
+              rows="12"
+              v-model="editingDocJson"
+            ></textarea>
+            <pre v-else class="doc-json">{{ JSON.stringify(doc, null, 2) }}</pre>
+            <div v-if="docError" class="error">{{ docError }}</div>
+          </div>
+        </div>
         <div v-else-if="columns.length === 0" class="empty">暂无数据</div>
         <div v-else class="table-wrap">
           <table class="data-table">
@@ -117,18 +149,32 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { getVSCodeBridge } from '../bridge';
+import { isDocumentDb } from '@/typings/database-types';
 
 const vscode = getVSCodeBridge();
 
 const connectionId = ref('');
 const database = ref('');
 const table = ref('');
+// 连接类型：由宿主随 init 下发，用于判断是否文档模式（MongoDB）
+const dbType = ref('');
+const isDocDb = computed(() => isDocumentDb(dbType.value));
+// 占位提示按数据模型区分：文档型用 JSON 过滤条件，关系型用 SQL WHERE
+const wherePlaceholder = computed(() =>
+  isDocDb.value ? 'JSON 过滤条件，例如 {"status":"active"}' : 'WHERE 条件，例如 age > 18'
+);
 
 const tab = ref<'data' | 'structure'>('data');
 
 // 数据
 const columns = ref<string[]>([]);
 const rows = ref<any[]>([]);
+// 文档型（MongoDB）原始文档
+const documents = ref<any[]>([]);
+// 内联 JSON 编辑态
+const editingDocId = ref('');
+const editingDocJson = ref('');
+const docError = ref('');
 const total = ref(0);
 const page = ref(1);
 const pageSize = ref(100);
@@ -152,8 +198,17 @@ onMounted(() => {
       connectionId.value = message.data.connectionId;
       database.value = message.data.database;
       table.value = message.data.table;
+      dbType.value = message.data.type || '';
       loadData(1);
       loadStructure();
+    } else if (message.command === 'documents') {
+      const d = message.data;
+      documents.value = d.documents || [];
+      total.value = d.total || 0;
+      page.value = d.page || 1;
+      pageSize.value = d.pageSize || 100;
+      loadError.value = '';
+      loading.value = false;
     } else if (message.command === 'tableData') {
       const d = message.data;
       columns.value = d.columns || [];
@@ -189,9 +244,74 @@ function loadData(p: number) {
       table: table.value,
       page: p,
       pageSize: pageSize.value,
-      where: where.value || undefined
+      where: where.value || undefined,
+      // 文档型：要求宿主返回原始文档而不是 columns/rows 扁平结构
+      ...(isDocDb.value ? { document: true } : {})
     }
   });
+}
+
+// ---- 文档型（MongoDB）编辑/删除：按 _id 定位 ----
+function editDoc(doc: any) {
+  editingDocId.value = String(doc._id);
+  editingDocJson.value = JSON.stringify(doc, null, 2);
+  docError.value = '';
+}
+
+function cancelEdit() {
+  editingDocId.value = '';
+  editingDocJson.value = '';
+  docError.value = '';
+}
+
+function formatDoc() {
+  try {
+    editingDocJson.value = JSON.stringify(JSON.parse(editingDocJson.value), null, 2);
+    docError.value = '';
+  } catch (e: any) {
+    docError.value = 'JSON 格式错误：' + (e?.message || e);
+  }
+}
+
+function saveDoc(doc: any) {
+  let parsed: any;
+  try {
+    parsed = JSON.parse(editingDocJson.value);
+  } catch (e: any) {
+    docError.value = 'JSON 格式错误：' + (e?.message || e);
+    return;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    docError.value = '请提供一个 JSON 对象';
+    return;
+  }
+  docError.value = '';
+  vscode.postMessage({
+    command: 'updateDocument',
+    data: {
+      id: connectionId.value,
+      database: database.value,
+      table: table.value,
+      docId: String(doc._id),
+      data: parsed
+    }
+  });
+  cancelEdit();
+  setTimeout(() => loadData(page.value), 400);
+}
+
+function deleteDoc(doc: any) {
+  if (!window.confirm('确认删除该文档？')) return;
+  vscode.postMessage({
+    command: 'deleteDocument',
+    data: {
+      id: connectionId.value,
+      database: database.value,
+      table: table.value,
+      docId: String(doc._id)
+    }
+  });
+  setTimeout(() => loadData(page.value), 400);
 }
 
 function loadStructure() {
@@ -393,5 +513,50 @@ function formatValue(v: any) {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* 文档型（MongoDB）：JSON 文档卡片 */
+.doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.doc-card {
+  border: 1px solid var(--dbt-panel-border, rgba(128, 128, 128, 0.35));
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+.doc-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.doc-id {
+  font-family: var(--dbt-editor-font-family, monospace);
+  font-size: 12px;
+  opacity: 0.8;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.doc-json,
+.doc-editor {
+  margin: 0;
+  font-family: var(--dbt-editor-font-family, monospace);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.doc-editor {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--dbt-input-background, inherit);
+  color: var(--dbt-input-foreground, inherit);
+  border: 1px solid var(--dbt-panel-border, rgba(128, 128, 128, 0.35));
+  border-radius: 3px;
+  padding: 6px 8px;
 }
 </style>

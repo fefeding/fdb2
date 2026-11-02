@@ -23,11 +23,43 @@ export class OracleService extends BaseDatabaseService {
   }
 
   /**
+   * 统一封装 Oracle 查询。
+   *
+   * 关键约定（务必遵守，否则会静默拿到 undefined）：
+   * 1. oracledb 返回的行对象键名是大写；dbQuery 统一把键名转成小写后返回。
+   * 2. 因此**所有 SQL 别名必须写成加引号的小写**（如 `... as "defaultvalue"`），
+   *    读取时用同名小写属性（如 `row.defaultvalue`）。
+   *    若别名写成 camelCase（如 `"isIdentity"`），归一化后是 `isidentity`，
+   *    用 `row.isIdentity` 读取会得到 undefined —— 这是最容易踩的坑。
+   * 3. 加引号同时可规避 Oracle 保留字别名（`column`/`type`/`comment`/`size` 等）
+   *    导致的 ORA-00923 "FROM keyword not found"。
+   * 4. 数据导出等按列名取值（`row[column]`）依赖本归一化：Oracle 的 `SELECT *`
+   *    返回的键名是大写，而 getColumns 返回小写列名，统一小写后二者才能对上。
+   */
+  private async dbQuery(dataSource: DataSource, sql: string, parameters?: any[]): Promise<any[]> {
+    const result = await dataSource.query(sql, parameters);
+    return this.normalizeRows(result);
+  }
+
+  /**
+   * 把每行对象的键名转小写（oracledb 默认返回大写键名）。
+   */
+  private normalizeRows(result: any): any[] {
+    if (!Array.isArray(result)) return result as any;
+    return result.map((row) => {
+      if (!row || typeof row !== 'object' || Array.isArray(row)) return row;
+      const out: any = {};
+      for (const k of Object.keys(row)) out[k.toLowerCase()] = row[k];
+      return out;
+    });
+  }
+
+  /**
    * 获取Oracle数据库列表（用户schema）
    */
   async getDatabases(dataSource: DataSource): Promise<string[]> {
-    const result = await dataSource.query(`
-      SELECT username as name 
+    const result = await this.dbQuery(dataSource, `
+      SELECT username as "name"
       FROM all_users 
       WHERE username NOT IN ('SYS', 'SYSTEM', 'XDB', 'OUTLN')
       ORDER BY username
@@ -39,16 +71,16 @@ export class OracleService extends BaseDatabaseService {
    * 获取Oracle表列表
    */
   async getTables(dataSource: DataSource, database: string): Promise<TableEntity[]> {
-    const result = await dataSource.query(`
+    const result = await this.dbQuery(dataSource, `
       SELECT 
-        table_name as name,
-        'TABLE' as type
+        table_name as "name",
+        'TABLE' as "type"
       FROM all_tables 
-      WHERE owner = ? 
+      WHERE owner = USER
         AND table_name NOT LIKE 'BIN$%'
         AND temporary = 'N'
       ORDER BY table_name
-    `, [database.toUpperCase()]);
+    `);
 
     return result.map((row: any) => ({
       name: row.name,
@@ -64,19 +96,18 @@ export class OracleService extends BaseDatabaseService {
    */
   async getColumns(dataSource: DataSource, database: string, table: string): Promise<ColumnEntity[]> {
     // 使用兼容的SQL查询，移除可能不兼容的字段
-    const result = await dataSource.query(`
+    const result = await this.dbQuery(dataSource, `
       SELECT 
-        column_name as name,
-        data_type as type,
-        data_length as length,
-        nullable as nullable,
-        data_default as defaultValue
-      FROM all_tab_columns 
-      WHERE owner = ? 
-        AND table_name = ?
+        column_name as "name",
+        data_type as "type",
+        data_length as "length",
+        nullable as "nullable",
+        data_default as "defaultvalue",
+        identity_column as "isidentity"
+      FROM user_tab_columns 
+      WHERE table_name = :1
       ORDER BY column_id
     `, [ 
-      database.toUpperCase(), 
       table.toUpperCase() 
     ]);
 
@@ -102,12 +133,15 @@ export class OracleService extends BaseDatabaseService {
       }
       
       return {
-        name: row.name,
+        // Oracle 数据字典中列名是大写存储的，而其它方言（及前端 spec）使用小写，
+        // 且 Oracle 对未加引号的标识符大小写不敏感。统一返回小写，避免与 spec 比较时
+        // 因大小写不同而把"已存在列"误判为"删除+新增"（会触发 ORA-01430 等）。
+        name: (row.name || '').toLowerCase(),
         type: row.type + (row.length ? `(${row.length})` : ''),
         nullable: row.nullable === 'Y',
-        defaultValue: row.defaultValue,
-        isPrimary: primaryKeys.includes(row.name),
-        isAutoIncrement: sequenceColumns.includes(row.name),
+        defaultValue: row.defaultvalue,
+        isPrimary: primaryKeys.includes((row.name || '').toLowerCase()),
+        isAutoIncrement: row.isidentity === 'YES' || sequenceColumns.includes((row.name || '').toLowerCase()),
         length: row.length,
         precision: precision,
         scale: scale
@@ -119,24 +153,23 @@ export class OracleService extends BaseDatabaseService {
    * 获取Oracle索引信息
    */
   async getIndexes(dataSource: DataSource, database: string, table: string): Promise<IndexEntity[]> {
-    const result = await dataSource.query(`
-      SELECT DISTINCT 
-        i.index_name as name,
-        DECODE(i.uniqueness, 'UNIQUE', 'UNIQUE INDEX', 'INDEX') as type,
-        ic.column_name as column
+    const result = await this.dbQuery(dataSource, `
+      SELECT 
+        i.index_name as "name",
+        DECODE(i.uniqueness, 'UNIQUE', 'UNIQUE INDEX', 'INDEX') as "type",
+        ic.column_name as "column"
       FROM all_indexes i
-      JOIN all_ind_columns ic ON i.index_name = ic.index_name
-      WHERE i.table_owner = ? 
-        AND i.table_name = ?
+      -- 索引名只在 schema 内唯一，必须同时限定 owner，否则跨 schema 同名索引会产生重复行。
+      -- 用 join 去重（而非 DISTINCT），这样 ORDER BY 未出现在 SELECT 中的列也不会触发 ORA-01791。
+      JOIN all_ind_columns ic ON i.index_name = ic.index_name AND ic.index_owner = i.table_owner
+      WHERE i.table_owner = USER 
+        AND i.table_name = :1
         AND i.index_name NOT IN (SELECT constraint_name 
                                FROM all_constraints 
-                               WHERE constraint_type = 'P' 
-                               AND table_owner = ?)
+                               WHERE constraint_type = 'P')
       ORDER BY i.index_name, ic.column_position
     `, [ 
-      database.toUpperCase(), 
-      table.toUpperCase(),
-      database.toUpperCase() 
+      table.toUpperCase()
     ]);
 
     // 按索引名分组
@@ -160,31 +193,30 @@ export class OracleService extends BaseDatabaseService {
    * 获取Oracle外键信息
    */
   async getForeignKeys(dataSource: DataSource, database: string, table: string): Promise<ForeignKeyEntity[]> {
-    const result = await dataSource.query(`
+    const result = await this.dbQuery(dataSource, `
       SELECT 
-        c.constraint_name as name,
-        cc.column_name as column,
-        r.table_name as referencedTable,
-        rc.column_name as referencedColumn,
-        c.delete_rule as onDelete
+        c.constraint_name as "name",
+        cc.column_name as "column",
+        r.table_name as "referencedtable",
+        rc.column_name as "referencedcolumn",
+        c.delete_rule as "ondelete"
       FROM all_constraints c
       JOIN all_cons_columns cc ON c.constraint_name = cc.constraint_name
       JOIN all_constraints r ON c.r_constraint_name = r.constraint_name
       JOIN all_cons_columns rc ON r.constraint_name = rc.constraint_name AND cc.position = rc.position
       WHERE c.constraint_type = 'R'
-        AND c.owner = ? 
-        AND c.table_name = ?
+        AND c.owner = USER 
+        AND c.table_name = :1
     `, [ 
-      database.toUpperCase(), 
       table.toUpperCase() 
     ]);
 
     return result.map((row: any) => ({
       name: row.name,
       column: row.column,
-      referencedTable: row.referencedTable,
-      referencedColumn: row.referencedColumn,
-      onDelete: row.onDelete || 'NO ACTION',
+      referencedTable: row.referencedtable,
+      referencedColumn: row.referencedcolumn,
+      onDelete: row.ondelete || 'NO ACTION',
       onUpdate: 'NO ACTION' // Oracle不支持ON UPDATE
     }));
   }
@@ -193,8 +225,8 @@ export class OracleService extends BaseDatabaseService {
    * 获取Oracle数据库大小（用户schema大小）
    */
   async getDatabaseSize(dataSource: DataSource, database: string): Promise<number> {
-    const result = await dataSource.query(`
-      SELECT SUM(bytes) as size
+    const result = await this.dbQuery(dataSource, `
+      SELECT SUM(bytes) as "size"
       FROM user_segments
     `);
     return result[0]?.size || 0;
@@ -205,21 +237,21 @@ export class OracleService extends BaseDatabaseService {
    */
   private async getTableStats(dataSource: DataSource, database: string, table: string): Promise<any> {
     try {
-      const result = await dataSource.query(`
+      const result = await this.dbQuery(dataSource, `
         SELECT 
-          num_rows as rowCount,
-          (SELECT SUM(bytes) FROM user_segments WHERE segment_name = ?) as dataSize
+          num_rows as "rowcount",
+          (SELECT SUM(bytes) FROM user_segments WHERE segment_name = :1) as "datasize"
         FROM all_tables
-        WHERE owner = ? AND table_name = ?
+        WHERE owner = USER AND table_name = :2
       `, [ 
         table.toUpperCase(),
-        database.toUpperCase(), 
         table.toUpperCase() 
       ]);
       
+      // 注意：dbQuery 会把键名统一转小写，故这里读 lowercase 键名
       return {
-        rowCount: result[0]?.rowCount || 0,
-        dataSize: result[0]?.dataSize || 0,
+        rowCount: result[0]?.rowcount || 0,
+        dataSize: result[0]?.datasize || 0,
         indexSize: 0 // Oracle索引大小计算较复杂，这里简化处理
       };
     } catch (error) {
@@ -236,19 +268,18 @@ export class OracleService extends BaseDatabaseService {
    * 获取主键信息
    */
   private async getPrimaryKeys(dataSource: DataSource, database: string, table: string): Promise<string[]> {
-    const result = await dataSource.query(`
-      SELECT column_name
+    const result = await this.dbQuery(dataSource, `
+      SELECT cc.column_name as "column_name"
       FROM all_cons_columns cc
       JOIN all_constraints c ON cc.constraint_name = c.constraint_name
       WHERE c.constraint_type = 'P'
-        AND c.owner = ? 
-        AND c.table_name = ?
+        AND c.owner = USER 
+        AND c.table_name = :1
       ORDER BY cc.position
     `, [ 
-      database.toUpperCase(), 
       table.toUpperCase() 
     ]);
-    return result.map((row: any) => row.column_name);
+    return result.map((row: any) => (row.column_name || '').toLowerCase());
   }
 
   /**
@@ -256,21 +287,20 @@ export class OracleService extends BaseDatabaseService {
    */
   private async getSequenceColumns(dataSource: DataSource, database: string, table: string): Promise<string[]> {
     try {
-      const result = await dataSource.query(`
-        SELECT acc.column_name
+      const result = await this.dbQuery(dataSource, `
+        SELECT acc.column_name as "column_name"
         FROM all_tab_columns acc
         JOIN all_triggers at ON acc.table_name = at.table_name 
           AND acc.owner = at.owner
         JOIN all_sequences seq ON at.trigger_name LIKE seq.sequence_name || '%'
-        WHERE acc.owner = ? 
-          AND acc.table_name = ?
+        WHERE acc.owner = USER 
+          AND acc.table_name = :1
           AND acc.data_default IS NOT NULL
           AND acc.data_default LIKE seq.sequence_name || '.nextval'
       `, [ 
-        database.toUpperCase(), 
         table.toUpperCase() 
       ]);
-      return result.map((row: any) => row.column_name);
+      return result.map((row: any) => (row.column_name || '').toLowerCase());
     } catch (error) {
       // 如果查询失败，返回空数组
       return [];
@@ -285,17 +315,25 @@ export class OracleService extends BaseDatabaseService {
   }
 
   /**
+   * Oracle 不支持 LIMIT/OFFSET 语法，分页需用 12c+ 的
+   * `OFFSET n ROWS FETCH NEXT m ROWS ONLY`。
+   */
+  protected buildPaginationClause(pageSize: number, offset: number): string {
+    return `OFFSET ${offset} ROWS FETCH NEXT ${pageSize} ROWS ONLY`;
+  }
+
+  /**
    * 获取Oracle视图列表
    */
   async getViews(dataSource: DataSource, database: string): Promise<any[]> {
-    const result = await dataSource.query(`
+    const result = await this.dbQuery(dataSource, `
       SELECT 
-        view_name as name,
-        '' as comment
+        view_name as "name",
+        NULL as "comment"
       FROM all_views 
-      WHERE owner = ?
+      WHERE owner = USER
       ORDER BY view_name
-    `, [database.toUpperCase()]);
+    `);
 
     return result.map((row: any) => ({
       name: row.name,
@@ -308,12 +346,12 @@ export class OracleService extends BaseDatabaseService {
    * 获取Oracle视图定义
    */
   async getViewDefinition(dataSource: DataSource, database: string, viewName: string): Promise<string> {
-    const result = await dataSource.query(`
-      SELECT text as definition
+    const result = await this.dbQuery(dataSource, `
+      SELECT text as "definition"
       FROM all_views 
-      WHERE owner = ? 
-        AND view_name = ?
-    `, [database.toUpperCase(), viewName.toUpperCase()]);
+      WHERE owner = USER 
+        AND view_name = :1
+    `, [viewName.toUpperCase()]);
 
     return result[0]?.definition || '';
   }
@@ -322,25 +360,25 @@ export class OracleService extends BaseDatabaseService {
    * 获取Oracle存储过程列表
    */
   async getProcedures(dataSource: DataSource, database: string): Promise<any[]> {
-    const result = await dataSource.query(`
+    const result = await this.dbQuery(dataSource, `
       SELECT 
-        object_name as name,
-        '' as comment,
-        'PROCEDURE' as type,
-        '' as returnType,
-        'PL/SQL' as language
+        object_name as "name",
+        NULL as "comment",
+        'PROCEDURE' as "type",
+        NULL as "returnvalue",
+        'PL/SQL' as "language"
       FROM all_objects 
-      WHERE owner = ? 
+      WHERE owner = USER 
         AND object_type IN ('PROCEDURE', 'FUNCTION')
         AND status = 'VALID'
       ORDER BY object_name
-    `, [database.toUpperCase()]);
+    `);
 
     return result.map((row: any) => ({
       name: row.name,
       comment: row.comment || '',
       type: row.type,
-      returnType: row.returnType || '',
+      returnType: row.returnvalue || '',
       language: row.language || 'PL/SQL'
     }));
   }
@@ -349,13 +387,13 @@ export class OracleService extends BaseDatabaseService {
    * 获取Oracle存储过程定义
    */
   async getProcedureDefinition(dataSource: DataSource, database: string, procedureName: string): Promise<string> {
-    const result = await dataSource.query(`
-      SELECT text as definition
+    const result = await this.dbQuery(dataSource, `
+      SELECT text as "definition"
       FROM all_source 
-      WHERE owner = ? 
-        AND name = ?
+      WHERE owner = USER 
+        AND name = :1
       ORDER BY line
-    `, [database.toUpperCase(), procedureName.toUpperCase()]);
+    `, [procedureName.toUpperCase()]);
 
     return result.map((row: any) => row.definition).join('\n') || '';
   }
@@ -404,7 +442,7 @@ export class OracleService extends BaseDatabaseService {
       }
     }
     
-    await dataSource.query(sql);
+    await this.dbQuery(dataSource, sql);
   }
 
   /**
@@ -412,7 +450,7 @@ export class OracleService extends BaseDatabaseService {
    */
   async dropDatabase(dataSource: DataSource, databaseName: string): Promise<void> {
     const sql = `DROP DATABASE ${this.quoteIdentifier(databaseName)}`;
-    await dataSource.query(sql);
+    await this.dbQuery(dataSource, sql);
   }
 
   /**
@@ -432,14 +470,17 @@ export class OracleService extends BaseDatabaseService {
       const foreignKeys = await this.getForeignKeys(dataSource, databaseName, table.name);
 
       // 生成CREATE TABLE语句
+      // 注意：Oracle 不支持 `CREATE TABLE IF NOT EXISTS` 语法，直接生成 CREATE TABLE。
       schemaSql += `-- 表结构: ${table.name}\n`;
-      schemaSql += `CREATE TABLE IF NOT EXISTS ${this.quoteIdentifier(table.name)} (\n`;
+      schemaSql += `CREATE TABLE ${this.quoteIdentifier(table.name)} (\n`;
 
       // 添加列定义
+      // 注意：Oracle 语法要求 `GENERATED ... AS IDENTITY` 出现在 NOT NULL / DEFAULT 之前。
       const columnDefinitions = columns.map(column => {
         let definition = `  ${this.quoteIdentifier(column.name)} ${column.type}`;
+        if (column.isAutoIncrement) definition += ' GENERATED ALWAYS AS IDENTITY';
         if (!column.nullable) definition += ' NOT NULL';
-        if (column.defaultValue !== undefined) {
+        if (column.defaultValue !== undefined && column.defaultValue !== null) {
           // 特殊关键字处理
           const upperDefault = column.defaultValue.toString().toUpperCase();
           if (upperDefault === 'CURRENT_TIMESTAMP' || upperDefault === 'NOW()' || upperDefault === 'CURRENT_DATE') {
@@ -448,7 +489,6 @@ export class OracleService extends BaseDatabaseService {
             definition += ` DEFAULT ${column.defaultValue === null ? 'NULL' : `'${column.defaultValue}'`}`;
           }
         }
-        if (column.isAutoIncrement) definition += ' GENERATED ALWAYS AS IDENTITY';
         return definition;
       });
 
@@ -490,14 +530,14 @@ export class OracleService extends BaseDatabaseService {
     // Oracle查看日志
     try {
       // 尝试查看Oracle警告日志
-      const logs = await dataSource.query(`
+      const logs = await this.dbQuery(dataSource, `
         SELECT * FROM v$diag_info WHERE name LIKE '%Log%'
       `);
       return logs;
     } catch (error) {
       try {
         // 尝试查看Oracle系统事件
-        const logs = await dataSource.query(`
+        const logs = await this.dbQuery(dataSource, `
           SELECT * FROM v$event_name WHERE name LIKE '%log%' LIMIT ${limit}
         `);
         return logs;
@@ -613,7 +653,7 @@ ALTER DATABASE OPEN;
       while (hasMoreData) {
         // 分批查询数据（Oracle 使用 ROWNUM 语法）
         const query = `SELECT * FROM (SELECT a.*, ROWNUM rnum FROM (SELECT * FROM ${this.quoteIdentifier(tableName)}) a WHERE ROWNUM <= ${offset + batchSize}) WHERE rnum > ${offset}`;
-        const data = await dataSource.query(query);
+        const data = await this.dbQuery(dataSource, query);
         
         if (data.length === 0) {
           hasMoreData = false;
@@ -702,7 +742,7 @@ ALTER DATABASE OPEN;
       while (hasMoreData) {
         // 分批查询数据（Oracle 使用 ROWNUM 语法）
         const query = `SELECT * FROM (SELECT a.*, ROWNUM rnum FROM (SELECT * FROM ${this.quoteIdentifier(tableName)}) a WHERE ROWNUM <= ${offset + batchSize}) WHERE rnum > ${offset}`;
-        const data = await dataSource.query(query);
+        const data = await this.dbQuery(dataSource, query);
         
         if (data.length === 0) {
           hasMoreData = false;
@@ -782,7 +822,7 @@ ALTER DATABASE OPEN;
       while (hasMoreData) {
         // 分批查询数据（Oracle 使用 ROWNUM 语法）
         const query = `SELECT * FROM (SELECT a.*, ROWNUM rnum FROM (SELECT * FROM ${this.quoteIdentifier(tableName)}) a WHERE ROWNUM <= ${offset + batchSize}) WHERE rnum > ${offset}`;
-        const data = await dataSource.query(query);
+        const data = await this.dbQuery(dataSource, query);
         
         if (data.length === 0) {
           hasMoreData = false;
@@ -854,17 +894,17 @@ ALTER DATABASE OPEN;
     const placeholders = columns.map((_, index) => `:${index + 1}`).join(', ');
     const values = columns.map(column => data[column]);
 
-    const sql = `INSERT INTO "${tableName}" (${columns.map(col => `"${col}"`).join(', ')}) VALUES (${placeholders})`;
+    const sql = `INSERT INTO ${this.quoteIdentifier(tableName)} (${columns.map(col => this.quoteIdentifier(col)).join(', ')}) VALUES (${placeholders})`;
     
-    await dataSource.query(sql, values);
+    await this.dbQuery(dataSource, sql, values);
   }
 
   /**
    * 删除表
    */
   async dropTable(dataSource: DataSource, databaseName: string, tableName: string): Promise<void> {
-    const sql = `DROP TABLE "${tableName}"`;
-    await dataSource.query(sql);
+    const sql = `DROP TABLE ${this.quoteIdentifier(tableName)} PURGE`;
+    await this.dbQuery(dataSource, sql);
   }
 
   /**

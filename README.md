@@ -155,7 +155,7 @@ cd packages/vscode && npm install && npm run build
 | **Oracle** | 1521 | PL/SQL, RAC, Data Guard, advanced security |
 | **CockroachDB** | 26257 | Distributed SQL, strong consistency, automatic sharding |
 | **MongoDB** | 27017 | NoSQL document database, aggregation pipeline, indexing |
-| **SAP HANA** | 39013 | In-memory database, real-time analytics, column store |
+| **SAP HANA** | 39013 | In-memory database, real-time analytics, column store（⚠️ 实验性，见下方说明） |
 | **ClickHouse** | 8123 | Columnar store, real-time analytics, MergeTree engine, HTTP interface |
 
 ### 🔄 Compatibility Notes
@@ -164,6 +164,7 @@ cd packages/vscode && npm install && npm run build
 - **Amazon Aurora PostgreSQL**: Compatible with PostgreSQL — select PostgreSQL type
 - **Better-SQLite3**: Compatible with SQLite — select SQLite type
 - **ClickHouse**: Connect via the HTTP interface (default port 8123) using Basic auth with the default user `default`; supports table/view browsing, schema inspection, data CRUD, SQL queries, backup and restore
+- **SAP HANA（实验性 / experimental）**: Requires the optional driver `@sap/hana-client`, which is **not** installed by default (`npm install @sap/hana-client`). SAP provides no freely available Docker image, so this dialect has **not** been verified end-to-end. If the driver is missing, the connection fails fast with an explicit install hint instead of a cryptic module error.
 
 ## 🤝 Contribution Guide
 

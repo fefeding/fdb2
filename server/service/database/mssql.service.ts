@@ -43,7 +43,7 @@ export class SQLServerService extends BaseDatabaseService {
       SELECT 
         t.name,
         'BASE TABLE' as type,
-        p.rows as rowCount,
+        p.rows as row_count,
         SUM(a.total_pages) * 8 * 1024 as dataSize
       FROM ${this.quoteIdentifier(database)}.sys.tables t
       INNER JOIN ${this.quoteIdentifier(database)}.sys.partitions p ON t.object_id = p.object_id
@@ -57,7 +57,7 @@ export class SQLServerService extends BaseDatabaseService {
     return result.map((row: any) => ({
       name: row.name,
       type: row.type,
-      rowCount: row.rowCount || 0,
+      rowCount: row.row_count || 0,
       dataSize: row.dataSize || 0,
       indexSize: 0 // SQL Server索引大小计算较复杂，这里简化处理
     }));
@@ -80,9 +80,9 @@ export class SQLServerService extends BaseDatabaseService {
         COLUMNPROPERTY(c.object_id, c.name, 'IsIdentity') as isIdentity
       FROM ${this.quoteIdentifier(database)}.sys.columns c
       INNER JOIN ${this.quoteIdentifier(database)}.sys.types t ON c.user_type_id = t.user_type_id
-      WHERE c.object_id = OBJECT_ID(?)
+      WHERE c.object_id = OBJECT_ID(@0)
       ORDER BY c.column_id
-    `, [`${database}.${table}`]);
+    `, [`${database}.dbo.${table}`]);
 
     // 获取主键信息
     const primaryKeys = await this.getPrimaryKeys(dataSource, database, table);
@@ -108,15 +108,15 @@ export class SQLServerService extends BaseDatabaseService {
       SELECT 
         i.name,
         i.type_desc as type,
-        c.name as column,
+        c.name as col_name,
         i.is_unique as isUnique
       FROM ${this.quoteIdentifier(database)}.sys.indexes i
       INNER JOIN ${this.quoteIdentifier(database)}.sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
       INNER JOIN ${this.quoteIdentifier(database)}.sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
-      WHERE i.object_id = OBJECT_ID(?)
+      WHERE i.object_id = OBJECT_ID(@0)
         AND i.is_primary_key = 0
       ORDER BY i.name, ic.key_ordinal
-    `, [`${database}.${table}`]);
+    `, [`${database}.dbo.${table}`]);
 
     // 按索引名分组
     const indexMap = new Map<string, IndexEntity>();
@@ -129,7 +129,7 @@ export class SQLServerService extends BaseDatabaseService {
           unique: row.isUnique
         });
       }
-      indexMap.get(row.name)!.columns.push(row.column);
+      indexMap.get(row.name)!.columns.push(row.col_name);
     });
 
     return Array.from(indexMap.values());
@@ -142,22 +142,22 @@ export class SQLServerService extends BaseDatabaseService {
     const result = await dataSource.query(`
       SELECT 
         fk.name as name,
-        c.name as column,
+        c.name as col_name,
         rt.name as referencedTable,
         rc.name as referencedColumn,
-        fk.delete_action_desc as onDelete,
-        fk.update_action_desc as onUpdate
+        fk.delete_referential_action_desc as onDelete,
+        fk.update_referential_action_desc as onUpdate
       FROM ${this.quoteIdentifier(database)}.sys.foreign_keys fk
       INNER JOIN ${this.quoteIdentifier(database)}.sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
       INNER JOIN ${this.quoteIdentifier(database)}.sys.columns c ON fkc.parent_object_id = c.object_id AND fkc.parent_column_id = c.column_id
       INNER JOIN ${this.quoteIdentifier(database)}.sys.columns rc ON fkc.referenced_object_id = rc.object_id AND fkc.referenced_column_id = rc.column_id
       INNER JOIN ${this.quoteIdentifier(database)}.sys.tables rt ON fkc.referenced_object_id = rt.object_id
-      WHERE fkc.parent_object_id = OBJECT_ID(?)
-    `, [`${database}.${table}`]);
+      WHERE fkc.parent_object_id = OBJECT_ID(@0)
+    `, [`${database}.dbo.${table}`]);
 
     return result.map((row: any) => ({
       name: row.name,
-      column: row.column,
+      column: row.col_name,
       referencedTable: row.referencedTable,
       referencedColumn: row.referencedColumn,
       onDelete: row.onDelete,
@@ -172,7 +172,7 @@ export class SQLServerService extends BaseDatabaseService {
     const result = await dataSource.query(`
       SELECT SUM(size * 8 * 1024) as size
       FROM sys.master_files
-      WHERE database_id = DB_ID(?)
+      WHERE database_id = DB_ID(@0)
     `, [database]);
     return result[0]?.size || 0;
   }
@@ -187,9 +187,9 @@ export class SQLServerService extends BaseDatabaseService {
       INNER JOIN ${this.quoteIdentifier(database)}.sys.index_columns ic ON k.parent_object_id = ic.object_id AND k.unique_index_id = ic.index_id
       INNER JOIN ${this.quoteIdentifier(database)}.sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
       WHERE k.type = 'PK'
-        AND k.parent_object_id = OBJECT_ID(?)
+        AND k.parent_object_id = OBJECT_ID(@0)
       ORDER BY ic.key_ordinal
-    `, [`${database}.${table}`]);
+    `, [`${database}.dbo.${table}`]);
     return result.map((row: any) => row.name);
   }
 
@@ -205,8 +205,8 @@ export class SQLServerService extends BaseDatabaseService {
       SELECT k.name AS name
       FROM ${this.quoteIdentifier(database)}.sys.key_constraints k
       WHERE k.type = 'PK'
-        AND k.parent_object_id = OBJECT_ID(?)
-    `, [`${database}.${table}`]);
+        AND k.parent_object_id = OBJECT_ID(@0)
+    `, [`${database}.dbo.${table}`]);
     return result?.[0]?.name ?? null;
   }
 
@@ -215,6 +215,20 @@ export class SQLServerService extends BaseDatabaseService {
    */
   public quoteIdentifier(identifier: string): string {
     return `[${identifier}]`;
+  }
+
+  /**
+   * SQL Server 不支持 LIMIT/OFFSET，使用 OFFSET ... ROWS FETCH NEXT ... ROWS ONLY
+   */
+  protected buildPaginationClause(pageSize: number, offset: number): string {
+    return `OFFSET ${offset} ROWS FETCH NEXT ${pageSize} ROWS ONLY`;
+  }
+
+  /**
+   * SQL Server 的 OFFSET/FETCH 语法强制要求 ORDER BY，无排序时补一个空排序
+   */
+  protected buildOrderByClause(orderBy?: string): string {
+    return orderBy ? ` ORDER BY ${orderBy}` : ' ORDER BY (SELECT NULL)';
   }
 
   /**
@@ -244,7 +258,7 @@ export class SQLServerService extends BaseDatabaseService {
     const result = await dataSource.query(`
       SELECT VIEW_DEFINITION as definition
       FROM ${this.quoteIdentifier(database)}.INFORMATION_SCHEMA.VIEWS 
-      WHERE TABLE_NAME = ?
+      WHERE TABLE_NAME = @0
     `, [viewName]);
 
     return result[0]?.definition || '';
@@ -282,7 +296,7 @@ export class SQLServerService extends BaseDatabaseService {
     const result = await dataSource.query(`
       SELECT ROUTINE_DEFINITION as definition
       FROM ${this.quoteIdentifier(database)}.INFORMATION_SCHEMA.ROUTINES 
-      WHERE ROUTINE_NAME = ?
+      WHERE ROUTINE_NAME = @0
     `, [procedureName]);
 
     return result[0]?.definition || '';
@@ -375,7 +389,7 @@ export class SQLServerService extends BaseDatabaseService {
       const columnDefinitions = columns.map(column => {
         let definition = `  ${this.quoteIdentifier(column.name)} ${column.type}`;
         if (!column.nullable) definition += ' NOT NULL';
-        if (column.defaultValue !== undefined) {
+        if (column.defaultValue !== undefined && column.defaultValue !== null) {
           // 特殊关键字处理
           const upperDefault = column.defaultValue.toString().toUpperCase();
           if (upperDefault === 'CURRENT_TIMESTAMP' || upperDefault === 'NOW()' || upperDefault === 'CURRENT_DATE') {
@@ -749,20 +763,14 @@ export class SQLServerService extends BaseDatabaseService {
     if (data.length === 0) return;
 
     const columns = Object.keys(data[0]);
-    const placeholders = data.map((_, index) => 
-      `(${columns.map((_, colIndex) => `@p${index}_${colIndex}`).join(', ')})`
+    // TypeORM 的 MSSQL 驱动按「数组下标」绑定参数（@0、@1…），必须传数组而非命名对象
+    const placeholders = data.map((_, index) =>
+      `(${columns.map((_, colIndex) => `@${index * columns.length + colIndex}`).join(', ')})`
     ).join(', ');
+    const params = data.flatMap(row => columns.map(col => row[col]));
 
     const sql = `INSERT INTO [${databaseName}].[dbo].[${tableName}] (${columns.map(col => `[${col}]`).join(', ')}) VALUES ${placeholders}`;
-    
-    // MSSQL需要单独处理参数化查询
-    for (let i = 0; i< data.length; i++) {
-      const params: any = {};
-      columns.forEach((column, colIndex) =>{
-        params[`p${i}_${colIndex}`] = data[i][column];
-      });
-      await dataSource.query(sql, params);
-    }
+    await dataSource.query(sql, params);
   }
 
   /**
@@ -770,15 +778,12 @@ export class SQLServerService extends BaseDatabaseService {
    */
   async insertData(dataSource: DataSource, databaseName: string, tableName: string, data: any): Promise<void> {
     const columns = Object.keys(data);
-    const placeholders = columns.map((_, index) => `@p${index}`).join(', ');
-    const params: any = {};
-    
-    columns.forEach((column, index) => {
-      params[`p${index}`] = data[column];
-    });
+    // TypeORM 的 MSSQL 驱动按「数组下标」绑定参数（@0、@1…），必须传数组而非命名对象
+    const placeholders = columns.map((_, index) => `@${index}`).join(', ');
+    const params: any[] = columns.map(column => data[column]);
 
     const sql = `INSERT INTO [${databaseName}].[dbo].[${tableName}] (${columns.map(col => `[${col}]`).join(', ')}) VALUES (${placeholders})`;
-    
+
     await dataSource.query(sql, params);
   }
 

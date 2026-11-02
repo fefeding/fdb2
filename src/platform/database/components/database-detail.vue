@@ -43,10 +43,11 @@
             :class="{ active: activeTab === 'tables' }"
             @click="activeTab = 'tables'"
           >
-            <i class="bi bi-table"></i> {{ $t('databaseDetail.tables') }}
+            <i class="bi bi-table"></i> {{ isDocDb ? '集合' : $t('databaseDetail.tables') }}
           </button>
         </li>
-        <li class="nav-item">
+        <!-- 视图/存储过程为关系型专属：文档型（MongoDB）不展示 -->
+        <li class="nav-item" v-if="!isDocDb">
           <button 
             class="nav-link" 
             :class="{ active: activeTab === 'views' }"
@@ -55,7 +56,7 @@
             <i class="bi bi-eye"></i> {{ $t('databaseDetail.views') }}
           </button>
         </li>
-        <li class="nav-item">
+        <li class="nav-item" v-if="!isDocDb">
           <button 
             class="nav-link" 
             :class="{ active: activeTab === 'procedures' }"
@@ -73,13 +74,24 @@
             <i class="bi bi-code-slash"></i> 函数
           </button>
         </li> -->
-        <li class="nav-item">
+        <!-- SQL 执行器：文档型数据库无 SQL，后续由「文档查询/聚合」面板替代 -->
+        <li class="nav-item" v-if="!isDocDb">
           <button 
             class="nav-link" 
             :class="{ active: activeTab === 'sql' }"
             @click="activeTab = 'sql'"
           >
             <i class="bi bi-terminal"></i> {{ $t('databaseDetail.executeSQL') }}
+          </button>
+        </li>
+        <!-- 文档查询（JSON 过滤 / 聚合管道）：文档型替代 SQL 执行器 -->
+        <li class="nav-item" v-if="isDocDb">
+          <button 
+            class="nav-link" 
+            :class="{ active: activeTab === 'docQuery' }"
+            @click="activeTab = 'docQuery'"
+          >
+            <i class="bi bi-braces"></i> 文档查询
           </button>
         </li>
         <li class="nav-item">
@@ -281,14 +293,23 @@
           </div>
         </div>
 
-        <!-- SQL执行标签页 -->
-        <div v-show="activeTab === 'sql'" class="tab-panel">
+        <!-- SQL执行标签页（文档型不渲染，避免执行必然失败的 SQL） -->
+        <div v-if="activeTab === 'sql' && !isDocDb" class="tab-panel">
           <div class="sql-executor-section">
             <SqlExecutor 
               :connection="connection"
               :database="database"
             />
           </div>
+        </div>
+
+        <!-- 文档查询标签页（文档型专属） -->
+        <div v-if="activeTab === 'docQuery' && isDocDb" class="tab-panel">
+          <DocumentQueryPanel
+            :connection="connection"
+            :database="database"
+            :tables="props.tables"
+          />
         </div>
 
         <!-- 工具标签页 -->
@@ -420,9 +441,12 @@ import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import { useI18n } from 'vue-i18n';
 import TableEditor from './table-editor.vue';
 import SqlExecutor from './sql-executor.vue';
+import DocumentQueryPanel from './document-query-panel.vue';
 import DbTools from './db-tools.vue';
 import { modal } from '@/utils/modal';
+import { toast } from '@/utils/toast';
 import { DatabaseService } from '@/service/database';
+import { isDocumentDb, nounOf } from '@/typings/database-types';
 
 // Props
 const props = defineProps<{
@@ -444,6 +468,9 @@ const emit = defineEmits<{
 
 const databaseService = new DatabaseService();
 const { t } = useI18n();
+// 文档型（MongoDB）：隐藏视图/存储过程等关系型专属能力，术语改为集合/文档
+const isDocDb = computed(() => isDocumentDb((props.connection as any)?.type));
+const tableNoun = computed(() => nounOf((props.connection as any)?.type, 'table'));
 // 响应式数据
 const activeTab = ref('tables');
 const showCreateTable = ref(false);
@@ -828,7 +855,12 @@ async function handleTableChange(result: any) {
         // 操作成功，刷新结构
         emit('refresh-database');
         const successMessage = isCreate ? t('databaseDetail.tableCreateSuccess') : t('databaseDetail.tableModifySuccess');
-        await modal.success(successMessage);
+        // 创建表成功用轻量 toast，不再弹出阻塞式对话框
+        if (isCreate) {
+          toast.success(successMessage);
+        } else {
+          await modal.success(successMessage);
+        }
       } else {
         const errorMessage = isCreate ? t('databaseDetail.tableCreateFailed') : t('databaseDetail.tableModifyFailed');
         await modal.error(errorMessage);

@@ -75,11 +75,26 @@ export class WebViewProvider {
     if (existed) panel.webview.postMessage(init);
   }
 
-  showTableDataPanel(connectionId: string, database: string, table: string): void {
+  /**
+   * 取连接类型（供 webview 判断是否文档模式）；取不到时返回空串（按关系型处理）。
+   */
+  private async connectionTypeOf(connectionId: string): Promise<string> {
+    try {
+      const list = await this.bridge.call<any[]>('/api/database/getConnections', {});
+      const hit = (list || []).find((c: any) => c?.id === connectionId);
+      return String(hit?.type || '');
+    } catch {
+      return '';
+    }
+  }
+
+  async showTableDataPanel(connectionId: string, database: string, table: string): Promise<void> {
     const viewType = 'dbtool.tableData';
     const existed = this.panels.has(viewType);
     const panel = this.createPanel(viewType, `数据: ${table}`, 'tableData');
-    const init = { command: 'init', data: { connectionId, database, table } };
+    // 带上连接类型：webview 据此判断是否走文档模式（MongoDB）
+    const type = await this.connectionTypeOf(connectionId);
+    const init = { command: 'init', data: { connectionId, database, table, type } };
     if (existed) {
       // 面板已就绪，不会再发 'ready'，直接下发新 init
       panel.webview.postMessage(init);
@@ -88,11 +103,12 @@ export class WebViewProvider {
     }
   }
 
-  showTableStructurePanel(connectionId: string, database: string, table: string): void {
+  async showTableStructurePanel(connectionId: string, database: string, table: string): Promise<void> {
     const viewType = 'dbtool.tableStructure';
     const existed = this.panels.has(viewType);
     const panel = this.createPanel(viewType, `结构: ${table}`, 'tableStructure');
-    const init = { command: 'init', data: { connectionId, database, table } };
+    const type = await this.connectionTypeOf(connectionId);
+    const init = { command: 'init', data: { connectionId, database, table, type } };
     if (existed) {
       panel.webview.postMessage(init);
     } else {
@@ -315,6 +331,19 @@ export class WebViewProvider {
             '/api/database/getTableData',
             this.withDefaults('/api/database/getTableData', message.data)
           );
+          // 文档型（MongoDB）：直接回传原始文档，保留嵌套结构，不做 columns/rows 扁平化
+          if (message.data.document) {
+            post({
+              command: 'documents',
+              data: {
+                documents: res.data || [],
+                total: res.total || (res.data || []).length,
+                page: message.data.page || 1,
+                pageSize: message.data.pageSize || 100
+              }
+            });
+            return;
+          }
           // 重新对齐：getTableData 返回对象数组，需还原为 columns/rows
           const aligned = alignRows(res.data || []);
           post({
@@ -331,6 +360,57 @@ export class WebViewProvider {
         }
         case 'getTableInfo':
           post({ command: 'tableInfo', data: await this.bridge.call('/api/database/getTableInfo', this.withDefaults('/api/database/getTableInfo', message.data)) });
+          return;
+        // ---- 文档型（MongoDB）操作：新增/更新/删除走 _id，索引与聚合走各自路由 ----
+        case 'insertDocument':
+          post({
+            command: 'documentSaved',
+            data: await this.bridge.call('/api/database/insertData', {
+              id: message.data.id, database: message.data.database, table: message.data.table, data: message.data.data
+            })
+          });
+          return;
+        case 'updateDocument':
+          post({
+            command: 'documentSaved',
+            data: await this.bridge.call('/api/database/updateData', {
+              id: message.data.id, database: message.data.database, table: message.data.table,
+              data: message.data.data, docId: message.data.docId
+            })
+          });
+          return;
+        case 'deleteDocument':
+          post({
+            command: 'documentSaved',
+            data: await this.bridge.call('/api/database/deleteData', {
+              id: message.data.id, database: message.data.database, table: message.data.table, docId: message.data.docId
+            })
+          });
+          return;
+        case 'truncateCollection':
+          post({
+            command: 'documentSaved',
+            data: await this.bridge.call(
+              `/api/database/truncateTable/${message.data.id}/${message.data.database}/${message.data.table}`, {}
+            )
+          });
+          return;
+        case 'getIndexes':
+          post({
+            command: 'indexes',
+            data: await this.bridge.call('/api/database/getIndexes', {
+              id: message.data.id, database: message.data.database, table: message.data.table
+            })
+          });
+          return;
+        case 'createIndex':
+          post({ command: 'documentSaved', data: await this.bridge.call('/api/database/createIndex', message.data) });
+          return;
+        case 'dropIndex':
+          post({ command: 'documentSaved', data: await this.bridge.call('/api/database/dropIndex', message.data) });
+          return;
+        case 'aggregate':
+          post({ command: 'aggregateResult', data: await this.bridge.call('/api/database/aggregate', message.data) });
           return;
         case 'executeQuery': {
           const start = Date.now();

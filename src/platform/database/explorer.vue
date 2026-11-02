@@ -131,12 +131,12 @@
                       <!-- 表节点 -->
                       <div class="node-content table-content">
                         <div class="node-icon">
-                          <i class="bi bi-table"></i>
+                          <i :class="isDocDb(connection) ? 'bi bi-collection' : 'bi bi-table'"></i>
                         </div>
                         <div class="node-main" @click="selectTable(connection, database, table)">
                           <div class="node-label">
                             <span class="table-name">{{ table.name }}</span>
-                            <span class="table-info" v-if="table.rowCount !== undefined">{{ formatNumber(table.rowCount) }} {{ $t('explorer.rowsSuffix') }}</span>
+                            <span class="table-info" v-if="table.rowCount !== undefined">{{ formatNumber(table.rowCount) }} {{ isDocDb(connection) ? '个文档' : $t('explorer.rowsSuffix') }}</span>
                           </div>
                         </div>
                         <div class="node-actions">
@@ -260,7 +260,13 @@ import ConnectionDetail from './components/connection-detail.vue';
 import DatabaseDetail from './components/database-detail.vue';
 import TableDetail from './components/table-detail.vue';
 import { pickTables } from './utils/table';
+import { isDocumentDb } from '@/typings/database-types';
 import { modal } from '@/utils/modal';
+
+// 文档型（MongoDB）连接：树里用集合/文档术语与图标
+function isDocDb(connection: any): boolean {
+  return isDocumentDb(connection?.type);
+}
 
 const route = useRoute();
 const router = useRouter();

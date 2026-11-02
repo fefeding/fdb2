@@ -13,7 +13,24 @@
         
         <div class="modal-body">
           <form @submit.prevent="handleSubmit">
-            <div class="row g-3">
+            <!-- 文档型（MongoDB）：整个文档以 JSON 编辑（CodeMirror 高亮 + 格式化），无列定义 -->
+            <div v-if="isDocDb" class="mb-3">
+              <div class="d-flex align-items-center mb-1">
+                <label class="form-label mb-0">
+                  {{ nounLabel }} JSON
+                  <small class="text-muted ms-2">{{ isEdit ? '编辑该文档' : '新建文档（JSON 对象）' }}</small>
+                </label>
+                <button type="button" class="btn btn-outline-secondary btn-sm ms-auto" @click="formatDocJson">
+                  <i class="bi bi-magic"></i> 格式化
+                </button>
+              </div>
+              <div ref="docEditorRef" class="doc-json-editor"></div>
+              <div v-if="docJsonError" class="text-danger small mt-1">{{ docJsonError }}</div>
+              <div v-else class="text-muted small mt-1">
+                {{ isEdit ? '保存时按 _id 定位该文档' : '保存时插入为新文档，_id 由数据库生成' }}
+              </div>
+            </div>
+            <div v-if="!isDocDb" class="row g-3">
               <div 
                 v-for="column in columns" 
                 :key="column.name" 
@@ -141,6 +158,7 @@ import { useI18n } from 'vue-i18n';
 import { DatabaseService } from '@/service/database';
 import { modal } from '@/utils/modal';
 import { isNumericType, isBooleanType, isDateTimeType, isTextType, isJsonType, isArrayType } from '@/utils/database-types';
+import { isDocumentDb, nounOf } from '@/typings/database-types';
 
 // CodeMirror imports
 import { EditorState } from '@codemirror/state';
@@ -171,6 +189,83 @@ const emit = defineEmits<{
 const formData = ref<any>({});
 const loading = ref(false);
 
+// 文档型（MongoDB）：整份文档以 JSON 编辑（CodeMirror，与列级 JSON 字段同一套高亮）
+const isDocDb = computed(() => isDocumentDb((props.connection as any)?.type));
+const nounLabel = computed(() => nounOf((props.connection as any)?.type, 'record'));
+const docJson = ref<string>('{\n  \n}');
+const docJsonError = ref<string>('');
+const docEditorRef = ref<HTMLElement | null>(null);
+const docEditorInstance = ref<EditorView | null>(null);
+
+// 打开/切换文档时初始化 JSON 文本，并（重新）挂载编辑器
+watch(
+  () => [props.visible, props.data, props.isEdit],
+  async () => {
+    if (!props.visible || !isDocDb.value) return;
+    docJsonError.value = '';
+    docJson.value = props.isEdit && props.data
+      ? JSON.stringify(props.data, null, 2)
+      : '{\n  \n}';
+    await nextTick();
+    initDocEditor();
+  },
+  { immediate: true, deep: true }
+);
+
+/** 创建/重建文档 JSON 编辑器（docJson 为唯一数据源） */
+function initDocEditor() {
+  if (!docEditorRef.value || !isDocDb.value) return;
+  if (docEditorInstance.value) {
+    docEditorInstance.value.destroy();
+    docEditorInstance.value = null;
+  }
+  const state = EditorState.create({
+    doc: docJson.value,
+    extensions: [
+      lineNumbers(),
+      highlightActiveLineGutter(),
+      highlightActiveLine(),
+      drawSelection(),
+      placeholder('{\n  \n}'),
+      json(),
+      syntaxHighlighting(defaultHighlightStyle),
+      keymap.of(defaultKeymap),
+      EditorView.lineWrapping,
+      EditorView.updateListener.of(update => {
+        if (update.docChanged) docJson.value = update.state.doc.toString();
+      }),
+      EditorView.theme({
+        '&': { fontSize: '13px', border: '1px solid var(--db-border-soft, #dee2e6)', borderRadius: '4px' },
+        '.cm-content': { minHeight: '220px', fontFamily: 'var(--bs-font-monospace, monospace)' },
+        '.cm-focused': { outline: 'none' },
+        '.cm-activeLineGutter': { backgroundColor: 'var(--db-border-soft)' },
+        '.cm-activeLine': { backgroundColor: 'var(--db-border-soft)' }
+      })
+    ]
+  });
+  docEditorInstance.value = new EditorView({ state, parent: docEditorRef.value });
+}
+
+function destroyDocEditor() {
+  docEditorInstance.value?.destroy();
+  docEditorInstance.value = null;
+}
+
+/** 格式化：解析当前内容并重新缩进，解析失败时给出提示 */
+function formatDocJson() {
+  try {
+    const parsed = JSON.parse(docJson.value);
+    const formatted = JSON.stringify(parsed, null, 2);
+    docJson.value = formatted;
+    docJsonError.value = '';
+    docEditorInstance.value?.dispatch({
+      changes: { from: 0, to: docEditorInstance.value.state.doc.length, insert: formatted }
+    });
+  } catch (e: any) {
+    docJsonError.value = `JSON 格式错误：${e?.message || e}`;
+  }
+}
+
 // JSON 文本数据
 const jsonText = ref<any>({});
 // JSON 验证错误
@@ -195,6 +290,7 @@ watch(() => props.visible, async (visible) => {
     initJsonEditors();
   } else {
     destroyJsonEditors();
+    destroyDocEditor();
   }
 });
 
@@ -434,6 +530,34 @@ function closeModal() {
 // 提交表单
 async function handleSubmit() {
   try {
+    // 文档型（MongoDB）：整份文档以 JSON 提交，按 _id 更新或直接插入
+    if (isDocDb.value) {
+      let doc: any;
+      try {
+        doc = JSON.parse(docJson.value);
+      } catch (e: any) {
+        docJsonError.value = `JSON 格式错误：${e?.message || e}`;
+        return;
+      }
+      if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
+        docJsonError.value = '请提供一个 JSON 对象（例如 {"name":"alice"}）';
+        return;
+      }
+      docJsonError.value = '';
+      loading.value = true;
+      const response = props.isEdit && props.data
+        ? await databaseService.updateData(
+            props.connection?.id || '', props.database || '', props.tableName || '',
+            doc, undefined, (props.data as any)?._id
+          )
+        : await databaseService.insertData(
+            props.connection?.id || '', props.database || '', props.tableName || '', doc
+          );
+      loading.value = false;
+      emit('submit', response);
+      return;
+    }
+
     // 验证所有 JSON 字段
     let hasInvalidJson = false;
     props.columns.forEach(column => {
@@ -598,5 +722,16 @@ function getPrimaryKeyWhere() {
 
 .json-editor :deep(.cm-editor) {
   height: 100%;
+}
+
+/* 文档 JSON 编辑器：限高可滚动，与列级 JSON 编辑器一致的 CodeMirror 外观 */
+.doc-json-editor {
+  max-height: 340px;
+  overflow: auto;
+  border-radius: 4px;
+}
+
+.doc-json-editor :deep(.cm-editor) {
+  background: var(--db-bg-soft, transparent);
 }
 </style>

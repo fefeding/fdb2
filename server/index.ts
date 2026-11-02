@@ -2,6 +2,7 @@ import * as http from "node:http";
 import * as https from "node:https";
 import { ConnectionService } from './service/connection.service';
 import { DatabaseService } from './service/database/database.service';
+import { dataModelOf } from './core/dialect';
 
 // 远程代理相关常量
 const REMOTE_ID_SEP = '::';
@@ -372,6 +373,46 @@ export async function handleDatabaseRoutes(pathname: string, body: any, headers?
       return result;
     }
 
+    // ---- 文档型（MongoDB）索引与聚合：统一走方言 service，未实现的方言会明确报错 ----
+
+    // /api/database/getIndexes
+    if (pathname === '/api/database/getIndexes') {
+      const { id, database, table } = body;
+      if (!id || !database || !table) throw Error('Missing parameters: id, database, table');
+      const dataSource = await databaseService['connectionService'].getActiveConnection(id, database);
+      const dbService = databaseService['getDatabaseService'](dataSource.options.type as string);
+      return await dbService.getIndexes(dataSource, database, table);
+    }
+
+    // /api/database/createIndex
+    if (pathname === '/api/database/createIndex') {
+      const { id, database, table, keys, options } = body;
+      if (!id || !database || !table || !keys) throw Error('Missing parameters: id, database, table, keys');
+      const dataSource = await databaseService['connectionService'].getActiveConnection(id, database);
+      const dbService = databaseService['getDatabaseService'](dataSource.options.type as string);
+      const name = await dbService.createIndex(dataSource, database, table, keys, options);
+      return { success: true, name };
+    }
+
+    // /api/database/dropIndex
+    if (pathname === '/api/database/dropIndex') {
+      const { id, database, table, indexName } = body;
+      if (!id || !database || !table || !indexName) throw Error('Missing parameters: id, database, table, indexName');
+      const dataSource = await databaseService['connectionService'].getActiveConnection(id, database);
+      const dbService = databaseService['getDatabaseService'](dataSource.options.type as string);
+      await dbService.dropIndex(dataSource, database, table, indexName);
+      return { success: true };
+    }
+
+    // /api/database/aggregate
+    if (pathname === '/api/database/aggregate') {
+      const { id, database, table, pipeline } = body;
+      if (!id || !database || !table || !pipeline) throw Error('Missing parameters: id, database, table, pipeline');
+      const dataSource = await databaseService['connectionService'].getActiveConnection(id, database);
+      const dbService = databaseService['getDatabaseService'](dataSource.options.type as string);
+      return await dbService.aggregate(dataSource, database, table, pipeline);
+    }
+
     // /api/database/getTableData
     if (pathname === '/api/database/getTableData') {
       const { id, database, table, page = 1, pageSize = 100, where, orderBy } = body;
@@ -597,6 +638,14 @@ export async function handleDatabaseRoutes(pathname: string, body: any, headers?
       const dataSource = await databaseService['connectionService'].getActiveConnection(id, database);
       const dbService = databaseService['getDatabaseService'](dataSource.options.type as string);
 
+      // 文档型（MongoDB）：直接插入文档，不拼 INSERT SQL
+      if (dataModelOf(dataSource.options.type as string) === 'document') {
+        const result = Array.isArray(data)
+          ? await dbService.bulkInsert(dataSource, database, table, data)
+          : await dbService.insertDocument(dataSource, database, table, data);
+        return { success: true, result };
+      }
+
       // 获取表的列信息，用于过滤自增字段
       const columns = await dbService.getColumns(dataSource, database, table);
 
@@ -607,12 +656,20 @@ export async function handleDatabaseRoutes(pathname: string, body: any, headers?
 
     // /api/database/updateData
     if (pathname === '/api/database/updateData') {
-      const { id, database, table, data, where } = body;
-      if (!id || !database || !table || !data || !where) throw Error('Missing parameters');
+      const { id, database, table, data, where, docId } = body;
+      if (!id || !database || !table || !data) throw Error('Missing parameters');
 
       // 获取数据库服务实例以使用正确的语法
       const dataSource = await databaseService['connectionService'].getActiveConnection(id, database);
       const dbService = databaseService['getDatabaseService'](dataSource.options.type as string);
+
+      // 文档型（MongoDB）：按 _id 更新，不拼 UPDATE SQL
+      if (dataModelOf(dataSource.options.type as string) === 'document') {
+        if (!docId) throw Error('Missing parameters: docId');
+        await dbService.updateDocument(dataSource, database, table, docId, data);
+        return { success: true };
+      }
+      if (!where) throw Error('Missing parameters');
 
       const sql = generateUpdateSQL(dataSource.options.type as string, table, data, where, dbService);
       const result = await databaseService.executeQuery(id, sql, database);
@@ -621,12 +678,20 @@ export async function handleDatabaseRoutes(pathname: string, body: any, headers?
 
     // /api/database/deleteData
     if (pathname === '/api/database/deleteData') {
-      const { id, database, table, where } = body;
-      if (!id || !database || !table || !where) throw Error('Missing parameters');
+      const { id, database, table, where, docId } = body;
+      if (!id || !database || !table) throw Error('Missing parameters');
 
       // 获取数据库服务实例以使用正确的语法
       const dataSource = await databaseService['connectionService'].getActiveConnection(id, database);
       const dbService = databaseService['getDatabaseService'](dataSource.options.type as string);
+
+      // 文档型（MongoDB）：按 _id 删除，不拼 DELETE SQL
+      if (dataModelOf(dataSource.options.type as string) === 'document') {
+        if (!docId) throw Error('Missing parameters: docId');
+        await dbService.deleteDocument(dataSource, database, table, docId);
+        return { success: true };
+      }
+      if (!where) throw Error('Missing parameters');
 
       const sql = generateDeleteSQL(dataSource.options.type as string, table, where, dbService);
       const result = await databaseService.executeQuery(id, sql, database);
@@ -642,9 +707,17 @@ export async function handleDatabaseRoutes(pathname: string, body: any, headers?
       const table = parts[5];
       if (!id || !database || !table) throw Error('Missing parameters');
 
-      // 使用数据库服务生成正确的TRUNCATE语法
+      // 获取数据库服务实例以使用正确的语法
       const dataSource = await databaseService['connectionService'].getActiveConnection(id, database);
       const dbService = databaseService['getDatabaseService'](dataSource.options.type as string);
+
+      // 文档型（MongoDB）：deleteMany({})，无 TRUNCATE 语法
+      if (dataModelOf(dataSource.options.type as string) === 'document') {
+        const deleted = await dbService.truncateCollection(dataSource, database, table);
+        return { success: true, deleted };
+      }
+
+      // 使用数据库服务生成正确的TRUNCATE语法
       const sql = `TRUNCATE TABLE ${dbService['quoteIdentifier'](table)}`;
       const result = await databaseService.executeQuery(id, sql, database);
       return { success: true, sql, result };
@@ -659,9 +732,17 @@ export async function handleDatabaseRoutes(pathname: string, body: any, headers?
       const table = parts[5];
       if (!id || !database || !table) throw Error('Missing parameters');
 
-      // 使用数据库服务生成正确的DROP语法
+      // 获取数据库服务实例以使用正确的语法
       const dataSource = await databaseService['connectionService'].getActiveConnection(id, database);
       const dbService = databaseService['getDatabaseService'](dataSource.options.type as string);
+
+      // 文档型（MongoDB）：collection.drop()，无 DROP TABLE 语法
+      if (dataModelOf(dataSource.options.type as string) === 'document') {
+        await dbService.dropTable(dataSource, database, table);
+        return { success: true };
+      }
+
+      // 使用数据库服务生成正确的DROP语法
       const sql = `DROP TABLE ${dbService['quoteIdentifier'](table)}`;
       const result = await databaseService.executeQuery(id, sql, database);
       return { success: true, sql, result };

@@ -22,7 +22,23 @@ export interface DialectFeature {
   supportTriggers: boolean;
   supportFullTextSearch: boolean;
   supportJson: boolean;
+  /** 数据模型：relational=关系型（库/表/列/SQL）；document=文档型（MongoDB，库/集合/JSON 文档） */
+  dataModel?: 'relational' | 'document';
+  /** 是否支持 SQL 编辑器与 SQL 查询构建器（文档型数据库为 false） */
+  supportSqlEditor?: boolean;
 }
+
+/** 能力默认值：新增字段无需改动全部方言，只需在需要偏离的方言上覆盖 */
+const DEFAULT_FEATURES: DialectFeature = {
+  supportSchemas: false,
+  supportProcedures: true,
+  supportViews: true,
+  supportTriggers: false,
+  supportFullTextSearch: false,
+  supportJson: false,
+  dataModel: 'relational',
+  supportSqlEditor: true
+};
 
 export interface DialectInfo {
   /** 规范化类型名（小写） */
@@ -152,7 +168,10 @@ const DIALECTS: Record<string, Partial<DialectInfo> & { type: string }> = {
       supportViews: false,
       supportTriggers: false,
       supportFullTextSearch: true,
-      supportJson: true
+      supportJson: true,
+      // 文档型：无 SQL、无表结构 DDL；前端据此切到文档模式 UI
+      dataModel: 'document',
+      supportSqlEditor: false
     },
     serviceFile: 'mongodb',
     serviceClass: 'MongoDBService'
@@ -214,17 +233,18 @@ export function getDialectInfo(type: string): DialectInfo {
     defaultPort: (full && full.defaultPort) ?? null,
     paramStyle: (full && full.paramStyle) || kindParamStyle(normalized),
     experimental: (full && full.experimental) || false,
-    features: (full && full.features) || {
-      supportSchemas: false,
-      supportProcedures: true,
-      supportViews: true,
-      supportTriggers: false,
-      supportFullTextSearch: false,
-      supportJson: false
-    },
+    features: { ...DEFAULT_FEATURES, ...(full && full.features) },
     serviceFile: (full && full.serviceFile) || resolveServiceFile(normalized),
     serviceClass: (full && full.serviceClass) || resolveServiceClass(normalized)
   };
+}
+
+/**
+ * 数据模型：document=文档型（MongoDB），relational=关系型。
+ * 后端据此分流数据操作（走驱动原生还是 SQL），前端据此切换文档模式 UI。
+ */
+export function dataModelOf(type: string): 'relational' | 'document' {
+  return getDialectInfo(type).features.dataModel || 'relational';
 }
 
 function kindParamStyle(type: string): '?' | '$' | 'inline' {

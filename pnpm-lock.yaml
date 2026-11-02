@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@fefeding/common':
         specifier: ^1.0.60
-        version: 1.0.60(better-sqlite3@11.10.0)(mysql2@3.22.6(@types/node@24.13.3))(oracledb@6.10.0)(pg@8.22.0)(sqlite3@5.1.7)
+        version: 1.0.60(better-sqlite3@12.11.1)(mongodb@6.21.0(socks@2.8.9))(mssql@12.7.13)(mysql2@3.22.6(@types/node@24.13.3))(oracledb@6.10.0)(pg@8.22.0)(sqlite3@5.1.7)
       axios:
         specifier: ^1.18.1
         version: 1.18.1
@@ -23,6 +23,12 @@ importers:
       express:
         specifier: ^5.2.1
         version: 5.2.1
+      mongodb:
+        specifier: ^6.21.0
+        version: 6.21.0(socks@2.8.9)
+      mssql:
+        specifier: ^12.7.13
+        version: 12.7.13
       mysql2:
         specifier: ^3.22.6
         version: 3.22.6(@types/node@24.13.3)
@@ -37,7 +43,7 @@ importers:
         version: 0.2.2
       typeorm:
         specifier: ^0.3.31
-        version: 0.3.31(better-sqlite3@11.10.0)(mysql2@3.22.6(@types/node@24.13.3))(oracledb@6.10.0)(pg@8.22.0)(sqlite3@5.1.7)
+        version: 0.3.31(better-sqlite3@12.11.1)(mongodb@6.21.0(socks@2.8.9))(mssql@12.7.13)(mysql2@3.22.6(@types/node@24.13.3))(oracledb@6.10.0)(pg@8.22.0)(sqlite3@5.1.7)
       vue-i18n:
         specifier: ^11.4.6
         version: 11.4.6(vue@3.5.39(typescript@5.9.3))
@@ -114,6 +120,9 @@ importers:
       autoprefixer:
         specifier: ^10.5.2
         version: 10.5.2(postcss@8.5.19)
+      better-sqlite3:
+        specifier: ^12.11.1
+        version: 12.11.1
       bootstrap:
         specifier: ^5.3.8
         version: 5.3.8(@popperjs/core@2.11.8)
@@ -198,10 +207,6 @@ importers:
       xlsx:
         specifier: ^0.18.5
         version: 0.18.5
-    optionalDependencies:
-      better-sqlite3:
-        specifier: ^11.10.0
-        version: 11.10.0
 
 packages:
 
@@ -218,6 +223,10 @@ packages:
   '@azu/style-format@1.0.1':
     resolution: {integrity: sha512-AHcTojlNBdD/3/KxIKlg8sxIWHfOtQszLvOpagLTO+bjC3u7SAszu1lf//u7JJC50aUSH+BVWDD/KvaA6Gfn5g==}
 
+  '@azure-rest/core-client@2.9.0':
+    resolution: {integrity: sha512-6933vNLqh06RR7rumnrq3UZIeBtRLeBHDPMrieDPIljiCaMMwt0nRw++nd3TOxiohtasNtm29rC+b/9ZVKCOqg==}
+    engines: {node: '>=22.0.0'}
+
   '@azure/abort-controller@2.2.0':
     resolution: {integrity: sha512-fNAjWnA/nZ2jz31kxR/AqRaUT8ewHBw/WuBIosK0moMy1C9e5ValbDfFdIxJzVOOYaYkV/b2F1S4H/aHiqfVQg==}
     engines: {node: '>=22.0.0'}
@@ -228,6 +237,14 @@ packages:
 
   '@azure/core-client@1.11.1':
     resolution: {integrity: sha512-2QygG2F76ZpMP2eMztiJvAiFMu71M9rDeU7vO/QKg5Css7MgM4frUOslFjhVjRhbGaCNPtz/S8M6y46/fFKVuQ==}
+    engines: {node: '>=22.0.0'}
+
+  '@azure/core-lro@2.7.2':
+    resolution: {integrity: sha512-0YIpccoX8m/k00O7mDDMdJpbr6mf1yWo2dfmxt5A8XVZVVMz2SSKaEbMCeJRvgQ0IaSlqhjT47p4hVIRRy90xw==}
+    engines: {node: '>=18.0.0'}
+
+  '@azure/core-paging@1.7.0':
+    resolution: {integrity: sha512-7GEAoIsaoBr6KELNRb8nypowCqvk8dnCHFCYg4XD4lOQGY2GqjQg5IhkRjyBFRO18CGSMq05PaNqSOE9GQro3g==}
     engines: {node: '>=22.0.0'}
 
   '@azure/core-process@1.0.0':
@@ -249,6 +266,14 @@ packages:
   '@azure/identity@4.13.3':
     resolution: {integrity: sha512-zGQPtqvXPgSA8yfV2CkIQ1qirqk0p9AIVpC5uEkdXQYcKl07QHvyaGYRnZOk0AsQUmxNb4wfkcwY5di8Z5xa9A==}
     engines: {node: '>=22.0.0'}
+
+  '@azure/keyvault-common@2.1.1':
+    resolution: {integrity: sha512-SxpomJRTBfDTQnuii3w10WnZNQJGPNi15tRPdPUQz7BqyB3yk976knEueS7R0H9kSLtXbP0wJZXRh0EbRTQ0lw==}
+    engines: {node: '>=22.0.0'}
+
+  '@azure/keyvault-keys@4.10.2':
+    resolution: {integrity: sha512-VmUSLbXRAbSzDD8grXHGPaknYs0SKr3yuf6U+d4XMpX4XuVYskNqbTTwXce0zR1LyxfTZm9rWEBcvs3vdYwCmQ==}
+    engines: {node: '>=20.0.0'}
 
   '@azure/logger@1.4.0':
     resolution: {integrity: sha512-rbAE25KUfjU/s3XHUdJgceoCP5dEOpMx85J04kF+QMdta73XkuG9JGHHinch+XIoKpBdqljin+KqURpJriSzLA==}
@@ -881,6 +906,9 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
+  '@js-joda/core@6.3.2':
+    resolution: {integrity: sha512-BVsYu84Gut8YTNR1v5/PnifmqXv4SVcfA/hVIM/mXADZfIocip/DfNppBtv+4am5hGH1XuH6FSoU8OHkBvZMeA==}
+
   '@lezer/common@0.15.12':
     resolution: {integrity: sha512-edfwCxNLnzq5pBA/yaIhwJ3U3Kz8VAUOTRg0hhxaizaI1N+qxV7EXDv/kLCkLeq2RzSFvxexlaj5Mzfn2kY0Ig==}
 
@@ -909,6 +937,9 @@ packages:
 
   '@marijn/find-cluster-break@1.0.3':
     resolution: {integrity: sha512-FY+MKLBoTsLNJF/eLWaOsXGdz6uh3Iu1axjPf6TUq92IYumcTcXWHoS747JARLkcdlJ/Waiaxc5wQfFO8jC6NA==}
+
+  '@mongodb-js/saslprep@1.6.1':
+    resolution: {integrity: sha512-D4CQtk9IwjCLAvCf1xvHEod3960q8XMUzfmdRU9qjUNlHnesGuTOvJcOTaPm9koZ1caUKA2aTbszZiAkcmSgmg==}
 
   '@napi-rs/keyring-darwin-arm64@1.3.0':
     resolution: {integrity: sha512-pl76hJvdYUBn6I24bXiOBMA9nbDapo3I5B+f3OorjDU4dUMSypXeKbOVehJe8fhgTiH24flMyTS3aAIy43xegQ==}
@@ -1531,6 +1562,9 @@ packages:
     resolution: {integrity: sha512-4BAffykYOgO+5nzBWYwE3W90sBgLJoUPRWWcL8wlyiM8IB8ipJz3UMJ9KXQd1RKQXpKp8Tutn80HZtWsu2u76w==}
     engines: {node: '>=10'}
 
+  '@tediousjs/connection-string@1.1.0':
+    resolution: {integrity: sha512-z9ZBWEG+8pIB5V1zYzlRPXx0oRJ5H7coPnMQK8EZOw03UTPI9Umn6viL36f5w+CuqkKsnCM50RVStpjZmR0Bng==}
+
   '@textlint/ast-node-types@15.8.0':
     resolution: {integrity: sha512-5CiH9COYmovWmExQgs7763DzX6Gy9zjkjJ7JxCC95wyTcjwQn/8poNF6fv3qzRlmx8CRRde8DHr9FcgAAiPzgw==}
 
@@ -1599,6 +1633,9 @@ packages:
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
 
+  '@types/readable-stream@4.0.25':
+    resolution: {integrity: sha512-7GsxL8Wd5X3jh73/qgW7WCnbBvGSdD8U3E4Jiuus3/8I+PN20DtlkJtwFhr/sImXfDDQ2Z03i/9wNiIF3TVSsw==}
+
   '@types/responselike@1.0.3':
     resolution: {integrity: sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==}
 
@@ -1614,6 +1651,12 @@ packages:
 
   '@types/web-bluetooth@0.0.21':
     resolution: {integrity: sha512-oIQLCGWtcFZy2JW77j9k8nHzAOpqMHLQejDA48XXMWH6tjCQHz5RCFz1bzsmROyL6PUm+LLnUiI4BCn221inxA==}
+
+  '@types/webidl-conversions@7.0.3':
+    resolution: {integrity: sha512-CiJJvcRtIgzadHCYXw7dqEnMNRjhGZlYK05Mj9OyktqV8uVT8fD2BFOB7S1uwBE3Kj2Z+4UyPmFw/Ixgw/LAlA==}
+
+  '@types/whatwg-url@11.0.5':
+    resolution: {integrity: sha512-coYR071JRaHa+xoEvvYqvnIHaVqaYrLPbsufM9BF63HkwI5Lgmy2QR8Q5K/lYDYo5AK82wOvSOS0UsLTpTG7uQ==}
 
   '@types/yauzl@2.10.3':
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
@@ -1830,6 +1873,10 @@ packages:
     resolution: {integrity: sha512-a1wflyaL0tHtJSmLSOVybYhy22vRih4eduhhrkcjgrWGnRfrZtovJ2FRjxuTtkkj47O/baf0R86QU5OuYpz8fA==}
     engines: {node: ^20.17.0 || >=22.9.0}
 
+  abort-controller@3.0.0:
+    resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
+    engines: {node: '>=6.5'}
+
   accepts@2.0.0:
     resolution: {integrity: sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng==}
     engines: {node: '>= 0.6'}
@@ -2028,8 +2075,9 @@ packages:
   bcrypt-pbkdf@1.0.2:
     resolution: {integrity: sha512-qeFIXtP4MSoi6NLqO12WfqARWWuCKi2Rn/9hJLEmtB5yTNr9DqFWkJRCf2qShWzPeAMRnOgCrq0sg/KLv5ES9w==}
 
-  better-sqlite3@11.10.0:
-    resolution: {integrity: sha512-EwhOpyXiOEL/lKzHz9AW1msWFNzGc/z+LzeB3/jnFJpxu+th2yqvzsSWas1v9jgs9+xiXJcD5A8CJxAG2TaghQ==}
+  better-sqlite3@12.11.1:
+    resolution: {integrity: sha512-dq9AtApgg5PGFtBzPFSBl3HZQjHok5gaQCM6zh2Yk0aSmDCs1CbnVI8/HgASQkNKsWFpseIO9beg5xxpYhbIfA==}
+    engines: {node: 20.x || 22.x || 23.x || 24.x || 25.x || 26.x}
 
   big-integer@1.6.52:
     resolution: {integrity: sha512-QxD8cf2eVqJOOz63z6JIN9BzvVs/dlySa5HGSBH5xtR8dPteIRQnBxxKqkNTiT6jbDTF6jAfrd4oMcND9RGbQg==}
@@ -2054,6 +2102,9 @@ packages:
 
   bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
+
+  bl@6.1.6:
+    resolution: {integrity: sha512-jLsPgN/YSvPUg9UX0Kd73CXpm2Psg9FxMeCSXnk3WBO3CMT10JMwijubhGfHCnFu6TPn1ei3b975dxv7K2pWVg==}
 
   bluebird@3.4.7:
     resolution: {integrity: sha512-iD3898SR7sWVRHbiQv+sHUtHnMvC1o3nW5rAcqnq3uOn07DSAppZYUkIGslDz6gXC7HfunPe7YVBgoEJASPcHA==}
@@ -2105,6 +2156,10 @@ packages:
     resolution: {integrity: sha512-FQBYNK15VMslhLHpA7+n+n1GOlF1kId2xcCg7/j95f24AOF6VDYMNH4mFxF7KuaTdv627faazpOAjFzMrfJOUw==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
+
+  bson@6.10.4:
+    resolution: {integrity: sha512-WIsKqkSC0ABoBJuT1LEX+2HEvNmNKKgnTAyd0fL8qzK4SH2i9NXg+t08YtdZp/V9IZ33cxe3iV4yM0qg8lMQng==}
+    engines: {node: '>=16.20.1'}
 
   buffer-crc32@0.2.13:
     resolution: {integrity: sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==}
@@ -2286,6 +2341,10 @@ packages:
   combined-stream@1.0.8:
     resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
     engines: {node: '>= 0.8'}
+
+  commander@11.1.0:
+    resolution: {integrity: sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==}
+    engines: {node: '>=16'}
 
   commander@12.1.0:
     resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
@@ -2700,8 +2759,16 @@ packages:
     resolution: {integrity: sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==}
     engines: {node: '>= 0.6'}
 
+  event-target-shim@5.0.1:
+    resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
+    engines: {node: '>=6'}
+
   eventemitter3@5.0.4:
     resolution: {integrity: sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw==}
+
+  events@3.3.0:
+    resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
+    engines: {node: '>=0.8.x'}
 
   exceljs@4.4.0:
     resolution: {integrity: sha512-XctvKaEMaj1Ii9oDOqbW/6e1gXknSY4g/aLCDicOXqBE4M0nRWkUu0PTp++UPNzoFY12BNHMfs/VadKIS6llvg==}
@@ -3221,6 +3288,9 @@ packages:
   js-cookie@3.0.8:
     resolution: {integrity: sha512-yeJd4aNAdYZQjaon2bpD/Gb0B/omw7HQOsynXXcOiWVCacbBcPlgn8S/d1X6blFSaHao7ozqtW7NZW19xpCtIw==}
 
+  js-md4@0.3.2:
+    resolution: {integrity: sha512-/GDnfQYsltsjRswQhN9fhv3EMw2sCpUdrdxyWDOUK7eyD++r3gRhzgiQgc/x4MAv2i1iuQ4lxO5mvqM3vj4bwA==}
+
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -3532,6 +3602,9 @@ packages:
     resolution: {integrity: sha512-aisnrDP4GNe06UcKFnV5bfMNPBUw4jsLGaWwWfnH3v02GnBuXX2MCVn5RbrWo0j3pczUilYblq7fQ7Nw2t5XKw==}
     engines: {node: '>= 0.8'}
 
+  memory-pager@1.5.0:
+    resolution: {integrity: sha512-ZS4Bp4r/Zoeq6+NLJpP+0Zzm0pR8whtGPf1XExKLJBAczGMnSi3It14OiNCStjQjM6NU1okjQGSxgEZN8eBYKg==}
+
   merge-descriptors@2.0.0:
     resolution: {integrity: sha512-Snk314V5ayFLhp3fkUREub6WtjBfPdCPY1Ln8/8munuLuiYhsABgBVWsozAG+MWMbVEvcdcpbi9R7ww22l9Q3g==}
     engines: {node: '>=18'}
@@ -3663,8 +3736,43 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  mongodb-connection-string-url@3.0.2:
+    resolution: {integrity: sha512-rMO7CGo/9BFwyZABcKAWL8UJwH/Kc2x0g72uhDWzG48URRax5TCIcJ7Rc3RZqffZzO/Gwff/jyKwCU9TN8gehA==}
+
+  mongodb@6.21.0:
+    resolution: {integrity: sha512-URyb/VXMjJ4da46OeSXg+puO39XH9DeQpWCslifrRn9JWugy0D+DvvBvkm2WxmHe61O/H19JM66p1z7RHVkZ6A==}
+    engines: {node: '>=16.20.1'}
+    peerDependencies:
+      '@aws-sdk/credential-providers': ^3.188.0
+      '@mongodb-js/zstd': ^1.1.0 || ^2.0.0
+      gcp-metadata: ^5.2.0
+      kerberos: ^2.0.1
+      mongodb-client-encryption: '>=6.0.0 <7'
+      snappy: ^7.3.2
+      socks: ^2.7.1
+    peerDependenciesMeta:
+      '@aws-sdk/credential-providers':
+        optional: true
+      '@mongodb-js/zstd':
+        optional: true
+      gcp-metadata:
+        optional: true
+      kerberos:
+        optional: true
+      mongodb-client-encryption:
+        optional: true
+      snappy:
+        optional: true
+      socks:
+        optional: true
+
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
+
+  mssql@12.7.13:
+    resolution: {integrity: sha512-RwNhOEU1A7vCbKmkZapbfLk31fKFByrEnK2eDPIw/rlloLUxNhuCcWj4CmXvyHiyjIjI0TMZWid20PAGoRX4xA==}
+    engines: {node: '>=18.19.0'}
+    hasBin: true
 
   muggle-string@0.4.1:
     resolution: {integrity: sha512-VNTrAak/KhO2i8dqqnqnAHOa3cYBwXEZe9h+D5h/1ZqFSTEFHdM65lR7RoIqq3tBBYavsOXV84NoHXZ0AkPyqQ==}
@@ -3695,6 +3803,9 @@ packages:
 
   napi-build-utils@2.0.0:
     resolution: {integrity: sha512-GEbrYkbfF7MoNaoh2iGG84Mnf/WZfB0GdGEsM8wz7Expx/LlWf5U8t9nvJKXSp3qr5IsEbK04cBGhol/KwOsWA==}
+
+  native-duplexpair@1.0.0:
+    resolution: {integrity: sha512-E7QQoM+3jvNtlmyfqRZ0/U75VFgCls+fSkbml2MpgWkWyz3ox8Y58gNhfuziuQYGNNQAbFZJQck55LHCnCK6CA==}
 
   negotiator@0.6.4:
     resolution: {integrity: sha512-myRT3DiWPHqho5PrJaIRyaMv2kgYf0mUVgBNOYMuCH5Ki1yEiQaf/ZJuQ62nvpc44wL5WDbTX7yGJi1Neevw8w==}
@@ -4125,6 +4236,10 @@ packages:
   process-warning@5.0.0:
     resolution: {integrity: sha512-a39t9ApHNx2L4+HBnQKqxxHNs1r7KF+Intd8Q/g1bUh6q0WIp9voPXJ/x0j+ZL45KF1pJd9+q2jLIRMfvEshkA==}
 
+  process@0.11.10:
+    resolution: {integrity: sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A==}
+    engines: {node: '>= 0.6.0'}
+
   progress@2.0.3:
     resolution: {integrity: sha512-7PiHtLll5LdnKIMw100I+8xJXR5gW2QwWYkT6iJva0bXitZKa/XMrSbdmg3r2Xnaidz9Qumd0VPaMrZlF9V9sA==}
     engines: {node: '>=0.4.0'}
@@ -4227,6 +4342,10 @@ packages:
   readable-stream@3.6.2:
     resolution: {integrity: sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA==}
     engines: {node: '>= 6'}
+
+  readable-stream@4.8.0:
+    resolution: {integrity: sha512-2jhTTU3Eilp/2DMT71gbcoqC35eQHasMJH0RHkYxwlxIv3+FR6Y5xAFZIwEGLxKkjZYEFlsiMNIdwUqjK2lLHQ==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
   readdir-glob@1.1.3:
     resolution: {integrity: sha512-v05I2k7xN8zXvPD9N+z/uhXPaj0sUFCe2rcWZIpBsqxfP7xXFQ0tipAd/wjj1YxWyWtUS5IDJpOG82JKt2EAVA==}
@@ -4499,6 +4618,9 @@ packages:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
 
+  sparse-bitfield@3.0.3:
+    resolution: {integrity: sha512-kvzhi7vqKTfkh0PZU+2D2PIllw2ymqJKujUcyPMd9Y75Nv4nPbGJZXNhxsgdQab2BmlDct1YnfQCguEvHr7VsQ==}
+
   spdx-correct@3.2.0:
     resolution: {integrity: sha512-kN9dJbvnySHULIluDHy32WHRUu3Og7B9sbY7tsFLctQkIqnMh3hErYgdMjTYuqmcXX+lK5T1lnUt3G7zNswmZA==}
 
@@ -4650,6 +4772,14 @@ packages:
   tar@7.5.20:
     resolution: {integrity: sha512-9FcyK4PA6+WbzlTM9WhQm6vB5W7cP7dUiPsv1g7YDwEQnQ1CGpK3MGlKk/ITVWMk05kHZuBhmVhiv8LZoy/PFQ==}
     engines: {node: '>=18'}
+
+  tarn@3.1.2:
+    resolution: {integrity: sha512-3RTvqKZcK/17jnJ8rMKFXbyNogywTs1z0gVPPwFsJGX46rkmUHOdIaSQ/aVO1rS7nH+soiXiWk7rvUXxndm8Dg==}
+    engines: {node: '>=8.0.0'}
+
+  tedious@20.3.8:
+    resolution: {integrity: sha512-ZrJiwyGn340Sa0V0g37Xqj5bvmJ1riYwvEtg7zdm/lpw70f2ZNIQ2fvHmntU5fEOorWDa48Jo1oKYAuUP+rh7Q==}
+    engines: {node: '>=22'}
 
   temp-file@3.4.0:
     resolution: {integrity: sha512-C5tjlC/HCtVUOi3KWVokd4vHVViOmGjtLwIh4MuzPo/nMYTV/p1urt3RnMz2IWXDdKEGJH3k5+KPxtqRsUYGtg==}
@@ -5285,6 +5415,17 @@ snapshots:
     dependencies:
       '@azu/format-text': 1.0.2
 
+  '@azure-rest/core-client@2.9.0':
+    dependencies:
+      '@azure/abort-controller': 2.2.0
+      '@azure/core-auth': 1.11.0
+      '@azure/core-rest-pipeline': 1.25.0
+      '@azure/core-tracing': 1.4.0
+      '@typespec/ts-http-runtime': 0.3.9
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - supports-color
+
   '@azure/abort-controller@2.2.0':
     dependencies:
       tslib: 2.8.1
@@ -5308,6 +5449,19 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
+
+  '@azure/core-lro@2.7.2':
+    dependencies:
+      '@azure/abort-controller': 2.2.0
+      '@azure/core-util': 1.14.0
+      '@azure/logger': 1.4.0
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - supports-color
+
+  '@azure/core-paging@1.7.0':
+    dependencies:
+      tslib: 2.8.1
 
   '@azure/core-process@1.0.0': {}
 
@@ -5348,6 +5502,35 @@ snapshots:
       '@azure/msal-browser': 5.25.0
       '@azure/msal-node': 6.0.1
       open: 10.2.0
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - supports-color
+
+  '@azure/keyvault-common@2.1.1':
+    dependencies:
+      '@azure-rest/core-client': 2.9.0
+      '@azure/abort-controller': 2.2.0
+      '@azure/core-auth': 1.11.0
+      '@azure/core-rest-pipeline': 1.25.0
+      '@azure/core-tracing': 1.4.0
+      '@azure/core-util': 1.14.0
+      '@azure/logger': 1.4.0
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - supports-color
+
+  '@azure/keyvault-keys@4.10.2':
+    dependencies:
+      '@azure-rest/core-client': 2.9.0
+      '@azure/abort-controller': 2.2.0
+      '@azure/core-auth': 1.11.0
+      '@azure/core-lro': 2.7.2
+      '@azure/core-paging': 1.7.0
+      '@azure/core-rest-pipeline': 1.25.0
+      '@azure/core-tracing': 1.4.0
+      '@azure/core-util': 1.14.0
+      '@azure/keyvault-common': 2.1.1
+      '@azure/logger': 1.4.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
@@ -5946,13 +6129,13 @@ snapshots:
       lodash.isundefined: 3.0.1
       lodash.uniq: 4.5.0
 
-  '@fefeding/common@1.0.60(better-sqlite3@11.10.0)(mysql2@3.22.6(@types/node@24.13.3))(oracledb@6.10.0)(pg@8.22.0)(sqlite3@5.1.7)':
+  '@fefeding/common@1.0.60(better-sqlite3@12.11.1)(mongodb@6.21.0(socks@2.8.9))(mssql@12.7.13)(mysql2@3.22.6(@types/node@24.13.3))(oracledb@6.10.0)(pg@8.22.0)(sqlite3@5.1.7)':
     dependencies:
       axios: 1.18.1
       cos-nodejs-sdk-v5: 2.15.4
       pino: 9.14.0
       reflect-metadata: 0.2.2
-      typeorm: 0.3.31(better-sqlite3@11.10.0)(mysql2@3.22.6(@types/node@24.13.3))(oracledb@6.10.0)(pg@8.22.0)(sqlite3@5.1.7)
+      typeorm: 0.3.31(better-sqlite3@12.11.1)(mongodb@6.21.0(socks@2.8.9))(mssql@12.7.13)(mysql2@3.22.6(@types/node@24.13.3))(oracledb@6.10.0)(pg@8.22.0)(sqlite3@5.1.7)
     transitivePeerDependencies:
       - '@google-cloud/spanner'
       - '@sap/hana-client'
@@ -6037,6 +6220,8 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@js-joda/core@6.3.2': {}
+
   '@lezer/common@0.15.12': {}
 
   '@lezer/common@1.5.2': {}
@@ -6073,6 +6258,10 @@ snapshots:
       - supports-color
 
   '@marijn/find-cluster-break@1.0.3': {}
+
+  '@mongodb-js/saslprep@1.6.1':
+    dependencies:
+      sparse-bitfield: 3.0.3
 
   '@napi-rs/keyring-darwin-arm64@1.3.0':
     optional: true
@@ -6525,6 +6714,8 @@ snapshots:
     dependencies:
       defer-to-connect: 2.0.1
 
+  '@tediousjs/connection-string@1.1.0': {}
+
   '@textlint/ast-node-types@15.8.0': {}
 
   '@textlint/linter-formatter@15.8.0':
@@ -6615,6 +6806,10 @@ snapshots:
 
   '@types/normalize-package-data@2.4.4': {}
 
+  '@types/readable-stream@4.0.25':
+    dependencies:
+      '@types/node': 24.13.3
+
   '@types/responselike@1.0.3':
     dependencies:
       '@types/node': 24.13.3
@@ -6630,6 +6825,12 @@ snapshots:
       - typescript
 
   '@types/web-bluetooth@0.0.21': {}
+
+  '@types/webidl-conversions@7.0.3': {}
+
+  '@types/whatwg-url@11.0.5':
+    dependencies:
+      '@types/webidl-conversions': 7.0.3
 
   '@types/yauzl@2.10.3':
     dependencies:
@@ -6962,6 +7163,10 @@ snapshots:
 
   abbrev@4.0.0: {}
 
+  abort-controller@3.0.0:
+    dependencies:
+      event-target-shim: 5.0.1
+
   accepts@2.0.0:
     dependencies:
       mime-types: 3.0.2
@@ -7211,11 +7416,10 @@ snapshots:
     dependencies:
       tweetnacl: 0.14.5
 
-  better-sqlite3@11.10.0:
+  better-sqlite3@12.11.1:
     dependencies:
       bindings: 1.5.0
       prebuild-install: 7.1.3
-    optional: true
 
   big-integer@1.6.52: {}
 
@@ -7233,7 +7437,6 @@ snapshots:
   bindings@1.5.0:
     dependencies:
       file-uri-to-path: 1.0.0
-    optional: true
 
   birpc@2.9.0: {}
 
@@ -7242,6 +7445,13 @@ snapshots:
       buffer: 5.7.1
       inherits: 2.0.4
       readable-stream: 3.6.2
+
+  bl@6.1.6:
+    dependencies:
+      '@types/readable-stream': 4.0.25
+      buffer: 6.0.3
+      inherits: 2.0.4
+      readable-stream: 4.8.0
 
   bluebird@3.4.7: {}
 
@@ -7302,6 +7512,8 @@ snapshots:
       electron-to-chromium: 1.5.389
       node-releases: 2.0.51
       update-browserslist-db: 1.2.3(browserslist@4.28.6)
+
+  bson@6.10.4: {}
 
   buffer-crc32@0.2.13: {}
 
@@ -7483,8 +7695,7 @@ snapshots:
     dependencies:
       readdirp: 5.0.0
 
-  chownr@1.1.4:
-    optional: true
+  chownr@1.1.4: {}
 
   chownr@2.0.0:
     optional: true
@@ -7538,6 +7749,8 @@ snapshots:
   combined-stream@1.0.8:
     dependencies:
       delayed-stream: 1.0.0
+
+  commander@11.1.0: {}
 
   commander@12.1.0: {}
 
@@ -7675,8 +7888,7 @@ snapshots:
 
   deep-eql@5.0.2: {}
 
-  deep-extend@0.6.0:
-    optional: true
+  deep-extend@0.6.0: {}
 
   default-browser-id@5.0.1: {}
 
@@ -8001,7 +8213,11 @@ snapshots:
 
   etag@1.8.1: {}
 
+  event-target-shim@5.0.1: {}
+
   eventemitter3@5.0.4: {}
+
+  events@3.3.0: {}
 
   exceljs@4.4.0:
     dependencies:
@@ -8015,8 +8231,7 @@ snapshots:
       unzipper: 0.10.14
       uuid: 8.3.2
 
-  expand-template@2.0.3:
-    optional: true
+  expand-template@2.0.3: {}
 
   expect-type@1.4.0: {}
 
@@ -8104,8 +8319,7 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.5
 
-  file-uri-to-path@1.0.0:
-    optional: true
+  file-uri-to-path@1.0.0: {}
 
   filelist@1.0.6:
     dependencies:
@@ -8269,8 +8483,7 @@ snapshots:
     dependencies:
       assert-plus: 1.0.0
 
-  github-from-package@0.0.0:
-    optional: true
+  github-from-package@0.0.0: {}
 
   glob-parent@5.1.2:
     dependencies:
@@ -8483,8 +8696,7 @@ snapshots:
 
   inherits@2.0.4: {}
 
-  ini@1.3.8:
-    optional: true
+  ini@1.3.8: {}
 
   ip-address@10.2.0:
     optional: true
@@ -8587,6 +8799,8 @@ snapshots:
   jiti@2.7.0: {}
 
   js-cookie@3.0.8: {}
+
+  js-md4@0.3.2: {}
 
   js-tokens@4.0.0: {}
 
@@ -8890,6 +9104,8 @@ snapshots:
 
   media-typer@1.1.0: {}
 
+  memory-pager@1.5.0: {}
+
   merge-descriptors@2.0.0: {}
 
   merge2@1.4.1: {}
@@ -8996,8 +9212,7 @@ snapshots:
 
   mitt@3.0.1: {}
 
-  mkdirp-classic@0.5.3:
-    optional: true
+  mkdirp-classic@0.5.3: {}
 
   mkdirp@0.5.6:
     dependencies:
@@ -9006,7 +9221,30 @@ snapshots:
   mkdirp@1.0.4:
     optional: true
 
+  mongodb-connection-string-url@3.0.2:
+    dependencies:
+      '@types/whatwg-url': 11.0.5
+      whatwg-url: 14.2.0
+
+  mongodb@6.21.0(socks@2.8.9):
+    dependencies:
+      '@mongodb-js/saslprep': 1.6.1
+      bson: 6.10.4
+      mongodb-connection-string-url: 3.0.2
+    optionalDependencies:
+      socks: 2.8.9
+
   ms@2.1.3: {}
+
+  mssql@12.7.13:
+    dependencies:
+      '@tediousjs/connection-string': 1.1.0
+      commander: 11.1.0
+      debug: 4.4.3
+      tarn: 3.1.2
+      tedious: 20.3.8
+    transitivePeerDependencies:
+      - supports-color
 
   muggle-string@0.4.1: {}
 
@@ -9038,8 +9276,9 @@ snapshots:
 
   nanoid@3.3.16: {}
 
-  napi-build-utils@2.0.0:
-    optional: true
+  napi-build-utils@2.0.0: {}
+
+  native-duplexpair@1.0.0: {}
 
   negotiator@0.6.4:
     optional: true
@@ -9049,7 +9288,6 @@ snapshots:
   node-abi@3.94.0:
     dependencies:
       semver: 7.8.5
-    optional: true
 
   node-abi@4.33.0:
     dependencies:
@@ -9445,13 +9683,14 @@ snapshots:
       simple-get: 4.0.1
       tar-fs: 2.1.5
       tunnel-agent: 0.6.0
-    optional: true
 
   proc-log@6.1.0: {}
 
   process-nextick-args@2.0.1: {}
 
   process-warning@5.0.0: {}
+
+  process@0.11.10: {}
 
   progress@2.0.3: {}
 
@@ -9532,7 +9771,6 @@ snapshots:
       ini: 1.3.8
       minimist: 1.2.8
       strip-json-comments: 2.0.1
-    optional: true
 
   read-binary-file-arch@1.0.6:
     dependencies:
@@ -9571,6 +9809,14 @@ snapshots:
       inherits: 2.0.4
       string_decoder: 1.3.0
       util-deprecate: 1.0.2
+
+  readable-stream@4.8.0:
+    dependencies:
+      abort-controller: 3.0.0
+      buffer: 6.0.3
+      events: 3.3.0
+      process: 0.11.10
+      string_decoder: 1.3.0
 
   readdir-glob@1.1.3:
     dependencies:
@@ -9874,15 +10120,13 @@ snapshots:
 
   signal-exit@4.1.0: {}
 
-  simple-concat@1.0.1:
-    optional: true
+  simple-concat@1.0.1: {}
 
   simple-get@4.0.1:
     dependencies:
       decompress-response: 6.0.0
       once: 1.4.0
       simple-concat: 1.0.1
-    optional: true
 
   simple-invariant@2.0.1: {}
 
@@ -9928,6 +10172,10 @@ snapshots:
       source-map: 0.6.1
 
   source-map@0.6.1: {}
+
+  sparse-bitfield@3.0.3:
+    dependencies:
+      memory-pager: 1.5.0
 
   spdx-correct@3.2.0:
     dependencies:
@@ -10024,8 +10272,7 @@ snapshots:
     dependencies:
       ansi-regex: 6.2.2
 
-  strip-json-comments@2.0.1:
-    optional: true
+  strip-json-comments@2.0.1: {}
 
   strip-literal@3.1.0:
     dependencies:
@@ -10114,7 +10361,6 @@ snapshots:
       mkdirp-classic: 0.5.3
       pump: 3.0.4
       tar-stream: 2.2.0
-    optional: true
 
   tar-stream@2.2.0:
     dependencies:
@@ -10141,6 +10387,22 @@ snapshots:
       minipass: 7.1.3
       minizlib: 3.1.0
       yallist: 5.0.0
+
+  tarn@3.1.2: {}
+
+  tedious@20.3.8:
+    dependencies:
+      '@azure/core-auth': 1.11.0
+      '@azure/identity': 4.13.3
+      '@azure/keyvault-keys': 4.10.2
+      '@js-joda/core': 6.3.2
+      '@types/node': 24.13.3
+      bl: 6.1.6
+      iconv-lite: 0.7.3
+      js-md4: 0.3.2
+      native-duplexpair: 1.0.0
+    transitivePeerDependencies:
+      - supports-color
 
   temp-file@3.4.0:
     dependencies:
@@ -10276,7 +10538,7 @@ snapshots:
       tunnel: 0.0.6
       underscore: 1.13.8
 
-  typeorm@0.3.31(better-sqlite3@11.10.0)(mysql2@3.22.6(@types/node@24.13.3))(oracledb@6.10.0)(pg@8.22.0)(sqlite3@5.1.7):
+  typeorm@0.3.31(better-sqlite3@12.11.1)(mongodb@6.21.0(socks@2.8.9))(mssql@12.7.13)(mysql2@3.22.6(@types/node@24.13.3))(oracledb@6.10.0)(pg@8.22.0)(sqlite3@5.1.7):
     dependencies:
       '@sqltools/formatter': 1.2.5
       ansis: 4.3.1
@@ -10294,7 +10556,9 @@ snapshots:
       uuid: 11.1.1
       yargs: 17.7.3
     optionalDependencies:
-      better-sqlite3: 11.10.0
+      better-sqlite3: 12.11.1
+      mongodb: 6.21.0(socks@2.8.9)
+      mssql: 12.7.13
       mysql2: 3.22.6(@types/node@24.13.3)
       oracledb: 6.10.0
       pg: 8.22.0

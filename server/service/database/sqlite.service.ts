@@ -204,7 +204,7 @@ export class SQLiteService extends BaseDatabaseService {
       const columnDefinitions = columns.map(column => {
         let definition = `  ${this.quoteIdentifier(column.name)} ${column.type}`;
         if (!column.nullable) definition += ' NOT NULL';
-        if (column.defaultValue !== undefined) {
+        if (column.defaultValue !== undefined && column.defaultValue !== null) {
           // 特殊关键字处理
           const upperDefault = column.defaultValue.toString().toUpperCase();
           if (upperDefault === 'CURRENT_TIMESTAMP' || upperDefault === 'NOW()' || upperDefault === 'CURRENT_DATE') {

@@ -159,8 +159,18 @@ export class ConnectionService {
         }
       }
       const tempDataSource = await this.createTypeORMDataSource(target);
-      await tempDataSource.query('SELECT 1');
-      await tempDataSource.destroy();
+      try {
+        // MongoDB 驱动不支持执行 SQL（SELECT 1 会报错），其连接在 initialize() 时已建立，
+        // 直接走原生 ping 校验；其余关系型库用 SELECT 1。
+        if ((target.type || '').toLowerCase() === 'mongodb') {
+          const client: any = (tempDataSource.driver as any).queryRunner.databaseConnection;
+          await client.db(target.database).command({ ping: 1 });
+        } else {
+          await tempDataSource.query('SELECT 1');
+        }
+      } finally {
+        await tempDataSource.destroy();
+      }
       return true;
     } catch (error) {
       return false;
@@ -307,8 +317,34 @@ export class ConnectionService {
       const { ClickHouseConnection } = require('./database/clickhouse-connection');
       return new ClickHouseConnection(connectionConfig) as unknown as DataSource;
     }
+    this.assertDriverAvailable(connectionConfig.type);
     const connectionOptions = this.getTypeORMOptions(connectionConfig);
     return new DataSource(connectionOptions).initialize();
+  }
+
+  /**
+   * 驱动就绪检查。
+   *
+   * 某些方言依赖未随默认依赖安装的原生/可选驱动（如 SAP HANA 的 @sap/hana-client）。
+   * 若缺失，TypeORM 会抛出 "Cannot find module ..." 这类含义不明的错误，
+   * 这里提前给出可执行的安装提示。
+   */
+  private assertDriverAvailable(type?: string): void {
+    const t = (type || '').toLowerCase();
+    const required: Record<string, string> = {
+      sap: '@sap/hana-client',
+      'sap-hana': '@sap/hana-client',
+      saphana: '@sap/hana-client'
+    };
+    const pkg = required[t];
+    if (!pkg) return;
+    try {
+      require(pkg);
+    } catch (error) {
+      throw new Error(
+        `数据库类型 "${t}" 需要驱动 ${pkg}，当前未安装。请先执行：npm install ${pkg}`
+      );
+    }
   }
 
   /**
@@ -348,25 +384,46 @@ export class ConnectionService {
       database: connectionConfig.database,
       synchronize: false,
       logging: false,
-      // 强制使用 mysql2 驱动：TypeORM 默认 connectorPackage 是 "mysql"（老包），
-      // 全局安装时 Node 会解析到系统中全局遗留的 mysql 包，该老包不支持 MySQL 8 的
-      // caching_sha2_password，导致 ER_NOT_SUPPORTED_AUTH_MODE。显式指定 mysql2 可彻底规避。
-      connectorPackage: 'mysql2',
-      ...userOptions,
-      // extra 必须放在 ...userOptions 之后并做合并：
-      // 原先 extra 在展开之前，connectionConfig.options.extra 会把它整体顶掉，
-      // 导致 multipleStatements 静默失效。
-      // connectionLimit 显式收敛单池上限（mysql2 默认 10），叠加最多 MAX_CACHED_CONNECTIONS
-      // 个池后仍远小于常见的 max_connections(151)，避免 Too many connections。
-      extra: {
-        multipleStatements: true,
-        connectionLimit: 5,
-        ...(userOptions.extra || {})
-      }
+      ...userOptions
     };
 
     // 根据数据库类型调整配置
     switch (connectionConfig.type.toLowerCase()) {
+      case 'mysql':
+      case 'mariadb':
+        return {
+          ...baseOptions,
+          type: 'mysql' as any,
+          // 强制使用 mysql2 驱动：TypeORM 默认 connectorPackage 是 "mysql"（老包），
+          // 全局安装时 Node 会解析到系统中全局遗留的 mysql 包，该老包不支持 MySQL 8 的
+          // caching_sha2_password，导致 ER_NOT_SUPPORTED_AUTH_MODE。显式指定 mysql2 可彻底规避。
+          connectorPackage: 'mysql2',
+          // extra 必须放在 ...userOptions 之后并做合并：
+          // 原先 extra 在展开之前，connectionConfig.options.extra 会把它整体顶掉，
+          // 导致 multipleStatements 静默失效。
+          // connectionLimit 显式收敛单池上限（mysql2 默认 10），叠加最多 MAX_CACHED_CONNECTIONS
+          // 个池后仍远小于常见的 max_connections(151)，避免 Too many connections。
+          extra: {
+            multipleStatements: true,
+            connectionLimit: 5,
+            ...(userOptions.extra || {})
+          }
+        };
+      case 'mongodb':
+        // MongoDB 驱动按 URL/凭据连接，不认 host/port/username/password/connectorPackage/extra，
+        // 注入这些字段会抛 "options must not contain any other properties"。
+        return {
+          type: 'mongodb' as any,
+          url: connectionConfig.options?.url,
+          host: connectionConfig.host,
+          port: connectionConfig.port,
+          username: connectionConfig.username || undefined,
+          password: connectionConfig.password || undefined,
+          database: connectionConfig.database,
+          synchronize: false,
+          logging: false,
+          ...(userOptions as any)
+        };
       case 'sqlite':
       case 'better-sqlite3':
       case 'bettersqlite3':

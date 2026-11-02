@@ -115,12 +115,10 @@ export abstract class BaseDatabaseService {
       query += ` WHERE ${where}`;
     }
     
-    if (orderBy) {
-      query += ` ORDER BY ${orderBy}`;
-    }
-    
+    query += this.buildOrderByClause(orderBy);
+
     const offset = (page - 1) * pageSize;
-    query += ` LIMIT ${pageSize} OFFSET ${offset}`;
+    query += ` ${this.buildPaginationClause(pageSize, offset)}`;
 
     // 执行数据查询
     const data = await dataSource.query(query);
@@ -134,6 +132,67 @@ export abstract class BaseDatabaseService {
     const total = countResult[0]?.total || 0;
 
     return { data, total };
+  }
+
+  /**
+   * 分页子句（默认 LIMIT/OFFSET，适用于 MySQL/PG/SQLite/CRDB）。
+   * MSSQL 等不支持该语法的方言需覆写（见 SQLServerService）。
+   */
+  protected buildPaginationClause(pageSize: number, offset: number): string {
+    return `LIMIT ${pageSize} OFFSET ${offset}`;
+  }
+
+  /**
+   * ORDER BY 子句。默认仅在有 orderBy 时输出；
+   * MSSQL 的 OFFSET/FETCH 语法强制要求 ORDER BY，故其覆写为"无排序时补一个空排序"。
+   */
+  protected buildOrderByClause(orderBy?: string): string {
+    return orderBy ? ` ORDER BY ${orderBy}` : '';
+  }
+
+  /**
+   * 判断一条语句是否含可执行 SQL（剔除行注释与块注释后的剩余内容）。
+   * 用于跳过 DDL 生成器输出的纯注释行，避免 better-sqlite3 等驱动 prepare() 报错。
+   */
+  protected hasExecutableSql(statement: string): boolean {
+    let out = '';
+    let i = 0;
+    const n = statement.length;
+    while (i < n) {
+      const ch = statement[i];
+      const next = statement[i + 1];
+      // 字符串字面量内的内容原样保留：避免把 '...--...' 里的 -- 当成注释
+      if (ch === "'") {
+        out += ch;
+        i++;
+        while (i < n) {
+          out += statement[i];
+          if (statement[i] === "'") {
+            // Oracle/标准 SQL 的转义是成对单引号 ''，不是反斜杠
+            if (statement[i + 1] === "'") { out += statement[i + 1]; i += 2; continue; }
+            i++;
+            break;
+          }
+          i++;
+        }
+        continue;
+      }
+      // 块注释
+      if (ch === '/' && next === '*') {
+        i += 2;
+        while (i < n && !(statement[i] === '*' && statement[i + 1] === '/')) i++;
+        i += 2;
+        continue;
+      }
+      // 行注释（到行尾）
+      if (ch === '-' && next === '-') {
+        while (i < n && statement[i] !== '\n') i++;
+        continue;
+      }
+      out += ch;
+      i++;
+    }
+    return out.trim().length > 0;
   }
 
   /**
@@ -171,12 +230,20 @@ export abstract class BaseDatabaseService {
     let failed = 0;
     const errors: any[] = [];
 
+    // 过滤"纯注释/空白"语句：DDL 生成器会输出形如 `-- 说明` 的注释行作为独立语句，
+    // better-sqlite3 对这类无实际 SQL 的字符串 prepare() 会抛 "contains no statements"。
+    const statements = sqlStatements.filter((s) => this.hasExecutableSql(s));
+
     // 分批处理SQL语句
-    for (let i = 0; i < sqlStatements.length; i += batchSize) {
-      const batch = sqlStatements.slice(i, i + batchSize);
+    for (let i = 0; i < statements.length; i += batchSize) {
+      const batch = statements.slice(i, i + batchSize);
       
       try {
-        if (useTransaction) {
+        // ClickHouse 等非事务型连接（自定义 connection 对象）不实现 transaction()；
+        // 此时降级为逐条顺序执行，避免 "dataSource.transaction is not a function" 让整个 DDL 批次失败。
+        const canUseTransaction =
+          useTransaction && typeof (dataSource as any).transaction === 'function';
+        if (canUseTransaction) {
           // 使用事务执行批次
           await dataSource.transaction(async (manager) => {
             for (const statement of batch) {
@@ -391,6 +458,74 @@ export abstract class BaseDatabaseService {
    * 创建表 - 子类实现
    */
   abstract createTable(dataSource: DataSource, databaseName: string, table: any): Promise<void>;
+
+  // ---------------------------------------------------------------- 文档级操作（document 模式）
+  // 仅文档型数据库（MongoDB）有意义：关系型走上面的 SQL/DDL 路径。
+  // 基类默认"不支持"，由 MongoDBService 覆写；调用方须先按 dataModelOf(type) 分流。
+
+  /**
+   * 按文档主键更新文档（关系型不支持）
+   */
+  async updateDocument(
+    _dataSource: DataSource, _databaseName: string, _tableName: string, _docId: any, _document: any
+  ): Promise<void> {
+    throw new Error('该数据库类型不支持文档级更新');
+  }
+
+  /**
+   * 按文档主键删除文档（关系型不支持）
+   */
+  async deleteDocument(
+    _dataSource: DataSource, _databaseName: string, _tableName: string, _docId: any
+  ): Promise<void> {
+    throw new Error('该数据库类型不支持文档级删除');
+  }
+
+  /**
+   * 插入单个文档并返回主键（关系型不支持）
+   */
+  async insertDocument(
+    _dataSource: DataSource, _databaseName: string, _tableName: string, _document: any
+  ): Promise<{ insertedId: any }> {
+    throw new Error('该数据库类型不支持文档级插入');
+  }
+
+  /**
+   * 清空集合但保留集合本身（关系型不支持）
+   */
+  async truncateCollection(
+    _dataSource: DataSource, _databaseName: string, _tableName: string
+  ): Promise<number> {
+    throw new Error('该数据库类型不支持清空集合');
+  }
+
+  /**
+   * 创建索引（文档型由 MongoDBService 覆写；关系型暂未提供统一实现）
+   */
+  async createIndex(
+    _dataSource: DataSource, _databaseName: string, _tableName: string,
+    _keys: Record<string, any>, _options?: any
+  ): Promise<string> {
+    throw new Error('该数据库类型不支持创建索引');
+  }
+
+  /**
+   * 删除索引（文档型由 MongoDBService 覆写）
+   */
+  async dropIndex(
+    _dataSource: DataSource, _databaseName: string, _tableName: string, _indexName: string
+  ): Promise<void> {
+    throw new Error('该数据库类型不支持删除索引');
+  }
+
+  /**
+   * 聚合管道（文档型由 MongoDBService 覆写）
+   */
+  async aggregate(
+    _dataSource: DataSource, _databaseName: string, _tableName: string, _pipeline: any[]
+  ): Promise<any[]> {
+    throw new Error('该数据库类型不支持聚合管道');
+  }
 
   /**
    * 执行查询 - 通用方法

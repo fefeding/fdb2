@@ -24,39 +24,45 @@ export class CockroachDBService extends BaseDatabaseService {
 
   /**
    * 获取CockroachDB数据库列表
+   * 注意：CockroachDB 兼容 PostgreSQL 协议，但没有 information_schema.databases，
+   * 数据库列表须查 pg_database。
    */
   async getDatabases(dataSource: DataSource): Promise<string[]> {
     const result = await dataSource.query(`
-      SELECT 
-        database_name as name
-      FROM 
-        information_schema.databases
-      WHERE 
-        database_name NOT IN ('system', 'pg_catalog', 'information_schema', 'crdb_internal')
-      ORDER BY 
-        database_name
+      SELECT
+        datname as name
+      FROM
+        pg_database
+      WHERE
+        datname NOT IN ('system', 'postgres')
+      ORDER BY
+        datname
     `);
     return result.map((row: any) => row.name);
   }
 
   /**
    * 获取CockroachDB表列表
+   * 注意：CockroachDB 的 information_schema.tables 没有 oid 列（与 PG 不同），
+   * 且 table_schema 是 'public' 而非数据库名。改为直接查 pg_class（relkind='r' 为普通表），
+   * 连接已定位到目标数据库，无需再按库名过滤。
    */
   async getTables(dataSource: DataSource, database: string): Promise<TableEntity[]> {
     const result = await dataSource.query(`
-      SELECT 
-        t.table_name as name,
+      SELECT
+        c.relname as name,
         'table' as type,
-        obj_description(t.oid) as comment
-      FROM 
-        information_schema.tables t
-      WHERE 
-        t.table_schema = $1
-        AND t.table_type = 'BASE TABLE'
-      ORDER BY 
-        t.table_name
-    `, [database]);
-    
+        obj_description(c.oid) as comment
+      FROM
+        pg_class c
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE
+        c.relkind = 'r'
+        AND n.nspname NOT IN ('information_schema', 'pg_catalog', 'system')
+      ORDER BY
+        c.relname
+    `);
+
     return result.map((row: any) => ({
       name: row.name,
       type: row.type,
@@ -81,33 +87,31 @@ export class CockroachDBService extends BaseDatabaseService {
           WHEN column_name IN (
             SELECT column_name 
             FROM information_schema.key_column_usage 
-            WHERE table_schema = $1 
-              AND table_name = $2 
+            WHERE table_name = $1 
               AND constraint_name LIKE '%_pkey'
           ) THEN true
           ELSE false
-        END as isPrimary,
+        END as "isPrimary",
         CASE 
-          WHEN data_type LIKE '%serial%' OR data_type LIKE '%identity%' 
+          WHEN column_default LIKE '%nextval%' OR is_identity = 'YES'
           THEN true
           ELSE false
-        END as isAutoIncrement
+        END as "isAutoIncrement"
       FROM 
         information_schema.columns
       WHERE 
-        table_schema = $1
-        AND table_name = $2
+        table_name = $1
       ORDER BY 
         ordinal_position
-    `, [database, table]);
+    `, [table]);
     
     return result.map((row: any) => ({
       name: row.name,
       type: row.type,
       nullable: row.nullable === 'YES',
       defaultValue: row.defaultValue,
-      isPrimary: row.isPrimary,
-      isAutoIncrement: row.isAutoIncrement
+      isPrimary: row.isPrimary === true,
+      isAutoIncrement: row.isAutoIncrement === true
     }));
   }
 
@@ -119,32 +123,41 @@ export class CockroachDBService extends BaseDatabaseService {
       SELECT 
         i.relname as name,
         CASE 
-          WHEN i.indisunique THEN 'UNIQUE'
+          WHEN ix.indisunique THEN 'UNIQUE'
           ELSE 'INDEX'
         END as type,
-        array_agg(a.attname ORDER BY k.n) as columns,
-        i.indisunique as unique
+        array_agg(a.attname ORDER BY array_position(ix.indkey, a.attnum)) as columns,
+        ix.indisunique as unique
       FROM 
-        pg_index i
-        JOIN pg_class t ON t.oid = i.indrelid
-        JOIN pg_namespace n ON n.oid = t.relnamespace
-        JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(i.indkey)
-        CROSS JOIN LATERAL unnest(i.indkey) WITH ORDINALITY AS k(n, ord) ON true
+        pg_index ix
+        JOIN pg_class t ON t.oid = ix.indrelid
+        JOIN pg_class i ON i.oid = ix.indexrelid
+        JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(ix.indkey)
       WHERE 
-        n.nspname = $1
-        AND t.relname = $2
+        t.relname = $1
       GROUP BY 
-        i.relname, i.indisunique
+        i.relname, ix.indisunique
       ORDER BY 
         i.relname
-    `, [database, table]);
+    `, [table]);
     
     return result.map((row: any) => ({
       name: row.name,
       type: row.type,
-      columns: row.columns || [],
+      columns: this.parsePgArray(row.columns),
       unique: row.unique
     }));
+  }
+
+  /**
+   * 解析 pg 驱动返回的数组字符串（形如 "{a,b}" 或 "{a}"）为 JS 数组
+   */
+  private parsePgArray(value: any): string[] {
+    if (Array.isArray(value)) return value;
+    if (typeof value !== 'string') return [];
+    const s = value.trim();
+    if (!s || s === '{}') return [];
+    return s.replace(/^\{|\}$/g, '').split(',').map((x) => x.trim().replace(/^"|"$/g, ''));
   }
 
   /**
@@ -171,11 +184,10 @@ export class CockroachDBService extends BaseDatabaseService {
           ON rc.constraint_name = tc.constraint_name
       WHERE 
         tc.constraint_type = 'FOREIGN KEY'
-        AND tc.table_schema = $1
-        AND tc.table_name = $2
+        AND tc.table_name = $1
       ORDER BY 
         tc.constraint_name
-    `, [database, table]);
+    `, [table]);
     
     return result.map((row: any) => ({
       name: row.name,
@@ -216,11 +228,9 @@ export class CockroachDBService extends BaseDatabaseService {
         view_definition as definition
       FROM 
         information_schema.views
-      WHERE 
-        table_schema = $1
       ORDER BY 
         table_name
-    `, [database]);
+    `);
     
     return result.map((row: any) => ({
       name: row.name,
@@ -240,9 +250,8 @@ export class CockroachDBService extends BaseDatabaseService {
       FROM 
         information_schema.views
       WHERE 
-        table_schema = $1
-        AND table_name = $2
-    `, [database, viewName]);
+        table_name = $1
+    `, [viewName]);
     return result[0]?.definition || '';
   }
 
@@ -259,11 +268,11 @@ export class CockroachDBService extends BaseDatabaseService {
         pg_proc p
         JOIN pg_namespace n ON n.oid = p.pronamespace
       WHERE 
-        n.nspname = $1
+        n.nspname NOT IN ('information_schema', 'pg_catalog', 'system')
         AND p.prokind = 'f'
       ORDER BY 
         p.proname
-    `, [database]);
+    `);
     
     return result.map((row: any) => ({
       name: row.name,
@@ -283,9 +292,9 @@ export class CockroachDBService extends BaseDatabaseService {
         pg_proc p
         JOIN pg_namespace n ON n.oid = p.pronamespace
       WHERE 
-        n.nspname = $1
-        AND p.proname = $2
-    `, [database, procedureName]);
+        n.nspname NOT IN ('information_schema', 'pg_catalog', 'system')
+        AND p.proname = $1
+    `, [procedureName]);
     return result[0]?.definition || '';
   }
 

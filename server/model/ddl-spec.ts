@@ -157,6 +157,11 @@ export interface DdlCapability {
   columnComment: boolean;
   /** native=原生 ALTER；rebuild=需重建表（SQLite）；unsupported=不支持（MongoDB） */
   alterStrategy: 'native' | 'rebuild' | 'unsupported';
+  /**
+   * 建表路径：sql=生成并执行 CREATE TABLE DDL（默认）；
+   * driver=方言无模式、无 CREATE TABLE 语法，走驱动原生调用建集合（MongoDB），忽略列定义。
+   */
+  createStrategy?: 'sql' | 'driver';
   quoteStyle: 'backtick' | 'double' | 'bracket';
 }
 
@@ -165,6 +170,8 @@ export interface DdlPreview {
   statements: string[];
   preview: string;
   changeSet: TableChangeSet | null;
+  /** 非致命的计划级错误（如方言不支持建表/改表、表已存在）。带回前端用于禁用 UI 与提示，而非抛错 */
+  error?: string | null;
 }
 
 /** 执行结果 */
@@ -172,4 +179,6 @@ export interface DdlExecuteResult {
   statements: string[];
   /** 执行时后端重新读取的实时结构与前端 baseline 不一致时拒绝执行（409） */
   conflict?: { reason: string };
+  /** 驱动原生路径执行（无模式方言建集合）：无 SQL 语句但已实际创建，statements 恒为空，前端不得按"无修改"处理 */
+  native?: boolean;
 }

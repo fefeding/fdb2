@@ -383,6 +383,7 @@ import { useConnectionStore } from '@/stores/connection';
 import SqlExecutor from './sql-executor.vue';
 import { useI18n } from 'vue-i18n';
 import { modal } from '@/utils/modal';
+import { toast } from '@/utils/toast';
 import { DatabaseService } from '@/service/database';
 import { saveTextFile } from '@/utils/download';
 
@@ -667,7 +668,7 @@ async function createDatabase() {
     creatingDatabase.value = true;
     try {
       await connectionStore.createDatabase(newDatabase.value.name);
-      modal.success(t('connection.databaseCreateSuccess'));
+      toast.success(t('connection.databaseCreateSuccess'));
       showCreateDatabase.value = false;
       // 重置表单
       newDatabase.value = {

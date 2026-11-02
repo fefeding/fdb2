@@ -9,7 +9,7 @@ import { getDialectInfo } from '../../core/dialect';
 import { canonicalizeTableEntity, canonicalizeTableSpec } from '../../core/schema/canonical';
 import { diffTable } from '../../core/schema/diff';
 import { ddlCapabilities, emitAlterDdl, emitCreateDdl, tableNameEquals } from '../../core/schema/ddl-emitter';
-import type { DdlCapability, DdlPreview, TableSpec } from '../../model/ddl-spec';
+import type { DdlCapability, DdlExecuteResult, DdlPreview, TableSpec } from '../../model/ddl-spec';
 import { MySQLService } from './mysql.service';
 import { PostgreSQLService } from './postgres.service';
 import { SQLiteService } from './sqlite.service';
@@ -202,19 +202,22 @@ export class DatabaseService {
   /**
    * 目标态 TableSpec 的静态校验（建表/改表共用）
    */
-  private validateTableSpec(spec: TableSpec): string {
+  private validateTableSpec(spec: TableSpec, requireColumns = true): string {
     if (!spec || typeof spec.name !== 'string' || !spec.name.trim()) {
       throw new Error('目标表名不能为空');
     }
-    if (!Array.isArray(spec.columns) || spec.columns.length === 0) {
+    // 无模式方言（MongoDB 建集合）没有列定义，不强制要求至少一列
+    if (requireColumns && (!Array.isArray(spec.columns) || spec.columns.length === 0)) {
       throw new Error('目标结构至少需要一列');
     }
-    const names = new Set(spec.columns.map((c) => c.name));
-    if (names.size !== spec.columns.length) {
-      throw new Error('目标结构存在重名列');
-    }
-    for (const pk of spec.primaryKey || []) {
-      if (!names.has(pk)) throw new Error(`主键列 "${pk}" 不在目标结构中`);
+    if (Array.isArray(spec.columns) && spec.columns.length > 0) {
+      const names = new Set(spec.columns.map((c) => c.name));
+      if (names.size !== spec.columns.length) {
+        throw new Error('目标结构存在重名列');
+      }
+      for (const pk of spec.primaryKey || []) {
+        if (!names.has(pk)) throw new Error(`主键列 "${pk}" 不在目标结构中`);
+      }
     }
     return spec.name.trim();
   }
@@ -230,28 +233,35 @@ export class DatabaseService {
     spec: TableSpec,
     forceRefresh = false
   ) {
-    const tableName = this.validateTableSpec(spec);
     const dataSource = await this.connectionService.getActiveConnection(connectionId, databaseName);
     const type = dataSource.options.type as string;
     const kind = getDialectInfo(type).kind;
     const dbService = this.getDatabaseService(type);
     const caps = ddlCapabilities(kind);
+    // 无模式方言（MongoDB）：走驱动原生建集合——不生成 CREATE TABLE SQL，也不需要列定义
+    const driverCreate = caps.createStrategy === 'driver';
+    const tableName = this.validateTableSpec(spec, !driverCreate);
 
     // 方言不支持建表：作为计划内错误返回（而非抛出）——capabilities 仍要带回前端用于禁用 UI
     if (!caps.createTable) {
-      return { dataSource, kind, caps, dbService, statements: [] as string[], error: `该数据库类型（${kind}）不支持通过 SQL 建表` };
+      return { dataSource, kind, caps, dbService, tableName, statements: [] as string[], error: `该数据库类型（${kind}）不支持通过 SQL 建表` };
     }
 
     // 重名检测：目标态与实时结构冲突（等价 409 语义）。
     // 预览走缓存避免每次输入都全量拉表；执行前必须 force 刷新，否则缓存会让重名检测失效。
     const tables = await this.getTableList(connectionId, databaseName, forceRefresh);
     if (tables.some((t) => tableNameEquals(kind, String(t?.name ?? ''), tableName))) {
-      return { dataSource, kind, caps, dbService, statements: [] as string[], error: `表 "${tableName}" 已存在` };
+      return { dataSource, kind, caps, dbService, tableName, statements: [] as string[], error: `表 "${tableName}" 已存在` };
+    }
+
+    // 驱动路径：无列定义、无 SQL 语句，执行阶段直接调 dbService.createTable
+    if (driverCreate) {
+      return { dataSource, kind, caps, dbService, tableName, statements: [] as string[], error: '' };
     }
 
     const desired = canonicalizeTableSpec(spec);
     const statements = emitCreateDdl(kind, desired, { mssqlDatabase: databaseName });
-    return { dataSource, kind, caps, dbService, statements, error: '' };
+    return { dataSource, kind, caps, dbService, tableName, statements, error: '' };
   }
 
   /**
@@ -266,13 +276,21 @@ export class DatabaseService {
     spec: TableSpec
   ): Promise<DdlPreview & { capabilities: DdlCapability }> {
     const plan = await this.buildCreatePlan(connectionId, databaseName, spec);
-    if (plan.error) throw new Error(plan.error);
-    const previewText = plan.statements.length > 0 ? plan.statements.join(';\n') + ';' : '';
+    // 注意：计划级非致命错误（方言不支持建表、表已存在）不能抛——否则 capabilities 不会返回，
+    // 前端无法据此禁用提交按钮。错误以注释形式写入预览，并由前端 submitDisabledHint 展示。
+    const previewText = plan.statements.length > 0
+      ? plan.statements.join(';\n') + ';'
+      : plan.error
+        ? `-- ${plan.error}`
+        : (plan.caps.createStrategy === 'driver'
+          ? `-- 创建集合 "${plan.tableName}"（无模式集合，不生成建表 SQL）`
+          : '');
     return {
       statements: plan.statements,
       preview: previewText,
       changeSet: null,
-      capabilities: plan.caps
+      capabilities: plan.caps,
+      error: plan.error || null
     };
   }
 
@@ -283,10 +301,24 @@ export class DatabaseService {
     connectionId: string,
     databaseName: string,
     spec: TableSpec
-  ): Promise<{ statements: string[] }> {
+  ): Promise<DdlExecuteResult> {
     // 执行前强制刷新表列表：重名检测必须基于最新结构，不能用预览的缓存
     const plan = await this.buildCreatePlan(connectionId, databaseName, spec, true);
     if (plan.error) throw new Error(plan.error);
+
+    // 无模式方言（MongoDB）：没有建表 SQL，直接走驱动原生建集合
+    if (plan.caps.createStrategy === 'driver') {
+      try {
+        await plan.dbService.createTable(plan.dataSource, databaseName, { name: plan.tableName });
+      } catch (error) {
+        console.error('执行创建集合失败:', error);
+        throw new Error(`创建集合失败: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      this.invalidateTableList(connectionId, databaseName); // 集合列表已变化
+      // native: 无 SQL 语句但集合已实际创建——前端据此与"无修改"区分
+      return { statements: plan.statements, native: true };
+    }
+
     if (plan.statements.length === 0) throw new Error('未能生成建表语句');
     try {
       await plan.dbService.executeBatchQuery(plan.dataSource, plan.statements, { useTransaction: true });
@@ -384,13 +416,16 @@ export class DatabaseService {
     spec: TableSpec
   ): Promise<DdlPreview & { capabilities: DdlCapability }> {
     const plan = await this.buildAlterPlan(connectionId, databaseName, tableName, spec);
-    if (plan.error) throw new Error(plan.error);
-    const previewText = plan.statements.length > 0 ? plan.statements.join(';\n') + ';' : '';
+    // 与 previewCreateTable 同理：计划级非致命错误不抛，确保 capabilities 返回以驱动 UI 禁用。
+    const previewText = plan.statements.length > 0
+      ? plan.statements.join(';\n') + ';'
+      : (plan.error ? `-- ${plan.error}` : '');
     return {
       statements: plan.statements,
       preview: previewText,
       changeSet: plan.changeSet,
-      capabilities: plan.caps
+      capabilities: plan.caps,
+      error: plan.error || null
     };
   }
 
@@ -735,7 +770,10 @@ export class DatabaseService {
           supportJson: true,
           supportArrays: true,
           supportDocuments: true,
-          supportNoSQL: true
+          supportNoSQL: true,
+          // 数据层能力：文档型、无 SQL 编辑器（前端据此切文档模式 UI）
+          dataModel: 'document',
+          supportSqlEditor: false
         }
       },
       {
@@ -743,7 +781,11 @@ export class DatabaseService {
         label: 'SAP HANA',
         icon: 'bi-database',
         defaultPort: 39013,
-        description: 'SAP HANA内存数据库',
+        description: 'SAP HANA内存数据库（实验性）',
+        // 实验性：依赖未随默认依赖安装的 @sap/hana-client 驱动，且官方无免费 Docker 镜像，
+        // 本仓库尚未做端到端运行验证。驱动缺失时会给出明确的安装提示。
+        experimental: true,
+        driverPackage: '@sap/hana-client',
         features: {
           supportSchemas: true,
           supportProcedures: true,
@@ -789,7 +831,11 @@ export class DatabaseService {
           supportJson: false
         }
       }
-    ];
+    ].map((t: any) => ({
+      ...t,
+      // 数据层能力默认值：关系型 + 支持 SQL；文档型（MongoDB）在自身 features 中覆盖
+      features: { dataModel: 'relational', supportSqlEditor: true, ...(t.features || {}) }
+    }));
   }
 
   /**

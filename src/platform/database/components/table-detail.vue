@@ -49,11 +49,12 @@
         <button class="btn btn-primary btn-sm" @click="refreshData">
           <i class="bi bi-arrow-clockwise"></i> {{ $t('tableDetail.refreshData') }}
         </button>
-        <button class="btn btn-info btn-sm" @click="editTableStructure">
+        <!-- 修改表结构：关系型专属（ALTER TABLE DDL）；文档型无表结构可改 -->
+        <button v-if="!isDocDb" class="btn btn-info btn-sm" @click="editTableStructure">
           <i class="bi bi-pencil-square"></i> {{ $t('tableDetail.modifyStructure') }}
         </button>
         <button class="btn btn-success btn-sm" @click="()=>insertData()">
-          <i class="bi bi-plus-lg"></i> {{ $t('tableDetail.insertData') }}
+          <i class="bi bi-plus-lg"></i> {{ isDocDb ? '新增文档' : $t('tableDetail.insertData') }}
         </button>
         <div class="btn-group">
           <button class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown">
@@ -69,10 +70,13 @@
             <li><button class="dropdown-item" @click="exportTableData('excel')">
               <i class="bi bi-file-earmark-excel me-2"></i>{{ $t('tableDetail.exportExcel') }}
             </button></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><button class="dropdown-item" @click="exportTableStructure()">
-              <i class="bi bi-file-earmark-text me-2"></i>{{ $t('tableDetail.exportStructure') }}
-            </button></li>
+            <!-- 导出表结构 = CREATE TABLE SQL：文档型无意义 -->
+            <template v-if="!isDocDb">
+              <li><hr class="dropdown-divider"></li>
+              <li><button class="dropdown-item" @click="exportTableStructure()">
+                <i class="bi bi-file-earmark-text me-2"></i>{{ $t('tableDetail.exportStructure') }}
+              </button></li>
+            </template>
             <li><button class="dropdown-item" @click="exportTableDataSQL()">
               <i class="bi bi-file-earmark-code me-2"></i>{{ $t('tableDetail.exportDataSQL') }}
             </button></li>
@@ -120,7 +124,8 @@
             <i class="bi bi-key"></i> {{ $t('tableDetail.indexesTab') }}
           </button>
         </li>
-        <li class="nav-item">
+        <!-- 外键与 SQL：关系型专属，文档型无外键、无 SQL -->
+        <li class="nav-item" v-if="!isDocDb">
           <button 
             class="nav-link" 
             :class="{ active: activeTab === 'relations' }"
@@ -129,7 +134,7 @@
             <i class="bi bi-link-45deg"></i> {{ $t('tableDetail.relationsTab') }}
           </button>
         </li>
-        <li class="nav-item">
+        <li class="nav-item" v-if="!isDocDb">
           <button 
             class="nav-link" 
             :class="{ active: activeTab === 'sql' }"
@@ -224,6 +229,40 @@
         <!-- 索引标签页 -->
         <div v-show="activeTab === 'indexes'" class="tab-panel">
           <div class="indexes-content">
+            <!-- 文档型（MongoDB）：可新建/删除索引；关系型暂无统一建索引实现 -->
+            <div v-if="isDocDb" class="mb-2">
+              <button class="btn btn-success btn-sm" @click="showCreateIndex = !showCreateIndex">
+                <i class="bi bi-plus-lg"></i> 新建索引
+              </button>
+            </div>
+            <div v-if="isDocDb && showCreateIndex" class="create-index-form mb-3 p-2 border rounded">
+              <div class="row g-2 align-items-end">
+                <div class="col-md-5">
+                  <label class="form-label small mb-1">索引键（JSON）</label>
+                  <textarea
+                    class="form-control font-monospace"
+                    rows="3"
+                    v-model="newIndexKeys"
+                    spellcheck="false"
+                    placeholder='{"name": 1}'
+                  ></textarea>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small mb-1">索引名（可选）</label>
+                  <input class="form-control form-control-sm" v-model="newIndexName" placeholder="idx_name" />
+                </div>
+                <div class="col-md-2">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="uniqIdx" v-model="newIndexUnique" />
+                    <label class="form-check-label small" for="uniqIdx">唯一</label>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <button class="btn btn-primary btn-sm" @click="createNewIndex">创建</button>
+                </div>
+              </div>
+              <div v-if="indexError" class="text-danger small mt-1">{{ indexError }}</div>
+            </div>
             <div class="indexes-table">
               <table class="table table-bordered">
                 <thead class="table-dark">
@@ -264,7 +303,7 @@
         </div>
 
         <!-- 关系标签页 -->
-        <div v-show="activeTab === 'relations'" class="tab-panel">
+        <div v-if="activeTab === 'relations' && !isDocDb" class="tab-panel">
           <div class="relations-content">
             <div class="relations-table">
               <table class="table table-bordered">
@@ -302,7 +341,7 @@
         </div>
 
         <!-- SQL标签页 -->
-        <div v-show="activeTab === 'sql'" class="tab-panel">
+        <div v-if="activeTab === 'sql' && !isDocDb" class="tab-panel">
           <div class="sql-section">
             <SqlExecutor 
               :connection="connection"
@@ -346,6 +385,7 @@ import type { ConnectionEntity, TableEntity } from '@/typings/database';
 import { useI18n } from 'vue-i18n';
 import { DatabaseService } from '@/service/database';
 import DataEditor from './data-editor.vue';
+import { isDocumentDb, nounOf } from '@/typings/database-types';
 
 import TableDataGrid from './table-data-grid.vue';
 import TableEditor from './table-editor.vue';
@@ -408,6 +448,18 @@ const sqlQuery = ref('');
 const showDataEditor = ref(false);
 const isEditMode = ref(false);
 const editingRow = ref<any>(null);
+
+// 文档型（MongoDB）：集合/文档语义，编辑与删除走 _id
+const isDocDb = computed(() => isDocumentDb((props.connection as any)?.type));
+const tableNoun = computed(() => nounOf((props.connection as any)?.type, 'table'));
+const recordNoun = computed(() => nounOf((props.connection as any)?.type, 'record'));
+
+// 索引管理（文档型）
+const showCreateIndex = ref(false);
+const newIndexKeys = ref('{\n  \n}');
+const newIndexName = ref('');
+const newIndexUnique = ref(false);
+const indexError = ref('');
 
 // 表格编辑器相关
 const showTableEditor = ref(false);
@@ -509,6 +561,29 @@ async function deleteRow(row: any) {
     });
 
     if (result) {
+      // 文档型（MongoDB）：按 _id 删除，不依赖"主键列"（无模式集合没有稳定列定义）
+      if (isDocDb.value) {
+        const docId = row?._id;
+        if (!docId) {
+          await modal.warning('该文档缺少 _id，无法删除');
+          return;
+        }
+        const resp = await databaseService.deleteData(
+          props.connection?.id || '',
+          props.database,
+          props.table?.name || '',
+          undefined,
+          String(docId)
+        );
+        if (resp.ret === 0) {
+          await modal.success(t('tableDetail.deleteSuccess'));
+          refreshData();
+        } else {
+          await modal.error(t('tableDetail.deleteFailed') + ': ' + (resp.msg || t('common.unknown')));
+        }
+        return;
+      }
+
       // 获取主键条件
       const primaryKeys = props.tableStructure?.columns?.filter((col: any) => col.isPrimary) || [];
       if (primaryKeys.length === 0) {
@@ -684,18 +759,77 @@ function editIndex(index: any) {
   console.log('编辑索引:', index);
 }
 
-function deleteIndex(index: any) {
-  // 删除索引
-  modal.confirm(t('tableDetail.confirmDeleteIndex', { name: index.name }), {
+// ---- 索引管理（文档型走后端原生索引路由） ----
+async function createNewIndex() {
+  indexError.value = '';
+  let keys: any;
+  try {
+    keys = JSON.parse(newIndexKeys.value);
+  } catch (e: any) {
+    indexError.value = 'JSON 格式错误：' + (e?.message || e);
+    return;
+  }
+  if (!keys || typeof keys !== 'object' || Array.isArray(keys)) {
+    indexError.value = '索引键必须是 JSON 对象，例如 {"name": 1}';
+    return;
+  }
+  try {
+    const res: any = await databaseService.createIndex(
+      props.connection?.id || '',
+      props.database,
+      props.table?.name || '',
+      keys,
+      { ...(newIndexName.value.trim() ? { name: newIndexName.value.trim() } : {}), unique: newIndexUnique.value }
+    );
+    if (res?.ret === 0) {
+      showCreateIndex.value = false;
+      newIndexKeys.value = '{\n  \n}';
+      newIndexName.value = '';
+      newIndexUnique.value = false;
+      await modal.success('索引创建成功');
+      emit('refresh-structure');
+    } else {
+      indexError.value = res?.msg || '创建索引失败';
+    }
+  } catch (e: any) {
+    indexError.value = e?.message || String(e);
+  }
+}
+
+async function deleteIndex(index: any) {
+  // 主键索引不可删除（MongoDB 的 _id_ 由数据库维护）
+  if (isDocDb.value && index?.name === '_id_') {
+    await modal.warning('主键索引（_id_）不可删除');
+    return;
+  }
+  const result = await modal.confirm(t('tableDetail.confirmDeleteIndex', { name: index.name }), {
     confirmButtonText: '删除',
     cancelButtonText: '取消',
     type: 'danger'
-  }).then(result => {
-    if (result) {
-      // 这里可以调用API删除索引
-      emit('refresh-structure');
-    }
   });
+  if (!result) return;
+
+  // 文档型：调后端删除索引；关系型暂无统一实现，保持原刷新行为
+  if (isDocDb.value) {
+    try {
+      const res: any = await databaseService.dropIndex(
+        props.connection?.id || '',
+        props.database,
+        props.table?.name || '',
+        index.name
+      );
+      if (res?.ret === 0) {
+        await modal.success('索引已删除');
+        emit('refresh-structure');
+      } else {
+        await modal.error(res?.msg || '删除索引失败');
+      }
+    } catch (e: any) {
+      await modal.error(e?.message || '删除索引失败');
+    }
+    return;
+  }
+  emit('refresh-structure');
 }
 
 function deleteForeignKey(fk: any) {

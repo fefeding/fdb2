@@ -44,8 +44,11 @@
             </div>
           </div>
 
-          <!-- 字段管理 -->
-          <div class="columns-section">
+          <!-- 字段管理：无模式方言建集合时无列定义，整节隐藏并给出说明 -->
+          <div v-if="schemalessCreate" class="alert alert-info py-2 small mb-4">
+            该数据库为无模式类型（MongoDB），将创建一个<strong>空集合</strong>，无需定义字段。
+          </div>
+          <div v-else class="columns-section">
             <div class="section-header d-flex justify-content-between align-items-center mb-3">
               <h6 class="section-title mb-0">{{ $t('tableEditor.columnManagement') }}</h6>
               <button class="btn btn-success btn-sm" @click="addColumn">
@@ -441,6 +444,10 @@ function buildTableSpec(): TableSpec {
 // 顺带缓存后端返回的方言能力（capabilities），驱动 UI 按真实能力禁用输入。
 const previewSql = ref('-- 完善表单后将在此显示后端生成的 SQL');
 const caps = ref<DdlCapability | null>(null);
+// 无模式方言建集合（MongoDB 走 driver 路径）：只需填集合名，不展示也不校验字段定义
+const schemalessCreate = computed(() =>
+  props.mode === 'create' && caps.value?.createStrategy === 'driver'
+);
 let previewTimer: ReturnType<typeof setTimeout> | null = null;
 let previewSeq = 0;
 
@@ -450,7 +457,8 @@ async function refreshPreview() {
   if (!formData.value.tableName) return;
   // 字段信息未填完时明确提示，而不是沿用上一次的预览结果——
   // 否则会出现"预览显示没有检测到任何修改、保存却真的执行了语句"的错觉
-  if (formData.value.columns.some(col => col.name && !rawType(col))) {
+  // 无模式建集合：字段定义已隐藏且被后端忽略，不提示"完善字段"
+  if (!schemalessCreate.value && formData.value.columns.some(col => col.name && !rawType(col))) {
     previewSql.value = '-- 请完善字段信息（列名与类型）后再查看 SQL';
     return;
   }
@@ -570,7 +578,8 @@ async function submit() {
       return;
     }
     
-    if (formData.value.columns.some(col => !col.name || !rawType(col))) {
+    // 无模式建集合：字段被隐藏且后端忽略，不做字段完整性校验
+    if (!schemalessCreate.value && formData.value.columns.some(col => !col.name || !rawType(col))) {
       await modal.warning('请完善所有字段信息');
       return;
     }
@@ -595,7 +604,8 @@ async function submit() {
         );
 
     // 后端基于实时结构判定无变更（含"改了又改回"），保持旧 UX：提示且不关弹窗
-    if (!result?.statements || result.statements.length === 0) {
+    // 无模式方言（driver 路径）statements 恒为空但集合已实际创建（native: true），不得按"无修改"处理
+    if (!result?.native && (!result?.statements || result.statements.length === 0)) {
       // 把实时表已有列名带出来：多数情况是"该字段其实已存在于表中"（之前已保存成功）
       const liveCols = (result as any)?.liveColumns as string[] | undefined;
       const live = liveCols?.length ? liveCols.join('、') : '（未知）';
@@ -608,7 +618,9 @@ async function submit() {
 
     emit('submit', {
       success: true,
-      message: props.mode === 'create' ? '表创建成功' : '表结构修改成功',
+      message: props.mode === 'create'
+        ? (schemalessCreate.value ? '集合创建成功' : '表创建成功')
+        : '表结构修改成功',
       data: result,
       mode: props.mode
     });

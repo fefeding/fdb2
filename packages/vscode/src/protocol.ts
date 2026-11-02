@@ -11,8 +11,18 @@ export type WebviewMessage =
   | { command: 'getDatabases'; data: { id: string } }
   | { command: 'getTables'; data: { id: string; database: string } }
   | { command: 'getViews'; data: { id: string; database: string } }
-  | { command: 'getTableData'; data: { id: string; database: string; table: string; page?: number; pageSize?: number; where?: string; orderBy?: string } }
+  // document: true 表示文档型（MongoDB）读取——返回原始文档数组而非 columns/rows 扁平结构
+  | { command: 'getTableData'; data: { id: string; database: string; table: string; page?: number; pageSize?: number; where?: string; orderBy?: string; document?: boolean } }
   | { command: 'getTableInfo'; data: { id: string; database: string; table: string } }
+  // ---- 文档型（MongoDB）专用：按 _id 的文档级操作与索引/聚合 ----
+  | { command: 'insertDocument'; data: { id: string; database: string; table: string; data: any } }
+  | { command: 'updateDocument'; data: { id: string; database: string; table: string; docId: string; data: any } }
+  | { command: 'deleteDocument'; data: { id: string; database: string; table: string; docId: string } }
+  | { command: 'truncateCollection'; data: { id: string; database: string; table: string } }
+  | { command: 'getIndexes'; data: { id: string; database: string; table: string } }
+  | { command: 'createIndex'; data: { id: string; database: string; table: string; keys: Record<string, any>; options?: any } }
+  | { command: 'dropIndex'; data: { id: string; database: string; table: string; indexName: string } }
+  | { command: 'aggregate'; data: { id: string; database: string; table: string; pipeline: any[] } }
   | { command: 'executeQuery'; data: { id: string; sql: string; database?: string } }
   | { command: 'refreshTree' }
   | { command: 'close' }
@@ -31,6 +41,11 @@ export type HostMessage =
   | { command: 'tables'; data: any[] }
   | { command: 'views'; data: any[] }
   | { command: 'tableData'; data: { columns: string[]; rows: any[][]; total: number; page: number; pageSize: number } }
+  // 文档型读取结果：原始文档数组（保留嵌套结构，不做 columns/rows 扁平化）
+  | { command: 'documents'; data: { documents: any[]; total: number; page: number; pageSize: number } }
+  | { command: 'documentSaved'; data: any }
+  | { command: 'indexes'; data: any[] }
+  | { command: 'aggregateResult'; data: any[] }
   | { command: 'tableInfo'; data: any }
   | { command: 'queryResult'; data: { columns: string[]; rows: any[][]; rowCount: number; executionTime: number; message?: string } }
   | { command: 'error'; data: string }

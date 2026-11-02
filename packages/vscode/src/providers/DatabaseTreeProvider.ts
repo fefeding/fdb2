@@ -3,6 +3,7 @@ import { DatabaseBridge } from '../service/DatabaseBridge';
 // 与 webview 侧共用同一份视图判定（utils/table.ts），
 // 避免宿主与 webview 各写一份 type 比较导致两边显示不一致
 import { pickTables } from '../../../../src/platform/database/utils/table';
+import { isDocumentDb } from '../../../../src/typings/database-types';
 
 export type TreeCtx = 'connection' | 'database' | 'table' | 'column' | 'error';
 
@@ -16,6 +17,9 @@ export class DatabaseTreeProvider implements vscode.TreeDataProvider<DbTreeItem>
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   constructor(private bridge: DatabaseBridge) {}
+
+  /** 连接 id -> 数据库类型：用于树节点按文档型/关系型显示不同图标与量词 */
+  private connTypes = new Map<string, string>();
 
   /** 刷新整棵树，或刷新单个节点（传 element） */
   refresh(element?: DbTreeItem): void {
@@ -31,6 +35,8 @@ export class DatabaseTreeProvider implements vscode.TreeDataProvider<DbTreeItem>
       if (!element) {
         // 空列表返回 []，由 package.json 的 viewsWelcome 负责展示引导
         const conns = (await this.bridge.call<any[]>('/api/database/getConnections')) || [];
+        this.connTypes.clear();
+        conns.forEach((c) => this.connTypes.set(c.id, String(c.type || '')));
         return conns.map((c) => DbTreeItem.connection(c));
       }
 
@@ -45,8 +51,9 @@ export class DatabaseTreeProvider implements vscode.TreeDataProvider<DbTreeItem>
           database: element.database
         })) || [];
         // 与桌面端工作台一致：视图不进左侧树，统一在数据库详情页的「视图」标签页展示
+        const type = this.connTypes.get(element.connectionId!) || '';
         return pickTables(tables).map((t) =>
-          DbTreeItem.table(t.name, t.rowCount, t.comment, element.connectionId!, element.database!)
+          DbTreeItem.table(t.name, t.rowCount, t.comment, element.connectionId!, element.database!, type)
         );
       }
 
@@ -115,11 +122,20 @@ export class DbTreeItem extends vscode.TreeItem {
     return item;
   }
 
-  static table(name: string, rowCount: number | undefined, comment: string | undefined, connId: string, db: string): DbTreeItem {
+  static table(
+    name: string,
+    rowCount: number | undefined,
+    comment: string | undefined,
+    connId: string,
+    db: string,
+    type?: string
+  ): DbTreeItem {
     const item = new DbTreeItem(name, 'table', vscode.TreeItemCollapsibleState.Collapsed, connId, db, name);
-    item.iconPath = new vscode.ThemeIcon('table');
+    // 文档型（MongoDB）：节点是集合，量词用"个文档"
+    const doc = isDocumentDb(type);
+    item.iconPath = new vscode.ThemeIcon(doc ? 'symbol-array' : 'table');
     const desc: string[] = [];
-    if (rowCount !== undefined && rowCount !== null) desc.push(`${rowCount} 行`);
+    if (rowCount !== undefined && rowCount !== null) desc.push(doc ? `${rowCount} 个文档` : `${rowCount} 行`);
     if (comment) desc.push(comment);
     item.description = desc.join(' · ');
     item.command = {
