@@ -157,6 +157,7 @@ import { ref, watch, computed, nextTick, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { DatabaseService } from '@/service/database';
 import { modal } from '@/utils/modal';
+import { toast } from '@/utils/toast';
 import { isNumericType, isBooleanType, isDateTimeType, isTextType, isJsonType, isArrayType } from '@/utils/database-types';
 import { isDocumentDb, nounOf } from '@/typings/database-types';
 
@@ -629,7 +630,7 @@ async function handleSubmit() {
     }
     
     if (response.ret === 0) {
-      modal.success(props.isEdit ? t('dataEditor.updateSuccess') : t('dataEditor.insertSuccess'));
+      toast.success(props.isEdit ? t('dataEditor.updateSuccess') : t('dataEditor.insertSuccess'));
       closeModal();
       nextTick(() => {
         emit('submit', response);

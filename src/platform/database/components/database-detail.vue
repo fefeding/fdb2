@@ -717,7 +717,7 @@ async function createOrUpdateView() {
     );
     
     if (result.success || result.ret === 0) {
-      await modal.success(t('databaseDetail.viewSaveSuccess'));
+      toast.success(t('databaseDetail.viewSaveSuccess'));
       showCreateView.value = false;
       editingView.value = null;
       await loadViews();
@@ -738,7 +738,7 @@ async function deleteView(view: any) {
       const response = await databaseService.dropView(props.connection?.id || '', props.database, view.name);
       
       if (response.success || response.ok) {
-        await modal.success(t('databaseDetail.viewDeleteSuccess'));
+        toast.success(t('databaseDetail.viewDeleteSuccess'));
         await loadViews();
       } else {
         await modal.error(t('databaseDetail.viewDeleteFailed'));
@@ -813,7 +813,7 @@ async function createOrUpdateProcedure() {
     );
     
     if (result.success || result.ret === 0) {
-      await modal.success(t('databaseDetail.procedureSaveSuccess'));
+      toast.success(t('databaseDetail.procedureSaveSuccess'));
       showCreateProcedure.value = false;
       editingProcedure.value = null;
       await loadProcedures();
@@ -834,7 +834,7 @@ async function deleteProcedure(procedure: any) {
       const response = await databaseService.dropProcedure(props.connection?.id || '', props.database, procedure.name);
       
       if (response.success || response.ok) {
-        await modal.success(t('databaseDetail.procedureDeleteSuccess'));
+        toast.success(t('databaseDetail.procedureDeleteSuccess'));
         await loadProcedures();
       } else {
         await modal.error(t('databaseDetail.procedureDeleteFailed'));
@@ -856,11 +856,7 @@ async function handleTableChange(result: any) {
         emit('refresh-database');
         const successMessage = isCreate ? t('databaseDetail.tableCreateSuccess') : t('databaseDetail.tableModifySuccess');
         // 创建表成功用轻量 toast，不再弹出阻塞式对话框
-        if (isCreate) {
-          toast.success(successMessage);
-        } else {
-          await modal.success(successMessage);
-        }
+        toast.success(successMessage);
       } else {
         const errorMessage = isCreate ? t('databaseDetail.tableCreateFailed') : t('databaseDetail.tableModifyFailed');
         await modal.error(errorMessage);

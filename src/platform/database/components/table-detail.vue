@@ -632,10 +632,8 @@ async function truncateTable() {
         props.table?.name || ''
       );
       if (response.ret === 0) {
-        await modal.success(t('tableDetail.truncateSuccess'));
-        nextTick(() => {
-          refreshData();
-        });
+        toast.success(t('tableDetail.truncateSuccess'));
+        refreshData();
       } else {
         await modal.error(t('tableDetail.truncateFailed'));
       }
@@ -662,7 +660,7 @@ async function dropTable() {
         );
         
         if (response.ret === 0 && response.data?.success) {
-          await modal.success(t('tableDetail.dropSuccess'));
+          toast.success(t('tableDetail.dropSuccess'));
           // 表删除后需要返回到数据库视图，这里通过事件通知父组件
           emit('refresh-database');
         } else {
@@ -733,7 +731,7 @@ async function handleTableStructureChange(result: any) {
       emit('refresh-structure');
       emit('refresh-database');
       closeTableEditor();
-      await modal.success(t('tableDetail.structureModifySuccess'));
+      toast.success(t('tableDetail.structureModifySuccess'));
     } else {
       await modal.error(t('tableDetail.structureModifyFailed'));
     }
@@ -787,7 +785,7 @@ async function createNewIndex() {
       newIndexKeys.value = '{\n  \n}';
       newIndexName.value = '';
       newIndexUnique.value = false;
-      await modal.success(t('tableDetail.indexCreated'));
+      toast.success(t('tableDetail.indexCreated'));
       emit('refresh-structure');
     } else {
       indexError.value = res?.msg || t('tableDetail.indexCreateFailed');
@@ -820,7 +818,7 @@ async function deleteIndex(index: any) {
         index.name
       );
       if (res?.ret === 0) {
-        await modal.success(t('tableDetail.indexDeleted'));
+        toast.success(t('tableDetail.indexDeleted'));
         emit('refresh-structure');
       } else {
         await modal.error(res?.msg || t('tableDetail.indexDeleteFailed'));

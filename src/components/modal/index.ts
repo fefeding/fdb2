@@ -51,18 +51,19 @@ export default {
     globalModalInstance = modalApp.mount(mount) as any;
     
     // 添加事件监听，确保模态框完全隐藏后重置 isModalActive
+    // （点遮罩 / 关闭按钮等非 onConfirm、onCancel 路径只能靠这里复位）
     if (globalModalInstance && globalModalInstance.$el) {
       const modalElement = globalModalInstance.$el;
       modalElement.addEventListener('hidden.bs.modal', () => {
+        // 关闭动作已由 onConfirm/onCancel 处理过：这里只是延迟到达的动画结束事件，
+        // 不能再复位，否则会把期间新弹出的modal状态清掉
+        if (closeHandled) {
+          closeHandled = false;
+          return;
+        }
         isModalActive = false;
         console.log('Modal hidden, isModalActive reset to false');
-        
-        // 处理待显示的modal
-        if (pendingModalOptions) {
-          const pending = pendingModalOptions;
-          pendingModalOptions = null;
-          showModal(pending);
-        }
+        flushPendingModal();
       });
     }
     
@@ -118,7 +119,35 @@ export const getModalInstance = (): ModalTypeWithMethods => {
 
 // 全局modal状态管理
 let isModalActive = false;
-let pendingModalOptions: ModalOptions | null = null;
+// 本次关闭是否已由 onConfirm/onCancel 处理（避免延迟的 hidden 事件重复复位）
+let closeHandled = false;
+
+type PendingModal = { options: ModalOptions; resolve: (value: boolean) => void };
+let pendingModal: PendingModal | null = null;
+
+/**
+ * 复位 active 标记并消费待显示modal。
+ *
+ * 复位必须在关闭动作（onConfirm/onCancel）里立即做：
+ * hide() 的关闭动画是异步的，hidden.bs.modal 可能在下一次 show 之后才触发，
+ * 若只依赖该事件复位，"确认 -> 紧接着又弹一个提示" 就会被误判为
+ * "Modal busy" 入队，而入队的 Promise 始终不 resolve，表现为
+ * 弹窗一闪而过、之后再点任何弹窗都没反应。
+ */
+function releaseActive(): void {
+  isModalActive = false;
+  flushPendingModal();
+}
+
+/** 显示排队中的modal，并把结果回传给最初那次调用的 Promise */
+function flushPendingModal(): void {
+  if (!pendingModal) return;
+  const pending = pendingModal;
+  pendingModal = null;
+  nextTick(() => {
+    showModal(pending.options).then(pending.resolve);
+  });
+}
 
 // 导出便捷函数供非Vue环境使用
 export const showModal = (options: ModalOptions) => {
@@ -135,14 +164,19 @@ export const showModal = (options: ModalOptions) => {
       ...options,
       onConfirm: () => {
         options.onConfirm?.();
+        closeHandled = true;
         globalModalInstance.hide();
+        // 立即复位，不等关闭动画结束，避免后续弹窗被误判为 busy
+        releaseActive();
         nextTick(() => {
           resolve(true);
         });
       },
       onCancel: () => {
         options.onCancel?.();
+        closeHandled = true;
         globalModalInstance.hide();
+        releaseActive();
         nextTick(() => {
           resolve(false);
         });
@@ -150,22 +184,19 @@ export const showModal = (options: ModalOptions) => {
     };
 
     // 如果当前有modal正在显示，将新的请求加入队列
+    // （入队时保留 resolve，等真正显示后再回传结果，避免调用方永久挂起）
     if (isModalActive) {
       console.log('Modal busy, queuing new modal');
-      pendingModalOptions = options;
+      pendingModal = { options, resolve };
       return;
     }
 
-    // 显示新的modal
-    const showModalInstance = () => {
-      globalModalInstance.setOptions?.(finalOptions);
-      isModalActive = true;
-      
-      // 使用Promise链确保正确的执行顺序
-      return globalModalInstance.show?.() || Promise.resolve();
-    };
+    globalModalInstance.setOptions?.(finalOptions);
+    isModalActive = true;
+    closeHandled = false;
 
-    showModalInstance();
+    // 使用Promise链确保正确的执行顺序
+    globalModalInstance.show?.() || Promise.resolve();
   });
 };
 
