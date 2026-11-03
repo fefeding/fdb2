@@ -686,6 +686,11 @@ function handleDataSubmit(result: any) {
     if (result.ret === 0) {
       // 操作成功，刷新数据
       refreshData();
+      // 文档型（MongoDB）无固定 schema：列由抽样文档推导，集合为空时结构里没有列。
+      // 首次插入后必须刷新结构，否则表格只有 ACTIONS 列、看不到数据列头
+      if (isDocDb.value && !(props.tableStructure?.columns?.length)) {
+        emit('refresh-structure');
+      }
       closeDataEditor();
     } else {
       modal.error(t('tableDetail.operationFailed'));

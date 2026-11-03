@@ -4,6 +4,7 @@ import { DatabaseBridge } from '../service/DatabaseBridge';
 // 避免宿主与 webview 各写一份 type 比较导致两边显示不一致
 import { pickTables } from '../../../../src/platform/database/utils/table';
 import { isDocumentDb } from '../../../../src/typings/database-types';
+import { dbBadgeIcon } from './db-icons';
 
 export type TreeCtx = 'connection' | 'database' | 'table' | 'column' | 'error';
 
@@ -99,7 +100,7 @@ export class DbTreeItem extends vscode.TreeItem {
     );
     item.connection = c;
     item.id = c.id; // 供 TreeView 稳定复用展开状态
-    item.iconPath = new vscode.ThemeIcon('database');
+    item.iconPath = dbBadgeIcon(c.type);
     const typeLabel = (c.type || '').toUpperCase();
     item.description = `${typeLabel} · ${c.host || ''}${c.port ? ':' + c.port : ''}${c.database ? '/' + c.database : ''}`;
     item.command = {
@@ -113,7 +114,7 @@ export class DbTreeItem extends vscode.TreeItem {
 
   static database(name: string, connId: string): DbTreeItem {
     const item = new DbTreeItem(name, 'database', vscode.TreeItemCollapsibleState.Collapsed, connId, name);
-    item.iconPath = new vscode.ThemeIcon('folder');
+    item.iconPath = new vscode.ThemeIcon('database');
     item.command = {
       command: 'dbtool.openExplorer',
       title: '打开数据库工作台',
