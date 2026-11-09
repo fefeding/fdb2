@@ -2,7 +2,7 @@
   "name": "vscode-fdb2",
   "displayName": "%displayName%",
   "description": "%extension.description%",
-  "version": "1.2.27",
+  "version": "1.2.28",
   "publisher": "fefeding",
   "license": "MIT",
   "icon": "resources/icon.png",
