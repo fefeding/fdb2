@@ -1,6 +1,6 @@
 {
-  "displayName": "Database Tool (fdb2)",
-  "extension.description": "A powerful database management tool: connection management, SQL query, data browsing and table structure inspection, supporting MySQL / PostgreSQL / SQL Server / SQLite / Oracle / MongoDB / ClickHouse and more.",
+  "displayName": "Database Client (fdb2) - SQL Editor for MySQL, PostgreSQL, SQLite, MongoDB",
+  "extension.description": "Database client & SQL editor for VS Code: MySQL, PostgreSQL, SQLite, SQL Server, MongoDB, Oracle, ClickHouse, CockroachDB and SAP HANA. Browse schemas, run queries, edit table data, export CSV. Free & open source.",
   "viewContainer.dbtool.title": "Database Tool",
   "view.databaseExplorer.name": "Database Connections",
   "command.addConnection.title": "Add Connection",

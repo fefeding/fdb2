@@ -2,10 +2,18 @@
   "name": "vscode-fdb2",
   "displayName": "%displayName%",
   "description": "%extension.description%",
-  "version": "1.2.25",
+  "version": "1.2.26",
   "publisher": "fefeding",
   "license": "MIT",
   "icon": "resources/icon.png",
+  "galleryBanner": {
+    "color": "#123A63",
+    "theme": "dark"
+  },
+  "homepage": "https://github.com/fefeding/fdb2#readme",
+  "bugs": {
+    "url": "https://github.com/fefeding/fdb2/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/fefeding/fdb2.git"
@@ -19,16 +27,33 @@
   ],
   "keywords": [
     "database",
+    "database client",
+    "database tool",
+    "database explorer",
+    "database browser",
+    "db client",
     "sql",
+    "sql client",
+    "sql editor",
+    "sql query",
+    "table editor",
+    "csv export",
     "mysql",
-    "postgres",
     "postgresql",
+    "postgres",
     "sqlite",
     "mongodb",
+    "sql server",
+    "mssql",
     "oracle",
     "clickhouse",
-    "sql editor",
-    "database client"
+    "cockroachdb",
+    "sap hana",
+    "nosql",
+    "dbeaver alternative",
+    "navicat alternative",
+    "数据库",
+    "数据库客户端"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [

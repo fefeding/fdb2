@@ -1,10 +1,14 @@
-# Database Tool (fdb2) — VSCode Extension
+# Database Tool (fdb2) — Database Client & SQL Editor for VS Code
 
-> A full-featured database management extension for Visual Studio Code, bringing the `fdb2` desktop tool right into your editor. Manage connections, browse schemas, run SQL, and edit table data **without ever leaving VSCode**.
+**A free, open-source database client for VS Code.** Connect to MySQL, PostgreSQL, SQLite, SQL Server, MongoDB, Oracle, ClickHouse, CockroachDB and SAP HANA; browse schemas, run SQL queries, edit table data and export CSV **without ever leaving VSCode**. One extension instead of a separate client for every database — a lightweight alternative to standalone tools such as DBeaver or Navicat.
 
-![Database Tool (fdb2) running in VSCode](https://raw.githubusercontent.com/fefeding/fdb2/main/public/fdb2.png)
+![Database Tool (fdb2) database explorer and SQL editor running in VS Code](https://raw.githubusercontent.com/fefeding/fdb2/main/public/fdb2.png)
 
-The extension embeds the `fdb2` web UI inside a VSCode Webview. The native **Activity Bar tree** is used for navigation, while the rich content (connection overview, database detail, table data/structure) is rendered by the same Vue UI reused from the desktop app. The host (`TypeScript`) talks to the webview through `postMessage`, and reuses the `db_tool/server` backend (`TypeORM` + per-database dialects).
+- **SQL editor + database explorer in one place** — a native Activity Bar tree (Connection → Database → Table → Column) plus a full workbench webview.
+- **One client for 9+ databases** — SQL and NoSQL, see the supported databases table below.
+- **Data grid, not just a query console** — pagination, sorting, WHERE filters, insert/edit/delete rows and CSV export.
+- **Free & open source** — MIT licensed; connection settings stay on your machine in `~/.fdb2/connections.json`.
+- **Works with the desktop app** — the same `fdb2` UI and connection config are available as a [desktop app / CLI](https://github.com/fefeding/fdb2#readme) for Windows, macOS and Linux.
 
 ---
 
@@ -17,31 +21,33 @@ The extension embeds the `fdb2` web UI inside a VSCode Webview. The native **Act
 - **SQL query** — A dedicated query panel that executes arbitrary SQL and renders results as a sortable, paginated table (`Ctrl/Cmd+Enter` to run).
 - **Data browsing & editing** — Paginated table data with WHERE filtering, row insert/edit/delete, and CSV export.
 - **Table structure** — Inspect columns, types, primary keys, indexes, foreign keys and relationships.
-- **Supported databases** — MySQL, PostgreSQL, SQL Server, SQLite, Oracle, CockroachDB, MongoDB, SAP HANA, ClickHouse. (Oracle / SQLite / SAP HANA require native drivers — see *Native drivers* below.)
+- **Supported databases** — 9+ engines in one client, see the table below.
+
+---
+
+## 🗄️ One client for 9+ databases
+
+| Database | Driver | Notes |
+| --- | --- | --- |
+| MySQL (MariaDB / TiDB via the MySQL protocol) | pure JS | works out of the box |
+| PostgreSQL, CockroachDB | pure JS | works out of the box |
+| SQL Server (MSSQL) | pure JS | works out of the box |
+| MongoDB (NoSQL / document store) | pure JS | works out of the box |
+| ClickHouse | HTTP, pure JS | default port `8123`, Basic auth |
+| SQLite (`.db` / `.sqlite`) | native | `better-sqlite3` / `sqlite3` |
+| Oracle | native | `oracledb` |
+| SAP HANA | native | `@sap/hana-client` (experimental) |
+
+Oracle / SQLite / SAP HANA require native drivers compiled for VS Code's Node ABI — see *Native drivers* below.
 
 ---
 
 ## 📥 Installation
 
 ### From the Marketplace (recommended)
-Search for **"Database Tool (fdb2)"** in the VSCode Extensions view (`Ctrl/Cmd+Shift+X`) and click **Install**.
+[Install from the VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=fefeding.vscode-fdb2), or search for **"Database Client (fdb2)"** in the VSCode Extensions view (`Ctrl/Cmd+Shift+X`) and click **Install**. The extension is also published on Open VSX for VS Code forks.
 
-### From source (for development)
-```bash
-# 1. Install extension dependencies (esbuild, typescript, native drivers…)
-cd packages/vscode && npm install
-
-# 2. Build host + webview
-cd packages/vscode && npm run build      # equals esbuild + root vite build
-
-# 3. Press F5 in VSCode to launch the "Extension Development Host"
-```
-
-Equivalent scripts from the repo root:
-- `npm run build:vscode` — webview only
-- `npm run build:vscode:extension` — host only
-- `npm run vscode:dev` — host in watch mode
-- `npm run vscode:package` — package a `.vsix`
+Building from source? See the *For contributors* section at the end of this page.
 
 ---
 
@@ -178,75 +184,42 @@ npm install --runtime=electron --target=<vscode-node-version>
 
 ---
 
-## 🏗️ Architecture
+## ❓ FAQ
 
-```
-packages/vscode/
-├── package.json            # extension manifest (viewsContainers/views/commands/menus/configuration)
-├── esbuild.js             # host bundler (bundles server + drivers, externalizes native modules)
-├── tsconfig.json
-├── src/
-│   ├── extension.ts        # entry: registers tree view, commands, webview providers
-│   ├── prelude.ts          # sets data dir + reflect-metadata before loading server
-│   ├── protocol.ts         # host <-> webview message protocol + result normalization
-│   ├── service/DatabaseBridge.ts     # bridges handleDatabaseRoutes
-│   └── providers/
-│       ├── DatabaseTreeProvider.ts   # Activity Bar tree (native navigation)
-│       └── WebViewProvider.ts        # panels + message routing
-└── resources/
-    ├── activity-icon.svg
-    ├── icon.png            # Marketplace icon (256x256)
-    └── webview/            # built by vite.config.vscode.ts (main.js)
-```
+**Is this a free DBeaver / Navicat / DataGrip alternative for VS Code?** Yes. fdb2 is MIT-licensed and embeds the connection manager, SQL editor and data grid directly in the editor, so you don't have to switch to a standalone database GUI.
 
-**Communication** — Host and webview exchange `postMessage`s. The protocol lives in `src/protocol.ts`; the webview bridge layer is `src/platform/vscode/bridge.ts`. A `ready` handshake flushes the first navigation so the panel never opens blank.
+**How do I view a SQLite `.db` / `.sqlite` file in VS Code?** Add a connection of type `sqlite`, point it at the absolute file path, then open the table's *Data* tab. SQLite needs a native driver compiled for VS Code's Node ABI (see *Native drivers* above).
+
+**Can one extension handle MySQL, PostgreSQL and MongoDB?** Yes — all supported engines share the same Activity Bar explorer, SQL workbench and data grid, and each connection keeps its own editor tab.
+
+**How do I connect to a database behind a VPN, private subnet or bastion host?** Add a `remote` connection pointing at an `fdb2` service that can reach the database. Schema browsing, SQL, DDL and data operations are then proxied over HTTP, and the database password stays on the remote service.
+
+**Is it free, open source, and does it need an account?** Free and MIT-licensed, no account required. Connection settings are stored locally in `~/.fdb2/connections.json` and shared with the desktop app by default.
 
 ---
 
-## 🔧 Build & Debug
+## 🇨🇳 中文说明
 
-The host and the webview are built separately:
+`fdb2` 是一款免费开源的 **VS Code 数据库客户端 / 数据库管理工具 / SQL 编辑器**，支持 MySQL、PostgreSQL、SQLite、SQL Server、MongoDB、Oracle、ClickHouse、CockroachDB、SAP HANA 等 9 种以上数据库。功能包括：数据库连接管理、表结构与索引/外键浏览、SQL 查询、表格数据增删改查（分页、排序、条件过滤）、CSV 导出，以及通过 `remote` 远程代理连接内网数据库。连接配置保存在本地 `~/.fdb2/connections.json`，与桌面端共用。
 
-```bash
-# 1. Install extension deps
-cd packages/vscode && npm install
-
-# 2A. One-shot build (host + webview)
-cd packages/vscode && npm run build          # esbuild + root vite build
-
-# 2B. Watch mode (dev) — host only; rebuild webview with npm run build:webview
-cd packages/vscode && npm run watch
-
-# 3. Press F5 in VSCode -> "Extension Development Host"
-```
+完整中文文档见 [README_zh.md](https://github.com/fefeding/fdb2/blob/main/README_zh.md)。
 
 ---
 
-## 📦 Publishing
+## 🛠️ For contributors
 
-### Manual
+The extension embeds the `fdb2` web UI inside a VSCode Webview. The native **Activity Bar tree** drives navigation, the host (`TypeScript`) exchanges `postMessage`s with the webview (`src/protocol.ts`) and reuses the `db_tool/server` backend (`TypeORM` + per-database dialects). Source, build scripts and the CI workflow live in the [GitHub repository](https://github.com/fefeding/fdb2/tree/main/packages/vscode).
+
 ```bash
 cd packages/vscode && npm install
-cd packages/vscode && npm run vscode:prepublish   # production build (esbuild + vite)
-../../node_modules/.bin/vsce package               # produce .vsix
-../../node_modules/.bin/vsce publish -p <PAT>      # VS Code Marketplace
-../../node_modules/.bin/ovsx publish *.vsix -p <OVSX_TOKEN>   # Open VSX
+npm run build          # esbuild host + Vite webview
+npm run watch          # host in watch mode
+# Press F5 in VS Code -> Extension Development Host
 ```
 
-### Automated via GitHub Actions
-`.github/workflows/build-vsix.yml` (aligned with `vscode-pptx`):
-- **Every push/PR to `main`** — builds the `.vsix` and uploads it as a CI artifact.
-- **Tagging `dbtool-v*` (e.g. `dbtool-v1.0.1`)** — creates a GitHub Release (with the `.vsix`) and publishes to **VS Code Marketplace** *and* **Open VSX** independently.
+Equivalent scripts from the repo root: `npm run build:vscode` (webview only), `npm run build:vscode:extension` (host only), `npm run vscode:dev` (host in watch mode), `npm run vscode:package` (package a `.vsix`).
 
-Required repository secrets (`Settings → Secrets and variables → Actions`):
-
-| Name | Type | Purpose |
-| --- | --- | --- |
-| `VSCODE_TOKEN` | Secret | Azure DevOps PAT with `Marketplace > Manage`, owned by the `publisher` in `package.json`. |
-| `OVSX_TOKEN` | Secret / Variable | Open VSX access token. |
-
-> The tag must match the `version` field in `packages/vscode/package.json` (auto-validated). Bump `version` before releasing.
-> `dbtool-v*` tags are independent from the Electron app's `v*` release tags to avoid cross-triggering.
+Releases are automated: tagging `dbtool-v<version>` builds the `.vsix` and publishes it to the VS Code Marketplace and Open VSX (`.github/workflows/build-vsix.yml`). The tag must match the `version` in `package.json`.
 
 ---
 

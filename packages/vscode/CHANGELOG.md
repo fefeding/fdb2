@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.26
+
+- **市场 SEO / 可发现性优化**（纯元数据，无功能改动）：
+  - `displayName` 改为 `Database Client (fdb2) - SQL Editor for MySQL, PostgreSQL, SQLite, MongoDB`，描述前置高意图关键词
+  - `keywords` 由 11 个扩充至 28 个（含 `sql client`/`database explorer`/`db client`/`table editor`、各数据库名、`dbeaver alternative`/`navicat alternative` 及中文 `数据库`/`数据库客户端`）
+  - `package.json` 新增 `galleryBanner`、`homepage`、`bugs` 展示字段
+  - `README.md` 重写开篇为关键词密集的导引，新增「9+ 数据库支持表」、长尾 FAQ 与中文说明，并把开发/构建/发布说明收拢至末尾 *For contributors*
+  - 根 `README.md` 同步插件名并加入 Marketplace 直达链接
+
 ## 1.2.25
 
 - **数据库树按类型着色徽章**：连接节点不再统一使用 `database` 主题图标，改为内联 SVG 徽章（M/P/CR/O/MS/MG/CH/S/H），配色与各数据库品牌一致；数据库节点图标改为圆柱体

@@ -127,7 +127,7 @@ Once set, the remote server rejects every HTTP request that does not carry the m
 
 ## 🔌 VSCode Extension
 
-Prefer staying inside the editor? `fdb2` also ships as a **VSCode extension** — "Database Tool (fdb2)" — that embeds the same UI directly in VSCode.
+Prefer staying inside the editor? `fdb2` also ships as a **VSCode extension** — [Database Client (fdb2)](https://marketplace.visualstudio.com/items?itemName=fefeding.vscode-fdb2) — a free database client & SQL editor that embeds the same UI directly in VSCode.
 
 - **Native tree navigation** — a dedicated **Database Tool** view in the Activity Bar (Connection → Database → Table → Column). Click any node to open the related panel.
 - **Per-connection tabs** — the same connection reuses one editor tab while different connections open new tabs, so you can compare databases side by side.
@@ -135,14 +135,14 @@ Prefer staying inside the editor? `fdb2` also ships as a **VSCode extension** �
 - **Shared config** — connections are stored at `~/.fdb2/connections.json` and reused by both the desktop app and the extension (override with the `dbtool.dataDir` setting).
 - **Supported databases** — MySQL, PostgreSQL, SQL Server, SQLite, Oracle, CockroachDB, MongoDB, SAP HANA, ClickHouse (Oracle/SQLite/SAP HANA need native drivers compiled for VSCode's Node ABI).
 
-Install from the Marketplace (`Ctrl/Cmd+Shift+X` → search **"Database Tool (fdb2)"**), or build from source:
+[Install from the VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=fefeding.vscode-fdb2) (or `Ctrl/Cmd+Shift+X` → search **"Database Client (fdb2)"**), or build from source:
 
 ```bash
 cd packages/vscode && npm install && npm run build
 # then press F5 in VSCode to launch the Extension Development Host
 ```
 
-> For full setup, operations, settings, native-driver notes, and publishing, see [**packages/vscode/README.md**](packages/vscode/README.md).
+> For full setup, operations, settings, native-driver notes, and build instructions, see [**packages/vscode/README.md**](packages/vscode/README.md).
 
 ## 📊 Supported Database Types
 
