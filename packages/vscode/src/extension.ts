@@ -53,6 +53,40 @@ function queryOf(item: any): Record<string, string> {
   return q;
 }
 
+const RATE_URL =
+  'https://marketplace.visualstudio.com/items?itemName=fefeding.vscode-fdb2&ssr=false#review-details';
+
+function openRatingPage(): void {
+  void vscode.env.openExternal(vscode.Uri.parse(RATE_URL));
+}
+
+/** 温和的评分引导：第 3 次激活后再询问，且只问一次（除非用户选了「去评分」）。 */
+function maybePromptForRating(context: vscode.ExtensionContext): void {
+  const store = context.globalState;
+  const count = (store.get<number>('dbtool.activationCount') ?? 0) + 1;
+  void store.update('dbtool.activationCount', count);
+  const ratingState = store.get<string>('dbtool.ratingState');
+  if (ratingState === undefined) {
+    void store.update('dbtool.ratingState', 'pending');
+    return;
+  }
+  if (ratingState !== 'pending' || count < 3) return;
+  void vscode.window
+    .showInformationMessage(
+      'Enjoying fdb2? A quick rating helps others discover this free database client for VS Code.',
+      'Rate it ★',
+      "Don't ask again"
+    )
+    .then((choice) => {
+      if (choice === 'Rate it ★') {
+        openRatingPage();
+        void store.update('dbtool.ratingState', 'rated');
+      } else if (choice === "Don't ask again") {
+        void store.update('dbtool.ratingState', 'never');
+      }
+    });
+}
+
 export function activate(context: vscode.ExtensionContext): void {
   bridge = new DatabaseBridge();
   treeProvider = new DatabaseTreeProvider(bridge);
@@ -73,6 +107,7 @@ export function activate(context: vscode.ExtensionContext): void {
   });
 
   register('dbtool.addConnection', () => webViewProvider.showConnectionPanel());
+  register('dbtool.rate', () => openRatingPage());
 
   register('dbtool.editConnection', async (item?: any) => {
     const conn = await resolveConnection(item);
@@ -174,6 +209,9 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // 首次激活时刷新树（加载已保存的连接）
   treeProvider.refresh();
+
+  // 温和的评分引导（仅在第 3 次激活后、且用户未拒绝时）
+  maybePromptForRating(context);
 }
 
 export async function deactivate(): Promise<void> {

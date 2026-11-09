@@ -42,6 +42,16 @@ Oracle / SQLite / SAP HANA require native drivers compiled for VS Code's Node AB
 
 ---
 
+## 🖼️ Screenshots
+
+The same `fdb2` web workbench runs inside the VS Code panel — connection browser, SQL editor and the sortable data grid, all without leaving the editor:
+
+![fdb2 workbench — connection overview and SQL editor](https://raw.githubusercontent.com/fefeding/fdb2/main/src/assets/images/theme/light/screen-1-1000x800.jpg)
+
+![fdb2 — table data grid with pagination and the database explorer tree](https://raw.githubusercontent.com/fefeding/fdb2/main/src/assets/images/theme/light/screen-2-1000x800.jpg)
+
+---
+
 ## 📥 Installation
 
 ### From the Marketplace (recommended)
@@ -220,6 +230,12 @@ npm run watch          # host in watch mode
 Equivalent scripts from the repo root: `npm run build:vscode` (webview only), `npm run build:vscode:extension` (host only), `npm run vscode:dev` (host in watch mode), `npm run vscode:package` (package a `.vsix`).
 
 Releases are automated: tagging `dbtool-v<version>` builds the `.vsix` and publishes it to the VS Code Marketplace and Open VSX (`.github/workflows/build-vsix.yml`). The tag must match the `version` in `package.json`.
+
+---
+
+## 🙏 Support & feedback
+
+If fdb2 helps you manage databases inside VS Code, a **rating on the Marketplace** goes a long way — it's the single biggest factor in how other developers discover the extension. You can also run the **`Database Tool: Rate fdb2`** command from the Command Palette to open the review page. Bugs and feature requests are welcome in [GitHub Issues](https://github.com/fefeding/fdb2/issues).
 
 ---
 

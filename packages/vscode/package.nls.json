@@ -14,6 +14,7 @@
   "command.editConnection.title": "Edit Connection",
   "command.copyTableName.title": "Copy Table Name",
   "command.copySelectSQL.title": "Copy SELECT Statement",
+  "command.rate.title": "Rate fdb2",
   "dbtool.category": "Database Tool",
   "viewsWelcome.databaseExplorer.contents": "No database connections yet.\n[Add Connection](command:dbtool.addConnection)\nConnection config is shared with the desktop fdb2 by default (~/.fdb2).",
   "configuration.title": "Database Tool",

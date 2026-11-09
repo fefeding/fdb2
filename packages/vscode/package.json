@@ -2,7 +2,7 @@
   "name": "vscode-fdb2",
   "displayName": "%displayName%",
   "description": "%extension.description%",
-  "version": "1.2.26",
+  "version": "1.2.27",
   "publisher": "fefeding",
   "license": "MIT",
   "icon": "resources/icon.png",
@@ -68,7 +68,8 @@
     "onCommand:dbtool.viewTableData",
     "onCommand:dbtool.viewTableStructure",
     "onCommand:dbtool.copyTableName",
-    "onCommand:dbtool.copySelectSQL"
+    "onCommand:dbtool.copySelectSQL",
+    "onCommand:dbtool.rate"
   ],
   "contributes": {
     "viewsContainers": {
@@ -153,6 +154,11 @@
         "command": "dbtool.copySelectSQL",
         "title": "%command.copySelectSQL.title%",
         "icon": "$(code)",
+        "category": "%dbtool.category%"
+      },
+      {
+        "command": "dbtool.rate",
+        "title": "%command.rate.title%",
         "category": "%dbtool.category%"
       }
     ],

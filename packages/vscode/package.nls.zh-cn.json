@@ -14,6 +14,7 @@
   "command.editConnection.title": "编辑连接",
   "command.copyTableName.title": "复制表名",
   "command.copySelectSQL.title": "复制 SELECT 语句",
+  "command.rate.title": "给 fdb2 评分",
   "dbtool.category": "数据库工具",
   "viewsWelcome.databaseExplorer.contents": "暂无数据库连接。\n[添加连接](command:dbtool.addConnection)\n连接配置默认与桌面端 fdb2 共享（~/.fdb2）。",
   "configuration.title": "数据库工具",
